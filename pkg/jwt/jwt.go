@@ -16,20 +16,20 @@ type Claims struct {
 	jwt.RegisteredClaims
 }
 
-func GenerateJWTToken(userID string, userRole int, config *config.Config) (string, error) {
+func GenerateJWTAccessToken(userID string, userRole int, config *config.Config) (string, error) {
 	claims := &Claims{
 		ID:     userID,
 		RoleID: userRole,
 		RegisteredClaims: jwt.RegisteredClaims{
-			ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Duration(config.Server.JwtExpMin) * time.Minute)),
-			Issuer:    config.Server.JwtIssuer,
+			ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Duration(config.JWT.AccessExpMin) * time.Minute)),
+			Issuer:    config.JWT.JwtIssuer,
 			IssuedAt:  jwt.NewNumericDate(time.Now()),
 		},
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 
-	tokenString, err := token.SignedString([]byte(config.Server.JwtSecretKey))
+	tokenString, err := token.SignedString([]byte(config.JWT.JwtSecretKey))
 	if err != nil {
 		return "", err
 	}
