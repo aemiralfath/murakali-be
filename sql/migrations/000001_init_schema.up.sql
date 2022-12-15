@@ -9,9 +9,9 @@ CREATE TABLE IF NOT EXISTS "user"
 (
 ),
     "role_id" int,
-    "username" varchar UNIQUE NOT NULL,
+    "username" varchar UNIQUE,
     "email" varchar UNIQUE NOT NULL,
-    "phone_no" varchar UNIQUE NOT NULL,
+    "phone_no" varchar UNIQUE,
     "fullname" varchar,
     "password" varchar,
     "gender" varchar,

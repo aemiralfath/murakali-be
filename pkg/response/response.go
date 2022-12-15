@@ -12,6 +12,9 @@ const (
 	NotFoundMessage            = "Route does not exist, please check again your route path."
 	UnauthorizedMessage        = "Email or password not valid."
 	ForbiddenMessage           = "Forbidden"
+
+	EmailAlreadyExistMessage = "Email already exist."
+	UserAlreadyExistMessage  = "User already exist."
 )
 
 type JSONResponse struct {

@@ -3,12 +3,22 @@ package server
 import (
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
+	authDelivery "murakali/internal/auth/delivery"
+	authRepository "murakali/internal/auth/repository"
+	authUseCase "murakali/internal/auth/usecase"
 	"murakali/pkg/response"
 	"net/http"
 	"time"
 )
 
 func (s *Server) MapHandlers() error {
+	aRepo, err := authRepository.NewAuthRepository(s.db, s.redisClient)
+	if err != nil {
+		return err
+	}
+
+	authUC := authUseCase.NewAuthUseCase(s.cfg, aRepo)
+	authHandlers := authDelivery.NewAuthHandlers(s.cfg, authUC, s.logger)
 
 	s.gin.Use(cors.New(cors.Config{
 		AllowOrigins:     []string{"*"},
@@ -28,9 +38,8 @@ func (s *Server) MapHandlers() error {
 
 	v1 := s.gin.Group("/api/v1")
 	authGroup := v1.Group("/auth")
-	authGroup.GET("/", func(c *gin.Context) {
-		response.SuccessResponse(c.Writer, "success", 200)
-	})
+
+	authDelivery.MapAuthRoutes(authGroup, authHandlers)
 
 	return nil
 }
