@@ -5,345 +5,509 @@ EXTENSION IF NOT EXISTS "uuid-ossp";
 
 CREATE TABLE IF NOT EXISTS "user"
 (
-    "id"         UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    "role_id"    int,
-    "username"   varchar UNIQUE NOT NULL,
-    "email"      varchar UNIQUE NOT NULL,
-    "phone_no"   varchar UNIQUE NOT NULL,
-    "fullname"   varchar,
-    "password"   varchar,
-    "gender"     varchar,
+    "id" UUID PRIMARY KEY DEFAULT uuid_generate_v4
+(
+),
+    "role_id" int,
+    "username" varchar UNIQUE NOT NULL,
+    "email" varchar UNIQUE NOT NULL,
+    "phone_no" varchar UNIQUE NOT NULL,
+    "fullname" varchar,
+    "password" varchar,
+    "gender" varchar,
     "birth_date" timestamp,
-    "photo_url"  varchar,
-    "is_sso"     boolean,
-    "created_at" timestamptz    NOT NULL DEFAULT (NOW()),
+    "photo_url" varchar,
+    "is_sso" boolean,
+    "is_verify" boolean,
+    "created_at" timestamptz NOT NULL DEFAULT
+(
+    NOW
+(
+)),
     "updated_at" timestamptz,
     "deleted_at" timestamptz
-);
+    );
 
 CREATE TABLE IF NOT EXISTS "shop"
 (
-    "id"            UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    "user_id"       UUID,
-    "name"          varchar UNIQUE NOT NULL,
+    "id" UUID PRIMARY KEY DEFAULT uuid_generate_v4
+(
+),
+    "user_id" UUID,
+    "name" varchar UNIQUE NOT NULL,
     "total_product" int,
-    "total_rating"  int,
-    "rating_avg"    float,
-    "created_at"    timestamptz    NOT NULL DEFAULT (NOW()),
-    "updated_at"    timestamptz,
-    "deleted_at"    timestamptz
-);
+    "total_rating" int,
+    "rating_avg" float,
+    "created_at" timestamptz NOT NULL DEFAULT
+(
+    NOW
+(
+)),
+    "updated_at" timestamptz,
+    "deleted_at" timestamptz
+    );
 
 CREATE TABLE IF NOT EXISTS "shop_courier"
 (
-    "id"         UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    "shop_id"    UUID,
+    "id" UUID PRIMARY KEY DEFAULT uuid_generate_v4
+(
+),
+    "shop_id" UUID,
     "courier_id" uuid,
-    "created_at" timestamptz NOT NULL DEFAULT (NOW()),
+    "created_at" timestamptz NOT NULL DEFAULT
+(
+    NOW
+(
+)),
     "updated_at" timestamptz,
     "deleted_at" timestamptz
-);
+    );
 
 CREATE TABLE IF NOT EXISTS "product_courier_whitelist"
 (
-    "id"         UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    "id" UUID PRIMARY KEY DEFAULT uuid_generate_v4
+(
+),
     "product_id" UUID,
     "courier_id" uuid,
-    "created_at" timestamptz NOT NULL DEFAULT (NOW()),
+    "created_at" timestamptz NOT NULL DEFAULT
+(
+    NOW
+(
+)),
     "updated_at" timestamptz,
     "deleted_at" timestamptz
-);
+    );
 
 CREATE TABLE IF NOT EXISTS "courier"
 (
-    "id"          uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
-    "name"        varchar,
-    "code"        varchar,
-    "service"     varchar,
+    "id" uuid PRIMARY KEY DEFAULT uuid_generate_v4
+(
+),
+    "name" varchar,
+    "code" varchar,
+    "service" varchar,
     "description" text,
-    "created_at"  timestamptz NOT NULL DEFAULT (NOW()),
-    "updated_at"  timestamptz,
-    "deleted_at"  timestamptz
-);
+    "created_at" timestamptz NOT NULL DEFAULT
+(
+    NOW
+(
+)),
+    "updated_at" timestamptz,
+    "deleted_at" timestamptz
+    );
 
 CREATE TABLE IF NOT EXISTS "cart_item"
 (
-    "id"                uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
-    "user_id"           UUID,
+    "id" uuid PRIMARY KEY DEFAULT uuid_generate_v4
+(
+),
+    "user_id" UUID,
     "product_detail_id" UUID,
-    "quantity"          int,
-    "created_at"        timestamptz NOT NULL DEFAULT (NOW()),
-    "updated_at"        timestamptz,
-    "deleted_at"        timestamptz
-);
+    "quantity" int,
+    "created_at" timestamptz NOT NULL DEFAULT
+(
+    NOW
+(
+)),
+    "updated_at" timestamptz,
+    "deleted_at" timestamptz
+    );
 
 CREATE TABLE IF NOT EXISTS "order_status"
 (
-    "id"         serial PRIMARY KEY,
-    "name"       varchar,
-    "created_at" timestamptz NOT NULL DEFAULT (NOW()),
+    "id"
+    serial
+    PRIMARY
+    KEY,
+    "name"
+    varchar,
+    "created_at"
+    timestamptz
+    NOT
+    NULL
+    DEFAULT (
+    NOW
+(
+)),
     "updated_at" timestamptz,
     "deleted_at" timestamptz
-);
+    );
 
 CREATE TABLE IF NOT EXISTS "order_item"
 (
-    "id"                uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
-    "order_id"          UUID,
+    "id" uuid PRIMARY KEY DEFAULT uuid_generate_v4
+(
+),
+    "order_id" UUID,
     "product_detail_id" UUID,
-    "quantity"          int,
-    "item_price"        float,
-    "total_price"       float
-);
+    "quantity" int,
+    "item_price" float,
+    "total_price" float
+    );
 
 CREATE TABLE IF NOT EXISTS "order"
 (
-    "id"              UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    "transaction_id"  UUID,
-    "shop_id"         UUID,
-    "user_id"         UUID,
-    "courier_id"      UUID,
+    "id" UUID PRIMARY KEY DEFAULT uuid_generate_v4
+(
+),
+    "transaction_id" UUID,
+    "shop_id" UUID,
+    "user_id" UUID,
+    "courier_id" UUID,
     "voucher_shop_id" uuid,
     "order_status_id" int,
-    "total_price"     float,
-    "delivery_fee"    float,
-    "created_at"      timestamptz NOT NULL DEFAULT (NOW())
-);
+    "total_price" float,
+    "delivery_fee" float,
+    "resi_no" varchar,
+    "created_at" timestamptz NOT NULL DEFAULT
+(
+    NOW
+(
+)),
+    "arrived_at" timestamptz
+    );
 
 CREATE TABLE IF NOT EXISTS "transaction"
 (
-    "id"                     uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
+    "id" uuid PRIMARY KEY DEFAULT uuid_generate_v4
+(
+),
     "voucher_marketplace_id" uuid,
-    "wallet_id"              UUID,
-    "card_number"            varchar,
-    "invoice"                varchar UNIQUE,
-    "total_price"            int,
-    "paid_at"                timestamptz,
-    "canceled_at"            timestamptz,
-    "expired_at"             timestamptz
-);
+    "wallet_id" UUID,
+    "card_number" varchar,
+    "invoice" varchar UNIQUE,
+    "total_price" int,
+    "paid_at" timestamptz,
+    "canceled_at" timestamptz,
+    "expired_at" timestamptz
+    );
 
 CREATE TABLE IF NOT EXISTS "promotion"
 (
-    "id"                  uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
-    "name"                varchar,
-    "product_id"          uuid,
+    "id" uuid PRIMARY KEY DEFAULT uuid_generate_v4
+(
+),
+    "name" varchar,
+    "product_id" uuid,
     "discount_percentage" float,
-    "discount_fix_price"  int,
-    "min_product_price"   float,
-    "max_discount_price"  float,
-    "quota"               int,
-    "max_quantity"        int,
-    "actived_date"        timestamptz,
-    "expired_date"        timestamptz,
-    "created_at"          timestamptz NOT NULL DEFAULT (NOW()),
-    "updated_at"          timestamptz,
-    "deleted_at"          timestamptz
-);
+    "discount_fix_price" int,
+    "min_product_price" float,
+    "max_discount_price" float,
+    "quota" int,
+    "max_quantity" int,
+    "actived_date" timestamptz,
+    "expired_date" timestamptz,
+    "created_at" timestamptz NOT NULL DEFAULT
+(
+    NOW
+(
+)),
+    "updated_at" timestamptz,
+    "deleted_at" timestamptz
+    );
 
 CREATE TABLE IF NOT EXISTS "voucher"
 (
-    "id"                  uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
-    "shop_id"             uuid,
-    "code"                varchar,
-    "quota"               int,
-    "actived_date"        timestamptz,
-    "expired_date"        timestamptz,
+    "id" uuid PRIMARY KEY DEFAULT uuid_generate_v4
+(
+),
+    "shop_id" uuid,
+    "code" varchar,
+    "quota" int,
+    "actived_date" timestamptz,
+    "expired_date" timestamptz,
     "discount_percentage" int,
-    "discount_fix_price"  int,
-    "min_product_price"   float,
-    "max_discount_price"  float,
-    "created_at"          timestamptz NOT NULL DEFAULT (NOW()),
-    "updated_at"          timestamptz,
-    "deleted_at"          timestamptz
-);
+    "discount_fix_price" int,
+    "min_product_price" float,
+    "max_discount_price" float,
+    "created_at" timestamptz NOT NULL DEFAULT
+(
+    NOW
+(
+)),
+    "updated_at" timestamptz,
+    "deleted_at" timestamptz
+    );
 
 CREATE TABLE IF NOT EXISTS "favorite"
 (
-    "user_id"    uuid,
-    "product_id" uuid,
-    "created_at" timestamptz NOT NULL DEFAULT (NOW())
-);
+    "user_id"
+    uuid,
+    "product_id"
+    uuid,
+    "created_at"
+    timestamptz
+    NOT
+    NULL
+    DEFAULT (
+    NOW
+(
+))
+    );
 
 CREATE TABLE IF NOT EXISTS "product"
 (
-    "id"             uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
-    "category_id"    uuid,
-    "shop_id"        uuid,
-    "sku"            varchar,
-    "title"          varchar,
-    "description"    varchar,
-    "view_count"     bigint,
+    "id" uuid PRIMARY KEY DEFAULT uuid_generate_v4
+(
+),
+    "category_id" uuid,
+    "shop_id" uuid,
+    "sku" varchar,
+    "title" varchar,
+    "description" varchar,
+    "view_count" bigint,
     "favorite_count" bigint,
-    "unit_sold"      bigint,
-    "listed_status"  boolean,
-    "thumbnail_url"  varchar,
-    "rating_avg"     float,
-    "min_price"      float,
-    "max_price"      float,
-    "created_at"     timestamptz NOT NULL DEFAULT (NOW()),
-    "updated_at"     timestamptz,
-    "deleted_at"     timestamptz
-);
+    "unit_sold" bigint,
+    "listed_status" boolean,
+    "thumbnail_url" varchar,
+    "rating_avg" float,
+    "min_price" float,
+    "max_price" float,
+    "created_at" timestamptz NOT NULL DEFAULT
+(
+    NOW
+(
+)),
+    "updated_at" timestamptz,
+    "deleted_at" timestamptz
+    );
 
 CREATE TABLE IF NOT EXISTS "product_detail"
 (
-    "id"         uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
+    "id" uuid PRIMARY KEY DEFAULT uuid_generate_v4
+(
+),
     "product_id" uuid,
-    "price"      float,
-    "stock"      bigint,
-    "weight"     int,
-    "size"       int,
-    "hazardous"  boolean,
-    "condition"  varchar,
+    "price" float,
+    "stock" bigint,
+    "weight" int,
+    "size" int,
+    "hazardous" boolean,
+    "condition" varchar,
     "bulk_price" boolean,
-    "created_at" timestamptz NOT NULL DEFAULT (NOW()),
+    "created_at" timestamptz NOT NULL DEFAULT
+(
+    NOW
+(
+)),
     "updated_at" timestamptz,
     "deleted_at" timestamptz
-);
+    );
 
 CREATE TABLE IF NOT EXISTS "variant"
 (
-    "id"                uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
+    "id" uuid PRIMARY KEY DEFAULT uuid_generate_v4
+(
+),
     "product_detail_id" uuid,
     "variant_detail_id" uuid,
-    "created_at"        timestamptz NOT NULL DEFAULT (NOW()),
-    "updated_at"        timestamptz,
-    "deleted_at"        timestamptz
-);
+    "created_at" timestamptz NOT NULL DEFAULT
+(
+    NOW
+(
+)),
+    "updated_at" timestamptz,
+    "deleted_at" timestamptz
+    );
 
 CREATE TABLE IF NOT EXISTS "variant_detail"
 (
-    "id"         uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
-    "name"       varchar,
-    "type"       varchar,
-    "created_at" timestamptz NOT NULL DEFAULT (NOW()),
+    "id" uuid PRIMARY KEY DEFAULT uuid_generate_v4
+(
+),
+    "name" varchar,
+    "type" varchar,
+    "created_at" timestamptz NOT NULL DEFAULT
+(
+    NOW
+(
+)),
     "updated_at" timestamptz,
     "deleted_at" timestamptz
-);
+    );
 
 CREATE TABLE IF NOT EXISTS "category"
 (
-    "id"         uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
-    "parent_id"  uuid,
-    "name"       varchar,
-    "photo_url"  varchar,
-    "created_at" timestamptz NOT NULL DEFAULT (NOW()),
+    "id" uuid PRIMARY KEY DEFAULT uuid_generate_v4
+(
+),
+    "parent_id" uuid,
+    "name" varchar,
+    "photo_url" varchar,
+    "created_at" timestamptz NOT NULL DEFAULT
+(
+    NOW
+(
+)),
     "updated_at" timestamptz,
     "deleted_at" timestamptz
-);
+    );
 
 CREATE TABLE IF NOT EXISTS "review"
 (
-    "id"         uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
-    "user_id"    uuid,
+    "id" uuid PRIMARY KEY DEFAULT uuid_generate_v4
+(
+),
+    "user_id" uuid,
     "product_id" uuid,
-    "comment"    text,
-    "rating"     float,
-    "image_url"  varchar,
-    "created_at" timestamptz NOT NULL DEFAULT (NOW()),
+    "comment" text,
+    "rating" float,
+    "image_url" varchar,
+    "created_at" timestamptz NOT NULL DEFAULT
+(
+    NOW
+(
+)),
     "updated_at" timestamptz,
     "deleted_at" timestamptz
-);
+    );
 
 CREATE TABLE IF NOT EXISTS "photo"
 (
-    "id"                uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
+    "id" uuid PRIMARY KEY DEFAULT uuid_generate_v4
+(
+),
     "product_detail_id" uuid,
-    "url"               varchar
-);
+    "url" varchar
+    );
 
 CREATE TABLE IF NOT EXISTS "video"
 (
-    "id"                uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
+    "id" uuid PRIMARY KEY DEFAULT uuid_generate_v4
+(
+),
     "product_detail_id" uuid,
-    "url"               varchar
-);
+    "url" varchar
+    );
 
 CREATE TABLE IF NOT EXISTS "sealabs_pay"
 (
-    "card_number" varchar PRIMARY KEY DEFAULT uuid_generate_v4(),
-    "user_id"     UUID,
-    "name"        varchar,
-    "is_default"  boolean,
+    "card_number" varchar PRIMARY KEY DEFAULT uuid_generate_v4
+(
+),
+    "user_id" UUID,
+    "name" varchar,
+    "is_default" boolean,
     "active_date" timestamp,
-    "created_at"  timestamptz NOT NULL DEFAULT (NOW()),
-    "updated_at"  timestamptz,
-    "deleted_at"  timestamptz
-);
+    "created_at" timestamptz NOT NULL DEFAULT
+(
+    NOW
+(
+)),
+    "updated_at" timestamptz,
+    "deleted_at" timestamptz
+    );
 
 CREATE TABLE IF NOT EXISTS "wallet"
 (
-    "id"            uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
-    "user_id"       UUID,
-    "balance"       float       NOT NULL DEFAULT 0,
-    "pin"           varchar,
+    "id" uuid PRIMARY KEY DEFAULT uuid_generate_v4
+(
+),
+    "user_id" UUID,
+    "balance" float NOT NULL DEFAULT 0,
+    "pin" varchar,
     "attempt_count" int,
-    "attempt_at"    timestamptz,
-    "unlocked_at"   timestamptz,
-    "created_at"    timestamptz NOT NULL DEFAULT (NOW()),
-    "updated_at"    timestamptz,
-    "deleted_at"    timestamptz,
-    "active_date"   timestamptz
-);
+    "attempt_at" timestamptz,
+    "unlocked_at" timestamptz,
+    "created_at" timestamptz NOT NULL DEFAULT
+(
+    NOW
+(
+)),
+    "updated_at" timestamptz,
+    "deleted_at" timestamptz,
+    "active_date" timestamptz
+    );
 
 CREATE TABLE IF NOT EXISTS "wallet_history"
 (
-    "id"             UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    "id" UUID PRIMARY KEY DEFAULT uuid_generate_v4
+(
+),
     "transaction_id" UUID,
-    "wallet_id"      UUID,
-    "from"           varchar,
-    "to"             varchar,
-    "amount"         float,
-    "description"    text,
-    "created_at"     timestamptz NOT NULL DEFAULT (NOW())
-);
+    "wallet_id" UUID,
+    "from" varchar,
+    "to" varchar,
+    "amount" float,
+    "description" text,
+    "created_at" timestamptz NOT NULL DEFAULT
+(
+    NOW
+(
+))
+    );
 
 CREATE TABLE IF NOT EXISTS "address"
 (
-    "id"              UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    "user_id"         UUID,
-    "name"            varchar,
-    "province_id"     int,
-    "city_id"         int,
-    "province"        varchar,
-    "city"            varchar,
-    "disctrict"       varchar,
-    "sub_disctrict"   varchar,
-    "address_detail"  varchar,
-    "zip_code"        varchar,
-    "is_default"      boolean,
+    "id" UUID PRIMARY KEY DEFAULT uuid_generate_v4
+(
+),
+    "user_id" UUID,
+    "name" varchar,
+    "province_id" int,
+    "city_id" int,
+    "province" varchar,
+    "city" varchar,
+    "disctrict" varchar,
+    "sub_disctrict" varchar,
+    "address_detail" varchar,
+    "zip_code" varchar,
+    "is_default" boolean,
     "is_shop_default" boolean,
-    "created_at"      timestamptz NOT NULL DEFAULT (NOW()),
-    "updated_at"      timestamptz,
-    "deleted_at"      timestamptz
-);
+    "created_at" timestamptz NOT NULL DEFAULT
+(
+    NOW
+(
+)),
+    "updated_at" timestamptz,
+    "deleted_at" timestamptz
+    );
 
 CREATE TABLE IF NOT EXISTS "role"
 (
-    "id"         serial PRIMARY KEY,
-    "name"       varchar,
-    "created_at" timestamptz NOT NULL DEFAULT (NOW()),
+    "id"
+    serial
+    PRIMARY
+    KEY,
+    "name"
+    varchar,
+    "created_at"
+    timestamptz
+    NOT
+    NULL
+    DEFAULT (
+    NOW
+(
+)),
     "updated_at" timestamptz
-);
+    );
 
 CREATE TABLE IF NOT EXISTS "email_history"
 (
-    "id"         UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    "email"      varchar UNIQUE NOT NULL,
-    "created_at" timestamptz    NOT NULL DEFAULT (NOW()),
+    "id" UUID PRIMARY KEY DEFAULT uuid_generate_v4
+(
+),
+    "email" varchar UNIQUE NOT NULL,
+    "created_at" timestamptz NOT NULL DEFAULT
+(
+    NOW
+(
+)),
     "updated_at" timestamptz
-);
+    );
 
 CREATE TABLE IF NOT EXISTS "banner"
 (
-    "id"        UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    "title"     varchar,
-    "content"   text,
+    "id" UUID PRIMARY KEY DEFAULT uuid_generate_v4
+(
+),
+    "title" varchar,
+    "content" text,
     "image_url" varchar,
-    "page_url"  varchar,
+    "page_url" varchar,
     "is_active" boolean
-);
+    );
 
 CREATE INDEX ON "user" ("email");
 
