@@ -7,6 +7,7 @@ import (
 )
 
 type UseCase interface {
-	Register(ctx context.Context, body body.RegisterRequest) (*model.User, error)
+	RegisterEmail(ctx context.Context, body body.RegisterEmailRequest) (*model.User, error)
+	RegisterUser(ctx context.Context, body body.RegisterUserRequest) error
 	VerifyOTP(ctx context.Context, body body.VerifyOTPRequest) error
 }

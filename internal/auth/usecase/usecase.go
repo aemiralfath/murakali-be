@@ -3,6 +3,7 @@ package usecase
 import (
 	"context"
 	"database/sql"
+	"golang.org/x/crypto/bcrypt"
 	"murakali/config"
 	"murakali/internal/auth"
 	"murakali/internal/auth/delivery/body"
@@ -13,6 +14,7 @@ import (
 	"murakali/pkg/postgre"
 	"murakali/pkg/response"
 	"net/http"
+	"time"
 )
 
 type authUC struct {
@@ -25,7 +27,7 @@ func NewAuthUseCase(cfg *config.Config, txRepo *postgre.TxRepo, authRepo auth.Re
 	return &authUC{cfg: cfg, txRepo: txRepo, authRepo: authRepo}
 }
 
-func (u *authUC) Register(ctx context.Context, body body.RegisterRequest) (*model.User, error) {
+func (u *authUC) RegisterEmail(ctx context.Context, body body.RegisterEmailRequest) (*model.User, error) {
 	emailHistory, err := u.authRepo.CheckEmailHistory(ctx, body.Email)
 	if err != nil {
 		if err != sql.ErrNoRows {
@@ -68,6 +70,76 @@ func (u *authUC) Register(ctx context.Context, body body.RegisterRequest) (*mode
 	return user, nil
 }
 
+func (u *authUC) RegisterUser(ctx context.Context, body body.RegisterUserRequest) error {
+	value, err := u.authRepo.GetOTPValue(ctx, body.Email)
+	if err != nil {
+		return httperror.New(http.StatusBadRequest, response.OTPAlreadyExpiredMessage)
+	}
+
+	if value != body.OTP {
+		return httperror.New(http.StatusBadRequest, response.OTPIsNotValidMessage)
+	}
+
+	usernameUser, err := u.authRepo.GetUserByUsername(ctx, body.Username)
+	if err != nil {
+		if err != sql.ErrNoRows {
+			return err
+		}
+	}
+
+	if usernameUser != nil {
+		return httperror.New(http.StatusBadRequest, response.UserNameAlreadyExistMessage)
+	}
+
+	phoneNoUser, err := u.authRepo.GetUserByPhoneNo(ctx, body.PhoneNo)
+	if err != nil {
+		if err != sql.ErrNoRows {
+			return err
+		}
+	}
+
+	if phoneNoUser != nil {
+		return httperror.New(http.StatusBadRequest, response.PhoneNoAlreadyExistMessage)
+	}
+
+	user, err := u.authRepo.GetUserByEmail(ctx, body.Email)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return httperror.New(http.StatusBadRequest, response.UserNotExistMessage)
+		}
+		return err
+	}
+
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(body.Password), bcrypt.DefaultCost)
+	if err != nil {
+		return err
+	}
+
+	if !user.IsVerify {
+		user.PhoneNo = body.PhoneNo
+		user.FullName = body.FullName
+		user.Username = body.Username
+		user.Password = string(hashedPassword)
+		user.IsVerify = true
+		user.UpdatedAt = time.Now()
+		err = u.txRepo.WithTransaction(func(tx postgre.Transaction) error {
+			if err := u.authRepo.UpdateUser(ctx, tx, user); err != nil {
+				return err
+			}
+
+			if err := u.authRepo.CreateEmailHistory(ctx, tx, body.Email); err != nil {
+				return err
+			}
+			return err
+		})
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
 func (u *authUC) VerifyOTP(ctx context.Context, body body.VerifyOTPRequest) error {
 	value, err := u.authRepo.GetOTPValue(ctx, body.Email)
 	if err != nil {
@@ -78,20 +150,6 @@ func (u *authUC) VerifyOTP(ctx context.Context, body body.VerifyOTPRequest) erro
 		return httperror.New(http.StatusBadRequest, response.OTPIsNotValidMessage)
 	}
 
-	err = u.txRepo.WithTransaction(func(tx postgre.Transaction) error {
-		if err := u.authRepo.VerifyUser(ctx, tx, body.Email); err != nil {
-			return err
-		}
-
-		if err := u.authRepo.CreateEmailHistory(ctx, tx, body.Email); err != nil {
-			return err
-		}
-		return err
-	})
-
-	if err != nil {
-		return err
-	}
 	return nil
 }
 

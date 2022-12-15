@@ -6,6 +6,7 @@ import (
 	authDelivery "murakali/internal/auth/delivery"
 	authRepository "murakali/internal/auth/repository"
 	authUseCase "murakali/internal/auth/usecase"
+	"murakali/internal/middleware"
 	"murakali/pkg/postgre"
 	"murakali/pkg/response"
 	"net/http"
@@ -13,6 +14,8 @@ import (
 )
 
 func (s *Server) MapHandlers() error {
+	mw := middleware.NewMiddlewareManager(s.cfg, []string{"*"}, s.logger)
+
 	txRepo := postgre.NewTxRepository(s.db)
 	aRepo, err := authRepository.NewAuthRepository(s.db, s.redisClient)
 	if err != nil {
@@ -22,6 +25,7 @@ func (s *Server) MapHandlers() error {
 	authUC := authUseCase.NewAuthUseCase(s.cfg, txRepo, aRepo)
 	authHandlers := authDelivery.NewAuthHandlers(s.cfg, authUC, s.logger)
 
+	s.gin.Use(mw.Latency())
 	s.gin.Use(cors.New(cors.Config{
 		AllowOrigins:     []string{"*"},
 		AllowMethods:     []string{"GET", "POST", "PUT", "PATCH", "DELETE"},

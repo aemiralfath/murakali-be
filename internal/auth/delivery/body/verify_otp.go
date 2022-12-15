@@ -13,6 +13,11 @@ type VerifyOTPRequest struct {
 	OTP   string `json:"otp"`
 }
 
+type VerifyOTPResponse struct {
+	Email string `json:"email"`
+	OTP   string `json:"otp"`
+}
+
 func (r *VerifyOTPRequest) Validate() (UnprocessableEntity, error) {
 	unprocessableEntity := false
 	entity := UnprocessableEntity{
@@ -35,7 +40,7 @@ func (r *VerifyOTPRequest) Validate() (UnprocessableEntity, error) {
 	}
 
 	r.OTP = strings.TrimSpace(r.OTP)
-	if r.OTP == "" {
+	if len(r.OTP) != 6 {
 		unprocessableEntity = true
 		entity.Fields["otp"] = InvalidOTPFormatMessage
 	}

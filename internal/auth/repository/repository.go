@@ -44,6 +44,26 @@ func (r *authRepo) GetUserByEmail(ctx context.Context, email string) (*model.Use
 	return &user, nil
 }
 
+func (r *authRepo) GetUserByUsername(ctx context.Context, username string) (*model.User, error) {
+	var user model.User
+	if err := r.PSQL.QueryRowContext(ctx, GetUserByUsernameQuery, username).
+		Scan(&user.ID, &user.Email, &user.IsVerify); err != nil {
+		return nil, err
+	}
+
+	return &user, nil
+}
+
+func (r *authRepo) GetUserByPhoneNo(ctx context.Context, phoneNo string) (*model.User, error) {
+	var user model.User
+	if err := r.PSQL.QueryRowContext(ctx, GetUserByPhoneNoQuery, phoneNo).
+		Scan(&user.ID, &user.Email, &user.IsVerify); err != nil {
+		return nil, err
+	}
+
+	return &user, nil
+}
+
 func (r *authRepo) CreateUser(ctx context.Context, email string) (*model.User, error) {
 	var user model.User
 	if err := r.PSQL.QueryRowContext(ctx, CreateUserQuery, constant.RoleUser, email, false, false).
@@ -63,8 +83,8 @@ func (r *authRepo) CreateEmailHistory(ctx context.Context, tx postgre.Transactio
 	return nil
 }
 
-func (r *authRepo) VerifyUser(ctx context.Context, tx postgre.Transaction, email string) error {
-	_, err := tx.ExecContext(ctx, VerifyUserQuery, true, email)
+func (r *authRepo) UpdateUser(ctx context.Context, tx postgre.Transaction, user *model.User) error {
+	_, err := tx.ExecContext(ctx, VerifyUserQuery, user.PhoneNo, user.FullName, user.Username, user.Password, user.IsVerify, user.UpdatedAt, user.Email)
 	if err != nil {
 		return err
 	}

@@ -6,6 +6,7 @@ import (
 )
 
 func MapAuthRoutes(authGroup *gin.RouterGroup, h auth.Handlers) {
-	authGroup.POST("/register", h.Register)
-	authGroup.PATCH("/verify", h.VerifyOTP)
+	authGroup.POST("/register", h.RegisterEmail)
+	authGroup.PUT("/register", h.RegisterUser)
+	authGroup.POST("/verify", h.VerifyOTP)
 }

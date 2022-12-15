@@ -1,7 +1,6 @@
 package body
 
 import (
-	"github.com/google/uuid"
 	"murakali/pkg/httperror"
 	"murakali/pkg/response"
 	"net/http"
@@ -9,16 +8,11 @@ import (
 	"strings"
 )
 
-type RegisterRequest struct {
+type RegisterEmailRequest struct {
 	Email string `json:"email"`
 }
 
-type RegisterResponse struct {
-	ID    uuid.UUID `json:"id"`
-	Email string    `json:"email"`
-}
-
-func (r *RegisterRequest) Validate() (UnprocessableEntity, error) {
+func (r *RegisterEmailRequest) Validate() (UnprocessableEntity, error) {
 	unprocessableEntity := false
 	entity := UnprocessableEntity{
 		Fields: map[string]string{
@@ -29,7 +23,7 @@ func (r *RegisterRequest) Validate() (UnprocessableEntity, error) {
 	r.Email = strings.TrimSpace(r.Email)
 	if r.Email == "" {
 		unprocessableEntity = true
-		entity.Fields["email"] = InvalidEmailFormatMessage
+		entity.Fields["email"] = FieldCannotBeEmptyMessage
 	}
 
 	_, err := mail.ParseAddress(r.Email)

@@ -22,8 +22,8 @@ func NewAuthHandlers(cfg *config.Config, authUC auth.UseCase, log logger.Logger)
 	return &authHandlers{cfg: cfg, authUC: authUC, logger: log}
 }
 
-func (h *authHandlers) Register(c *gin.Context) {
-	var requestBody body.RegisterRequest
+func (h *authHandlers) RegisterEmail(c *gin.Context) {
+	var requestBody body.RegisterEmailRequest
 	if err := c.ShouldBind(&requestBody); err != nil {
 		response.ErrorResponse(c.Writer, response.BadRequestMessage, http.StatusBadRequest)
 		return
@@ -35,7 +35,7 @@ func (h *authHandlers) Register(c *gin.Context) {
 		return
 	}
 
-	user, err := h.authUC.Register(c, requestBody)
+	_, err = h.authUC.RegisterEmail(c, requestBody)
 	if err != nil {
 		var e *httperror.Error
 		if !errors.As(err, &e) {
@@ -48,12 +48,35 @@ func (h *authHandlers) Register(c *gin.Context) {
 		return
 	}
 
-	jsonResponse := body.RegisterResponse{
-		ID:    user.ID,
-		Email: user.Email,
+	response.SuccessResponse(c.Writer, nil, http.StatusCreated)
+}
+
+func (h *authHandlers) RegisterUser(c *gin.Context) {
+	var requestBody body.RegisterUserRequest
+	if err := c.ShouldBind(&requestBody); err != nil {
+		response.ErrorResponse(c.Writer, response.BadRequestMessage, http.StatusBadRequest)
+		return
 	}
 
-	response.SuccessResponse(c.Writer, jsonResponse, http.StatusCreated)
+	invalidFields, err := requestBody.Validate()
+	if err != nil {
+		response.ErrorResponseData(c.Writer, invalidFields, response.UnprocessableEntityMessage, http.StatusUnprocessableEntity)
+		return
+	}
+
+	if err := h.authUC.RegisterUser(c, requestBody); err != nil {
+		var e *httperror.Error
+		if !errors.As(err, &e) {
+			h.logger.Errorf("HandlerRegister, Error: %s", err)
+			response.ErrorResponse(c.Writer, response.InternalServerErrorMessage, http.StatusInternalServerError)
+			return
+		}
+
+		response.ErrorResponse(c.Writer, e.Err.Error(), e.Status)
+		return
+	}
+
+	response.SuccessResponse(c.Writer, nil, http.StatusOK)
 }
 
 func (h *authHandlers) VerifyOTP(c *gin.Context) {
