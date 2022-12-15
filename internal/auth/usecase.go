@@ -8,4 +8,5 @@ import (
 
 type UseCase interface {
 	Register(ctx context.Context, body body.RegisterRequest) (*model.User, error)
+	VerifyOTP(ctx context.Context, body body.VerifyOTPRequest) error
 }

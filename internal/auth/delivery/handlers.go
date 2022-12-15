@@ -55,3 +55,31 @@ func (h *authHandlers) Register(c *gin.Context) {
 
 	response.SuccessResponse(c.Writer, jsonResponse, http.StatusCreated)
 }
+
+func (h *authHandlers) VerifyOTP(c *gin.Context) {
+	var requestBody body.VerifyOTPRequest
+	if err := c.ShouldBind(&requestBody); err != nil {
+		response.ErrorResponse(c.Writer, response.BadRequestMessage, http.StatusBadRequest)
+		return
+	}
+
+	invalidFields, err := requestBody.Validate()
+	if err != nil {
+		response.ErrorResponseData(c.Writer, invalidFields, response.UnprocessableEntityMessage, http.StatusUnprocessableEntity)
+		return
+	}
+
+	if err := h.authUC.VerifyOTP(c, requestBody); err != nil {
+		var e *httperror.Error
+		if !errors.As(err, &e) {
+			h.logger.Errorf("HandlerRegister, Error: %s", err)
+			response.ErrorResponse(c.Writer, response.InternalServerErrorMessage, http.StatusInternalServerError)
+			return
+		}
+
+		response.ErrorResponse(c.Writer, e.Err.Error(), e.Status)
+		return
+	}
+
+	response.SuccessResponse(c.Writer, nil, http.StatusOK)
+}

@@ -15,6 +15,8 @@ const (
 
 	EmailAlreadyExistMessage = "Email already exist."
 	UserAlreadyExistMessage  = "User already exist."
+	OTPAlreadyExpiredMessage = "OTP already expired."
+	OTPIsNotValidMessage     = "OTP is not valid."
 )
 
 type JSONResponse struct {

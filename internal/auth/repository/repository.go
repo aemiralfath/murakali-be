@@ -8,59 +8,25 @@ import (
 	"murakali/internal/auth"
 	"murakali/internal/constant"
 	"murakali/internal/model"
+	"murakali/pkg/postgre"
 	"time"
 )
 
-type statement struct {
-	CheckEMailHistory *sql.Stmt
-	GetUserByEmail    *sql.Stmt
-	CreateUser        *sql.Stmt
-}
-
 type authRepo struct {
-	PSQL        *sql.DB // postgres
+	PSQL        *sql.DB
 	RedisClient *redis.Client
-	statement   statement
-}
-
-func initStatement(postgres *sql.DB) (statement, error) {
-	var dbStatement statement
-	var err error
-
-	dbStatement.CheckEMailHistory, err = postgres.Prepare(CheckEmailHistoryQuery)
-	if err != nil {
-		return dbStatement, err
-	}
-
-	dbStatement.CreateUser, err = postgres.Prepare(CreateUserQuery)
-	if err != nil {
-		return dbStatement, err
-	}
-
-	dbStatement.GetUserByEmail, err = postgres.Prepare(GetUserByEmailQuery)
-	if err != nil {
-		return dbStatement, err
-	}
-
-	return dbStatement, nil
 }
 
 func NewAuthRepository(psql *sql.DB, client *redis.Client) (auth.Repository, error) {
-	dbStatement, err := initStatement(psql)
-	if err != nil {
-		return nil, err
-	}
-
 	return &authRepo{
 		PSQL:        psql,
 		RedisClient: client,
-		statement:   dbStatement,
 	}, nil
 }
 
 func (r *authRepo) CheckEmailHistory(ctx context.Context, email string) (*model.EmailHistory, error) {
 	var emailHistory model.EmailHistory
-	if err := r.statement.CheckEMailHistory.QueryRowContext(ctx, email).
+	if err := r.PSQL.QueryRowContext(ctx, CheckEmailHistoryQuery, email).
 		Scan(&emailHistory.ID, &emailHistory.Email); err != nil {
 		return nil, err
 	}
@@ -70,7 +36,7 @@ func (r *authRepo) CheckEmailHistory(ctx context.Context, email string) (*model.
 
 func (r *authRepo) GetUserByEmail(ctx context.Context, email string) (*model.User, error) {
 	var user model.User
-	if err := r.statement.GetUserByEmail.QueryRowContext(ctx, email).
+	if err := r.PSQL.QueryRowContext(ctx, GetUserByEmailQuery, email).
 		Scan(&user.ID, &user.Email, &user.IsVerify); err != nil {
 		return nil, err
 	}
@@ -80,12 +46,30 @@ func (r *authRepo) GetUserByEmail(ctx context.Context, email string) (*model.Use
 
 func (r *authRepo) CreateUser(ctx context.Context, email string) (*model.User, error) {
 	var user model.User
-	if err := r.statement.CreateUser.QueryRowContext(ctx, constant.RoleUser, email, false, false).
+	if err := r.PSQL.QueryRowContext(ctx, CreateUserQuery, constant.RoleUser, email, false, false).
 		Scan(&user.ID, &user.Email); err != nil {
 		return nil, err
 	}
 
 	return &user, nil
+}
+
+func (r *authRepo) CreateEmailHistory(ctx context.Context, tx postgre.Transaction, email string) error {
+	_, err := tx.ExecContext(ctx, CreateEmailHistoryQuery, email)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (r *authRepo) VerifyUser(ctx context.Context, tx postgre.Transaction, email string) error {
+	_, err := tx.ExecContext(ctx, VerifyUserQuery, true, email)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func (r *authRepo) InsertNewOTPKey(ctx context.Context, email, otp string) error {
@@ -102,4 +86,20 @@ func (r *authRepo) InsertNewOTPKey(ctx context.Context, email, otp string) error
 	}
 
 	return nil
+}
+
+func (r *authRepo) GetOTPValue(ctx context.Context, email string) (string, error) {
+	key := fmt.Sprintf("%s:%s", constant.OtpKey, email)
+
+	res := r.RedisClient.Get(ctx, key)
+	if res.Err() != nil {
+		return "", res.Err()
+	}
+
+	value, err := res.Result()
+	if err != nil {
+		return "", err
+	}
+
+	return value, nil
 }

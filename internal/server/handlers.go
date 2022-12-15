@@ -6,18 +6,20 @@ import (
 	authDelivery "murakali/internal/auth/delivery"
 	authRepository "murakali/internal/auth/repository"
 	authUseCase "murakali/internal/auth/usecase"
+	"murakali/pkg/postgre"
 	"murakali/pkg/response"
 	"net/http"
 	"time"
 )
 
 func (s *Server) MapHandlers() error {
+	txRepo := postgre.NewTxRepository(s.db)
 	aRepo, err := authRepository.NewAuthRepository(s.db, s.redisClient)
 	if err != nil {
 		return err
 	}
 
-	authUC := authUseCase.NewAuthUseCase(s.cfg, aRepo)
+	authUC := authUseCase.NewAuthUseCase(s.cfg, txRepo, aRepo)
 	authHandlers := authDelivery.NewAuthHandlers(s.cfg, authUC, s.logger)
 
 	s.gin.Use(cors.New(cors.Config{

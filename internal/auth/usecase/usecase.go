@@ -3,7 +3,6 @@ package usecase
 import (
 	"context"
 	"database/sql"
-	"fmt"
 	"murakali/config"
 	"murakali/internal/auth"
 	"murakali/internal/auth/delivery/body"
@@ -11,17 +10,19 @@ import (
 	"murakali/internal/util"
 	smtp "murakali/pkg/email"
 	"murakali/pkg/httperror"
+	"murakali/pkg/postgre"
 	"murakali/pkg/response"
 	"net/http"
 )
 
 type authUC struct {
 	cfg      *config.Config
+	txRepo   *postgre.TxRepo
 	authRepo auth.Repository
 }
 
-func NewAuthUseCase(cfg *config.Config, authRepo auth.Repository) auth.UseCase {
-	return &authUC{cfg: cfg, authRepo: authRepo}
+func NewAuthUseCase(cfg *config.Config, txRepo *postgre.TxRepo, authRepo auth.Repository) auth.UseCase {
+	return &authUC{cfg: cfg, txRepo: txRepo, authRepo: authRepo}
 }
 
 func (u *authUC) Register(ctx context.Context, body body.RegisterRequest) (*model.User, error) {
@@ -67,6 +68,33 @@ func (u *authUC) Register(ctx context.Context, body body.RegisterRequest) (*mode
 	return user, nil
 }
 
+func (u *authUC) VerifyOTP(ctx context.Context, body body.VerifyOTPRequest) error {
+	value, err := u.authRepo.GetOTPValue(ctx, body.Email)
+	if err != nil {
+		return httperror.New(http.StatusBadRequest, response.OTPAlreadyExpiredMessage)
+	}
+
+	if value != body.OTP {
+		return httperror.New(http.StatusBadRequest, response.OTPIsNotValidMessage)
+	}
+
+	err = u.txRepo.WithTransaction(func(tx postgre.Transaction) error {
+		if err := u.authRepo.VerifyUser(ctx, tx, body.Email); err != nil {
+			return err
+		}
+
+		if err := u.authRepo.CreateEmailHistory(ctx, tx, body.Email); err != nil {
+			return err
+		}
+		return err
+	})
+
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 func (u *authUC) SendOTPEmail(ctx context.Context, email string) error {
 	otp, err := util.GenerateOTP(6)
 	if err != nil {
@@ -78,7 +106,7 @@ func (u *authUC) SendOTPEmail(ctx context.Context, email string) error {
 	}
 
 	subject := "Email Verification!"
-	msg := fmt.Sprintf("<html><body>Hi!<br>Please input this OTP for verify your email: %s<br></body></html>", otp)
+	msg := smtp.VerificationEmailBody(otp)
 	go smtp.SendEmail(u.cfg, email, subject, msg)
 
 	return nil
