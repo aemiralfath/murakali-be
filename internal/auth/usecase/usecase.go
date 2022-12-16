@@ -11,6 +11,7 @@ import (
 	"murakali/internal/util"
 	smtp "murakali/pkg/email"
 	"murakali/pkg/httperror"
+	"murakali/pkg/jwt"
 	"murakali/pkg/postgre"
 	"murakali/pkg/response"
 	"net/http"
@@ -25,6 +26,47 @@ type authUC struct {
 
 func NewAuthUseCase(cfg *config.Config, txRepo *postgre.TxRepo, authRepo auth.Repository) auth.UseCase {
 	return &authUC{cfg: cfg, txRepo: txRepo, authRepo: authRepo}
+}
+
+func (u *authUC) Login(ctx context.Context, requestBody body.LoginRequest) (string, string, error) {
+	user, err := u.authRepo.GetUserByEmail(ctx, requestBody.Email)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return "", "", httperror.New(http.StatusUnauthorized, response.UnauthorizedMessage)
+		}
+	}
+
+	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(requestBody.Password)); err != nil {
+		return "", "", httperror.New(http.StatusUnauthorized, response.UnauthorizedMessage)
+	}
+
+	accessToken, err := jwt.GenerateJWTAccessToken(user.ID.String(), user.RoleID, u.cfg)
+	if err != nil {
+		return "", "", err
+	}
+
+	refreshToken, err := jwt.GenerateJWTRefreshToken(user.ID.String(), u.cfg)
+	if err != nil {
+		return "", "", err
+	}
+
+	return accessToken, refreshToken, nil
+}
+
+func (u *authUC) RefreshToken(ctx context.Context, id string) (string, error) {
+	user, err := u.authRepo.GetUserByID(ctx, id)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return "", httperror.New(http.StatusUnauthorized, response.UnauthorizedMessage)
+		}
+	}
+
+	accessToken, err := jwt.GenerateJWTAccessToken(user.ID.String(), user.RoleID, u.cfg)
+	if err != nil {
+		return "", err
+	}
+
+	return accessToken, nil
 }
 
 func (u *authUC) RegisterEmail(ctx context.Context, body body.RegisterEmailRequest) (*model.User, error) {

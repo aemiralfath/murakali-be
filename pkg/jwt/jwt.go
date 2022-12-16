@@ -10,14 +10,19 @@ import (
 	"time"
 )
 
-type Claims struct {
+type AccessClaims struct {
 	ID     string `json:"id"`
 	RoleID int    `json:"role_id"`
 	jwt.RegisteredClaims
 }
 
+type RefreshClaims struct {
+	ID string `json:"id"`
+	jwt.RegisteredClaims
+}
+
 func GenerateJWTAccessToken(userID string, userRole int, config *config.Config) (string, error) {
-	claims := &Claims{
+	claims := &AccessClaims{
 		ID:     userID,
 		RoleID: userRole,
 		RegisteredClaims: jwt.RegisteredClaims{
@@ -35,6 +40,49 @@ func GenerateJWTAccessToken(userID string, userRole int, config *config.Config) 
 	}
 
 	return tokenString, nil
+}
+
+func GenerateJWTRefreshToken(userID string, config *config.Config) (string, error) {
+	claims := &RefreshClaims{
+		ID: userID,
+		RegisteredClaims: jwt.RegisteredClaims{
+			ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Duration(config.JWT.RefreshExpMin) * time.Minute)),
+			Issuer:    config.JWT.JwtIssuer,
+			IssuedAt:  jwt.NewNumericDate(time.Now()),
+		},
+	}
+
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+
+	tokenString, err := token.SignedString([]byte(config.JWT.JwtSecretKey))
+	if err != nil {
+		return "", err
+	}
+
+	return tokenString, nil
+}
+
+func ExtractJWT(tokenString, jwtKey string) (map[string]interface{}, error) {
+	claims := jwt.MapClaims{}
+	token, err := jwt.ParseWithClaims(tokenString, claims, func(token *jwt.Token) (interface{}, error) {
+		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
+		}
+		return []byte(jwtKey), nil
+	})
+
+	if err != nil {
+		if errors.Is(err, jwt.ErrSignatureInvalid) {
+			return nil, errors.New("invalid token signature")
+		}
+		return nil, err
+	}
+
+	if !token.Valid {
+		return nil, errors.New("invalid token ")
+	}
+
+	return claims, nil
 }
 
 func ExtractJWTFromRequest(r *http.Request, jwtKey string) (map[string]interface{}, error) {

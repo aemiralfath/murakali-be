@@ -34,10 +34,20 @@ func (r *authRepo) CheckEmailHistory(ctx context.Context, email string) (*model.
 	return &emailHistory, nil
 }
 
+func (r *authRepo) GetUserByID(ctx context.Context, id string) (*model.User, error) {
+	var user model.User
+	if err := r.PSQL.QueryRowContext(ctx, GetUserByIDQuery, id).
+		Scan(&user.ID, &user.RoleID, &user.Email); err != nil {
+		return nil, err
+	}
+
+	return &user, nil
+}
+
 func (r *authRepo) GetUserByEmail(ctx context.Context, email string) (*model.User, error) {
 	var user model.User
 	if err := r.PSQL.QueryRowContext(ctx, GetUserByEmailQuery, email).
-		Scan(&user.ID, &user.Email, &user.IsVerify); err != nil {
+		Scan(&user.ID, &user.RoleID, &user.Email, &user.Password, &user.IsVerify); err != nil {
 		return nil, err
 	}
 
