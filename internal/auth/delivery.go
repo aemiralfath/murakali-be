@@ -8,4 +8,5 @@ type Handlers interface {
 	VerifyOTP(c *gin.Context)
 	Login(c *gin.Context)
 	RefreshToken(c *gin.Context)
+	ResetPasswordEmail(c *gin.Context)
 }

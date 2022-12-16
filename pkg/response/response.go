@@ -14,6 +14,8 @@ const (
 	ForbiddenMessage           = "Forbidden"
 
 	EmailAlreadyExistMessage    = "Email already exist."
+	EmailNotExistMessage        = "Email not exist."
+	UserNotVerifyMessage        = "User not verify."
 	UserAlreadyExistMessage     = "User already exist."
 	UserNameAlreadyExistMessage = "Username already exist."
 	PhoneNoAlreadyExistMessage  = "Phone no already exist."

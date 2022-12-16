@@ -2,7 +2,6 @@ package delivery
 
 import (
 	"errors"
-	"github.com/gin-gonic/gin"
 	"murakali/config"
 	"murakali/internal/auth"
 	"murakali/internal/auth/delivery/body"
@@ -12,6 +11,8 @@ import (
 	"murakali/pkg/logger"
 	"murakali/pkg/response"
 	"net/http"
+
+	"github.com/gin-gonic/gin"
 )
 
 type authHandlers struct {
@@ -168,4 +169,33 @@ func (h *authHandlers) VerifyOTP(c *gin.Context) {
 	}
 
 	response.SuccessResponse(c.Writer, nil, http.StatusOK)
+}
+
+func (h *authHandlers) ResetPasswordEmail(c *gin.Context) {
+	var requestBody body.ResetPasswordEmailRequest
+	if err := c.ShouldBind(&requestBody); err != nil {
+		response.ErrorResponse(c.Writer, response.BadRequestMessage, http.StatusBadRequest)
+		return
+	}
+
+	invalidFields, err := requestBody.Validate()
+	if err != nil {
+		response.ErrorResponseData(c.Writer, invalidFields, response.UnprocessableEntityMessage, http.StatusUnprocessableEntity)
+		return
+	}
+
+	_, err = h.authUC.ResetPasswordEmail(c, requestBody)
+	if err != nil {
+		var e *httperror.Error
+		if !errors.As(err, &e) {
+			h.logger.Errorf("HandlerAuth, Error: %s", err)
+			response.ErrorResponse(c.Writer, response.InternalServerErrorMessage, http.StatusInternalServerError)
+			return
+		}
+
+		response.ErrorResponse(c.Writer, e.Err.Error(), e.Status)
+		return
+	}
+
+	response.SuccessResponse(c.Writer, nil, http.StatusCreated)
 }

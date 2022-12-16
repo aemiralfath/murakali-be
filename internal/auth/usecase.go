@@ -12,4 +12,5 @@ type UseCase interface {
 	VerifyOTP(ctx context.Context, body body.VerifyOTPRequest) error
 	Login(ctx context.Context, body body.LoginRequest) (string, string, error)
 	RefreshToken(ctx context.Context, id string) (string, error)
+	ResetPasswordEmail(ctx context.Context, body body.ResetPasswordEmailRequest) (*model.User, error)
 }

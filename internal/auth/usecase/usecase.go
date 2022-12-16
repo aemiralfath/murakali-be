@@ -3,7 +3,6 @@ package usecase
 import (
 	"context"
 	"database/sql"
-	"golang.org/x/crypto/bcrypt"
 	"murakali/config"
 	"murakali/internal/auth"
 	"murakali/internal/auth/delivery/body"
@@ -16,6 +15,8 @@ import (
 	"murakali/pkg/response"
 	"net/http"
 	"time"
+
+	"golang.org/x/crypto/bcrypt"
 )
 
 type authUC struct {
@@ -180,6 +181,40 @@ func (u *authUC) RegisterUser(ctx context.Context, body body.RegisterUserRequest
 	}
 
 	return nil
+}
+
+func (u *authUC) ResetPasswordEmail(ctx context.Context, body body.ResetPasswordEmailRequest) (*model.User, error) {
+	emailHistory, err := u.authRepo.CheckEmailHistory(ctx, body.Email)
+	if err != nil {
+		if err != sql.ErrNoRows {
+			return nil, err
+		}
+	}
+
+	if emailHistory == nil {
+		return nil, httperror.New(http.StatusBadRequest, response.EmailNotExistMessage)
+	}
+
+	user, err := u.authRepo.GetUserByEmail(ctx, body.Email)
+	if err != nil {
+		if err != sql.ErrNoRows {
+			return nil, err
+		}
+	}
+
+	if user == nil {
+		return nil, httperror.New(http.StatusBadRequest, response.UserNotExistMessage)
+	}
+
+	if !user.IsVerify {
+		return nil, httperror.New(http.StatusBadRequest, response.UserNotVerifyMessage)
+	}
+
+	if err := u.SendOTPEmail(ctx, user.Email); err != nil {
+		return nil, err
+	}
+
+	return user, nil
 }
 
 func (u *authUC) VerifyOTP(ctx context.Context, body body.VerifyOTPRequest) error {
