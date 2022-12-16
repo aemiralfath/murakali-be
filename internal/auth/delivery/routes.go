@@ -10,4 +10,5 @@ func MapAuthRoutes(authGroup *gin.RouterGroup, h auth.Handlers) {
 	authGroup.PUT("/register", h.RegisterUser)
 	authGroup.POST("/verify", h.VerifyOTP)
 	authGroup.POST("/login", h.Login)
+	authGroup.GET("/refresh", h.RefreshToken)
 }

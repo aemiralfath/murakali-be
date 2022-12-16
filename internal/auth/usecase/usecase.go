@@ -53,6 +53,22 @@ func (u *authUC) Login(ctx context.Context, requestBody body.LoginRequest) (stri
 	return accessToken, refreshToken, nil
 }
 
+func (u *authUC) RefreshToken(ctx context.Context, id string) (string, error) {
+	user, err := u.authRepo.GetUserByID(ctx, id)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return "", httperror.New(http.StatusUnauthorized, response.UnauthorizedMessage)
+		}
+	}
+
+	accessToken, err := jwt.GenerateJWTAccessToken(user.ID.String(), user.RoleID, u.cfg)
+	if err != nil {
+		return "", err
+	}
+
+	return accessToken, nil
+}
+
 func (u *authUC) RegisterEmail(ctx context.Context, body body.RegisterEmailRequest) (*model.User, error) {
 	emailHistory, err := u.authRepo.CheckEmailHistory(ctx, body.Email)
 	if err != nil {

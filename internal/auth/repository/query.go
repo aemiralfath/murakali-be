@@ -2,6 +2,7 @@ package repository
 
 const (
 	CheckEmailHistoryQuery  = `SELECT "id", "email" FROM "email_history" WHERE "email" ILIKE $1`
+	GetUserByIDQuery        = `SELECT "id", "role_id", "email" FROM "user" WHERE "id" = $1`
 	GetUserByEmailQuery     = `SELECT "id", "role_id", "email", "password", "is_verify" FROM "user" WHERE "email" ILIKE $1`
 	GetUserByUsernameQuery  = `SELECT "id", "email", "is_verify" FROM "user" WHERE "username" ILIKE $1`
 	GetUserByPhoneNoQuery   = `SELECT "id", "email", "is_verify" FROM "user" WHERE "phone_no" ILIKE $1`

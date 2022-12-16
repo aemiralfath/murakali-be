@@ -8,6 +8,7 @@ import (
 
 type Repository interface {
 	CheckEmailHistory(ctx context.Context, email string) (*model.EmailHistory, error)
+	GetUserByID(ctx context.Context, id string) (*model.User, error)
 	GetUserByEmail(ctx context.Context, email string) (*model.User, error)
 	GetUserByUsername(ctx context.Context, username string) (*model.User, error)
 	GetUserByPhoneNo(ctx context.Context, phoneNo string) (*model.User, error)

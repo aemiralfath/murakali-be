@@ -62,6 +62,29 @@ func GenerateJWTRefreshToken(userID string, config *config.Config) (string, erro
 	return tokenString, nil
 }
 
+func ExtractJWT(tokenString, jwtKey string) (map[string]interface{}, error) {
+	claims := jwt.MapClaims{}
+	token, err := jwt.ParseWithClaims(tokenString, claims, func(token *jwt.Token) (interface{}, error) {
+		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
+		}
+		return []byte(jwtKey), nil
+	})
+
+	if err != nil {
+		if errors.Is(err, jwt.ErrSignatureInvalid) {
+			return nil, errors.New("invalid token signature")
+		}
+		return nil, err
+	}
+
+	if !token.Valid {
+		return nil, errors.New("invalid token ")
+	}
+
+	return claims, nil
+}
+
 func ExtractJWTFromRequest(r *http.Request, jwtKey string) (map[string]interface{}, error) {
 	tokenString := ExtractBearerToken(r)
 
