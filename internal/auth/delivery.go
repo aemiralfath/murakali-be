@@ -9,4 +9,5 @@ type Handlers interface {
 	Login(c *gin.Context)
 	RefreshToken(c *gin.Context)
 	ResetPasswordEmail(c *gin.Context)
+	ResetPasswordUser(c *gin.Context)
 }

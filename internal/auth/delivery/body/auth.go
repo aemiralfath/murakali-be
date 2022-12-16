@@ -7,6 +7,7 @@ const (
 	InvalidPhoneNoFormatMessage  = "Invalid phone no format."
 	InvalidPasswordFormatMessage = "Password must contain at least 8-40 characters," +
 		"at least 1 number, 1 Upper case, 1 special character, and not contains username"
+	InvalidPasswordSameOldPasswordMessage = "Your new password cannot be the same as your old password."
 )
 
 type UnprocessableEntity struct {

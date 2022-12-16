@@ -14,6 +14,7 @@ import (
 	"murakali/pkg/postgre"
 	"murakali/pkg/response"
 	"net/http"
+	"strings"
 	"time"
 
 	"golang.org/x/crypto/bcrypt"
@@ -211,6 +212,71 @@ func (u *authUC) ResetPasswordEmail(ctx context.Context, body body.ResetPassword
 	}
 
 	if err := u.SendOTPEmail(ctx, user.Email); err != nil {
+		return nil, err
+	}
+
+	return user, nil
+}
+
+func (u *authUC) ResetPasswordUser(ctx context.Context, body *body.ResetPasswordUserRequest) (*model.User, error) {
+	value, err := u.authRepo.GetOTPValue(ctx, body.Email)
+	if err != nil {
+		return nil, httperror.New(http.StatusBadRequest, response.OTPAlreadyExpiredMessage)
+	}
+
+	if value != body.OTP {
+		return nil, httperror.New(http.StatusBadRequest, response.OTPIsNotValidMessage)
+	}
+
+	emailHistory, err := u.authRepo.CheckEmailHistory(ctx, body.Email)
+	if err != nil {
+		if err != sql.ErrNoRows {
+			return nil, err
+		}
+	}
+
+	if emailHistory == nil {
+		return nil, httperror.New(http.StatusBadRequest, response.EmailNotExistMessage)
+	}
+
+	user, err := u.authRepo.GetUserByEmail(ctx, body.Email)
+	if err != nil {
+		if err != sql.ErrNoRows {
+			return nil, err
+		}
+	}
+
+	if user == nil {
+		return nil, httperror.New(http.StatusBadRequest, response.UserNotExistMessage)
+	}
+
+	if !user.IsVerify {
+		return nil, httperror.New(http.StatusBadRequest, response.UserNotVerifyMessage)
+	}
+
+	err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(body.Password))
+	if err == nil {
+		body.IsPasswordSameOldPassword = true
+		return nil, httperror.New(http.StatusBadRequest, response.PasswordSameOldPasswordMessage)
+	}
+
+	if strings.Contains(strings.ToLower(body.Password), user.Username) {
+		body.IsPasswordContainsUsername = true
+		return nil, httperror.New(http.StatusBadRequest, response.PasswordContainUsernameMessage)
+	}
+
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(body.Password), bcrypt.DefaultCost)
+	if err != nil {
+		return nil, err
+	}
+
+	user, err = u.authRepo.UpdatePassword(ctx, user, string(hashedPassword))
+	if err != nil {
+		return nil, err
+	}
+
+	_, err = u.authRepo.DeleteOTPValue(ctx, user.Email)
+	if err != nil {
 		return nil, err
 	}
 

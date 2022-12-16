@@ -4,12 +4,13 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
-	"github.com/go-redis/redis/v8"
 	"murakali/internal/auth"
 	"murakali/internal/constant"
 	"murakali/internal/model"
 	"murakali/pkg/postgre"
 	"time"
+
+	"github.com/go-redis/redis/v8"
 )
 
 type authRepo struct {
@@ -47,7 +48,7 @@ func (r *authRepo) GetUserByID(ctx context.Context, id string) (*model.User, err
 func (r *authRepo) GetUserByEmail(ctx context.Context, email string) (*model.User, error) {
 	var user model.User
 	if err := r.PSQL.QueryRowContext(ctx, GetUserByEmailQuery, email).
-		Scan(&user.ID, &user.RoleID, &user.Email, &user.Password, &user.IsVerify); err != nil {
+		Scan(&user.ID, &user.RoleID, &user.Email, &user.Password, &user.Username, &user.IsVerify); err != nil {
 		return nil, err
 	}
 
@@ -82,6 +83,14 @@ func (r *authRepo) CreateUser(ctx context.Context, email string) (*model.User, e
 	}
 
 	return &user, nil
+}
+
+func (r *authRepo) UpdatePassword(ctx context.Context, user *model.User, password string) (*model.User, error) {
+	_, err := r.PSQL.ExecContext(ctx, UpdatePasswordQuery, password, user.Email)
+	if err != nil {
+		return nil, err
+	}
+	return user, nil
 }
 
 func (r *authRepo) CreateEmailHistory(ctx context.Context, tx postgre.Transaction, email string) error {
@@ -129,6 +138,22 @@ func (r *authRepo) GetOTPValue(ctx context.Context, email string) (string, error
 	value, err := res.Result()
 	if err != nil {
 		return "", err
+	}
+
+	return value, nil
+}
+
+func (r *authRepo) DeleteOTPValue(ctx context.Context, email string) (int64, error) {
+	key := fmt.Sprintf("%s:%s", constant.OtpKey, email)
+
+	res := r.RedisClient.Del(ctx, key)
+	if res.Err() != nil {
+		return -1, res.Err()
+	}
+
+	value, err := res.Result()
+	if err != nil {
+		return -1, err
 	}
 
 	return value, nil
