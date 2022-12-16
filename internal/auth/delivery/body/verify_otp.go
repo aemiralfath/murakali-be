@@ -1,6 +1,7 @@
 package body
 
 import (
+	"fmt"
 	"murakali/pkg/httperror"
 	"murakali/pkg/response"
 	"net/http"
@@ -9,13 +10,13 @@ import (
 )
 
 type VerifyOTPRequest struct {
-	Email string `json:"email"`
-	OTP   string `json:"otp"`
+	Email string `json:"email" form:"email"`
+	OTP   string `json:"otp" form:"otp"`
 }
 
 type VerifyOTPResponse struct {
-	Email string `json:"email"`
-	OTP   string `json:"otp"`
+	Email string `json:"email" form:"email"`
+	OTP   string `json:"otp" form:"otp"`
 }
 
 func (r *VerifyOTPRequest) Validate() (UnprocessableEntity, error) {
@@ -35,6 +36,7 @@ func (r *VerifyOTPRequest) Validate() (UnprocessableEntity, error) {
 
 	_, err := mail.ParseAddress(r.Email)
 	if err != nil {
+		fmt.Println("email", r.Email)
 		unprocessableEntity = true
 		entity.Fields["email"] = InvalidEmailFormatMessage
 	}
