@@ -37,7 +37,7 @@ func (r *authRepo) CheckEmailHistory(ctx context.Context, email string) (*model.
 func (r *authRepo) GetUserByEmail(ctx context.Context, email string) (*model.User, error) {
 	var user model.User
 	if err := r.PSQL.QueryRowContext(ctx, GetUserByEmailQuery, email).
-		Scan(&user.ID, &user.Email, &user.IsVerify); err != nil {
+		Scan(&user.ID, &user.RoleID, &user.Email, &user.Password, &user.IsVerify); err != nil {
 		return nil, err
 	}
 

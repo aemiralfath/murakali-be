@@ -22,6 +22,38 @@ func NewAuthHandlers(cfg *config.Config, authUC auth.UseCase, log logger.Logger)
 	return &authHandlers{cfg: cfg, authUC: authUC, logger: log}
 }
 
+func (h *authHandlers) Login(c *gin.Context) {
+	var requestBody body.LoginRequest
+	if err := c.ShouldBind(&requestBody); err != nil {
+		response.ErrorResponse(c.Writer, response.BadRequestMessage, http.StatusBadRequest)
+		return
+	}
+
+	invalidFields, err := requestBody.Validate()
+	if err != nil {
+		response.ErrorResponseData(c.Writer, invalidFields, response.UnprocessableEntityMessage, http.StatusUnprocessableEntity)
+		return
+	}
+
+	accessToken, refreshToken, err := h.authUC.Login(c, requestBody)
+	if err != nil {
+		var e *httperror.Error
+		if !errors.As(err, &e) {
+			h.logger.Errorf("HandlerRegister, Error: %s", err)
+			response.ErrorResponse(c.Writer, response.InternalServerErrorMessage, http.StatusInternalServerError)
+			return
+		}
+
+		response.ErrorResponse(c.Writer, e.Err.Error(), e.Status)
+		return
+	}
+
+	c.SetCookie("access_token", accessToken, h.cfg.JWT.AccessExpMin*60, "/", h.cfg.Server.Domain, false, true)
+	c.SetCookie("refresh_token", refreshToken, h.cfg.JWT.RefreshExpMin*60, "/", "localhost", false, true)
+	c.SetCookie("logged_in", "true", h.cfg.JWT.RefreshExpMin*60, "/", "localhost", false, false)
+	response.SuccessResponse(c.Writer, body.LoginResponse{AccessToken: accessToken}, http.StatusOK)
+}
+
 func (h *authHandlers) RegisterEmail(c *gin.Context) {
 	var requestBody body.RegisterEmailRequest
 	if err := c.ShouldBind(&requestBody); err != nil {

@@ -10,18 +10,43 @@ import (
 	"time"
 )
 
-type Claims struct {
+type AccessClaims struct {
 	ID     string `json:"id"`
 	RoleID int    `json:"role_id"`
 	jwt.RegisteredClaims
 }
 
+type RefreshClaims struct {
+	ID string `json:"id"`
+	jwt.RegisteredClaims
+}
+
 func GenerateJWTAccessToken(userID string, userRole int, config *config.Config) (string, error) {
-	claims := &Claims{
+	claims := &AccessClaims{
 		ID:     userID,
 		RoleID: userRole,
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Duration(config.JWT.AccessExpMin) * time.Minute)),
+			Issuer:    config.JWT.JwtIssuer,
+			IssuedAt:  jwt.NewNumericDate(time.Now()),
+		},
+	}
+
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+
+	tokenString, err := token.SignedString([]byte(config.JWT.JwtSecretKey))
+	if err != nil {
+		return "", err
+	}
+
+	return tokenString, nil
+}
+
+func GenerateJWTRefreshToken(userID string, config *config.Config) (string, error) {
+	claims := &RefreshClaims{
+		ID: userID,
+		RegisteredClaims: jwt.RegisteredClaims{
+			ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Duration(config.JWT.RefreshExpMin) * time.Minute)),
 			Issuer:    config.JWT.JwtIssuer,
 			IssuedAt:  jwt.NewNumericDate(time.Now()),
 		},

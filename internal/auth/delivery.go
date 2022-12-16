@@ -6,4 +6,5 @@ type Handlers interface {
 	RegisterEmail(c *gin.Context)
 	RegisterUser(c *gin.Context)
 	VerifyOTP(c *gin.Context)
+	Login(c *gin.Context)
 }
