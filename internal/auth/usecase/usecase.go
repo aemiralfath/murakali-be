@@ -294,11 +294,6 @@ func (u *authUC) ResetPasswordVerifyOTP(ctx context.Context, body body.ResetPass
 	h.Write([]byte(value))
 	hashedOTP := fmt.Sprintf("%x", h.Sum(nil))
 
-	fmt.Println("email:", body.Email)
-	fmt.Println("value", value)
-	fmt.Println("code:", body.Code)
-	fmt.Println("hashedOTP", hashedOTP)
-
 	if hashedOTP != body.Code {
 		return "", httperror.New(http.StatusBadRequest, response.OTPIsNotValidMessage)
 	}
