@@ -21,6 +21,11 @@ type RefreshClaims struct {
 	jwt.RegisteredClaims
 }
 
+type RegisterClaims struct {
+	Email string `json:"email"`
+	jwt.RegisteredClaims
+}
+
 func GenerateJWTAccessToken(userID string, userRole int, config *config.Config) (string, error) {
 	claims := &AccessClaims{
 		ID:     userID,
@@ -45,6 +50,26 @@ func GenerateJWTAccessToken(userID string, userRole int, config *config.Config) 
 func GenerateJWTRefreshToken(userID string, config *config.Config) (string, error) {
 	claims := &RefreshClaims{
 		ID: userID,
+		RegisteredClaims: jwt.RegisteredClaims{
+			ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Duration(config.JWT.RefreshExpMin) * time.Minute)),
+			Issuer:    config.JWT.JwtIssuer,
+			IssuedAt:  jwt.NewNumericDate(time.Now()),
+		},
+	}
+
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+
+	tokenString, err := token.SignedString([]byte(config.JWT.JwtSecretKey))
+	if err != nil {
+		return "", err
+	}
+
+	return tokenString, nil
+}
+
+func GenerateJWTRegisterToken(email string, config *config.Config) (string, error) {
+	claims := &RegisterClaims{
+		Email: email,
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Duration(config.JWT.RefreshExpMin) * time.Minute)),
 			Issuer:    config.JWT.JwtIssuer,

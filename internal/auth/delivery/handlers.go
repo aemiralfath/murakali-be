@@ -116,6 +116,18 @@ func (h *authHandlers) RegisterEmail(c *gin.Context) {
 }
 
 func (h *authHandlers) RegisterUser(c *gin.Context) {
+	registerToken, err := c.Cookie(constant.RegisterTokenCookie)
+	if err != nil {
+		response.ErrorResponse(c.Writer, response.ForbiddenMessage, http.StatusForbidden)
+		return
+	}
+
+	claims, err := jwt.ExtractJWT(registerToken, h.cfg.JWT.JwtSecretKey)
+	if err != nil {
+		response.ErrorResponse(c.Writer, response.ForbiddenMessage, http.StatusForbidden)
+		return
+	}
+
 	var requestBody body.RegisterUserRequest
 	if err := c.ShouldBind(&requestBody); err != nil {
 		response.ErrorResponse(c.Writer, response.BadRequestMessage, http.StatusBadRequest)
@@ -128,7 +140,7 @@ func (h *authHandlers) RegisterUser(c *gin.Context) {
 		return
 	}
 
-	if err := h.authUC.RegisterUser(c, requestBody); err != nil {
+	if err := h.authUC.RegisterUser(c, claims["email"].(string), requestBody); err != nil {
 		var e *httperror.Error
 		if !errors.As(err, &e) {
 			h.logger.Errorf("HandlerAuth, Error: %s", err)
@@ -140,6 +152,7 @@ func (h *authHandlers) RegisterUser(c *gin.Context) {
 		return
 	}
 
+	c.SetCookie(constant.RegisterTokenCookie, "", -1, "/", h.cfg.Server.Domain, false, true)
 	response.SuccessResponse(c.Writer, nil, http.StatusOK)
 }
 
@@ -156,7 +169,8 @@ func (h *authHandlers) VerifyOTP(c *gin.Context) {
 		return
 	}
 
-	if err := h.authUC.VerifyOTP(c, requestBody); err != nil {
+	registerToken, err := h.authUC.VerifyOTP(c, requestBody)
+	if err != nil {
 		var e *httperror.Error
 		if !errors.As(err, &e) {
 			h.logger.Errorf("HandlerAuth, Error: %s", err)
@@ -168,6 +182,7 @@ func (h *authHandlers) VerifyOTP(c *gin.Context) {
 		return
 	}
 
+	c.SetCookie(constant.RegisterTokenCookie, registerToken, h.cfg.JWT.RefreshExpMin*60, "/", h.cfg.Server.Domain, false, true)
 	response.SuccessResponse(c.Writer, nil, http.StatusOK)
 }
 

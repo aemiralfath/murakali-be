@@ -130,7 +130,7 @@ func (r *authRepo) InsertNewOTPKey(ctx context.Context, email, otp string) error
 func (r *authRepo) GetOTPValue(ctx context.Context, email string) (string, error) {
 	key := fmt.Sprintf("%s:%s", constant.OtpKey, email)
 
-	res := r.RedisClient.Get(ctx, key)
+	res := r.RedisClient.GetDel(ctx, key)
 	if res.Err() != nil {
 		return "", res.Err()
 	}
