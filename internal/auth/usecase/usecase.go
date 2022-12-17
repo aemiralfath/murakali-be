@@ -280,6 +280,11 @@ func (u *authUC) VerifyOTP(ctx context.Context, body body.VerifyOTPRequest) (str
 		return "", err
 	}
 
+	_, err = u.authRepo.DeleteOTPValue(ctx, body.Email)
+	if err != nil {
+		return "", err
+	}
+
 	return registerToken, nil
 }
 

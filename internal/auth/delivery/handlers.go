@@ -260,6 +260,7 @@ func (h *authHandlers) ResetPasswordUser(c *gin.Context) {
 		return
 	}
 
+	c.SetCookie(constant.ResetPasswordTokenCookie, "", -1, "/", h.cfg.Server.Domain, false, true)
 	response.SuccessResponse(c.Writer, nil, http.StatusCreated)
 }
 
