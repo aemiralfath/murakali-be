@@ -5,14 +5,11 @@ import (
 	"murakali/pkg/httperror"
 	"murakali/pkg/response"
 	"net/http"
-	"net/mail"
 	"regexp"
 	"strings"
 )
 
 type RegisterUserRequest struct {
-	Email    string `json:"email"`
-	OTP      string `json:"otp"`
 	Username string `json:"username"`
 	FullName string `json:"fullname"`
 	Password string `json:"password"`
@@ -23,31 +20,11 @@ func (r *RegisterUserRequest) Validate() (UnprocessableEntity, error) {
 	unprocessableEntity := false
 	entity := UnprocessableEntity{
 		Fields: map[string]string{
-			"email":    "",
-			"otp":      "",
 			"username": "",
 			"fullname": "",
 			"password": "",
 			"phone_no": "",
 		},
-	}
-
-	r.Email = strings.TrimSpace(r.Email)
-	if r.Email == "" {
-		unprocessableEntity = true
-		entity.Fields["email"] = InvalidEmailFormatMessage
-	}
-
-	_, err := mail.ParseAddress(r.Email)
-	if err != nil {
-		unprocessableEntity = true
-		entity.Fields["email"] = InvalidEmailFormatMessage
-	}
-
-	r.OTP = strings.TrimSpace(r.OTP)
-	if len(r.OTP) != 6 {
-		unprocessableEntity = true
-		entity.Fields["otp"] = InvalidOTPFormatMessage
 	}
 
 	r.Username = strings.TrimSpace(r.Username)

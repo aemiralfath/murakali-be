@@ -36,7 +36,7 @@ func (u *authUC) Login(ctx context.Context, requestBody body.LoginRequest) (stri
 		}
 	}
 
-	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(requestBody.Password)); err != nil {
+	if err := bcrypt.CompareHashAndPassword([]byte(*user.Password), []byte(requestBody.Password)); err != nil {
 		return "", "", httperror.New(http.StatusUnauthorized, response.UnauthorizedMessage)
 	}
 
@@ -112,14 +112,13 @@ func (u *authUC) RegisterEmail(ctx context.Context, body body.RegisterEmailReque
 	return user, nil
 }
 
-func (u *authUC) RegisterUser(ctx context.Context, body body.RegisterUserRequest) error {
-	value, err := u.authRepo.GetOTPValue(ctx, body.Email)
+func (u *authUC) RegisterUser(ctx context.Context, email string, body body.RegisterUserRequest) error {
+	user, err := u.authRepo.GetUserByEmail(ctx, email)
 	if err != nil {
-		return httperror.New(http.StatusBadRequest, response.OTPAlreadyExpiredMessage)
-	}
-
-	if value != body.OTP {
-		return httperror.New(http.StatusBadRequest, response.OTPIsNotValidMessage)
+		if err == sql.ErrNoRows {
+			return httperror.New(http.StatusBadRequest, response.UserNotExistMessage)
+		}
+		return err
 	}
 
 	usernameUser, err := u.authRepo.GetUserByUsername(ctx, body.Username)
@@ -144,32 +143,26 @@ func (u *authUC) RegisterUser(ctx context.Context, body body.RegisterUserRequest
 		return httperror.New(http.StatusBadRequest, response.PhoneNoAlreadyExistMessage)
 	}
 
-	user, err := u.authRepo.GetUserByEmail(ctx, body.Email)
-	if err != nil {
-		if err == sql.ErrNoRows {
-			return httperror.New(http.StatusBadRequest, response.UserNotExistMessage)
-		}
-		return err
-	}
-
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(body.Password), bcrypt.DefaultCost)
 	if err != nil {
 		return err
 	}
 
+	password := string(hashedPassword)
 	if !user.IsVerify {
-		user.PhoneNo = body.PhoneNo
-		user.FullName = body.FullName
-		user.Username = body.Username
-		user.Password = string(hashedPassword)
+		user.PhoneNo = &body.PhoneNo
+		user.FullName = &body.FullName
+		user.Username = &body.Username
+		user.Password = &password
 		user.IsVerify = true
-		user.UpdatedAt = time.Now()
+		user.UpdatedAt.Time = time.Now()
+		user.UpdatedAt.Valid = true
 		err = u.txRepo.WithTransaction(func(tx postgre.Transaction) error {
 			if err := u.authRepo.UpdateUser(ctx, tx, user); err != nil {
 				return err
 			}
 
-			if err := u.authRepo.CreateEmailHistory(ctx, tx, body.Email); err != nil {
+			if err := u.authRepo.CreateEmailHistory(ctx, tx, email); err != nil {
 				return err
 			}
 			return err
@@ -182,17 +175,22 @@ func (u *authUC) RegisterUser(ctx context.Context, body body.RegisterUserRequest
 	return nil
 }
 
-func (u *authUC) VerifyOTP(ctx context.Context, body body.VerifyOTPRequest) error {
+func (u *authUC) VerifyOTP(ctx context.Context, body body.VerifyOTPRequest) (string, error) {
 	value, err := u.authRepo.GetOTPValue(ctx, body.Email)
 	if err != nil {
-		return httperror.New(http.StatusBadRequest, response.OTPAlreadyExpiredMessage)
+		return "", httperror.New(http.StatusBadRequest, response.OTPAlreadyExpiredMessage)
 	}
 
 	if value != body.OTP {
-		return httperror.New(http.StatusBadRequest, response.OTPIsNotValidMessage)
+		return "", httperror.New(http.StatusBadRequest, response.OTPIsNotValidMessage)
 	}
 
-	return nil
+	registerToken, err := jwt.GenerateJWTRegisterToken(body.Email, u.cfg)
+	if err != nil {
+		return "", err
+	}
+
+	return registerToken, nil
 }
 
 func (u *authUC) SendOTPEmail(ctx context.Context, email string) error {
