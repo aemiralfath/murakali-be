@@ -2,7 +2,9 @@ package usecase
 
 import (
 	"context"
+	"crypto/sha256"
 	"database/sql"
+	"fmt"
 	"murakali/config"
 	"murakali/internal/auth"
 	"murakali/internal/auth/delivery/body"
@@ -204,24 +206,16 @@ func (u *authUC) ResetPasswordEmail(ctx context.Context, body body.ResetPassword
 		return nil, httperror.New(http.StatusBadRequest, response.UserNotVerifyMessage)
 	}
 
-	if err := u.SendOTPEmail(ctx, user.Email); err != nil {
+	if err := u.SendLinkOTPEmail(ctx, user.Email); err != nil {
 		return nil, err
 	}
 
 	return user, nil
 }
 
-func (u *authUC) ResetPasswordUser(ctx context.Context, body *body.ResetPasswordUserRequest) (*model.User, error) {
-	value, err := u.authRepo.GetOTPValue(ctx, body.Email)
-	if err != nil {
-		return nil, httperror.New(http.StatusBadRequest, response.OTPAlreadyExpiredMessage)
-	}
+func (u *authUC) ResetPasswordUser(ctx context.Context, email string, body *body.ResetPasswordUserRequest) (*model.User, error) {
 
-	if value != body.OTP {
-		return nil, httperror.New(http.StatusBadRequest, response.OTPIsNotValidMessage)
-	}
-
-	emailHistory, err := u.authRepo.CheckEmailHistory(ctx, body.Email)
+	emailHistory, err := u.authRepo.CheckEmailHistory(ctx, email)
 	if err != nil {
 		if err != sql.ErrNoRows {
 			return nil, err
@@ -232,7 +226,7 @@ func (u *authUC) ResetPasswordUser(ctx context.Context, body *body.ResetPassword
 		return nil, httperror.New(http.StatusBadRequest, response.EmailNotExistMessage)
 	}
 
-	user, err := u.authRepo.GetUserByEmail(ctx, body.Email)
+	user, err := u.authRepo.GetUserByEmail(ctx, email)
 	if err != nil {
 		if err != sql.ErrNoRows {
 			return nil, err
@@ -268,11 +262,6 @@ func (u *authUC) ResetPasswordUser(ctx context.Context, body *body.ResetPassword
 		return nil, err
 	}
 
-	_, err = u.authRepo.DeleteOTPValue(ctx, user.Email)
-	if err != nil {
-		return nil, err
-	}
-
 	return user, nil
 }
 
@@ -294,6 +283,39 @@ func (u *authUC) VerifyOTP(ctx context.Context, body body.VerifyOTPRequest) (str
 	return registerToken, nil
 }
 
+func (u *authUC) ResetPasswordVerifyOTP(ctx context.Context, body body.ResetPasswordVerifyOTPRequest) (string, error) {
+
+	value, err := u.authRepo.GetOTPValue(ctx, body.Email)
+	if err != nil {
+		return "", httperror.New(http.StatusBadRequest, response.OTPAlreadyExpiredMessage)
+	}
+
+	h := sha256.New()
+	h.Write([]byte(value))
+	hashedOTP := fmt.Sprintf("%x", h.Sum(nil))
+
+	fmt.Println("email:", body.Email)
+	fmt.Println("value", value)
+	fmt.Println("code:", body.Code)
+	fmt.Println("hashedOTP", hashedOTP)
+
+	if hashedOTP != body.Code {
+		return "", httperror.New(http.StatusBadRequest, response.OTPIsNotValidMessage)
+	}
+
+	resetPasswordToken, err := jwt.GenerateJWTResetPasswordToken(body.Email, hashedOTP, u.cfg)
+	if err != nil {
+		return "", err
+	}
+
+	_, err = u.authRepo.DeleteOTPValue(ctx, body.Email)
+	if err != nil {
+		return "", err
+	}
+
+	return resetPasswordToken, nil
+}
+
 func (u *authUC) SendOTPEmail(ctx context.Context, email string) error {
 	otp, err := util.GenerateOTP(6)
 	if err != nil {
@@ -306,6 +328,29 @@ func (u *authUC) SendOTPEmail(ctx context.Context, email string) error {
 
 	subject := "Email Verification!"
 	msg := smtp.VerificationEmailBody(otp)
+	go smtp.SendEmail(u.cfg, email, subject, msg)
+
+	return nil
+}
+
+func (u *authUC) SendLinkOTPEmail(ctx context.Context, email string) error {
+	otp, err := util.GenerateOTP(6)
+	if err != nil {
+		return err
+	}
+
+	if err := u.authRepo.InsertNewOTPKey(ctx, email, otp); err != nil {
+		return err
+	}
+
+	h := sha256.New()
+	h.Write([]byte(otp))
+	hashedOTP := fmt.Sprintf("%x", h.Sum(nil))
+
+	link := fmt.Sprintf("http://localhost:8080/api/v1/auth/verify?code=%s&email=%s", hashedOTP, email)
+
+	subject := "Email Verification!"
+	msg := smtp.VerificationEmailLinkOTPBody(link)
 	go smtp.SendEmail(u.cfg, email, subject, msg)
 
 	return nil

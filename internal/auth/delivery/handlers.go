@@ -217,6 +217,18 @@ func (h *authHandlers) ResetPasswordEmail(c *gin.Context) {
 
 func (h *authHandlers) ResetPasswordUser(c *gin.Context) {
 
+	ResetPasswordToken, err := c.Cookie(constant.ResetPasswordTokenCookie)
+	if err != nil {
+		response.ErrorResponse(c.Writer, response.ForbiddenMessage, http.StatusForbidden)
+		return
+	}
+
+	claims, err := jwt.ExtractJWT(ResetPasswordToken, h.cfg.JWT.JwtSecretKey)
+	if err != nil {
+		response.ErrorResponse(c.Writer, response.ForbiddenMessage, http.StatusForbidden)
+		return
+	}
+
 	var requestBody body.ResetPasswordUserRequest
 	if err := c.ShouldBind(&requestBody); err != nil {
 		response.ErrorResponse(c.Writer, response.BadRequestMessage, http.StatusBadRequest)
@@ -229,7 +241,7 @@ func (h *authHandlers) ResetPasswordUser(c *gin.Context) {
 		return
 	}
 
-	_, err = h.authUC.ResetPasswordUser(c, &requestBody)
+	_, err = h.authUC.ResetPasswordUser(c, claims["email"].(string), &requestBody)
 	if err != nil {
 		var e *httperror.Error
 		if !errors.As(err, &e) {
@@ -249,4 +261,34 @@ func (h *authHandlers) ResetPasswordUser(c *gin.Context) {
 	}
 
 	response.SuccessResponse(c.Writer, nil, http.StatusCreated)
+}
+
+func (h *authHandlers) ResetPasswordVerifyOTP(c *gin.Context) {
+	var requestBody body.ResetPasswordVerifyOTPRequest
+	if err := c.ShouldBind(&requestBody); err != nil {
+		response.ErrorResponse(c.Writer, response.BadRequestMessage, http.StatusBadRequest)
+		return
+	}
+
+	invalidFields, err := requestBody.Validate()
+	if err != nil {
+		response.ErrorResponseData(c.Writer, invalidFields, response.UnprocessableEntityMessage, http.StatusUnprocessableEntity)
+		return
+	}
+
+	ResetPasswordToken, err := h.authUC.ResetPasswordVerifyOTP(c, requestBody)
+	if err != nil {
+		var e *httperror.Error
+		if !errors.As(err, &e) {
+			h.logger.Errorf("HandlerAuth, Error: %s", err)
+			response.ErrorResponse(c.Writer, response.InternalServerErrorMessage, http.StatusInternalServerError)
+			return
+		}
+
+		response.ErrorResponse(c.Writer, e.Err.Error(), e.Status)
+		return
+	}
+
+	c.SetCookie(constant.ResetPasswordTokenCookie, ResetPasswordToken, h.cfg.JWT.RefreshExpMin*60, "/", h.cfg.Server.Domain, false, true)
+	response.SuccessResponse(c.Writer, nil, http.StatusOK)
 }
