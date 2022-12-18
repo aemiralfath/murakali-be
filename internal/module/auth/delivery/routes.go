@@ -1,7 +1,7 @@
 package delivery
 
 import (
-	"murakali/internal/auth"
+	"murakali/internal/module/auth"
 
 	"github.com/gin-gonic/gin"
 )
@@ -12,6 +12,7 @@ func MapAuthRoutes(authGroup *gin.RouterGroup, h auth.Handlers) {
 	authGroup.POST("/verify", h.VerifyOTP)
 	authGroup.GET("/verify", h.ResetPasswordVerifyOTP)
 	authGroup.POST("/login", h.Login)
+	authGroup.GET("/logout", h.Logout)
 	authGroup.POST("/reset-password", h.ResetPasswordEmail)
 	authGroup.PATCH("/reset-password", h.ResetPasswordUser)
 	authGroup.GET("/refresh", h.RefreshToken)

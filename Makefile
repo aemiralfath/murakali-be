@@ -13,7 +13,7 @@ mod:
 
 .PHONY: golangci-lint-install
 golangci-lint-install:
-	curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin
+	curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(shell go env GOPATH)/bin
 
 .PHONY: golangci-lint-run
 golangci-lint-run:
@@ -29,18 +29,8 @@ compile:
 
 .PHONY: test-coverage
 test-coverage:
-	go test -race -failfast -tags=integration -coverprofile=$(COVERAGE_OUTPUT) -covermode=count ./internal/...
+	go test -race -failfast -tags=integration -coverprofile=$(COVERAGE_OUTPUT) -covermode=atomic ./internal/...
 	go tool cover -html=$(COVERAGE_OUTPUT) -o $(COVERAGE_OUTPUT_HTML)
-
-.PHONY: ci-test
-ci-test:
-	mod golangci-lint test-unit compile
-
-.PHONY: lint
-lint:
-	mod golangci-lint
-
-.DEFAULT_GOAL := ci-test
 
 .PHONY: docker-up
 docker-up:

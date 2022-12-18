@@ -7,11 +7,11 @@ import (
 	"github.com/go-redis/redis/v8"
 )
 
-func NewRedis(config *config.Config) (*redis.Client, error) {
+func NewRedis(cfg *config.Config) (*redis.Client, error) {
 	connectionCfg := &redis.Options{
-		Addr:     config.Redis.Address,
-		Password: config.Redis.Password,
-		DB:       config.Redis.DB,
+		Addr:     cfg.Redis.Address,
+		Password: cfg.Redis.Password,
+		DB:       cfg.Redis.DB,
 	}
 
 	client := redis.NewClient(connectionCfg)

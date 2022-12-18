@@ -59,7 +59,7 @@ type LoggerConfig struct {
 
 type ExternalConfig struct {
 	SlpURL       string `mapstructure:"SLP_URL"`
-	SlpApiKey    string `mapstructure:"SLP_API_KEY"`
+	SlpAPIKey    string `mapstructure:"SLP_API_KEY"`
 	SMTPHost     string `mapstructure:"SMTP_HOST"`
 	SMTPPort     string `mapstructure:"SMTP_PORT"`
 	SMTPPassword string `mapstructure:"SMTP_PASSWORD"`
