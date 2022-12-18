@@ -8,22 +8,22 @@ import (
 	"strings"
 )
 
-type VerifyOTPRequest struct {
-	Email string `json:"email" form:"email"`
-	OTP   string `json:"otp" form:"otp"`
+type ResetPasswordVerifyOTPRequest struct {
+	Email string `form:"email"`
+	Code  string `form:"code"`
 }
 
-type VerifyOTPResponse struct {
-	Email string `json:"email" form:"email"`
-	OTP   string `json:"otp" form:"otp"`
+type ResetPasswordVerifyOTPResponse struct {
+	Email string `form:"email"`
+	Code  string `form:"code"`
 }
 
-func (r *VerifyOTPRequest) Validate() (UnprocessableEntity, error) {
+func (r *ResetPasswordVerifyOTPRequest) Validate() (UnprocessableEntity, error) {
 	unprocessableEntity := false
 	entity := UnprocessableEntity{
 		Fields: map[string]string{
 			"email": "",
-			"otp":   "",
+			"code":  "",
 		},
 	}
 
@@ -39,10 +39,10 @@ func (r *VerifyOTPRequest) Validate() (UnprocessableEntity, error) {
 		entity.Fields["email"] = InvalidEmailFormatMessage
 	}
 
-	r.OTP = strings.TrimSpace(r.OTP)
-	if len(r.OTP) != 6 {
+	r.Code = strings.TrimSpace(r.Code)
+	if r.Code == "" {
 		unprocessableEntity = true
-		entity.Fields["otp"] = InvalidOTPFormatMessage
+		entity.Fields["code"] = InvalidOTPFormatMessage
 	}
 
 	if unprocessableEntity {

@@ -3,11 +3,12 @@ package jwt
 import (
 	"errors"
 	"fmt"
-	"github.com/golang-jwt/jwt/v4"
 	"murakali/config"
 	"net/http"
 	"strings"
 	"time"
+
+	"github.com/golang-jwt/jwt/v4"
 )
 
 type AccessClaims struct {
@@ -23,6 +24,12 @@ type RefreshClaims struct {
 
 type RegisterClaims struct {
 	Email string `json:"email"`
+	jwt.RegisteredClaims
+}
+
+type ResetPasswordClaims struct {
+	Email string `json:"email"`
+	OTP   string `json:"otp"`
 	jwt.RegisteredClaims
 }
 
@@ -70,6 +77,27 @@ func GenerateJWTRefreshToken(userID string, config *config.Config) (string, erro
 func GenerateJWTRegisterToken(email string, config *config.Config) (string, error) {
 	claims := &RegisterClaims{
 		Email: email,
+		RegisteredClaims: jwt.RegisteredClaims{
+			ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Duration(config.JWT.RefreshExpMin) * time.Minute)),
+			Issuer:    config.JWT.JwtIssuer,
+			IssuedAt:  jwt.NewNumericDate(time.Now()),
+		},
+	}
+
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+
+	tokenString, err := token.SignedString([]byte(config.JWT.JwtSecretKey))
+	if err != nil {
+		return "", err
+	}
+
+	return tokenString, nil
+}
+
+func GenerateJWTResetPasswordToken(email string, otp string, config *config.Config) (string, error) {
+	claims := &ResetPasswordClaims{
+		Email: email,
+		OTP:   otp,
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Duration(config.JWT.RefreshExpMin) * time.Minute)),
 			Issuer:    config.JWT.JwtIssuer,

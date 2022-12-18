@@ -13,13 +13,17 @@ const (
 	UnauthorizedMessage        = "Email or password not valid."
 	ForbiddenMessage           = "Forbidden"
 
-	EmailAlreadyExistMessage    = "Email already exist."
-	UserAlreadyExistMessage     = "User already exist."
-	UserNameAlreadyExistMessage = "Username already exist."
-	PhoneNoAlreadyExistMessage  = "Phone no already exist."
-	UserNotExistMessage         = "User not exist."
-	OTPAlreadyExpiredMessage    = "OTP already expired."
-	OTPIsNotValidMessage        = "OTP is not valid."
+	EmailAlreadyExistMessage       = "Email already exist."
+	EmailNotExistMessage           = "Email not exist."
+	UserNotVerifyMessage           = "User not verify."
+	UserAlreadyExistMessage        = "User already exist."
+	UserNameAlreadyExistMessage    = "Username already exist."
+	PhoneNoAlreadyExistMessage     = "Phone no already exist."
+	UserNotExistMessage            = "User not exist."
+	PasswordSameOldPasswordMessage = "Your new password cannot be the same as your old password."
+	PasswordContainUsernameMessage = "Password contains username."
+	OTPAlreadyExpiredMessage       = "OTP already expired."
+	OTPIsNotValidMessage           = "OTP is not valid."
 )
 
 type JSONResponse struct {
