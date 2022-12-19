@@ -30,4 +30,7 @@ type Repository interface {
 	UpdateUserEmail(ctx context.Context, tx postgre.Transaction, user *model.User) error
 	CreateEmailHistory(ctx context.Context, tx postgre.Transaction, email string) error
 	GetSealabsPay(ctx context.Context, userid string) ([]*model.SealabsPay, error)
+	AddSealabsPay(ctx context.Context, tx postgre.Transaction, request body.AddSealabsPayRequest) error
+	CheckDefaultSealabsPay(ctx context.Context, userid string) (*string, error)
+	SetDefaultSealabsPay(ctx context.Context, tx postgre.Transaction, card_number *string) error
 }

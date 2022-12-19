@@ -403,3 +403,24 @@ func (u *userUC) GetSealabsPay(ctx context.Context, userid string) ([]*model.Sea
 
 	return response, nil
 }
+
+func (u *userUC) AddSealabsPay(ctx context.Context, request body.AddSealabsPayRequest, userid string) error {
+
+	card_number, err := u.userRepo.CheckDefaultSealabsPay(ctx, userid)
+	if err != nil {
+		return err
+	}
+
+	err = u.txRepo.WithTransaction(func(tx postgre.Transaction) error {
+		if u.userRepo.SetDefaultSealabsPay(ctx, tx, card_number) != nil {
+			return err
+		}
+
+		err = u.userRepo.AddSealabsPay(ctx, tx, request)
+		if err != nil {
+			return err
+		}
+		return nil
+	})
+	return nil
+}

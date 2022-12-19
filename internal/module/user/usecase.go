@@ -17,4 +17,5 @@ type UseCase interface {
 	EditEmail(ctx context.Context, userID string, requestBody body.EditEmailRequest) (*model.User, error)
 	EditEmailUser(ctx context.Context, userID string, requestBody body.EditEmailUserRequest) (*model.User, error)
 	GetSealabsPay(ctx context.Context, userid string) ([]*model.SealabsPay, error)
+	AddSealabsPay(ctx context.Context, request body.AddSealabsPayRequest, userid string) error
 }
