@@ -25,6 +25,7 @@ func (r *UpdateAddressRequest) Validate() (UnprocessableEntity, error) {
 	unprocessableEntity := false
 	entity := UnprocessableEntity{
 		Fields: map[string]string{
+			"id":              "",
 			"name":            "",
 			"province_id":     "",
 			"city_id":         "",
