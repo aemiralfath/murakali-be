@@ -29,4 +29,5 @@ type Repository interface {
 	UpdateUserField(ctx context.Context, user *model.User) error
 	UpdateUserEmail(ctx context.Context, tx postgre.Transaction, user *model.User) error
 	CreateEmailHistory(ctx context.Context, tx postgre.Transaction, email string) error
+	GetSealabsPay(ctx context.Context, userid string) ([]*model.SealabsPay, error)
 }

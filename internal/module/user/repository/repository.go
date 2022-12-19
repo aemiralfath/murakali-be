@@ -12,7 +12,6 @@ import (
 	"murakali/pkg/pagination"
 	"murakali/pkg/postgre"
 	"time"
-
 )
 
 type userRepo struct {
@@ -313,4 +312,25 @@ func (r *userRepo) DeleteOTPValue(ctx context.Context, email string) (int64, err
 	}
 
 	return value, nil
+}
+
+func (r *userRepo) GetSealabsPay(ctx context.Context, userid string) ([]*model.SealabsPay, error) {
+
+	responses := make([]*model.SealabsPay, 0)
+	res, err := r.PSQL.QueryContext(ctx, GetSealabsPayByIdQuery, userid)
+
+	if err != nil {
+		return nil, err
+	}
+	defer res.Close()
+
+	for res.Next() {
+		var response model.SealabsPay
+		if err := res.Scan(
+			&response.CardNumber, &response.UserID, &response.Name, &response.IsDefault, &response.ActiveDate, &response.CreatedAt, &response.UpdatedAt, &response.DeletedAt); err != nil {
+			return nil, err
+		}
+		responses = append(responses, &response)
+	}
+	return responses, nil
 }

@@ -35,3 +35,7 @@ const (
 	UpdateUserEmailQuery    = `UPDATE "user" SET "email" = $1, "updated_at" = $2 WHERE "id" = $3`
 	CreateEmailHistoryQuery = `INSERT INTO "email_history" (email) VALUES ($1)`
 )
+
+const (
+	GetSealabsPayByIdQuery        = `SELECT * from sealabs_pay where user_id = $1`
+)
