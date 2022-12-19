@@ -173,7 +173,7 @@ func (u *authUC) RegisterUser(ctx context.Context, email string, requestBody bod
 			if errCreate := u.authRepo.CreateEmailHistory(ctx, tx, email); errCreate != nil {
 				return errCreate
 			}
-			return err
+			return nil
 		})
 		if err != nil {
 			return err

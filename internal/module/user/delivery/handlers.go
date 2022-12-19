@@ -6,6 +6,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"murakali/config"
 	"murakali/internal/module/user"
+	"murakali/internal/module/user/delivery/body"
 	"murakali/pkg/httperror"
 	"murakali/pkg/logger"
 	"murakali/pkg/pagination"
@@ -23,6 +24,40 @@ type userHandlers struct {
 
 func NewUserHandlers(cfg *config.Config, userUC user.UseCase, log logger.Logger) user.Handlers {
 	return &userHandlers{cfg: cfg, userUC: userUC, logger: log}
+}
+
+func (h *userHandlers) CreateAddress(c *gin.Context) {
+	userID, exist := c.Get("userID")
+	if !exist {
+		response.ErrorResponse(c.Writer, response.UnauthorizedMessage, http.StatusUnauthorized)
+		return
+	}
+
+	var requestBody body.CreateAddressRequest
+	if err := c.ShouldBind(&requestBody); err != nil {
+		response.ErrorResponse(c.Writer, response.BadRequestMessage, http.StatusBadRequest)
+		return
+	}
+
+	invalidFields, err := requestBody.Validate()
+	if err != nil {
+		response.ErrorResponseData(c.Writer, invalidFields, response.UnprocessableEntityMessage, http.StatusUnprocessableEntity)
+		return
+	}
+
+	if err := h.userUC.CreateAddress(c, userID.(string), requestBody); err != nil {
+		var e *httperror.Error
+		if !errors.As(err, &e) {
+			h.logger.Errorf("HandlerUser, Error: %s", err)
+			response.ErrorResponse(c.Writer, response.InternalServerErrorMessage, http.StatusInternalServerError)
+			return
+		}
+
+		response.ErrorResponse(c.Writer, e.Err.Error(), e.Status)
+		return
+	}
+
+	response.SuccessResponse(c.Writer, nil, http.StatusOK)
 }
 
 func (h *userHandlers) GetAddress(c *gin.Context) {

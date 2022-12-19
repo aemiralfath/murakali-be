@@ -7,7 +7,9 @@ import (
 	"github.com/go-redis/redis/v8"
 	"murakali/internal/model"
 	"murakali/internal/module/user"
+	"murakali/internal/module/user/delivery/body"
 	"murakali/pkg/pagination"
+	"murakali/pkg/postgre"
 )
 
 type userRepo struct {
@@ -22,6 +24,66 @@ func NewUserRepository(psql *sql.DB, client *redis.Client) user.Repository {
 	}
 }
 
+func (r *userRepo) CreateAddress(ctx context.Context, tx postgre.Transaction, userID string, requestBody body.CreateAddressRequest) error {
+	_, err := tx.ExecContext(
+		ctx,
+		CreateAddressQuery,
+		userID,
+		requestBody.Name,
+		requestBody.ProvinceID,
+		requestBody.CityID,
+		requestBody.Province,
+		requestBody.City,
+		requestBody.District,
+		requestBody.SubDistrict,
+		requestBody.AddressDetail,
+		requestBody.ZipCode,
+		requestBody.IsDefault,
+		requestBody.IsShopDefault)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (r *userRepo) UpdateDefaultAddress(ctx context.Context, tx postgre.Transaction, status bool, address *model.Address) error {
+	_, err := tx.ExecContext(ctx, UpdateDefaultAddressQuery, status, address.ID)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (r *userRepo) UpdateDefaultShopAddress(ctx context.Context, tx postgre.Transaction, status bool, address *model.Address) error {
+	_, err := tx.ExecContext(ctx, UpdateDefaultShopAddressQuery, status, address.ID)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (r *userRepo) GetDefaultUserAddress(ctx context.Context, userID string) (*model.Address, error) {
+	var address model.Address
+	if err := r.PSQL.QueryRowContext(ctx, GetDefaultAddressQuery, userID, true).Scan(&address.ID, &address.UserID, &address.IsDefault); err != nil {
+		return nil, err
+	}
+
+	return &address, nil
+}
+
+func (r *userRepo) GetDefaultShopAddress(ctx context.Context, userID string) (*model.Address, error) {
+	var address model.Address
+	if err := r.PSQL.QueryRowContext(ctx, GetDefaultShopAddressQuery, userID, true).
+		Scan(&address.ID, &address.UserID, &address.IsShopDefault); err != nil {
+		return nil, err
+	}
+
+	return &address, nil
+}
+
 func (r *userRepo) GetUserByID(ctx context.Context, id string) (*model.User, error) {
 	var userModel model.User
 	if err := r.PSQL.QueryRowContext(ctx, GetUserByIDQuery, id).
@@ -34,7 +96,7 @@ func (r *userRepo) GetUserByID(ctx context.Context, id string) (*model.User, err
 
 func (r *userRepo) GetTotalAddress(ctx context.Context, userID, name string) (int64, error) {
 	var total int64
-	if err := r.PSQL.QueryRowContext(ctx, GetTotalAddress, userID, fmt.Sprintf("%%%s%%", name)).Scan(&total); err != nil {
+	if err := r.PSQL.QueryRowContext(ctx, GetTotalAddressQuery, userID, fmt.Sprintf("%%%s%%", name)).Scan(&total); err != nil {
 		return 0, err
 	}
 
@@ -44,7 +106,7 @@ func (r *userRepo) GetTotalAddress(ctx context.Context, userID, name string) (in
 func (r *userRepo) GetAddresses(ctx context.Context, userID, name string, pgn *pagination.Pagination) ([]*model.Address, error) {
 	addresses := make([]*model.Address, 0)
 	res, err := r.PSQL.QueryContext(
-		ctx, GetAddresses,
+		ctx, GetAddressesQuery,
 		userID,
 		fmt.Sprintf("%%%s%%", name),
 		pgn.GetSort(),

@@ -13,6 +13,7 @@ const (
 	UnauthorizedMessage        = "Email or password not valid."
 	ForbiddenMessage           = "Forbidden"
 
+	UserNotASellerMessage          = "User not a seller."
 	EmailAlreadyExistMessage       = "Email already exist."
 	EmailNotExistMessage           = "Email not exist."
 	UserNotVerifyMessage           = "User not verify."
