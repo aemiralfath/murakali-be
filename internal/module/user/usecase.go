@@ -9,4 +9,5 @@ import (
 type UseCase interface {
 	GetAddress(ctx context.Context, userID, name string, pagination *pagination.Pagination) (*pagination.Pagination, error)
 	CreateAddress(ctx context.Context, userID string, requestBody body.CreateAddressRequest) error
+	UpdateAddress(ctx context.Context, userID string, requestBody body.UpdateAddressRequest) error
 }

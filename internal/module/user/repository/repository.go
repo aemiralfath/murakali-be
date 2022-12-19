@@ -47,22 +47,28 @@ func (r *userRepo) CreateAddress(ctx context.Context, tx postgre.Transaction, us
 	return nil
 }
 
-func (r *userRepo) UpdateDefaultAddress(ctx context.Context, tx postgre.Transaction, status bool, address *model.Address) error {
-	_, err := tx.ExecContext(ctx, UpdateDefaultAddressQuery, status, address.ID)
-	if err != nil {
-		return err
+func (r *userRepo) GetAddressByID(ctx context.Context, addressID string) (*model.Address, error) {
+	var address model.Address
+	if err := r.PSQL.QueryRowContext(ctx, GetAddressByIDQuery, addressID).Scan(
+		&address.ID,
+		&address.UserID,
+		&address.Name,
+		&address.ProvinceID,
+		&address.CityID,
+		&address.Province,
+		&address.City,
+		&address.District,
+		&address.SubDistrict,
+		&address.AddressDetail,
+		&address.ZipCode,
+		&address.IsDefault,
+		&address.IsShopDefault,
+		&address.CreatedAt,
+		&address.UpdatedAt); err != nil {
+		return nil, err
 	}
 
-	return nil
-}
-
-func (r *userRepo) UpdateDefaultShopAddress(ctx context.Context, tx postgre.Transaction, status bool, address *model.Address) error {
-	_, err := tx.ExecContext(ctx, UpdateDefaultShopAddressQuery, status, address.ID)
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return &address, nil
 }
 
 func (r *userRepo) GetDefaultUserAddress(ctx context.Context, userID string) (*model.Address, error) {
@@ -101,6 +107,47 @@ func (r *userRepo) GetTotalAddress(ctx context.Context, userID, name string) (in
 	}
 
 	return total, nil
+}
+
+func (r *userRepo) UpdateAddress(ctx context.Context, tx postgre.Transaction, address *model.Address) error {
+	_, err := tx.ExecContext(ctx, UpdateAddressByIDQuery,
+		address.Name,
+		address.ProvinceID,
+		address.CityID,
+		address.Province,
+		address.City,
+		address.District,
+		address.SubDistrict,
+		address.AddressDetail,
+		address.ZipCode,
+		address.IsDefault,
+		address.IsShopDefault,
+		address.UpdatedAt,
+		address.ID,
+	)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (r *userRepo) UpdateDefaultAddress(ctx context.Context, tx postgre.Transaction, status bool, address *model.Address) error {
+	_, err := tx.ExecContext(ctx, UpdateDefaultAddressQuery, status, address.ID)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (r *userRepo) UpdateDefaultShopAddress(ctx context.Context, tx postgre.Transaction, status bool, address *model.Address) error {
+	_, err := tx.ExecContext(ctx, UpdateDefaultShopAddressQuery, status, address.ID)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func (r *userRepo) GetAddresses(ctx context.Context, userID, name string, pgn *pagination.Pagination) ([]*model.Address, error) {
