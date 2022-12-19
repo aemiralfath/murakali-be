@@ -35,4 +35,5 @@ type Repository interface {
 	CheckDefaultSealabsPay(ctx context.Context, userid string) (*string, error)
 	SetDefaultSealabsPayTrans(ctx context.Context, tx postgre.Transaction, card_number *string) error
 	SetDefaultSealabsPay(ctx context.Context, card_number string, userid string) error
+	DeleteSealabsPay(ctx context.Context, card_number string) error
 }
