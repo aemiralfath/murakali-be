@@ -3,8 +3,11 @@ package repository
 import (
 	"context"
 	"database/sql"
+	"fmt"
 	"murakali/internal/model"
 	"murakali/internal/module/user"
+	"murakali/internal/module/user/delivery/body"
+	"murakali/pkg/postgre"
 
 	"github.com/go-redis/redis/v8"
 )
@@ -40,4 +43,32 @@ func (r *userRepo) GetSealabsPay(ctx context.Context, userid string) ([]*model.S
 		responses = append(responses, &response)
 	}
 	return responses, nil
+}
+
+func (r *userRepo) CheckDefaultSealabsPay(ctx context.Context, userid string) (*string, error) {
+	fmt.Println("1")
+	var temp *string
+	if err := r.PSQL.QueryRowContext(ctx, CheckDefaultSealabsPayQuery, userid).
+		Scan(&temp); err != nil {
+		return nil, err
+	}
+
+	return temp, nil
+}
+
+func (r *userRepo) SetDefaultSealabsPay(ctx context.Context, tx postgre.Transaction, card_number *string) error {
+	if _, err := tx.ExecContext(ctx, SetDefaultSealabsPayQuery, card_number); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (r *userRepo) AddSealabsPay(ctx context.Context, tx postgre.Transaction, request body.AddSealabsPayRequest) error {
+
+	if _, err := tx.ExecContext(ctx, CreateSealabsPayQuery, request.CardNumber, request.UserID, request.Name, request.IsDefault, request.ActiveDateTime); err != nil {
+		return err
+	}
+
+	return nil
 }

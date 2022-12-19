@@ -1,13 +1,15 @@
 package delivery
 
 import (
-	"github.com/gin-gonic/gin"
 	"murakali/internal/middleware"
 	"murakali/internal/module/user"
 
+	"github.com/gin-gonic/gin"
 )
 
 func MapUserRoutes(userGroup *gin.RouterGroup, h user.Handlers, mw *middleware.MWManager) {
 	userGroup.Use(mw.AuthJWTMiddleware())
-	userGroup.GET("/sealab-pay",h.GetSealabsPay)
+	userGroup.GET("/sealab-pay", h.GetSealabsPay)
+	userGroup.POST("/sealab-pay", h.AddSealabsPay)
+
 }
