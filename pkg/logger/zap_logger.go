@@ -10,6 +10,7 @@ import (
 
 type Logger interface {
 	InitLogger()
+	GetZapLogger() *zap.SugaredLogger
 	Debug(args ...interface{})
 	Debugf(template string, args ...interface{})
 	Info(args ...interface{})
@@ -50,6 +51,10 @@ func (l *APILogger) getLoggerLevel(cfg *config.Config) zapcore.Level {
 	}
 
 	return level
+}
+
+func (l *APILogger) GetZapLogger() *zap.SugaredLogger {
+	return l.sugarLogger
 }
 
 func (l *APILogger) InitLogger() {

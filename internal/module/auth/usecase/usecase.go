@@ -38,6 +38,8 @@ func (u *authUC) Login(ctx context.Context, requestBody body.LoginRequest) (*mod
 		if err == sql.ErrNoRows {
 			return nil, httperror.New(http.StatusUnauthorized, response.UnauthorizedMessage)
 		}
+
+		return nil, err
 	}
 
 	if bcrypt.CompareHashAndPassword([]byte(*user.Password), []byte(requestBody.Password)) != nil {
@@ -63,6 +65,8 @@ func (u *authUC) RefreshToken(ctx context.Context, id string) (string, error) {
 		if err == sql.ErrNoRows {
 			return "", httperror.New(http.StatusUnauthorized, response.UnauthorizedMessage)
 		}
+
+		return "", err
 	}
 
 	accessToken, err := jwt.GenerateJWTAccessToken(user.ID.String(), user.RoleID, u.cfg)
@@ -97,8 +101,8 @@ func (u *authUC) RegisterEmail(ctx context.Context, requestBody body.RegisterEma
 			return nil, httperror.New(http.StatusBadRequest, response.UserAlreadyExistMessage)
 		}
 
-		if u.SendOTPEmail(ctx, user.Email) != nil {
-			return nil, err
+		if errEmail := u.SendOTPEmail(ctx, user.Email); errEmail != nil {
+			return nil, errEmail
 		}
 
 		return user, nil
@@ -162,12 +166,12 @@ func (u *authUC) RegisterUser(ctx context.Context, email string, requestBody bod
 		user.UpdatedAt.Time = time.Now()
 		user.UpdatedAt.Valid = true
 		err = u.txRepo.WithTransaction(func(tx postgre.Transaction) error {
-			if u.authRepo.UpdateUser(ctx, tx, user) != nil {
-				return err
+			if errUpdate := u.authRepo.UpdateUser(ctx, tx, user); errUpdate != nil {
+				return errUpdate
 			}
 
-			if u.authRepo.CreateEmailHistory(ctx, tx, email) != nil {
-				return err
+			if errCreate := u.authRepo.CreateEmailHistory(ctx, tx, email); errCreate != nil {
+				return errCreate
 			}
 			return err
 		})
