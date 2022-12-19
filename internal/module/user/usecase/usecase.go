@@ -62,3 +62,12 @@ func (u *userUC) PatchSealabsPay(ctx context.Context, card_number string, userid
 	}
 	return nil
 }
+
+func (u *userUC) DeleteSealabsPay(ctx context.Context, card_number string) error {
+	err := u.userRepo.DeleteSealabsPay(ctx, card_number)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}

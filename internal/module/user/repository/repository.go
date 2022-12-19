@@ -86,3 +86,11 @@ func (r *userRepo) PatchSealabsPay(ctx context.Context, card_number string) erro
 	}
 	return nil
 }
+
+func (r *userRepo) DeleteSealabsPay(ctx context.Context, card_number string) error {
+
+	if _, err := r.PSQL.ExecContext(ctx, DeleteSealabsPayQuery, card_number); err != nil {
+		return err
+	}
+	return nil
+}

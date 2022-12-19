@@ -12,4 +12,5 @@ func MapUserRoutes(userGroup *gin.RouterGroup, h user.Handlers, mw *middleware.M
 	userGroup.GET("/sealab-pay", h.GetSealabsPay)
 	userGroup.POST("/sealab-pay", h.AddSealabsPay)
 	userGroup.PATCH("/sealab-pay", h.PatchSealabsPay)
+	userGroup.DELETE("/sealab-pay", h.DeleteSealabsPay)
 }
