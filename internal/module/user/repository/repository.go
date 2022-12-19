@@ -47,9 +47,9 @@ func (r *userRepo) CreateAddress(ctx context.Context, tx postgre.Transaction, us
 	return nil
 }
 
-func (r *userRepo) GetAddressByID(ctx context.Context, addressID string) (*model.Address, error) {
+func (r *userRepo) GetAddressByID(ctx context.Context, userID, addressID string) (*model.Address, error) {
 	var address model.Address
-	if err := r.PSQL.QueryRowContext(ctx, GetAddressByIDQuery, addressID).Scan(
+	if err := r.PSQL.QueryRowContext(ctx, GetAddressByIDQuery, addressID, userID).Scan(
 		&address.ID,
 		&address.UserID,
 		&address.Name,
@@ -143,6 +143,15 @@ func (r *userRepo) UpdateDefaultAddress(ctx context.Context, tx postgre.Transact
 
 func (r *userRepo) UpdateDefaultShopAddress(ctx context.Context, tx postgre.Transaction, status bool, address *model.Address) error {
 	_, err := tx.ExecContext(ctx, UpdateDefaultShopAddressQuery, status, address.ID)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (r *userRepo) DeleteAddress(ctx context.Context, addressID string) error {
+	_, err := r.PSQL.ExecContext(ctx, DeleteAddressByIDQuery, addressID)
 	if err != nil {
 		return err
 	}

@@ -13,7 +13,7 @@ const (
 	UnauthorizedMessage        = "Email or password not valid."
 	ForbiddenMessage           = "Forbidden"
 
-	UserNotMatchMessage            = "User not match."
+	AddressIsDefaultMessage        = "Address is default."
 	UserNotASellerMessage          = "User not a seller."
 	EmailAlreadyExistMessage       = "Email already exist."
 	EmailNotExistMessage           = "Email not exist."

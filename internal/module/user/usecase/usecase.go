@@ -88,17 +88,13 @@ func (u *userUC) UpdateAddress(ctx context.Context, userID string, requestBody b
 		return err
 	}
 
-	address, err := u.userRepo.GetAddressByID(ctx, requestBody.ID)
+	address, err := u.userRepo.GetAddressByID(ctx, userModel.ID.String(), requestBody.ID)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return httperror.New(http.StatusBadRequest, response.AddressNotExistMessage)
 		}
 
 		return err
-	}
-
-	if address.UserID != userModel.ID {
-		return httperror.New(http.StatusBadRequest, response.UserNotMatchMessage)
 	}
 
 	if requestBody.IsShopDefault && userModel.RoleID != constant.RoleSeller {
@@ -182,4 +178,34 @@ func (u *userUC) GetAddress(ctx context.Context, userID, name string, pgn *pagin
 
 	pgn.Rows = addresses
 	return pgn, nil
+}
+
+func (u *userUC) DeleteAddress(ctx context.Context, userID, addressID string) error {
+	userModel, err := u.userRepo.GetUserByID(ctx, userID)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return httperror.New(http.StatusUnauthorized, response.UnauthorizedMessage)
+		}
+
+		return err
+	}
+
+	address, err := u.userRepo.GetAddressByID(ctx, userModel.ID.String(), addressID)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return httperror.New(http.StatusBadRequest, response.AddressNotExistMessage)
+		}
+
+		return err
+	}
+
+	if address.IsDefault || address.IsShopDefault {
+		return httperror.New(http.StatusBadRequest, response.AddressIsDefaultMessage)
+	}
+
+	if err := u.userRepo.DeleteAddress(ctx, address.ID.String()); err != nil {
+		return err
+	}
+
+	return nil
 }
