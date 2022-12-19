@@ -8,11 +8,11 @@ import (
 	"murakali/internal/model"
 	"murakali/internal/module/user"
 	"murakali/internal/module/user/delivery/body"
+	"murakali/pkg/pagination"
 	"murakali/pkg/postgre"
+	"time"
 
 	"github.com/go-redis/redis/v8"
-	"murakali/pkg/pagination"
-	"time"
 )
 
 type userRepo struct {
@@ -92,7 +92,6 @@ func (r *userRepo) GetDefaultShopAddress(ctx context.Context, userID string) (*m
 
 	return &address, nil
 }
-
 
 func (r *userRepo) GetTotalAddress(ctx context.Context, userID, name string) (int64, error) {
 	var total int64
@@ -337,6 +336,7 @@ func (r *userRepo) GetSealabsPay(ctx context.Context, userid string) ([]*model.S
 }
 
 func (r *userRepo) CheckDefaultSealabsPay(ctx context.Context, userid string) (*string, error) {
+	fmt.Println("1")
 	var temp *string
 	if err := r.PSQL.QueryRowContext(ctx, CheckDefaultSealabsPayQuery, userid).
 		Scan(&temp); err != nil {
@@ -347,16 +347,7 @@ func (r *userRepo) CheckDefaultSealabsPay(ctx context.Context, userid string) (*
 }
 
 func (r *userRepo) SetDefaultSealabsPayTrans(ctx context.Context, tx postgre.Transaction, card_number *string) error {
-	if _, err := tx.ExecContext(ctx, SetDefaultSealabsPayQuery, card_number); err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func (r *userRepo) AddSealabsPay(ctx context.Context, tx postgre.Transaction, request body.AddSealabsPayRequest) error {
-
-	if _, err := tx.ExecContext(ctx, CreateSealabsPayQuery, request.CardNumber, request.UserID, request.Name, request.IsDefault, request.ActiveDateTime); err != nil {
+	if _, err := tx.ExecContext(ctx, SetDefaultSealabsPayTransQuery, card_number); err != nil {
 		return err
 	}
 
@@ -371,8 +362,8 @@ func (r *userRepo) SetDefaultSealabsPay(ctx context.Context, card_number string,
 	return nil
 }
 
-func (r *userRepo) PatchSealabsPay(ctx context.Context, card_number string) error {
 
+func (r *userRepo) PatchSealabsPay(ctx context.Context, card_number string) error {
 	if _, err := r.PSQL.ExecContext(ctx, PatchSealabsPayQuery, card_number); err != nil {
 		return err
 	}
@@ -380,9 +371,17 @@ func (r *userRepo) PatchSealabsPay(ctx context.Context, card_number string) erro
 }
 
 func (r *userRepo) DeleteSealabsPay(ctx context.Context, card_number string) error {
-
 	if _, err := r.PSQL.ExecContext(ctx, DeleteSealabsPayQuery, card_number); err != nil {
 		return err
 	}
+	return nil
+}
+
+func (r *userRepo) AddSealabsPay(ctx context.Context, tx postgre.Transaction, request body.AddSealabsPayRequest) error {
+
+	if _, err := tx.ExecContext(ctx, CreateSealabsPayQuery, request.CardNumber, request.UserID, request.Name, request.IsDefault, request.ActiveDateTime); err != nil {
+		return err
+	}
+
 	return nil
 }

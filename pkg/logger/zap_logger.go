@@ -43,9 +43,7 @@ type APILogger struct {
 }
 
 func NewAPILogger(cfg *config.Config) *APILogger {
-
 	return &APILogger{cfg: cfg}
-
 }
 
 var loggerLevelMap = map[string]zapcore.Level{

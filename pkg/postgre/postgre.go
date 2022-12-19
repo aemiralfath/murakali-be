@@ -18,7 +18,7 @@ type myQueryTracer struct {
 	log *zap.SugaredLogger
 }
 
-func (tracer *myQueryTracer) TraceQueryStart(ctx context.Context, pg *pgx.Conn, data pgx.TraceQueryStartData) context.Context {
+func (tracer *myQueryTracer) TraceQueryStart(ctx context.Context, _ *pgx.Conn, data pgx.TraceQueryStartData) context.Context {
 	tracer.log.Infow("Executing command start", "sql", data.SQL, "args", data.Args)
 	return ctx
 }
