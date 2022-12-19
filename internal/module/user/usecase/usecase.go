@@ -394,6 +394,8 @@ func (u *userUC) SendLinkOTPEmail(ctx context.Context, email string) error {
 	return nil
 }
 
+
+
 func (u *userUC) GetSealabsPay(ctx context.Context, userid string) ([]*model.SealabsPay, error) {
 
 	response, err := u.userRepo.GetSealabsPay(ctx, userid)
