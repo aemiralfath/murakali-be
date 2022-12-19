@@ -10,5 +10,7 @@ import (
 func MapUserRoutes(userGroup *gin.RouterGroup, h user.Handlers, mw *middleware.MWManager) {
 	userGroup.Use(mw.AuthJWTMiddleware())
 
-	userGroup.PUT("/profile", h.UserEdit)
+	userGroup.PUT("/profile", h.EditUser)
+	userGroup.POST("/email", h.EditEmail)
+	userGroup.GET("/email", h.EditEmailUser)
 }

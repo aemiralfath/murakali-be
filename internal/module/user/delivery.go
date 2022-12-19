@@ -3,5 +3,7 @@ package user
 import "github.com/gin-gonic/gin"
 
 type Handlers interface {
-	UserEdit(c *gin.Context)
+	EditUser(c *gin.Context)
+	EditEmail(c *gin.Context)
+	EditEmailUser(c *gin.Context)
 }
