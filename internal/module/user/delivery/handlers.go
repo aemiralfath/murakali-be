@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 	"murakali/config"
 	"murakali/internal/module/user"
 	"murakali/internal/module/user/delivery/body"
@@ -26,26 +27,21 @@ func NewUserHandlers(cfg *config.Config, userUC user.UseCase, log logger.Logger)
 	return &userHandlers{cfg: cfg, userUC: userUC, logger: log}
 }
 
-func (h *userHandlers) DeleteAddress(c *gin.Context) {
+func (h *userHandlers) DeleteAddressByID(c *gin.Context) {
 	userID, exist := c.Get("userID")
 	if !exist {
 		response.ErrorResponse(c.Writer, response.UnauthorizedMessage, http.StatusUnauthorized)
 		return
 	}
 
-	var requestBody body.DeleteAddressRequest
-	if err := c.ShouldBind(&requestBody); err != nil {
+	id := c.Param("id")
+	addressID, err := uuid.Parse(id)
+	if err != nil {
 		response.ErrorResponse(c.Writer, response.BadRequestMessage, http.StatusBadRequest)
 		return
 	}
 
-	invalidFields, err := requestBody.Validate()
-	if err != nil {
-		response.ErrorResponseData(c.Writer, invalidFields, response.UnprocessableEntityMessage, http.StatusUnprocessableEntity)
-		return
-	}
-
-	if err := h.userUC.DeleteAddress(c, userID.(string), requestBody.ID); err != nil {
+	if err := h.userUC.DeleteAddressByID(c, userID.(string), addressID.String()); err != nil {
 		var e *httperror.Error
 		if !errors.As(err, &e) {
 			h.logger.Errorf("HandlerUser, Error: %s", err)
@@ -58,6 +54,36 @@ func (h *userHandlers) DeleteAddress(c *gin.Context) {
 	}
 
 	response.SuccessResponse(c.Writer, nil, http.StatusOK)
+}
+
+func (h *userHandlers) GetAddressByID(c *gin.Context) {
+	userID, exist := c.Get("userID")
+	if !exist {
+		response.ErrorResponse(c.Writer, response.UnauthorizedMessage, http.StatusUnauthorized)
+		return
+	}
+
+	id := c.Param("id")
+	addressID, err := uuid.Parse(id)
+	if err != nil {
+		response.ErrorResponse(c.Writer, response.BadRequestMessage, http.StatusBadRequest)
+		return
+	}
+
+	address, err := h.userUC.GetAddressByID(c, userID.(string), addressID.String())
+	if err != nil {
+		var e *httperror.Error
+		if !errors.As(err, &e) {
+			h.logger.Errorf("HandlerUser, Error: %s", err)
+			response.ErrorResponse(c.Writer, response.InternalServerErrorMessage, http.StatusInternalServerError)
+			return
+		}
+
+		response.ErrorResponse(c.Writer, e.Err.Error(), e.Status)
+		return
+	}
+
+	response.SuccessResponse(c.Writer, address, http.StatusOK)
 }
 
 func (h *userHandlers) CreateAddress(c *gin.Context) {
@@ -94,15 +120,22 @@ func (h *userHandlers) CreateAddress(c *gin.Context) {
 	response.SuccessResponse(c.Writer, nil, http.StatusOK)
 }
 
-func (h *userHandlers) UpdateAddress(c *gin.Context) {
+func (h *userHandlers) UpdateAddressByID(c *gin.Context) {
 	userID, exist := c.Get("userID")
 	if !exist {
 		response.ErrorResponse(c.Writer, response.UnauthorizedMessage, http.StatusUnauthorized)
 		return
 	}
 
+	id := c.Param("id")
+	addressID, err := uuid.Parse(id)
+	if err != nil {
+		response.ErrorResponse(c.Writer, response.BadRequestMessage, http.StatusBadRequest)
+		return
+	}
+
 	var requestBody body.UpdateAddressRequest
-	if err := c.ShouldBind(&requestBody); err != nil {
+	if c.ShouldBind(&requestBody) != nil {
 		response.ErrorResponse(c.Writer, response.BadRequestMessage, http.StatusBadRequest)
 		return
 	}
@@ -113,7 +146,7 @@ func (h *userHandlers) UpdateAddress(c *gin.Context) {
 		return
 	}
 
-	if err := h.userUC.UpdateAddress(c, userID.(string), requestBody); err != nil {
+	if err := h.userUC.UpdateAddressByID(c, userID.(string), addressID.String(), requestBody); err != nil {
 		var e *httperror.Error
 		if !errors.As(err, &e) {
 			h.logger.Errorf("HandlerUser, Error: %s", err)

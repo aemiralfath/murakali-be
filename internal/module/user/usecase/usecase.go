@@ -6,6 +6,7 @@ import (
 	"math"
 	"murakali/config"
 	"murakali/internal/constant"
+	"murakali/internal/model"
 	"murakali/internal/module/user"
 	"murakali/internal/module/user/delivery/body"
 	"murakali/pkg/httperror"
@@ -78,7 +79,7 @@ func (u *userUC) CreateAddress(ctx context.Context, userID string, requestBody b
 	return nil
 }
 
-func (u *userUC) UpdateAddress(ctx context.Context, userID string, requestBody body.UpdateAddressRequest) error {
+func (u *userUC) UpdateAddressByID(ctx context.Context, userID, addressID string, requestBody body.UpdateAddressRequest) error {
 	userModel, err := u.userRepo.GetUserByID(ctx, userID)
 	if err != nil {
 		if err == sql.ErrNoRows {
@@ -88,7 +89,7 @@ func (u *userUC) UpdateAddress(ctx context.Context, userID string, requestBody b
 		return err
 	}
 
-	address, err := u.userRepo.GetAddressByID(ctx, userModel.ID.String(), requestBody.ID)
+	address, err := u.userRepo.GetAddressByID(ctx, userModel.ID.String(), addressID)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return httperror.New(http.StatusBadRequest, response.AddressNotExistMessage)
@@ -180,7 +181,29 @@ func (u *userUC) GetAddress(ctx context.Context, userID, name string, pgn *pagin
 	return pgn, nil
 }
 
-func (u *userUC) DeleteAddress(ctx context.Context, userID, addressID string) error {
+func (u *userUC) GetAddressByID(ctx context.Context, userID, addressID string) (*model.Address, error) {
+	userModel, err := u.userRepo.GetUserByID(ctx, userID)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, httperror.New(http.StatusUnauthorized, response.UnauthorizedMessage)
+		}
+
+		return nil, err
+	}
+
+	address, err := u.userRepo.GetAddressByID(ctx, userModel.ID.String(), addressID)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, httperror.New(http.StatusBadRequest, response.AddressNotExistMessage)
+		}
+
+		return nil, err
+	}
+
+	return address, nil
+}
+
+func (u *userUC) DeleteAddressByID(ctx context.Context, userID, addressID string) error {
 	userModel, err := u.userRepo.GetUserByID(ctx, userID)
 	if err != nil {
 		if err == sql.ErrNoRows {

@@ -1,7 +1,6 @@
 package body
 
 import (
-	"github.com/google/uuid"
 	"murakali/pkg/httperror"
 	"murakali/pkg/response"
 	"net/http"
@@ -9,7 +8,6 @@ import (
 )
 
 type UpdateAddressRequest struct {
-	ID            string `json:"id"`
 	Name          string `json:"name"`
 	ProvinceID    int    `json:"province_id"`
 	CityID        int    `json:"city_id"`
@@ -27,7 +25,6 @@ func (r *UpdateAddressRequest) Validate() (UnprocessableEntity, error) {
 	unprocessableEntity := false
 	entity := UnprocessableEntity{
 		Fields: map[string]string{
-			"id":              "",
 			"name":            "",
 			"province_id":     "",
 			"city_id":         "",
@@ -42,14 +39,6 @@ func (r *UpdateAddressRequest) Validate() (UnprocessableEntity, error) {
 		},
 	}
 
-	r.ID = strings.TrimSpace(r.ID)
-	id, err := uuid.Parse(r.ID)
-	if err != nil {
-		unprocessableEntity = true
-		entity.Fields["id"] = IDNotValidMessage
-	}
-
-	r.ID = id.String()
 	r.Name = strings.TrimSpace(r.Name)
 	if r.Name == "" {
 		unprocessableEntity = true

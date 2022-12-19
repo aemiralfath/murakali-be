@@ -10,6 +10,7 @@ func MapUserRoutes(userGroup *gin.RouterGroup, h user.Handlers, mw *middleware.M
 	userGroup.Use(mw.AuthJWTMiddleware())
 	userGroup.GET("/address", h.GetAddress)
 	userGroup.POST("/address", h.CreateAddress)
-	userGroup.PUT("/address", h.UpdateAddress)
-	userGroup.DELETE("/address", h.DeleteAddress)
+	userGroup.GET("/address/:id", h.GetAddressByID)
+	userGroup.PUT("/address/:id", h.UpdateAddressByID)
+	userGroup.DELETE("/address/:id", h.DeleteAddressByID)
 }
