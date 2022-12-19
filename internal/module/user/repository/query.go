@@ -34,7 +34,7 @@ const (
 	PatchSealabsPayQuery           = `UPDATE "sealabs_pay" set is_default = TRUE,updated_at = now() where card_number = $1`
 	SetDefaultSealabsPayQuery      = `UPDATE "sealabs_pay" set is_default = FALSE where card_number <> $1 and user_id = $2`
 	DeleteSealabsPayQuery          = `UPDATE "sealabs_pay" set deleted_at = now() where card_number = $1 and is_default = FALSE`
-	GetUserByIDQuery                            = `SELECT "id", "role_id", "email", "username", "phone_no", "fullname", "gender", "birth_date", "is_verify" FROM "user" WHERE "id" = $1`
+	GetUserByIDQuery                            = `SELECT "id", "role_id", "email", "username", "phone_no", "fullname", "gender", "birth_date", "is_verify" FROM "user" WHERE "id" = $1 AND "deleted_at" IS NULL`
 	CheckEmailHistoryQuery         = `SELECT "id", "email" FROM "email_history" WHERE "email" ILIKE $1`
 	GetUserByUsernameQuery         = `SELECT "id", "email", "username", "is_verify" FROM "user" WHERE "username" ILIKE $1`
 	GetUserByPhoneNoQuery          = `SELECT "id", "email", "phone_no", "is_verify" FROM "user" WHERE "phone_no" ILIKE $1`

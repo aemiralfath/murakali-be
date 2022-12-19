@@ -14,6 +14,7 @@ const (
 	ForbiddenMessage           = "Forbidden"
 
 	AddressIsDefaultMessage        = "Address is default."
+	UserNotMatchMessage            = "User not match."
 	UserNotASellerMessage          = "User not a seller."
 	EmailAlreadyExistMessage       = "Email already exist."
 	EmailSamePreviousEmailMessage  = "This email same as your current email."

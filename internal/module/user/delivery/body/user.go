@@ -2,7 +2,7 @@ package body
 
 const (
 	FieldCannotBeEmptyMessage         = "Field cannot be empty."
-	IDNotValidMessage         = "ID not valid."
+	IDNotValidMessage                 = "ID not valid."
 	InvalidPhoneNoFormatMessage       = "Invalid phone no format."
 	InvalidEmailFormatMessage         = "Invalid email format."
 	InvalidDateFormatMessage          = "Invalid date format."
