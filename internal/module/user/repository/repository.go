@@ -337,7 +337,6 @@ func (r *userRepo) GetSealabsPay(ctx context.Context, userid string) ([]*model.S
 }
 
 func (r *userRepo) CheckDefaultSealabsPay(ctx context.Context, userid string) (*string, error) {
-	fmt.Println("1")
 	var temp *string
 	if err := r.PSQL.QueryRowContext(ctx, CheckDefaultSealabsPayQuery, userid).
 		Scan(&temp); err != nil {
@@ -347,8 +346,8 @@ func (r *userRepo) CheckDefaultSealabsPay(ctx context.Context, userid string) (*
 	return temp, nil
 }
 
-func (r *userRepo) SetDefaultSealabsPay(ctx context.Context, tx postgre.Transaction, card_number *string) error {
-	if _, err := tx.ExecContext(ctx, SetDefaultSealabsPayQuery, card_number); err != nil {
+func (r *userRepo) SetDefaultSealabsPayTrans(ctx context.Context, tx postgre.Transaction, card_number *string) error {
+	if _, err := tx.ExecContext(ctx, SetDefaultSealabsPayTransQuery, card_number); err != nil {
 		return err
 	}
 
@@ -361,5 +360,21 @@ func (r *userRepo) AddSealabsPay(ctx context.Context, tx postgre.Transaction, re
 		return err
 	}
 
+	return nil
+}
+
+func (r *userRepo) SetDefaultSealabsPay(ctx context.Context, card_number string, userid string) error {
+	if _, err := r.PSQL.ExecContext(ctx, SetDefaultSealabsPayQuery, card_number, userid); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (r *userRepo) PatchSealabsPay(ctx context.Context, card_number string) error {
+
+	if _, err := r.PSQL.ExecContext(ctx, PatchSealabsPayQuery, card_number); err != nil {
+		return err
+	}
 	return nil
 }

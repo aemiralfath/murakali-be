@@ -13,4 +13,5 @@ type Handlers interface {
 	EditEmailUser(c *gin.Context)
 	GetSealabsPay(c *gin.Context)
 	AddSealabsPay(c *gin.Context)
+	PatchSealabsPay(c *gin.Context)
 }

@@ -38,4 +38,6 @@ const (
 	CreateSealabsPayQuery          = `INSERT INTO "sealabs_pay" (card_number, user_id, name, is_default,active_date) VALUES ($1, $2, $3, $4, $5)`
 	CheckDefaultSealabsPayQuery    = `SELECT card_number from "sealabs_pay" where user_id = $1 and is_default is true and deleted_at is null`
 	SetDefaultSealabsPayQuery = `UPDATE "sealabs_pay" set is_default = FALSE,updated_at = now() where card_number = $1`
-)
+	SetDefaultSealabsPayTransQuery = `UPDATE "sealabs_pay" set is_default = FALSE where card_number = $1`
+	PatchSealabsPayQuery           = `UPDATE "sealabs_pay" set is_default = TRUE where card_number = $1`
+	)
