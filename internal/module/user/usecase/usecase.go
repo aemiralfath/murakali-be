@@ -448,7 +448,29 @@ func (u *userUC) DeleteSealabsPay(ctx context.Context, card_number string) error
 	return nil
 }
 
-func (u *userUC) DeleteAddress(ctx context.Context, userID, addressID string) error {
+func (u *userUC) GetAddressByID(ctx context.Context, userID, addressID string) (*model.Address, error) {
+	userModel, err := u.userRepo.GetUserByID(ctx, userID)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, httperror.New(http.StatusUnauthorized, response.UnauthorizedMessage)
+		}
+
+		return nil, err
+	}
+
+	address, err := u.userRepo.GetAddressByID(ctx, userModel.ID.String(), addressID)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, httperror.New(http.StatusBadRequest, response.AddressNotExistMessage)
+		}
+
+		return nil, err
+	}
+
+	return address, nil
+}
+
+func (u *userUC) DeleteAddressByID(ctx context.Context, userID, addressID string) error {
 	userModel, err := u.userRepo.GetUserByID(ctx, userID)
 	if err != nil {
 		if err == sql.ErrNoRows {
