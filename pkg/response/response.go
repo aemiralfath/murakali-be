@@ -16,6 +16,7 @@ const (
 	AddressIsDefaultMessage        = "Address is default."
 	UserNotASellerMessage          = "User not a seller."
 	EmailAlreadyExistMessage       = "Email already exist."
+	EmailSamePreviousEmailMessage  = "This email same as your current email."
 	EmailNotExistMessage           = "Email not exist."
 	UserNotVerifyMessage           = "User not verify."
 	UserAlreadyExistMessage        = "User already exist."

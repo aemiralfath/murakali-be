@@ -14,4 +14,6 @@ type UseCase interface {
 	UpdateAddressByID(ctx context.Context, userID, addressID string, requestBody body.UpdateAddressRequest) error
 	DeleteAddressByID(ctx context.Context, userID, addressID string) error
 	EditUser(ctx context.Context, userID string, body body.EditUserRequest) (*model.User, error)
+	EditEmail(ctx context.Context, userID string, requestBody body.EditEmailRequest) (*model.User, error)
+	EditEmailUser(ctx context.Context, userID string, requestBody body.EditEmailUserRequest) (*model.User, error)
 }
