@@ -4,9 +4,9 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
-	"murakali/internal/auth"
 	"murakali/internal/constant"
 	"murakali/internal/model"
+	"murakali/internal/module/auth"
 	"murakali/pkg/postgre"
 	"time"
 
@@ -18,11 +18,11 @@ type authRepo struct {
 	RedisClient *redis.Client
 }
 
-func NewAuthRepository(psql *sql.DB, client *redis.Client) (auth.Repository, error) {
+func NewAuthRepository(psql *sql.DB, client *redis.Client) auth.Repository {
 	return &authRepo{
 		PSQL:        psql,
 		RedisClient: client,
-	}, nil
+	}
 }
 
 func (r *authRepo) CheckEmailHistory(ctx context.Context, email string) (*model.EmailHistory, error) {
@@ -103,7 +103,9 @@ func (r *authRepo) CreateEmailHistory(ctx context.Context, tx postgre.Transactio
 }
 
 func (r *authRepo) UpdateUser(ctx context.Context, tx postgre.Transaction, user *model.User) error {
-	_, err := tx.ExecContext(ctx, VerifyUserQuery, user.PhoneNo, user.FullName, user.Username, user.Password, user.IsVerify, user.UpdatedAt, user.Email)
+	_, err := tx.ExecContext(
+		ctx, VerifyUserQuery, user.PhoneNo, user.FullName,
+		user.Username, user.Password, user.IsVerify, user.UpdatedAt, user.Email)
 	if err != nil {
 		return err
 	}
@@ -113,14 +115,13 @@ func (r *authRepo) UpdateUser(ctx context.Context, tx postgre.Transaction, user 
 
 func (r *authRepo) InsertNewOTPKey(ctx context.Context, email, otp string) error {
 	key := fmt.Sprintf("%s:%s", constant.OtpKey, email)
-	value := fmt.Sprintf("%s", otp)
 
 	duration, err := time.ParseDuration(constant.OtpDuration)
 	if err != nil {
 		return err
 	}
 
-	if err := r.RedisClient.Set(ctx, key, value, duration); err.Err() != nil {
+	if err := r.RedisClient.Set(ctx, key, otp, duration); err.Err() != nil {
 		return err.Err()
 	}
 

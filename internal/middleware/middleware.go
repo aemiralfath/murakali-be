@@ -8,9 +8,9 @@ import (
 type MWManager struct {
 	cfg     *config.Config
 	origins []string
-	logger  logger.Logger
+	log     logger.Logger
 }
 
-func NewMiddlewareManager(cfg *config.Config, origins []string, logger logger.Logger) *MWManager {
-	return &MWManager{cfg: cfg, origins: origins, logger: logger}
+func NewMiddlewareManager(cfg *config.Config, origins []string, log logger.Logger) *MWManager {
+	return &MWManager{cfg: cfg, origins: origins, log: log}
 }

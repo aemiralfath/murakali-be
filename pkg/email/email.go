@@ -1,6 +1,7 @@
 package email
 
 import (
+	"errors"
 	"fmt"
 	"murakali/config"
 	"net/smtp"
@@ -28,6 +29,6 @@ func SendEmail(cfg *config.Config, toEmail, subject, msg string) {
 
 	err := smtp.SendMail(email.Addr, email.Auth, from, []string{toEmail}, value)
 	if err != nil {
-		fmt.Println(fmt.Errorf(err.Error()))
+		fmt.Println(errors.New(err.Error()))
 	}
 }

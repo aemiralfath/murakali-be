@@ -20,7 +20,7 @@ linters-settings:
   misspell:
     locale: US
   lll:
-    line-length: 120
+    line-length: 150
   gocritic:
     enabled-tags:
       - diagnostic
@@ -42,10 +42,9 @@ linters: # don't use --enable-all
   disable-all: true
   enable:
     - bodyclose
-    - deadcode
+    - unused
     - depguard
     - dogsled
-    - dupl
     - errcheck
     - funlen
     - gochecknoinits
@@ -53,28 +52,24 @@ linters: # don't use --enable-all
     - gocritic
     - gocyclo
     - gofmt
-    - goimports
-    - golint
+    - revive
     - gosec
     - gosimple
     - govet
     - ineffassign
-    - interfacer
     - lll
     - misspell
     - nakedret
     - nestif
-    - scopelint
+    - exportloopref
     - staticcheck
-    - structcheck
     - stylecheck
     - typecheck
     - unconvert
     - unparam
     - unused
-    - varcheck
     - whitespace
-    - maligned
+    - govet
 
 run:
   tests: false
@@ -84,3 +79,5 @@ run:
   modules-download-mode: vendor
   skip-files:
     - ./*_test.go
+    - pkg/email/builder.go
+    - query.go

@@ -3,9 +3,9 @@ package delivery
 import (
 	"errors"
 	"murakali/config"
-	"murakali/internal/auth"
-	"murakali/internal/auth/delivery/body"
 	"murakali/internal/constant"
+	"murakali/internal/module/auth"
+	"murakali/internal/module/auth/delivery/body"
 	"murakali/pkg/httperror"
 	"murakali/pkg/jwt"
 	"murakali/pkg/logger"
@@ -25,6 +25,11 @@ func NewAuthHandlers(cfg *config.Config, authUC auth.UseCase, log logger.Logger)
 	return &authHandlers{cfg: cfg, authUC: authUC, logger: log}
 }
 
+func (h *authHandlers) Logout(c *gin.Context) {
+	c.SetCookie(constant.RefreshTokenCookie, "", -1, "/", h.cfg.Server.Domain, false, true)
+	response.SuccessResponse(c.Writer, nil, http.StatusOK)
+}
+
 func (h *authHandlers) Login(c *gin.Context) {
 	var requestBody body.LoginRequest
 	if err := c.ShouldBind(&requestBody); err != nil {
@@ -38,7 +43,7 @@ func (h *authHandlers) Login(c *gin.Context) {
 		return
 	}
 
-	accessToken, refreshToken, err := h.authUC.Login(c, requestBody)
+	token, err := h.authUC.Login(c, requestBody)
 	if err != nil {
 		var e *httperror.Error
 		if !errors.As(err, &e) {
@@ -51,9 +56,8 @@ func (h *authHandlers) Login(c *gin.Context) {
 		return
 	}
 
-	c.SetCookie(constant.AccessTokenCookie, accessToken, h.cfg.JWT.AccessExpMin*60, "/", h.cfg.Server.Domain, false, true)
-	c.SetCookie(constant.RefreshTokenCookie, refreshToken, h.cfg.JWT.RefreshExpMin*60, "/", h.cfg.Server.Domain, false, true)
-	response.SuccessResponse(c.Writer, body.LoginResponse{AccessToken: accessToken}, http.StatusOK)
+	c.SetCookie(constant.RefreshTokenCookie, token.RefreshToken, h.cfg.JWT.RefreshExpMin*60, "/", h.cfg.Server.Domain, false, true)
+	response.SuccessResponse(c.Writer, body.LoginResponse{AccessToken: token.AccessToken}, http.StatusOK)
 }
 
 func (h *authHandlers) RefreshToken(c *gin.Context) {
@@ -82,7 +86,6 @@ func (h *authHandlers) RefreshToken(c *gin.Context) {
 		return
 	}
 
-	c.SetCookie(constant.AccessTokenCookie, accessToken, h.cfg.JWT.AccessExpMin*60, "/", h.cfg.Server.Domain, false, true)
 	response.SuccessResponse(c.Writer, body.LoginResponse{AccessToken: accessToken}, http.StatusOK)
 }
 
@@ -129,7 +132,7 @@ func (h *authHandlers) RegisterUser(c *gin.Context) {
 	}
 
 	var requestBody body.RegisterUserRequest
-	if err := c.ShouldBind(&requestBody); err != nil {
+	if c.ShouldBind(&requestBody) != nil {
 		response.ErrorResponse(c.Writer, response.BadRequestMessage, http.StatusBadRequest)
 		return
 	}
@@ -216,7 +219,6 @@ func (h *authHandlers) ResetPasswordEmail(c *gin.Context) {
 }
 
 func (h *authHandlers) ResetPasswordUser(c *gin.Context) {
-
 	ResetPasswordToken, err := c.Cookie(constant.ResetPasswordTokenCookie)
 	if err != nil {
 		response.ErrorResponse(c.Writer, response.ForbiddenMessage, http.StatusForbidden)
@@ -230,7 +232,7 @@ func (h *authHandlers) ResetPasswordUser(c *gin.Context) {
 	}
 
 	var requestBody body.ResetPasswordUserRequest
-	if err := c.ShouldBind(&requestBody); err != nil {
+	if c.ShouldBind(&requestBody) != nil {
 		response.ErrorResponse(c.Writer, response.BadRequestMessage, http.StatusBadRequest)
 		return
 	}

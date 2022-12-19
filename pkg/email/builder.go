@@ -191,7 +191,6 @@ a[x-apple-data-detectors] {
   </div>
  </body>
 </html>`
-
 }
 
 func VerificationEmailLinkOTPBody(link string) string {
@@ -385,5 +384,4 @@ a[x-apple-data-detectors] {
   </div>
  </body>
 </html>`
-
 }

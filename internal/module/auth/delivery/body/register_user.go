@@ -49,11 +49,7 @@ func (r *RegisterUserRequest) Validate() (UnprocessableEntity, error) {
 		entity.Fields["password"] = InvalidPasswordFormatMessage
 	}
 
-	regex, err := regexp.Compile(`^8[1-9][0-9]{6,9}$`)
-	if err != nil {
-		return entity, err
-	}
-
+	regex := regexp.MustCompile(`^8[1-9]\d{6,9}$`)
 	if !regex.MatchString(r.PhoneNo) {
 		unprocessableEntity = true
 		entity.Fields["phone_no"] = InvalidPhoneNoFormatMessage

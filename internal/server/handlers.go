@@ -3,10 +3,13 @@ package server
 import (
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
-	authDelivery "murakali/internal/auth/delivery"
-	authRepository "murakali/internal/auth/repository"
-	authUseCase "murakali/internal/auth/usecase"
 	"murakali/internal/middleware"
+	authDelivery "murakali/internal/module/auth/delivery"
+	authRepository "murakali/internal/module/auth/repository"
+	authUseCase "murakali/internal/module/auth/usecase"
+	userDelivery "murakali/internal/module/user/delivery"
+	userRepository "murakali/internal/module/user/repository"
+	userUseCase "murakali/internal/module/user/usecase"
 	"murakali/pkg/postgre"
 	"murakali/pkg/response"
 	"net/http"
@@ -14,18 +17,16 @@ import (
 )
 
 func (s *Server) MapHandlers() error {
-	mw := middleware.NewMiddlewareManager(s.cfg, []string{"*"}, s.logger)
-
 	txRepo := postgre.NewTxRepository(s.db)
-	aRepo, err := authRepository.NewAuthRepository(s.db, s.redisClient)
-	if err != nil {
-		return err
-	}
 
-	authUC := authUseCase.NewAuthUseCase(s.cfg, txRepo, aRepo)
-	authHandlers := authDelivery.NewAuthHandlers(s.cfg, authUC, s.logger)
+	authRepo := authRepository.NewAuthRepository(s.db, s.redisClient)
+	authUC := authUseCase.NewAuthUseCase(s.cfg, txRepo, authRepo)
+	authHandlers := authDelivery.NewAuthHandlers(s.cfg, authUC, s.log)
 
-	s.gin.Use(mw.Latency())
+	userRepo := userRepository.NewUserRepository(s.db, s.redisClient)
+	userUC := userUseCase.NewUserUseCase(s.cfg, txRepo, userRepo)
+	userHandlers := userDelivery.NewUserHandlers(s.cfg, userUC, s.log)
+
 	s.gin.Use(cors.New(cors.Config{
 		AllowOrigins:     []string{"*"},
 		AllowMethods:     []string{"GET", "POST", "PUT", "PATCH", "DELETE"},
@@ -44,8 +45,11 @@ func (s *Server) MapHandlers() error {
 
 	v1 := s.gin.Group("/api/v1")
 	authGroup := v1.Group("/auth")
+	userGroup := v1.Group("/user")
 
+	mw := middleware.NewMiddlewareManager(s.cfg, []string{"*"}, s.log)
 	authDelivery.MapAuthRoutes(authGroup, authHandlers)
+	userDelivery.MapUserRoutes(userGroup, userHandlers, mw)
 
 	return nil
 }
