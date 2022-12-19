@@ -20,4 +20,7 @@ type Repository interface {
 	UpdateDefaultAddress(ctx context.Context, tx postgre.Transaction, status bool, address *model.Address) error
 	UpdateDefaultShopAddress(ctx context.Context, tx postgre.Transaction, status bool, address *model.Address) error
 	DeleteAddress(ctx context.Context, addressID string) error
+	GetUserByUsername(ctx context.Context, username string) (*model.User, error)
+	GetUserByPhoneNo(ctx context.Context, phoneNo string) (*model.User, error)
+	UpdateUserField(ctx context.Context, user *model.User) error
 }

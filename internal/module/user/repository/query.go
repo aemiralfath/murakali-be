@@ -1,7 +1,6 @@
 package repository
 
 const (
-	GetUserByIDQuery              = `SELECT "id", "role_id", "email" FROM "user" WHERE "id" = $1 AND "deleted_at" IS NULL`
 	GetTotalAddressQuery          = `SELECT count(id) FROM "address" WHERE "user_id" = $1 AND "name" ILIKE $2 AND "deleted_at" IS NULL`
 	GetDefaultAddressQuery        = `SELECT "id", "user_id", "is_default" FROM "address" WHERE "user_id" = $1 AND "is_default" = $2 AND "deleted_at" IS NULL`
 	GetDefaultShopAddressQuery    = `SELECT "id", "user_id", "is_shop_default" FROM "address" WHERE "user_id" = $1 AND "is_shop_default" = $2 AND "deleted_at" IS NULL`
@@ -27,4 +26,9 @@ const (
 		"name" = $1, "province_id" = $2, "city_id" = $3, "province" = $4, "city" = $5, "district" = $6,
 		"sub_district" = $7, "address_detail" = $8, "zip_code" = $9, "is_default" = $10, "is_shop_default" = $11, "updated_at" = $12
 	WHERE "id" = $13`
+
+	GetUserByIDQuery       = `SELECT "id", "role_id", "email", "username", "phone_no", "fullname", "gender", "birth_date", "is_verify" FROM "user" WHERE "id" = $1`
+	GetUserByUsernameQuery = `SELECT "id", "email", "username", "is_verify" FROM "user" WHERE "username" ILIKE $1`
+	GetUserByPhoneNoQuery  = `SELECT "id", "email", "phone_no", "is_verify" FROM "user" WHERE "phone_no" ILIKE $1`
+	UpdateUserFieldQuery   = `UPDATE "user" SET "username" = $1, "fullname" = $2, "phone_no" = $3, "birth_date" = $4, "gender" = $5, "updated_at" = $6 WHERE "email" = $7`
 )

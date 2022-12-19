@@ -8,4 +8,5 @@ type Handlers interface {
 	GetAddressByID(c *gin.Context)
 	UpdateAddressByID(c *gin.Context)
 	DeleteAddressByID(c *gin.Context)
+	UserEdit(c *gin.Context)
 }

@@ -1,9 +1,10 @@
 package delivery
 
 import (
-	"github.com/gin-gonic/gin"
 	"murakali/internal/middleware"
 	"murakali/internal/module/user"
+
+	"github.com/gin-gonic/gin"
 )
 
 func MapUserRoutes(userGroup *gin.RouterGroup, h user.Handlers, mw *middleware.MWManager) {
@@ -13,4 +14,5 @@ func MapUserRoutes(userGroup *gin.RouterGroup, h user.Handlers, mw *middleware.M
 	userGroup.GET("/address/:id", h.GetAddressByID)
 	userGroup.PUT("/address/:id", h.UpdateAddressByID)
 	userGroup.DELETE("/address/:id", h.DeleteAddressByID)
+	userGroup.PUT("/profile", h.UserEdit)
 }
