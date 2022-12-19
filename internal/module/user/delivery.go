@@ -7,4 +7,5 @@ import (
 type Handlers interface {
 	GetSealabsPay(c *gin.Context)
 	AddSealabsPay(c *gin.Context)
+	PatchSealabsPay(c *gin.Context)
 }

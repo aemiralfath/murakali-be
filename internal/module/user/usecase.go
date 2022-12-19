@@ -9,4 +9,5 @@ import (
 type UseCase interface {
 	GetSealabsPay(ctx context.Context, userid string) ([]*model.SealabsPay, error)
 	AddSealabsPay(ctx context.Context, request body.AddSealabsPayRequest, userid string) error
+	PatchSealabsPay(ctx context.Context, card_number string, userid string) error
 }

@@ -38,7 +38,7 @@ func (u *userUC) AddSealabsPay(ctx context.Context, request body.AddSealabsPayRe
 	}
 
 	err = u.txRepo.WithTransaction(func(tx postgre.Transaction) error {
-		if u.userRepo.SetDefaultSealabsPay(ctx, tx, card_number) != nil {
+		if u.userRepo.SetDefaultSealabsPayTrans(ctx, tx, card_number) != nil {
 			return err
 		}
 
@@ -48,5 +48,17 @@ func (u *userUC) AddSealabsPay(ctx context.Context, request body.AddSealabsPayRe
 		}
 		return nil
 	})
+	return nil
+}
+
+func (u *userUC) PatchSealabsPay(ctx context.Context, card_number string, userid string) error {
+	err := u.userRepo.PatchSealabsPay(ctx, card_number)
+	if err != nil {
+		return err
+	}
+
+	if u.userRepo.SetDefaultSealabsPay(ctx, card_number, userid) != nil {
+		return err
+	}
 	return nil
 }
