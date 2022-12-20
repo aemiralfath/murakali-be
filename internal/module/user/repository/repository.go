@@ -249,9 +249,9 @@ func (r *userRepo) UpdateUserField(ctx context.Context, userModel *model.User) e
 	return nil
 }
 
-func (r *userRepo) UpdateUserEmail(ctx context.Context, tx postgre.Transaction, user *model.User) error {
+func (r *userRepo) UpdateUserEmail(ctx context.Context, tx postgre.Transaction, userModel *model.User) error {
 	_, err := tx.ExecContext(
-		ctx, UpdateUserEmailQuery, user.Email, user.UpdatedAt, user.ID)
+		ctx, UpdateUserEmailQuery, userModel.Email, userModel.UpdatedAt, userModel.ID)
 	if err != nil {
 		return err
 	}
