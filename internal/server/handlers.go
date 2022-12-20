@@ -1,6 +1,7 @@
 package server
 
 import (
+	"fmt"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"murakali/internal/middleware"
@@ -28,13 +29,13 @@ func (s *Server) MapHandlers() error {
 	userHandlers := userDelivery.NewUserHandlers(s.cfg, userUC, s.log)
 
 	s.gin.Use(cors.New(cors.Config{
-		AllowOrigins:     []string{"*"},
+		AllowOrigins:     []string{fmt.Sprintf("http://%s", s.cfg.Server.Origin)},
 		AllowMethods:     []string{"GET", "POST", "PUT", "PATCH", "DELETE"},
 		AllowHeaders:     []string{"Origin", "Content-type", "Authorization"},
 		ExposeHeaders:    []string{"Content-Length"},
 		AllowCredentials: true,
 		AllowOriginFunc: func(origin string) bool {
-			return origin == "http://localhost:3001"
+			return origin == fmt.Sprintf("http://%s", s.cfg.Server.Origin)
 		},
 		MaxAge: 12 * time.Hour,
 	}))
