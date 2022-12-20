@@ -230,8 +230,6 @@ func (h *userHandlers) ValidateQueryAddress(c *gin.Context, pgn *pagination.Pagi
 	return name
 }
 
-
-
 func (h *userHandlers) EditUser(c *gin.Context) {
 	var requestBody body.EditUserRequest
 	if err := c.ShouldBind(&requestBody); err != nil {

@@ -4,8 +4,8 @@ import (
 	"context"
 	"crypto/sha256"
 	"database/sql"
-	"math"
 	"fmt"
+	"math"
 	"murakali/config"
 	"murakali/internal/constant"
 	"murakali/internal/model"
@@ -394,27 +394,23 @@ func (u *userUC) SendLinkOTPEmail(ctx context.Context, email string) error {
 	return nil
 }
 
-
-
 func (u *userUC) GetSealabsPay(ctx context.Context, userid string) ([]*model.SealabsPay, error) {
-
-	response, err := u.userRepo.GetSealabsPay(ctx, userid)
+	slp, err := u.userRepo.GetSealabsPay(ctx, userid)
 	if err != nil {
 		return nil, err
 	}
 
-	return response, nil
+	return slp, nil
 }
 
 func (u *userUC) AddSealabsPay(ctx context.Context, request body.AddSealabsPayRequest, userid string) error {
-
-	card_number, err := u.userRepo.CheckDefaultSealabsPay(ctx, userid)
+	cardNumber, err := u.userRepo.CheckDefaultSealabsPay(ctx, userid)
 	if err != nil {
 		return err
 	}
 
 	err = u.txRepo.WithTransaction(func(tx postgre.Transaction) error {
-		if u.userRepo.SetDefaultSealabsPayTrans(ctx, tx, card_number) != nil {
+		if u.userRepo.SetDefaultSealabsPayTrans(ctx, tx, cardNumber) != nil {
 			return err
 		}
 
@@ -427,73 +423,21 @@ func (u *userUC) AddSealabsPay(ctx context.Context, request body.AddSealabsPayRe
 	return nil
 }
 
-func (u *userUC) PatchSealabsPay(ctx context.Context, card_number string, userid string) error {
-	err := u.userRepo.PatchSealabsPay(ctx, card_number)
+func (u *userUC) PatchSealabsPay(ctx context.Context, cardNumber, userid string) error {
+	err := u.userRepo.PatchSealabsPay(ctx, cardNumber)
 	if err != nil {
 		return err
 	}
 
-	if u.userRepo.SetDefaultSealabsPay(ctx, card_number, userid) != nil {
+	if u.userRepo.SetDefaultSealabsPay(ctx, cardNumber, userid) != nil {
 		return err
 	}
 	return nil
 }
 
-func (u *userUC) DeleteSealabsPay(ctx context.Context, card_number string) error {
-	err := u.userRepo.DeleteSealabsPay(ctx, card_number)
+func (u *userUC) DeleteSealabsPay(ctx context.Context, cardNumber string) error {
+	err := u.userRepo.DeleteSealabsPay(ctx, cardNumber)
 	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func (u *userUC) GetAddressByID(ctx context.Context, userID, addressID string) (*model.Address, error) {
-	userModel, err := u.userRepo.GetUserByID(ctx, userID)
-	if err != nil {
-		if err == sql.ErrNoRows {
-			return nil, httperror.New(http.StatusUnauthorized, response.UnauthorizedMessage)
-		}
-
-		return nil, err
-	}
-
-	address, err := u.userRepo.GetAddressByID(ctx, userModel.ID.String(), addressID)
-	if err != nil {
-		if err == sql.ErrNoRows {
-			return nil, httperror.New(http.StatusBadRequest, response.AddressNotExistMessage)
-		}
-
-		return nil, err
-	}
-
-	return address, nil
-}
-
-func (u *userUC) DeleteAddressByID(ctx context.Context, userID, addressID string) error {
-	userModel, err := u.userRepo.GetUserByID(ctx, userID)
-	if err != nil {
-		if err == sql.ErrNoRows {
-			return httperror.New(http.StatusUnauthorized, response.UnauthorizedMessage)
-		}
-
-		return err
-	}
-
-	address, err := u.userRepo.GetAddressByID(ctx, userModel.ID.String(), addressID)
-	if err != nil {
-		if err == sql.ErrNoRows {
-			return httperror.New(http.StatusBadRequest, response.AddressNotExistMessage)
-		}
-
-		return err
-	}
-
-	if address.IsDefault || address.IsShopDefault {
-		return httperror.New(http.StatusBadRequest, response.AddressIsDefaultMessage)
-	}
-
-	if err := u.userRepo.DeleteAddress(ctx, address.ID.String()); err != nil {
 		return err
 	}
 

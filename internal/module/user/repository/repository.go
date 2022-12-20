@@ -93,7 +93,6 @@ func (r *userRepo) GetDefaultShopAddress(ctx context.Context, userID string) (*m
 	return &address, nil
 }
 
-
 func (r *userRepo) GetTotalAddress(ctx context.Context, userID, name string) (int64, error) {
 	var total int64
 	if err := r.PSQL.QueryRowContext(ctx, GetTotalAddressQuery, userID, fmt.Sprintf("%%%s%%", name)).Scan(&total); err != nil {
@@ -316,7 +315,6 @@ func (r *userRepo) DeleteOTPValue(ctx context.Context, email string) (int64, err
 }
 
 func (r *userRepo) GetSealabsPay(ctx context.Context, userid string) ([]*model.SealabsPay, error) {
-
 	responses := make([]*model.SealabsPay, 0)
 	res, err := r.PSQL.QueryContext(ctx, GetSealabsPayByIdQuery, userid)
 
@@ -328,7 +326,8 @@ func (r *userRepo) GetSealabsPay(ctx context.Context, userid string) ([]*model.S
 	for res.Next() {
 		var response model.SealabsPay
 		if err := res.Scan(
-			&response.CardNumber, &response.UserID, &response.Name, &response.IsDefault, &response.ActiveDate, &response.CreatedAt, &response.UpdatedAt, &response.DeletedAt); err != nil {
+			&response.CardNumber, &response.UserID, &response.Name, &response.IsDefault,
+			&response.ActiveDate, &response.CreatedAt, &response.UpdatedAt, &response.DeletedAt); err != nil {
 			return nil, err
 		}
 		responses = append(responses, &response)
@@ -347,41 +346,39 @@ func (r *userRepo) CheckDefaultSealabsPay(ctx context.Context, userid string) (*
 	return temp, nil
 }
 
-
-func (r *userRepo) PatchSealabsPay(ctx context.Context, card_number string) error {
-	if _, err := r.PSQL.ExecContext(ctx, PatchSealabsPayQuery, card_number); err != nil {
+func (r *userRepo) PatchSealabsPay(ctx context.Context, cardNumber string) error {
+	if _, err := r.PSQL.ExecContext(ctx, PatchSealabsPayQuery, cardNumber); err != nil {
 		return err
 	}
 	return nil
 }
 
-func (r *userRepo) DeleteSealabsPay(ctx context.Context, card_number string) error {
-	if _, err := r.PSQL.ExecContext(ctx, DeleteSealabsPayQuery, card_number); err != nil {
+func (r *userRepo) DeleteSealabsPay(ctx context.Context, cardNumber string) error {
+	if _, err := r.PSQL.ExecContext(ctx, DeleteSealabsPayQuery, cardNumber); err != nil {
 		return err
 	}
 	return nil
 }
 
-func (r *userRepo) SetDefaultSealabsPayTrans(ctx context.Context, tx postgre.Transaction, card_number *string) error {
-	if _, err := tx.ExecContext(ctx, SetDefaultSealabsPayTransQuery, card_number); err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func (r *userRepo) SetDefaultSealabsPay(ctx context.Context, card_number string, userid string) error {
-	if _, err := r.PSQL.ExecContext(ctx, SetDefaultSealabsPayQuery, card_number, userid); err != nil {
+func (r *userRepo) SetDefaultSealabsPayTrans(ctx context.Context, tx postgre.Transaction, cardNumber *string) error {
+	if _, err := tx.ExecContext(ctx, SetDefaultSealabsPayTransQuery, cardNumber); err != nil {
 		return err
 	}
 
 	return nil
 }
 
+func (r *userRepo) SetDefaultSealabsPay(ctx context.Context, cardNumber, userid string) error {
+	if _, err := r.PSQL.ExecContext(ctx, SetDefaultSealabsPayQuery, cardNumber, userid); err != nil {
+		return err
+	}
+
+	return nil
+}
 
 func (r *userRepo) AddSealabsPay(ctx context.Context, tx postgre.Transaction, request body.AddSealabsPayRequest) error {
-
-	if _, err := tx.ExecContext(ctx, CreateSealabsPayQuery, request.CardNumber, request.UserID, request.Name, request.IsDefault, request.ActiveDateTime); err != nil {
+	if _, err := tx.ExecContext(ctx, CreateSealabsPayQuery, request.CardNumber, request.UserID,
+		request.Name, request.IsDefault, request.ActiveDateTime); err != nil {
 		return err
 	}
 
