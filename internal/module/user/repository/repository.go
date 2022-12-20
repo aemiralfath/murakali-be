@@ -385,3 +385,39 @@ func (r *userRepo) AddSealabsPay(ctx context.Context, tx postgre.Transaction, re
 
 	return nil
 }
+
+func (r *userRepo) CheckShopByID(ctx context.Context, userID string) (int64, error) {
+	var result int64
+	err := r.PSQL.QueryRowContext(ctx, CheckShopByIdQuery, userID).Scan(&result)
+	if err != nil {
+		return -1, err
+	}
+
+	return result, nil
+}
+
+func (r *userRepo) CheckShopUnique(ctx context.Context, shopName string) (int64, error) {
+	var result int64
+	err := r.PSQL.QueryRowContext(ctx, CheckShopUniqueQuery, shopName).Scan(&result)
+	if err != nil {
+		return -1, err
+	}
+
+	return result, nil
+}
+
+func (r *userRepo) AddShop(ctx context.Context, userID, shopName string) error {
+	if _, err := r.PSQL.ExecContext(ctx, AddShopQuery, userID, shopName); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (r *userRepo) UpdateRole(ctx context.Context, userID string) error {
+	if _, err := r.PSQL.ExecContext(ctx, UpdateRoleQuery, userID); err != nil {
+		return err
+	}
+
+	return nil
+}

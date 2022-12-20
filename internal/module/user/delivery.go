@@ -15,4 +15,5 @@ type Handlers interface {
 	AddSealabsPay(c *gin.Context)
 	PatchSealabsPay(c *gin.Context)
 	DeleteSealabsPay(c *gin.Context)
+	RegisterMerchant(c *gin.Context)
 }
