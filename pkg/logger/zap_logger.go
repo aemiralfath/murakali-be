@@ -10,46 +10,81 @@ import (
 
 type Logger interface {
 	InitLogger()
+
+	GetZapLogger() *zap.SugaredLogger
+
 	Debug(args ...interface{})
+
 	Debugf(template string, args ...interface{})
+
 	Info(args ...interface{})
+
 	Infof(template string, args ...interface{})
+
 	Warn(args ...interface{})
+
 	Warnf(template string, args ...interface{})
+
 	Error(args ...interface{})
+
 	Errorf(template string, args ...interface{})
+
 	DPanic(args ...interface{})
+
 	DPanicf(template string, args ...interface{})
+
 	Fatal(args ...interface{})
+
 	Fatalf(template string, args ...interface{})
 }
 
 type APILogger struct {
-	cfg         *config.Config
+	cfg *config.Config
+
 	sugarLogger *zap.SugaredLogger
 }
 
 func NewAPILogger(cfg *config.Config) *APILogger {
+
 	return &APILogger{cfg: cfg}
+
 }
 
 var loggerLevelMap = map[string]zapcore.Level{
-	"debug":     zapcore.DebugLevel,
-	"info":      zapcore.InfoLevel,
-	"warn":      zapcore.WarnLevel,
+
+	"debug": zapcore.DebugLevel,
+
+	"info": zapcore.InfoLevel,
+
+	"warn": zapcore.WarnLevel,
+
 	"httperror": zapcore.ErrorLevel,
-	"dpanic":    zapcore.DPanicLevel,
-	"panic":     zapcore.PanicLevel,
-	"fatal":     zapcore.FatalLevel,
+
+	"dpanic": zapcore.DPanicLevel,
+
+	"panic": zapcore.PanicLevel,
+
+	"fatal": zapcore.FatalLevel,
 }
 
 func (l *APILogger) getLoggerLevel(cfg *config.Config) zapcore.Level {
+
 	level, exist := loggerLevelMap[cfg.Logger.Level]
+
 	if !exist {
+
 		return zapcore.DebugLevel
+
 	}
 
 	return level
+
+}
+
+func (l *APILogger) GetZapLogger() *zap.SugaredLogger {
+
+	return l.sugarLogger
+
 }
 
 func (l *APILogger) InitLogger() {
