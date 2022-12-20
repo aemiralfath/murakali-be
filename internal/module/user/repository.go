@@ -4,18 +4,29 @@ import (
 	"context"
 	"murakali/internal/model"
 	"murakali/internal/module/user/delivery/body"
+	"murakali/pkg/pagination"
 	"murakali/pkg/postgre"
 )
 
 type Repository interface {
+	GetUserByID(ctx context.Context, id string) (*model.User, error)
+	GetTotalAddress(ctx context.Context, userID, name string) (int64, error)
+	GetAddresses(ctx context.Context, userID, name string, pagination *pagination.Pagination) ([]*model.Address, error)
+	GetAddressByID(ctx context.Context, userID, addressID string) (*model.Address, error)
+	GetDefaultUserAddress(ctx context.Context, userID string) (*model.Address, error)
+	GetDefaultShopAddress(ctx context.Context, userID string) (*model.Address, error)
+	CreateAddress(ctx context.Context, tx postgre.Transaction, userID string, requestBody body.CreateAddressRequest) error
+	UpdateAddress(ctx context.Context, tx postgre.Transaction, address *model.Address) error
+	UpdateDefaultAddress(ctx context.Context, tx postgre.Transaction, status bool, address *model.Address) error
+	UpdateDefaultShopAddress(ctx context.Context, tx postgre.Transaction, status bool, address *model.Address) error
+	DeleteAddress(ctx context.Context, addressID string) error
 	GetSealabsPay(ctx context.Context, userid string) ([]*model.SealabsPay, error)
 	AddSealabsPay(ctx context.Context, tx postgre.Transaction, request body.AddSealabsPayRequest) error
-	PatchSealabsPay(ctx context.Context, card_number string) error
+	PatchSealabsPay(ctx context.Context, cardNumber string) error
 	CheckDefaultSealabsPay(ctx context.Context, userid string) (*string, error)
-	SetDefaultSealabsPayTrans(ctx context.Context, tx postgre.Transaction, card_number *string) error
-	SetDefaultSealabsPay(ctx context.Context, card_number string, userid string) error
-	DeleteSealabsPay(ctx context.Context, card_number string) error
-	GetUserByID(ctx context.Context, id string) (*model.User, error)
+	SetDefaultSealabsPayTrans(ctx context.Context, tx postgre.Transaction, cardNumber *string) error
+	SetDefaultSealabsPay(ctx context.Context, cardNumber string, userid string) error
+	DeleteSealabsPay(ctx context.Context, cardNmber string) error
 	CheckEmailHistory(ctx context.Context, email string) (*model.EmailHistory, error)
 	InsertNewOTPKey(ctx context.Context, email, otp string) error
 	GetOTPValue(ctx context.Context, email string) (string, error)

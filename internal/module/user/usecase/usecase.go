@@ -5,13 +5,16 @@ import (
 	"crypto/sha256"
 	"database/sql"
 	"fmt"
+	"math"
 	"murakali/config"
+	"murakali/internal/constant"
 	"murakali/internal/model"
 	"murakali/internal/module/user"
 	"murakali/internal/module/user/delivery/body"
 	"murakali/internal/util"
 	smtp "murakali/pkg/email"
 	"murakali/pkg/httperror"
+	"murakali/pkg/pagination"
 	"murakali/pkg/postgre"
 	"murakali/pkg/response"
 	"net/http"
@@ -28,52 +31,206 @@ func NewUserUseCase(cfg *config.Config, txRepo *postgre.TxRepo, userRepo user.Re
 	return &userUC{cfg: cfg, txRepo: txRepo, userRepo: userRepo}
 }
 
-func (u *userUC) GetSealabsPay(ctx context.Context, userid string) ([]*model.SealabsPay, error) {
+func (u *userUC) CreateAddress(ctx context.Context, userID string, requestBody body.CreateAddressRequest) error {
+	userModel, err := u.userRepo.GetUserByID(ctx, userID)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return httperror.New(http.StatusBadRequest, response.UserNotExistMessage)
+		}
 
-	response, err := u.userRepo.GetSealabsPay(ctx, userid)
+		return err
+	}
+
+	if requestBody.IsShopDefault && userModel.RoleID != constant.RoleSeller {
+		return httperror.New(http.StatusBadRequest, response.UserNotASellerMessage)
+	}
+
+	err = u.txRepo.WithTransaction(func(tx postgre.Transaction) error {
+		if requestBody.IsDefault {
+			defaultAddress, getErr := u.userRepo.GetDefaultUserAddress(ctx, userModel.ID.String())
+			if getErr != nil && getErr != sql.ErrNoRows {
+				return getErr
+			}
+
+			if defaultAddress != nil && defaultAddress.IsDefault {
+				if errUpdate := u.userRepo.UpdateDefaultAddress(ctx, tx, false, defaultAddress); errUpdate != nil {
+					return errUpdate
+				}
+			}
+		}
+
+		if requestBody.IsShopDefault {
+			defaultShopAddress, getErr := u.userRepo.GetDefaultShopAddress(ctx, userModel.ID.String())
+			if getErr != nil && getErr != sql.ErrNoRows {
+				return getErr
+			}
+
+			if defaultShopAddress != nil && defaultShopAddress.IsShopDefault {
+				if errUpdate := u.userRepo.UpdateDefaultShopAddress(ctx, tx, false, defaultShopAddress); errUpdate != nil {
+					return errUpdate
+				}
+			}
+		}
+
+		err = u.userRepo.CreateAddress(ctx, tx, userModel.ID.String(), requestBody)
+		if err != nil {
+			return err
+		}
+
+		return nil
+	})
+
+	return nil
+}
+
+func (u *userUC) UpdateAddressByID(ctx context.Context, userID, addressID string, requestBody body.UpdateAddressRequest) error {
+	userModel, err := u.userRepo.GetUserByID(ctx, userID)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return httperror.New(http.StatusBadRequest, response.UserNotExistMessage)
+		}
+
+		return err
+	}
+
+	address, err := u.userRepo.GetAddressByID(ctx, userModel.ID.String(), addressID)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return httperror.New(http.StatusBadRequest, response.AddressNotExistMessage)
+		}
+
+		return err
+	}
+
+	if requestBody.IsShopDefault && userModel.RoleID != constant.RoleSeller {
+		return httperror.New(http.StatusBadRequest, response.UserNotASellerMessage)
+	}
+
+	err = u.txRepo.WithTransaction(func(tx postgre.Transaction) error {
+		if requestBody.IsDefault {
+			defaultAddress, getErr := u.userRepo.GetDefaultUserAddress(ctx, userModel.ID.String())
+			if getErr != nil && getErr != sql.ErrNoRows {
+				return getErr
+			}
+
+			if defaultAddress != nil && defaultAddress.IsDefault {
+				if errUpdate := u.userRepo.UpdateDefaultAddress(ctx, tx, false, defaultAddress); errUpdate != nil {
+					return errUpdate
+				}
+			}
+		}
+
+		if requestBody.IsShopDefault {
+			defaultShopAddress, getErr := u.userRepo.GetDefaultShopAddress(ctx, userModel.ID.String())
+			if getErr != nil && getErr != sql.ErrNoRows {
+				return getErr
+			}
+
+			if defaultShopAddress != nil && defaultShopAddress.IsShopDefault {
+				if errUpdate := u.userRepo.UpdateDefaultShopAddress(ctx, tx, false, defaultShopAddress); errUpdate != nil {
+					return errUpdate
+				}
+			}
+		}
+
+		address.Name = requestBody.Name
+		address.ProvinceID = requestBody.ProvinceID
+		address.CityID = requestBody.CityID
+		address.Province = requestBody.Province
+		address.City = requestBody.City
+		address.District = requestBody.District
+		address.SubDistrict = requestBody.SubDistrict
+		address.AddressDetail = requestBody.AddressDetail
+		address.ZipCode = requestBody.ZipCode
+		address.IsDefault = requestBody.IsDefault
+		address.IsShopDefault = requestBody.IsShopDefault
+		address.UpdatedAt.Valid = true
+		address.UpdatedAt.Time = time.Now()
+		err = u.userRepo.UpdateAddress(ctx, tx, address)
+		if err != nil {
+			return err
+		}
+
+		return nil
+	})
+
+	return nil
+}
+
+func (u *userUC) GetAddress(ctx context.Context, userID, name string, pgn *pagination.Pagination) (*pagination.Pagination, error) {
+	userModel, err := u.userRepo.GetUserByID(ctx, userID)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, httperror.New(http.StatusUnauthorized, response.UnauthorizedMessage)
+		}
+
+		return nil, err
+	}
+
+	totalRows, err := u.userRepo.GetTotalAddress(ctx, userModel.ID.String(), name)
 	if err != nil {
 		return nil, err
 	}
 
-	return response, nil
-}
+	totalPages := int(math.Ceil(float64(totalRows) / float64(pgn.Limit)))
+	pgn.TotalRows = totalRows
+	pgn.TotalPages = totalPages
 
-func (u *userUC) AddSealabsPay(ctx context.Context, request body.AddSealabsPayRequest, userid string) error {
-
-	card_number, err := u.userRepo.CheckDefaultSealabsPay(ctx, userid)
+	addresses, err := u.userRepo.GetAddresses(ctx, userModel.ID.String(), name, pgn)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	err = u.txRepo.WithTransaction(func(tx postgre.Transaction) error {
-		if u.userRepo.SetDefaultSealabsPayTrans(ctx, tx, card_number) != nil {
-			return err
+	pgn.Rows = addresses
+	return pgn, nil
+}
+
+func (u *userUC) GetAddressByID(ctx context.Context, userID, addressID string) (*model.Address, error) {
+	userModel, err := u.userRepo.GetUserByID(ctx, userID)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, httperror.New(http.StatusUnauthorized, response.UnauthorizedMessage)
 		}
 
-		err = u.userRepo.AddSealabsPay(ctx, tx, request)
-		if err != nil {
-			return err
+		return nil, err
+	}
+
+	address, err := u.userRepo.GetAddressByID(ctx, userModel.ID.String(), addressID)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, httperror.New(http.StatusBadRequest, response.AddressNotExistMessage)
 		}
-		return nil
-	})
-	return nil
+
+		return nil, err
+	}
+
+	return address, nil
 }
 
-func (u *userUC) PatchSealabsPay(ctx context.Context, card_number string, userid string) error {
-	err := u.userRepo.PatchSealabsPay(ctx, card_number)
+func (u *userUC) DeleteAddressByID(ctx context.Context, userID, addressID string) error {
+	userModel, err := u.userRepo.GetUserByID(ctx, userID)
 	if err != nil {
+		if err == sql.ErrNoRows {
+			return httperror.New(http.StatusUnauthorized, response.UnauthorizedMessage)
+		}
+
 		return err
 	}
 
-	if u.userRepo.SetDefaultSealabsPay(ctx, card_number, userid) != nil {
+	address, err := u.userRepo.GetAddressByID(ctx, userModel.ID.String(), addressID)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return httperror.New(http.StatusBadRequest, response.AddressNotExistMessage)
+		}
+
 		return err
 	}
-	return nil
-}
 
-func (u *userUC) DeleteSealabsPay(ctx context.Context, card_number string) error {
-	err := u.userRepo.DeleteSealabsPay(ctx, card_number)
-	if err != nil {
+	if address.IsDefault || address.IsShopDefault {
+		return httperror.New(http.StatusBadRequest, response.AddressIsDefaultMessage)
+	}
+
+	if err := u.userRepo.DeleteAddress(ctx, address.ID.String()); err != nil {
 		return err
 	}
 
@@ -233,6 +390,56 @@ func (u *userUC) SendLinkOTPEmail(ctx context.Context, email string) error {
 	subject := "Change email!"
 	msg := smtp.VerificationEmailLinkOTPBody(link)
 	go smtp.SendEmail(u.cfg, email, subject, msg)
+
+	return nil
+}
+
+func (u *userUC) GetSealabsPay(ctx context.Context, userid string) ([]*model.SealabsPay, error) {
+	slp, err := u.userRepo.GetSealabsPay(ctx, userid)
+	if err != nil {
+		return nil, err
+	}
+
+	return slp, nil
+}
+
+func (u *userUC) AddSealabsPay(ctx context.Context, request body.AddSealabsPayRequest, userid string) error {
+	cardNumber, err := u.userRepo.CheckDefaultSealabsPay(ctx, userid)
+	if err != nil {
+		return err
+	}
+
+	err = u.txRepo.WithTransaction(func(tx postgre.Transaction) error {
+		if u.userRepo.SetDefaultSealabsPayTrans(ctx, tx, cardNumber) != nil {
+			return err
+		}
+
+		err = u.userRepo.AddSealabsPay(ctx, tx, request)
+		if err != nil {
+			return err
+		}
+		return nil
+	})
+	return nil
+}
+
+func (u *userUC) PatchSealabsPay(ctx context.Context, cardNumber, userid string) error {
+	err := u.userRepo.PatchSealabsPay(ctx, cardNumber)
+	if err != nil {
+		return err
+	}
+
+	if u.userRepo.SetDefaultSealabsPay(ctx, cardNumber, userid) != nil {
+		return err
+	}
+	return nil
+}
+
+func (u *userUC) DeleteSealabsPay(ctx context.Context, cardNumber string) error {
+	err := u.userRepo.DeleteSealabsPay(ctx, cardNumber)
+	if err != nil {
+		return err
+	}
 
 	return nil
 }

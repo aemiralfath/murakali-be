@@ -8,5 +8,6 @@ const (
 	OtpKey      = "user:otp"
 	OtpDuration = "30m"
 
-	RoleUser = 1
+	RoleUser   = 1
+	RoleSeller = 2
 )

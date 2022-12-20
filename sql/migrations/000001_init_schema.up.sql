@@ -17,8 +17,8 @@ CREATE TABLE IF NOT EXISTS "user"
     "gender" varchar,
     "birth_date" timestamp,
     "photo_url" varchar,
-    "is_sso" boolean,
-    "is_verify" boolean,
+    "is_sso" boolean DEFAULT false,
+    "is_verify" boolean DEFAULT false,
     "created_at" timestamptz NOT NULL DEFAULT
 (
     NOW
@@ -259,7 +259,7 @@ CREATE TABLE IF NOT EXISTS "product"
     "view_count" bigint,
     "favorite_count" bigint,
     "unit_sold" bigint,
-    "listed_status" boolean,
+    "listed_status" boolean DEFAULT false,
     "thumbnail_url" varchar,
     "rating_avg" float,
     "min_price" float,
@@ -283,9 +283,9 @@ CREATE TABLE IF NOT EXISTS "product_detail"
     "stock" bigint,
     "weight" int,
     "size" int,
-    "hazardous" boolean,
+    "hazardous" boolean DEFAULT false,
     "condition" varchar,
-    "bulk_price" boolean,
+    "bulk_price" boolean DEFAULT false,
     "created_at" timestamptz NOT NULL DEFAULT
 (
     NOW
@@ -388,7 +388,7 @@ CREATE TABLE IF NOT EXISTS "sealabs_pay"
 ),
     "user_id" UUID,
     "name" varchar,
-    "is_default" boolean,
+    "is_default" boolean DEFAULT false,
     "active_date" timestamp,
     "created_at" timestamptz NOT NULL DEFAULT
 (
@@ -449,12 +449,12 @@ CREATE TABLE IF NOT EXISTS "address"
     "city_id" int,
     "province" varchar,
     "city" varchar,
-    "disctrict" varchar,
-    "sub_disctrict" varchar,
+    "district" varchar,
+    "sub_district" varchar,
     "address_detail" varchar,
     "zip_code" varchar,
-    "is_default" boolean,
-    "is_shop_default" boolean,
+    "is_default" boolean DEFAULT false,
+    "is_shop_default" boolean DEFAULT false,
     "created_at" timestamptz NOT NULL DEFAULT
 (
     NOW
@@ -506,7 +506,7 @@ CREATE TABLE IF NOT EXISTS "banner"
     "content" text,
     "image_url" varchar,
     "page_url" varchar,
-    "is_active" boolean
+    "is_active" boolean DEFAULT false
     );
 
 CREATE INDEX ON "user" ("email");

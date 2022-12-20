@@ -13,6 +13,9 @@ const (
 	UnauthorizedMessage        = "Email or password not valid."
 	ForbiddenMessage           = "Forbidden"
 
+	AddressIsDefaultMessage        = "Address is default."
+	UserNotMatchMessage            = "User not match."
+	UserNotASellerMessage          = "User not a seller."
 	EmailAlreadyExistMessage       = "Email already exist."
 	EmailSamePreviousEmailMessage  = "This email same as your current email."
 	EmailNotExistMessage           = "Email not exist."
@@ -21,6 +24,7 @@ const (
 	UserNameAlreadyExistMessage    = "Username already exist."
 	PhoneNoAlreadyExistMessage     = "Phone no already exist."
 	UserNotExistMessage            = "User not exist."
+	AddressNotExistMessage         = "Address not exist."
 	PasswordSameOldPasswordMessage = "Your new password cannot be the same as your old password."
 	PasswordContainUsernameMessage = "Password contains username."
 	OTPAlreadyExpiredMessage       = "OTP already expired."
