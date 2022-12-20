@@ -95,13 +95,13 @@ func (h *userHandlers) EditEmail(c *gin.Context) {
 }
 
 func (h *userHandlers) EditEmailUser(c *gin.Context) {
-	var requestBody body.EditEmailUserRequest
-	if err := c.ShouldBind(&requestBody); err != nil {
+	var requestParam body.EditEmailUserRequest
+	if err := c.ShouldBind(&requestParam); err != nil {
 		response.ErrorResponse(c.Writer, response.BadRequestMessage, http.StatusBadRequest)
 		return
 	}
 
-	invalidFields, err := requestBody.Validate()
+	invalidFields, err := requestParam.Validate()
 	if err != nil {
 		response.ErrorResponseData(c.Writer, invalidFields, response.UnprocessableEntityMessage, http.StatusUnprocessableEntity)
 		return
@@ -113,7 +113,7 @@ func (h *userHandlers) EditEmailUser(c *gin.Context) {
 		return
 	}
 
-	_, err = h.userUC.EditEmailUser(c, fmt.Sprintf("%v", userID), requestBody)
+	_, err = h.userUC.EditEmailUser(c, fmt.Sprintf("%v", userID), requestParam)
 	if err != nil {
 		var e *httperror.Error
 		if !errors.As(err, &e) {
