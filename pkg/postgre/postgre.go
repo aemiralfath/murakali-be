@@ -29,7 +29,6 @@ func (tracer *myQueryTracer) TraceQueryEnd(_ context.Context, _ *pgx.Conn, data 
 
 func NewPG(cfg *config.Config, log logger.Logger) (*sql.DB, error) {
 	connString := fmt.Sprintf(
-
 		"postgres://%s:%s@%s/%s?sslmode=disable",
 
 		cfg.Postgres.PostgresqlUser,
@@ -44,7 +43,6 @@ func NewPG(cfg *config.Config, log logger.Logger) (*sql.DB, error) {
 	connectionCfg, err := pgx.ParseConfig(connString)
 
 	if err != nil {
-
 		return nil, fmt.Errorf("failed to parse cfg %w", err)
 	}
 
@@ -57,19 +55,14 @@ func NewPG(cfg *config.Config, log logger.Logger) (*sql.DB, error) {
 	db, err := sql.Open(cfg.Postgres.PgDriver, connStr)
 
 	if err != nil {
-
 		return nil, err
-
 	}
 
 	err = db.Ping()
 
 	if err != nil {
-
 		return db, err
-
 	}
 
 	return db, nil
-
 }

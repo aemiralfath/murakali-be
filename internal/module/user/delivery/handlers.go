@@ -357,8 +357,8 @@ func (h *userHandlers) GetSealabsPay(c *gin.Context) {
 		response.ErrorResponse(c.Writer, e.Err.Error(), e.Status)
 		return
 	}
-	response.SuccessResponse(c.Writer, result, http.StatusOK)
 
+	response.SuccessResponse(c.Writer, result, http.StatusOK)
 }
 
 func (h *userHandlers) AddSealabsPay(c *gin.Context) {
@@ -427,7 +427,6 @@ func (h *userHandlers) PatchSealabsPay(c *gin.Context) {
 }
 
 func (h *userHandlers) DeleteSealabsPay(c *gin.Context) {
-
 	var requestBody body.SlpCardRequest
 	if err := c.ShouldBind(&requestBody); err != nil {
 		response.ErrorResponse(c.Writer, response.BadRequestMessage, http.StatusBadRequest)

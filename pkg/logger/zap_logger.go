@@ -64,13 +64,10 @@ var loggerLevelMap = map[string]zapcore.Level{
 }
 
 func (l *APILogger) getLoggerLevel(cfg *config.Config) zapcore.Level {
-
 	level, exist := loggerLevelMap[cfg.Logger.Level]
 
 	if !exist {
-
 		return zapcore.DebugLevel
-
 	}
 
 	return level
