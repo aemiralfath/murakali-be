@@ -1,12 +1,13 @@
 package server
 
 import (
-	"github.com/gin-contrib/cors"
-	"github.com/gin-gonic/gin"
 	"murakali/internal/middleware"
 	authDelivery "murakali/internal/module/auth/delivery"
 	authRepository "murakali/internal/module/auth/repository"
 	authUseCase "murakali/internal/module/auth/usecase"
+	productDelivery "murakali/internal/module/product/delivery"
+	productRepository "murakali/internal/module/product/repository"
+	productUseCase "murakali/internal/module/product/usecase"
 	userDelivery "murakali/internal/module/user/delivery"
 	userRepository "murakali/internal/module/user/repository"
 	userUseCase "murakali/internal/module/user/usecase"
@@ -14,6 +15,9 @@ import (
 	"murakali/pkg/response"
 	"net/http"
 	"time"
+
+	"github.com/gin-contrib/cors"
+	"github.com/gin-gonic/gin"
 )
 
 func (s *Server) MapHandlers() error {
@@ -26,6 +30,10 @@ func (s *Server) MapHandlers() error {
 	userRepo := userRepository.NewUserRepository(s.db, s.redisClient)
 	userUC := userUseCase.NewUserUseCase(s.cfg, txRepo, userRepo)
 	userHandlers := userDelivery.NewUserHandlers(s.cfg, userUC, s.log)
+
+	productRepo := productRepository.NewProductRepository(s.db, s.redisClient)
+	productUC := productUseCase.NewProductUseCase(s.cfg, txRepo, productRepo)
+	productHandlers := productDelivery.NewProductHandlers(s.cfg, productUC, s.log)
 
 	s.gin.Use(cors.New(cors.Config{
 		AllowOrigins:     []string{"*"},
@@ -46,10 +54,12 @@ func (s *Server) MapHandlers() error {
 	v1 := s.gin.Group("/api/v1")
 	authGroup := v1.Group("/auth")
 	userGroup := v1.Group("/user")
+	productGroup := v1.Group("/product")
 
 	mw := middleware.NewMiddlewareManager(s.cfg, []string{"*"}, s.log)
 	authDelivery.MapAuthRoutes(authGroup, authHandlers)
 	userDelivery.MapUserRoutes(userGroup, userHandlers, mw)
+	productDelivery.MapProductRoutes(productGroup, productHandlers)
 
 	return nil
 }
