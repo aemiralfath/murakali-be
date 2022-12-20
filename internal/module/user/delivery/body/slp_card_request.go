@@ -7,11 +7,11 @@ import (
 	"strings"
 )
 
-type PatchSealabsPayRequest struct {
+type SlpCardRequest struct {
 	CardNumber string `form:"card_number"`
 }
 
-func (r *PatchSealabsPayRequest) Validate() (UnprocessableEntity, error) {
+func (r *SlpCardRequest) Validate() (UnprocessableEntity, error) {
 	unprocessableEntity := false
 	entity := UnprocessableEntity{
 		Fields: map[string]string{

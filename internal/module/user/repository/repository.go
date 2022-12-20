@@ -347,7 +347,7 @@ func (r *userRepo) CheckDefaultSealabsPay(ctx context.Context, userid string) (*
 }
 
 func (r *userRepo) SetDefaultSealabsPayTrans(ctx context.Context, tx postgre.Transaction, card_number *string) error {
-	if _, err := tx.ExecContext(ctx, SetDefaultSealabsPayTransQuery, card_number); err != nil {
+	if _, err := tx.ExecContext(ctx, SetDefaultSealabsPayQuery, card_number); err != nil {
 		return err
 	}
 

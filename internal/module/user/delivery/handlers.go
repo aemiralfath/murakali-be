@@ -400,7 +400,7 @@ func (h *userHandlers) PatchSealabsPay(c *gin.Context) {
 		response.ErrorResponse(c.Writer, response.UnauthorizedMessage, http.StatusUnauthorized)
 		return
 	}
-	var requestBody body.PatchSealabsPayRequest
+	var requestBody body.SlpCardRequest
 	if err := c.ShouldBind(&requestBody); err != nil {
 		response.ErrorResponse(c.Writer, response.BadRequestMessage, http.StatusBadRequest)
 		return
@@ -428,7 +428,7 @@ func (h *userHandlers) PatchSealabsPay(c *gin.Context) {
 
 func (h *userHandlers) DeleteSealabsPay(c *gin.Context) {
 
-	var requestBody body.PatchSealabsPayRequest
+	var requestBody body.SlpCardRequest
 	if err := c.ShouldBind(&requestBody); err != nil {
 		response.ErrorResponse(c.Writer, response.BadRequestMessage, http.StatusBadRequest)
 		return
