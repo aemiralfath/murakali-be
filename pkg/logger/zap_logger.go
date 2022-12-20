@@ -10,7 +10,9 @@ import (
 
 type Logger interface {
 	InitLogger()
+
 	GetZapLogger() *zap.SugaredLogger
+
 	Debug(args ...interface{})
 
 	Debugf(template string, args ...interface{})
@@ -37,8 +39,7 @@ type Logger interface {
 }
 
 type APILogger struct {
-	cfg *config.Config
-
+	cfg         *config.Config
 	sugarLogger *zap.SugaredLogger
 }
 
@@ -65,7 +66,6 @@ var loggerLevelMap = map[string]zapcore.Level{
 
 func (l *APILogger) getLoggerLevel(cfg *config.Config) zapcore.Level {
 	level, exist := loggerLevelMap[cfg.Logger.Level]
-
 	if !exist {
 		return zapcore.DebugLevel
 	}

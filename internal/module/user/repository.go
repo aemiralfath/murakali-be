@@ -20,6 +20,13 @@ type Repository interface {
 	UpdateDefaultAddress(ctx context.Context, tx postgre.Transaction, status bool, address *model.Address) error
 	UpdateDefaultShopAddress(ctx context.Context, tx postgre.Transaction, status bool, address *model.Address) error
 	DeleteAddress(ctx context.Context, addressID string) error
+	GetSealabsPay(ctx context.Context, userid string) ([]*model.SealabsPay, error)
+	AddSealabsPay(ctx context.Context, tx postgre.Transaction, request body.AddSealabsPayRequest) error
+	PatchSealabsPay(ctx context.Context, cardNumber string) error
+	CheckDefaultSealabsPay(ctx context.Context, userid string) (*string, error)
+	SetDefaultSealabsPayTrans(ctx context.Context, tx postgre.Transaction, cardNumber *string) error
+	SetDefaultSealabsPay(ctx context.Context, cardNumber string, userid string) error
+	DeleteSealabsPay(ctx context.Context, cardNmber string) error
 	CheckEmailHistory(ctx context.Context, email string) (*model.EmailHistory, error)
 	InsertNewOTPKey(ctx context.Context, email, otp string) error
 	GetOTPValue(ctx context.Context, email string) (string, error)
@@ -29,11 +36,4 @@ type Repository interface {
 	UpdateUserField(ctx context.Context, user *model.User) error
 	UpdateUserEmail(ctx context.Context, tx postgre.Transaction, user *model.User) error
 	CreateEmailHistory(ctx context.Context, tx postgre.Transaction, email string) error
-	GetSealabsPay(ctx context.Context, userid string) ([]*model.SealabsPay, error)
-	AddSealabsPay(ctx context.Context, tx postgre.Transaction, request body.AddSealabsPayRequest) error
-	PatchSealabsPay(ctx context.Context, cardNumber string) error
-	CheckDefaultSealabsPay(ctx context.Context, userid string) (*string, error)
-	SetDefaultSealabsPayTrans(ctx context.Context, tx postgre.Transaction, cardNumber *string) error
-	SetDefaultSealabsPay(ctx context.Context, cardNumber string, userid string) error
-	DeleteSealabsPay(ctx context.Context, cardNumber string) error
 }

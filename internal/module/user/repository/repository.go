@@ -11,8 +11,9 @@ import (
 	"murakali/pkg/pagination"
 	"time"
 
-	"github.com/go-redis/redis/v8"
 	"murakali/pkg/postgre"
+
+	"github.com/go-redis/redis/v8"
 )
 
 type userRepo struct {
