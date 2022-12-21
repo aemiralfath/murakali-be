@@ -3,8 +3,6 @@ package delivery
 import (
 	"errors"
 	"fmt"
-	"github.com/gin-gonic/gin"
-	"github.com/google/uuid"
 	"murakali/config"
 	"murakali/internal/module/user"
 	"murakali/internal/module/user/delivery/body"
@@ -15,6 +13,9 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+
+	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 )
 
 type userHandlers struct {
@@ -25,6 +26,39 @@ type userHandlers struct {
 
 func NewUserHandlers(cfg *config.Config, userUC user.UseCase, log logger.Logger) user.Handlers {
 	return &userHandlers{cfg: cfg, userUC: userUC, logger: log}
+}
+
+func (h *userHandlers) RegisterMerchant(c *gin.Context) {
+	userID, exist := c.Get("userID")
+	if !exist {
+		response.ErrorResponse(c.Writer, response.UnauthorizedMessage, http.StatusUnauthorized)
+		return
+	}
+
+	var requestBody body.RegisterMerchant
+	if err := c.ShouldBind(&requestBody); err != nil {
+		response.ErrorResponse(c.Writer, response.BadRequestMessage, http.StatusBadRequest)
+		return
+	}
+
+	invalidFields, err := requestBody.Validate()
+	if err != nil {
+		response.ErrorResponseData(c.Writer, invalidFields, response.UnprocessableEntityMessage, http.StatusUnprocessableEntity)
+		return
+	}
+	if err := h.userUC.RegisterMerchant(c, userID.(string), requestBody.ShopName); err != nil {
+		var e *httperror.Error
+		if !errors.As(err, &e) {
+			h.logger.Errorf("HandlerUser, Error: %s", err)
+			response.ErrorResponse(c.Writer, response.InternalServerErrorMessage, http.StatusInternalServerError)
+			return
+		}
+
+		response.ErrorResponse(c.Writer, e.Err.Error(), e.Status)
+		return
+	}
+
+	response.SuccessResponse(c.Writer, nil, http.StatusOK)
 }
 
 func (h *userHandlers) DeleteAddressByID(c *gin.Context) {
@@ -393,16 +427,17 @@ func (h *userHandlers) AddSealabsPay(c *gin.Context) {
 }
 
 func (h *userHandlers) PatchSealabsPay(c *gin.Context) {
+	cardNumber := c.Param("cardNumber")
+
+	var requestBody body.SlpCardRequest
+	requestBody.CardNumber = cardNumber
+
 	userid, exist := c.Get("userID")
 	if !exist {
 		response.ErrorResponse(c.Writer, response.UnauthorizedMessage, http.StatusUnauthorized)
 		return
 	}
-	var requestBody body.SlpCardRequest
-	if err := c.ShouldBind(&requestBody); err != nil {
-		response.ErrorResponse(c.Writer, response.BadRequestMessage, http.StatusBadRequest)
-		return
-	}
+
 	invalidFields, err := requestBody.Validate()
 	if err != nil {
 		response.ErrorResponseData(c.Writer, invalidFields, response.UnprocessableEntityMessage, http.StatusUnprocessableEntity)
@@ -425,11 +460,11 @@ func (h *userHandlers) PatchSealabsPay(c *gin.Context) {
 }
 
 func (h *userHandlers) DeleteSealabsPay(c *gin.Context) {
+	cardNumber := c.Param("cardNumber")
+
 	var requestBody body.SlpCardRequest
-	if err := c.ShouldBind(&requestBody); err != nil {
-		response.ErrorResponse(c.Writer, response.BadRequestMessage, http.StatusBadRequest)
-		return
-	}
+	requestBody.CardNumber = cardNumber
+
 	invalidFields, err := requestBody.Validate()
 	if err != nil {
 		response.ErrorResponseData(c.Writer, invalidFields, response.UnprocessableEntityMessage, http.StatusUnprocessableEntity)

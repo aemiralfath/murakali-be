@@ -20,4 +20,5 @@ type UseCase interface {
 	AddSealabsPay(ctx context.Context, request body.AddSealabsPayRequest, userid string) error
 	PatchSealabsPay(ctx context.Context, cardNumber string, userid string) error
 	DeleteSealabsPay(ctx context.Context, cardNumber string) error
+	RegisterMerchant(ctx context.Context, userID string, shopName string) error
 }

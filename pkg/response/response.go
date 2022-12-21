@@ -29,6 +29,8 @@ const (
 	PasswordContainUsernameMessage = "Password contains username."
 	OTPAlreadyExpiredMessage       = "OTP already expired."
 	OTPIsNotValidMessage           = "OTP is not valid."
+	UserAlreadyHaveShop            = "User already have shop."
+	ShopAlreadyExists              = "Shop already exists."
 )
 
 type JSONResponse struct {

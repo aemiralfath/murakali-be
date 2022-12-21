@@ -443,3 +443,33 @@ func (u *userUC) DeleteSealabsPay(ctx context.Context, cardNumber string) error 
 
 	return nil
 }
+
+func (u *userUC) RegisterMerchant(ctx context.Context, userID, shopName string) error {
+	count, err := u.userRepo.CheckShopByID(ctx, userID)
+	if err != nil {
+		return err
+	}
+	if count != 0 {
+		return httperror.New(http.StatusBadRequest, response.UserAlreadyHaveShop)
+	}
+
+	count, err = u.userRepo.CheckShopUnique(ctx, shopName)
+	if err != nil {
+		return err
+	}
+	if count != 0 {
+		return httperror.New(http.StatusBadRequest, response.ShopAlreadyExists)
+	}
+
+	err = u.userRepo.AddShop(ctx, userID, shopName)
+	if err != nil {
+		return err
+	}
+
+	err = u.userRepo.UpdateRole(ctx, userID)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
