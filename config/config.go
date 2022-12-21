@@ -17,8 +17,9 @@ type Config struct {
 }
 
 type ServerConfig struct {
-	AppVersion        string        `mapstructure:"APP_VERSION"`
+	Origin            string        `mapstructure:"ORIGIN"`
 	Domain            string        `mapstructure:"DOMAIN"`
+	AppVersion        string        `mapstructure:"APP_VERSION"`
 	Port              string        `mapstructure:"PORT"`
 	Mode              string        `mapstructure:"MODE"`
 	ReadTimeout       time.Duration `mapstructure:"READ_TIMEOUT"`

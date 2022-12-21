@@ -36,4 +36,8 @@ type Repository interface {
 	UpdateUserField(ctx context.Context, user *model.User) error
 	UpdateUserEmail(ctx context.Context, tx postgre.Transaction, user *model.User) error
 	CreateEmailHistory(ctx context.Context, tx postgre.Transaction, email string) error
+	CheckShopByID(ctx context.Context, userID string) (int64, error)
+	CheckShopUnique(ctx context.Context, shopName string) (int64, error)
+	AddShop(ctx context.Context, userID string, shopName string) error
+	UpdateRole(ctx context.Context, userID string) error
 }

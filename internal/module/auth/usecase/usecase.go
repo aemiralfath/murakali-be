@@ -349,7 +349,7 @@ func (u *authUC) SendLinkOTPEmail(ctx context.Context, email string) error {
 	h.Write([]byte(otp))
 	hashedOTP := fmt.Sprintf("%x", h.Sum(nil))
 
-	link := fmt.Sprintf("http://localhost:8080/api/v1/auth/verify?code=%s&email=%s", hashedOTP, email)
+	link := fmt.Sprintf("http://%s/verify?code=%s&email=%s", u.cfg.Server.Origin, hashedOTP, email)
 
 	subject := "Reset Password!"
 	msg := smtp.VerificationEmailLinkOTPBody(link)

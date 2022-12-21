@@ -385,7 +385,7 @@ func (u *userUC) SendLinkOTPEmail(ctx context.Context, email string) error {
 	h.Write([]byte(otp))
 	hashedOTP := fmt.Sprintf("%x", h.Sum(nil))
 
-	link := fmt.Sprintf("http://localhost:8080/api/v1/user/email?code=%s&email=%s", hashedOTP, email)
+	link := fmt.Sprintf("http://%s/verify/email?code=%s&email=%s", u.cfg.Server.Origin, hashedOTP, email)
 
 	subject := "Change email!"
 	msg := smtp.VerificationEmailLinkOTPBody(link)
@@ -437,6 +437,36 @@ func (u *userUC) PatchSealabsPay(ctx context.Context, cardNumber, userid string)
 
 func (u *userUC) DeleteSealabsPay(ctx context.Context, cardNumber string) error {
 	err := u.userRepo.DeleteSealabsPay(ctx, cardNumber)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (u *userUC) RegisterMerchant(ctx context.Context, userID, shopName string) error {
+	count, err := u.userRepo.CheckShopByID(ctx, userID)
+	if err != nil {
+		return err
+	}
+	if count != 0 {
+		return httperror.New(http.StatusBadRequest, response.UserAlreadyHaveShop)
+	}
+
+	count, err = u.userRepo.CheckShopUnique(ctx, shopName)
+	if err != nil {
+		return err
+	}
+	if count != 0 {
+		return httperror.New(http.StatusBadRequest, response.ShopAlreadyExists)
+	}
+
+	err = u.userRepo.AddShop(ctx, userID, shopName)
+	if err != nil {
+		return err
+	}
+
+	err = u.userRepo.UpdateRole(ctx, userID)
 	if err != nil {
 		return err
 	}

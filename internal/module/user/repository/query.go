@@ -41,4 +41,8 @@ const (
 	UpdateUserFieldQuery           = `UPDATE "user" SET "username" = $1, "fullname" = $2, "phone_no" = $3, "birth_date" = $4, "gender" = $5, "updated_at" = $6 WHERE "email" = $7`
 	UpdateUserEmailQuery           = `UPDATE "user" SET "email" = $1, "updated_at" = $2 WHERE "id" = $3`
 	CreateEmailHistoryQuery        = `INSERT INTO "email_history" (email) VALUES ($1)`
+	CheckShopByIdQuery             = `SELECT count(id) from "shop" WHERE "user_id" = $1 and deleted_at IS NULL`
+	CheckShopUniqueQuery           = `SELECT count(name) from "shop" WHERE "name" = $1 and deleted_at IS NULL`
+	AddShopQuery                   = `INSERT INTO "shop" (user_id,name) VALUES ($1,$2) `
+	UpdateRoleQuery                = `UPDATE "user" SET "role_id" = 2,updated_at = now() where id = $1`
 )
