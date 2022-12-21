@@ -9,6 +9,8 @@ import (
 	"murakali/pkg/logger"
 	"murakali/pkg/response"
 	"net/http"
+	"strconv"
+	"strings"
 )
 
 type locationHandlers struct {
@@ -36,4 +38,28 @@ func (h *locationHandlers) GetProvince(c *gin.Context) {
 	}
 
 	response.SuccessResponse(c.Writer, province, http.StatusOK)
+}
+
+func (h *locationHandlers) GetCity(c *gin.Context) {
+	id := strings.TrimSpace(c.Query("province_id"))
+	provinceID, err := strconv.Atoi(id)
+	if err != nil {
+		response.ErrorResponse(c.Writer, response.BadRequestMessage, http.StatusBadRequest)
+		return
+	}
+
+	city, err := h.locationUC.GetCity(c, provinceID)
+	if err != nil {
+		var e *httperror.Error
+		if !errors.As(err, &e) {
+			h.logger.Errorf("HandlerLocation, Error: %s", err)
+			response.ErrorResponse(c.Writer, response.InternalServerErrorMessage, http.StatusInternalServerError)
+			return
+		}
+
+		response.ErrorResponse(c.Writer, e.Err.Error(), e.Status)
+		return
+	}
+
+	response.SuccessResponse(c.Writer, city, http.StatusOK)
 }

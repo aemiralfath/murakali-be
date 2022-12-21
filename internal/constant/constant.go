@@ -6,6 +6,7 @@ const (
 	ResetPasswordTokenCookie = "reset_password_token"
 
 	ProvinceKey = "location:province"
+	CityKey     = "location:city"
 	OtpKey      = "user:otp"
 	OtpDuration = "30m"
 

@@ -7,4 +7,5 @@ import (
 
 type UseCase interface {
 	GetProvince(ctx context.Context) (*body.ProvinceResponse, error)
+	GetCity(ctx context.Context, provinceID int) (*body.CityResponse, error)
 }
