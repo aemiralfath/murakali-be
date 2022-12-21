@@ -10,7 +10,9 @@ import (
 )
 
 type CategoryRequest struct {
-	Name string `json:"name"`
+	NameLevelOne   string `form:"name_lvl_one"`
+	NameLevelTwo   string `form:"name_lvl_two"`
+	NameLevelThree string `form:"name_lvl_three"`
 }
 
 type CategoryResponse struct {
@@ -18,6 +20,8 @@ type CategoryResponse struct {
 	ParentID uuid.UUID `json:"parent_id"`
 	Name     string    `json:"name"`
 	PhotoURL string    `json:"photo_url"`
+
+	ChildCategory []*CategoryResponse `json:"child_category"`
 }
 
 func (r *CategoryRequest) Validate() (UnprocessableEntity, error) {
@@ -28,12 +32,23 @@ func (r *CategoryRequest) Validate() (UnprocessableEntity, error) {
 		},
 	}
 
-	r.Name = strings.TrimSpace(r.Name)
-	if r.Name == "" {
+	r.NameLevelOne = strings.TrimSpace(r.NameLevelOne)
+	if r.NameLevelOne == "" {
 		unprocessableEntity = true
-		entity.Fields["name"] = FieldCannotBeEmptyMessage
+		entity.Fields["name_lvl_one"] = FieldCannotBeEmptyMessage
 	}
 
+	r.NameLevelTwo = strings.TrimSpace(r.NameLevelTwo)
+	if r.NameLevelTwo == "" {
+		unprocessableEntity = true
+		entity.Fields["name_lvl_two"] = FieldCannotBeEmptyMessage
+	}
+
+	r.NameLevelThree = strings.TrimSpace(r.NameLevelThree)
+	if r.NameLevelThree == "" {
+		unprocessableEntity = true
+		entity.Fields["name_lvl_three"] = FieldCannotBeEmptyMessage
+	}
 	if unprocessableEntity {
 		return entity, httperror.New(
 			http.StatusUnprocessableEntity,
