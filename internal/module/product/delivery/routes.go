@@ -7,4 +7,5 @@ import (
 )
 
 func MapProductRoutes(productGroup *gin.RouterGroup, h product.Handlers) {
+	productGroup.GET("/category", h.GetCategories)
 }
