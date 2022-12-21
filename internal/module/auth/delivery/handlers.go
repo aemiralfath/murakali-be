@@ -26,7 +26,8 @@ func NewAuthHandlers(cfg *config.Config, authUC auth.UseCase, log logger.Logger)
 }
 
 func (h *authHandlers) Logout(c *gin.Context) {
-	c.SetCookie(constant.RefreshTokenCookie, "", -1, "/", h.cfg.Server.Domain, false, true)
+	c.SetSameSite(http.SameSiteNoneMode)
+	c.SetCookie(constant.RefreshTokenCookie, "", -1, "/", h.cfg.Server.Domain, true, true)
 	response.SuccessResponse(c.Writer, nil, http.StatusOK)
 }
 
@@ -56,7 +57,8 @@ func (h *authHandlers) Login(c *gin.Context) {
 		return
 	}
 
-	c.SetCookie(constant.RefreshTokenCookie, token.RefreshToken, h.cfg.JWT.RefreshExpMin*60, "/", h.cfg.Server.Domain, false, true)
+	c.SetSameSite(http.SameSiteNoneMode)
+	c.SetCookie(constant.RefreshTokenCookie, token.RefreshToken, h.cfg.JWT.RefreshExpMin*60, "/", h.cfg.Server.Domain, true, true)
 	response.SuccessResponse(c.Writer, body.LoginResponse{AccessToken: token.AccessToken}, http.StatusOK)
 }
 
@@ -155,7 +157,8 @@ func (h *authHandlers) RegisterUser(c *gin.Context) {
 		return
 	}
 
-	c.SetCookie(constant.RegisterTokenCookie, "", -1, "/", h.cfg.Server.Domain, false, true)
+	c.SetSameSite(http.SameSiteNoneMode)
+	c.SetCookie(constant.RegisterTokenCookie, "", -1, "/", h.cfg.Server.Domain, true, true)
 	response.SuccessResponse(c.Writer, nil, http.StatusOK)
 }
 
@@ -185,7 +188,8 @@ func (h *authHandlers) VerifyOTP(c *gin.Context) {
 		return
 	}
 
-	c.SetCookie(constant.RegisterTokenCookie, registerToken, h.cfg.JWT.RefreshExpMin*60, "/", h.cfg.Server.Domain, false, true)
+	c.SetSameSite(http.SameSiteNoneMode)
+	c.SetCookie(constant.RegisterTokenCookie, registerToken, h.cfg.JWT.RefreshExpMin*60, "/", h.cfg.Server.Domain, true, true)
 	response.SuccessResponse(c.Writer, nil, http.StatusOK)
 }
 
@@ -262,7 +266,8 @@ func (h *authHandlers) ResetPasswordUser(c *gin.Context) {
 		return
 	}
 
-	c.SetCookie(constant.ResetPasswordTokenCookie, "", -1, "/", h.cfg.Server.Domain, false, true)
+	c.SetSameSite(http.SameSiteNoneMode)
+	c.SetCookie(constant.ResetPasswordTokenCookie, "", -1, "/", h.cfg.Server.Domain, true, true)
 	response.SuccessResponse(c.Writer, nil, http.StatusCreated)
 }
 
@@ -292,6 +297,7 @@ func (h *authHandlers) ResetPasswordVerifyOTP(c *gin.Context) {
 		return
 	}
 
-	c.SetCookie(constant.ResetPasswordTokenCookie, ResetPasswordToken, h.cfg.JWT.RefreshExpMin*60, "/", h.cfg.Server.Domain, false, true)
+	c.SetSameSite(http.SameSiteNoneMode)
+	c.SetCookie(constant.ResetPasswordTokenCookie, ResetPasswordToken, h.cfg.JWT.RefreshExpMin*60, "/", h.cfg.Server.Domain, true, true)
 	response.SuccessResponse(c.Writer, nil, http.StatusOK)
 }

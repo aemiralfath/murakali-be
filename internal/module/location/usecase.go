@@ -1,0 +1,10 @@
+package location
+
+import (
+	"context"
+	"murakali/internal/module/location/delivery/body"
+)
+
+type UseCase interface {
+	GetProvince(ctx context.Context) (*body.ProvinceResponse, error)
+}

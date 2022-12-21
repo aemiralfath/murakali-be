@@ -5,6 +5,7 @@ const (
 	RefreshTokenCookie       = "refresh_token"
 	ResetPasswordTokenCookie = "reset_password_token"
 
+	ProvinceKey = "location:province"
 	OtpKey      = "user:otp"
 	OtpDuration = "30m"
 
