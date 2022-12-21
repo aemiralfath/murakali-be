@@ -2,7 +2,13 @@ package util
 
 import (
 	"crypto/rand"
+	"mime/multipart"
+	"murakali/config"
 	"unicode"
+
+	"github.com/cloudinary/cloudinary-go/v2"
+	"github.com/cloudinary/cloudinary-go/v2/api/uploader"
+	"github.com/gin-gonic/gin"
 )
 
 func GenerateOTP(length int) (string, error) {
@@ -46,4 +52,10 @@ func VerifyPassword(s string) bool {
 
 func isSpecialCharacter(char rune) bool {
 	return !unicode.IsLetter(char) && !unicode.IsNumber(char) && !unicode.IsSpace(char)
+}
+
+func UploadeImageToCloudinary(c *gin.Context, cfg *config.Config, file multipart.File) string {
+	cldService, _ := cloudinary.NewFromURL(cfg.External.CloudinaryURL)
+	response, _ := cldService.Upload.Upload(c, file, uploader.UploadParams{})
+	return response.SecureURL
 }

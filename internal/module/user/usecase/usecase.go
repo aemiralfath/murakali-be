@@ -473,3 +473,35 @@ func (u *userUC) RegisterMerchant(ctx context.Context, userID, shopName string) 
 
 	return nil
 }
+
+func (u *userUC) GetUserProfile(ctx context.Context, userID string) (*body.ProfileResponse, error) {
+	userModel, err := u.userRepo.GetUserByID(ctx, userID)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, httperror.New(http.StatusBadRequest, response.UserNotExistMessage)
+		}
+		return nil, err
+	}
+
+	profileinfo := &body.ProfileResponse{
+		Role:        userModel.RoleID,
+		UserName:    userModel.Username,
+		Email:       userModel.Email,
+		PhoneNumber: userModel.PhoneNo,
+		FullName:    userModel.FullName,
+		Gender:      userModel.Gender,
+		BirthDate:   userModel.BirthDate.Time,
+		PhotoURL:    userModel.PhotoURL,
+		IsVerify:    userModel.IsVerify,
+	}
+
+	return profileinfo, nil
+}
+
+func (u *userUC) UploadProfilePicture(ctx context.Context, imgURL, userID string) error {
+	err := u.userRepo.UpdateProfileImage(ctx, imgURL, userID)
+	if err != nil {
+		return err
+	}
+	return nil
+}
