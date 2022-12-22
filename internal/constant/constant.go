@@ -8,6 +8,7 @@ const (
 	ProvinceKey    = "location:province"
 	CityKey        = "location:city"
 	SubDistrictKey = "location:subdistrict"
+	UrbanKey       = "location:urban"
 	OtpKey         = "user:otp"
 	OtpDuration    = "30m"
 

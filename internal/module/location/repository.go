@@ -9,4 +9,6 @@ type Repository interface {
 	InsertCityRedis(ctx context.Context, provinceID int, value string) error
 	GetSubDistrictRedis(ctx context.Context, province, city string) (string, error)
 	InsertSubDistrictRedis(ctx context.Context, province, city, value string) error
+	GetUrbanRedis(ctx context.Context, province, city, subDistrict string) (string, error)
+	InsertUrbanRedis(ctx context.Context, province, city, subDistrict, value string) error
 }

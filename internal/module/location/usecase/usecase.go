@@ -124,6 +124,43 @@ func (u *locationUC) GetSubDistrict(ctx context.Context, province, city string) 
 	return &subDistrict, nil
 }
 
+func (u *locationUC) GetUrban(ctx context.Context, province, city, subDistrict string) (*body.UrbanResponse, error) {
+	urban := body.UrbanResponse{Rows: make([]model.Urban, 0)}
+	urbanRedis, err := u.locationRepo.GetUrbanRedis(ctx, province, city, subDistrict)
+	if err != nil {
+		res, err := u.GetDataFromKodePos(province, city, subDistrict)
+		if err != nil {
+			return nil, err
+		}
+
+		urbanMap := make(map[string]model.Urban)
+		for _, value := range res.Data {
+			_, ok := urbanMap[value.Urban]
+			if strings.Contains(value.Province, province) && strings.Contains(value.City, city) && strings.Contains(value.Subdistrict, subDistrict) && !ok {
+				urbanMap[value.Urban] = model.Urban{Urban: value.Urban, PostalCode: value.Postalcode}
+				urban.Rows = append(urban.Rows, urbanMap[value.Urban])
+			}
+		}
+
+		redisValue, err := json.Marshal(urban)
+		if err != nil {
+			return nil, err
+		}
+
+		if err := u.locationRepo.InsertUrbanRedis(ctx, province, city, subDistrict, string(redisValue)); err != nil {
+			return nil, err
+		}
+
+		return &urban, err
+	}
+
+	if err := json.Unmarshal([]byte(urbanRedis), &urban); err != nil {
+		return nil, err
+	}
+
+	return &urban, nil
+}
+
 func (u *locationUC) GetProvinceRajaOngkir() (*body.RajaOngkirProvinceResponse, error) {
 	var responseOngkir body.RajaOngkirProvinceResponse
 	url := fmt.Sprintf("%s/province", u.cfg.External.OngkirAPIURL)

@@ -2,10 +2,6 @@ package body
 
 import "murakali/internal/model"
 
-const (
-	FieldCannotBeEmptyMessage = "Field cannot be empty."
-)
-
 type UnprocessableEntity struct {
 	Fields map[string]string `json:"fields"`
 }
@@ -20,6 +16,10 @@ type CityResponse struct {
 
 type SubDistrictResponse struct {
 	Rows []model.SubDistrict `json:"rows"`
+}
+
+type UrbanResponse struct {
+	Rows []model.Urban `json:"rows"`
 }
 
 type StatusResponse struct {

@@ -13,3 +13,8 @@ type City struct {
 type SubDistrict struct {
 	SubDistrict string `json:"sub_district"`
 }
+
+type Urban struct {
+	Urban      string `json:"urban"`
+	PostalCode string `json:"postal_code"`
+}

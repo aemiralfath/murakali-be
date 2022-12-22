@@ -42,6 +42,14 @@ func (r *locationRepo) InsertSubDistrictRedis(ctx context.Context, province, cit
 	return nil
 }
 
+func (r *locationRepo) InsertUrbanRedis(ctx context.Context, province, city, subDistrict, value string) error {
+	if err := r.RedisClient.Set(ctx, fmt.Sprintf("%s:%s:%s:%s", constant.UrbanKey, province, city, subDistrict), value, 0); err.Err() != nil {
+		return err.Err()
+	}
+
+	return nil
+}
+
 func (r *locationRepo) GetProvinceRedis(ctx context.Context) (string, error) {
 	res := r.RedisClient.Get(ctx, constant.ProvinceKey)
 	if res.Err() != nil {
@@ -71,8 +79,21 @@ func (r *locationRepo) GetCityRedis(ctx context.Context, provinceID int) (string
 }
 
 func (r *locationRepo) GetSubDistrictRedis(ctx context.Context, province, city string) (string, error) {
-	fmt.Println(fmt.Sprintf("%s:%s:%s", constant.SubDistrictKey, province, city))
 	res := r.RedisClient.Get(ctx, fmt.Sprintf("%s:%s:%s", constant.SubDistrictKey, province, city))
+	if res.Err() != nil {
+		return "", res.Err()
+	}
+
+	value, err := res.Result()
+	if err != nil {
+		return "", err
+	}
+
+	return value, nil
+}
+
+func (r *locationRepo) GetUrbanRedis(ctx context.Context, province, city, subDistrict string) (string, error) {
+	res := r.RedisClient.Get(ctx, fmt.Sprintf("%s:%s:%s:%s", constant.UrbanKey, province, city, subDistrict))
 	if res.Err() != nil {
 		return "", res.Err()
 	}
