@@ -483,7 +483,7 @@ func (u *userUC) GetUserProfile(ctx context.Context, userID string) (*body.Profi
 		return nil, err
 	}
 
-	profileinfo := &body.ProfileResponse{
+	profileInfo := &body.ProfileResponse{
 		Role:        userModel.RoleID,
 		UserName:    userModel.Username,
 		Email:       userModel.Email,
@@ -495,7 +495,7 @@ func (u *userUC) GetUserProfile(ctx context.Context, userID string) (*body.Profi
 		IsVerify:    userModel.IsVerify,
 	}
 
-	return profileinfo, nil
+	return profileInfo, nil
 }
 
 func (u *userUC) UploadProfilePicture(ctx context.Context, imgURL, userID string) error {

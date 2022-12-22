@@ -54,7 +54,7 @@ func isSpecialCharacter(char rune) bool {
 	return !unicode.IsLetter(char) && !unicode.IsNumber(char) && !unicode.IsSpace(char)
 }
 
-func UploadeImageToCloudinary(c *gin.Context, cfg *config.Config, file multipart.File) string {
+func UploadImageToCloudinary(c *gin.Context, cfg *config.Config, file multipart.File) string {
 	cldService, _ := cloudinary.NewFromURL(cfg.External.CloudinaryURL)
 	response, _ := cldService.Upload.Upload(c, file, uploader.UploadParams{})
 	return response.SecureURL

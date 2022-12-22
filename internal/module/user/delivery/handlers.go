@@ -489,13 +489,13 @@ func (h *userHandlers) DeleteSealabsPay(c *gin.Context) {
 }
 
 func (h *userHandlers) GetUserProfile(c *gin.Context) {
-	userid, exist := c.Get("userID")
+	userID, exist := c.Get("userID")
 	if !exist {
 		response.ErrorResponse(c.Writer, response.UnauthorizedMessage, http.StatusUnauthorized)
 		return
 	}
 
-	profile, err := h.userUC.GetUserProfile(c, userid.(string))
+	profile, err := h.userUC.GetUserProfile(c, userID.(string))
 	if err != nil {
 		var e *httperror.Error
 		if !errors.As(err, &e) {
@@ -516,10 +516,10 @@ func (h *userHandlers) UploadProfilePicture(c *gin.Context) {
 		Size() int64
 	}
 
-	var imgurl string
+	var imgURL string
 	var img body.ImageRequest
 
-	userid, exist := c.Get("userID")
+	userID, exist := c.Get("userID")
 	if !exist {
 		response.ErrorResponse(c.Writer, response.UnauthorizedMessage, http.StatusUnauthorized)
 		return
@@ -541,9 +541,9 @@ func (h *userHandlers) UploadProfilePicture(c *gin.Context) {
 		response.ErrorResponse(c.Writer, response.InternalServerErrorMessage, http.StatusInternalServerError)
 		return
 	}
-	imgurl = util.UploadeImageToCloudinary(c, h.cfg, data)
+	imgURL = util.UploadImageToCloudinary(c, h.cfg, data)
 
-	err = h.userUC.UploadProfilePicture(c, imgurl, userid.(string))
+	err = h.userUC.UploadProfilePicture(c, imgURL, userID.(string))
 
 	if err != nil {
 		var e *httperror.Error
