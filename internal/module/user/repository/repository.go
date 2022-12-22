@@ -440,7 +440,7 @@ func (r *userRepo) UpdateProfileImage(ctx context.Context, imgURL, userID string
 	return nil
 }
 
-func (r *userRepo) UpdatePasswordByID(ctx context.Context, userID string, newPassword string) error {
+func (r *userRepo) UpdatePasswordByID(ctx context.Context, userID, newPassword string) error {
 	_, err := r.PSQL.ExecContext(ctx, UpdatePasswordQuery, newPassword, userID)
 	if err != nil {
 		return err

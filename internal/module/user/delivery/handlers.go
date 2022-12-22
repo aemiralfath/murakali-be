@@ -581,7 +581,6 @@ func (h *userHandlers) VerifyPasswordChange(c *gin.Context) {
 	}
 
 	response.SuccessResponse(c.Writer, nil, http.StatusOK)
-
 }
 
 func (h *userHandlers) VerifyOTP(c *gin.Context) {

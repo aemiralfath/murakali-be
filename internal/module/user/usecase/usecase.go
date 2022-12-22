@@ -511,17 +511,16 @@ func (u *userUC) UploadProfilePicture(ctx context.Context, imgURL, userID string
 }
 
 func (u *userUC) VerifyPasswordChange(ctx context.Context, userID string) error {
-	user, err := u.userRepo.GetUserByID(ctx, userID)
+	userInfo, err := u.userRepo.GetUserByID(ctx, userID)
 	if err != nil {
 		return err
 	}
 
-	err = u.SendOTPEmail(ctx, user.Email)
+	err = u.SendOTPEmail(ctx, userInfo.Email)
 	if err != nil {
 		return err
 	}
 	return nil
-
 }
 
 func (u *userUC) SendOTPEmail(ctx context.Context, email string) error {
@@ -542,11 +541,11 @@ func (u *userUC) SendOTPEmail(ctx context.Context, email string) error {
 }
 
 func (u *userUC) VerifyOTP(ctx context.Context, requestBody body.VerifyOTPRequest, userID string) (string, error) {
-	user, err := u.userRepo.GetUserByID(ctx, userID)
+	userInfo, err := u.userRepo.GetUserByID(ctx, userID)
 	if err != nil {
 		return "", err
 	}
-	value, err := u.userRepo.GetOTPValue(ctx, user.Email)
+	value, err := u.userRepo.GetOTPValue(ctx, userInfo.Email)
 	if err != nil {
 		return "", httperror.New(http.StatusBadRequest, response.OTPAlreadyExpiredMessage)
 	}
@@ -555,12 +554,12 @@ func (u *userUC) VerifyOTP(ctx context.Context, requestBody body.VerifyOTPReques
 		return "", httperror.New(http.StatusBadRequest, response.OTPIsNotValidMessage)
 	}
 
-	changePasswordToken, err := jwt.GenerateJWTChangePasswordToken(user.ID.String(), u.cfg)
+	changePasswordToken, err := jwt.GenerateJWTChangePasswordToken(userInfo.ID.String(), u.cfg)
 	if err != nil {
 		return "", err
 	}
 
-	_, err = u.userRepo.DeleteOTPValue(ctx, user.Email)
+	_, err = u.userRepo.DeleteOTPValue(ctx, userInfo.Email)
 	if err != nil {
 		return "", err
 	}
@@ -568,8 +567,8 @@ func (u *userUC) VerifyOTP(ctx context.Context, requestBody body.VerifyOTPReques
 	return changePasswordToken, nil
 }
 
-func (u *userUC) ChangePassword(ctx context.Context, userID string, newPassword string) error {
-	user, err := u.userRepo.GetUserByID(ctx, userID)
+func (u *userUC) ChangePassword(ctx context.Context, userID, newPassword string) error {
+	userInfo, err := u.userRepo.GetUserByID(ctx, userID)
 	if err != nil {
 		return err
 	}
@@ -582,7 +581,7 @@ func (u *userUC) ChangePassword(ctx context.Context, userID string, newPassword 
 		return httperror.New(http.StatusBadRequest, response.PasswordSameOldPasswordMessage)
 	}
 
-	if strings.Contains(strings.ToLower(newPassword), strings.ToLower(*user.Username)) {
+	if strings.Contains(strings.ToLower(newPassword), strings.ToLower(*userInfo.Username)) {
 		return httperror.New(http.StatusBadRequest, response.PasswordContainUsernameMessage)
 	}
 

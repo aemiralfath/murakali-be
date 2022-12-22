@@ -41,6 +41,6 @@ type Repository interface {
 	AddShop(ctx context.Context, userID string, shopName string) error
 	UpdateRole(ctx context.Context, userID string) error
 	UpdateProfileImage(ctx context.Context, imgURL, userID string) error
-	UpdatePasswordByID(ctx context.Context, userID string, newPassword string) error
+	UpdatePasswordByID(ctx context.Context, userID, newPassword string) error
 	GetPasswordByID(ctx context.Context, id string) (string, error)
 }
