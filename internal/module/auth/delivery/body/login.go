@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"net/mail"
 	"strings"
+	"time"
 )
 
 type LoginRequest struct {
@@ -14,7 +15,8 @@ type LoginRequest struct {
 }
 
 type LoginResponse struct {
-	AccessToken string `json:"access_token"`
+	AccessToken string    `json:"access_token"`
+	ExpiredAt   time.Time `json:"expired_at"`
 }
 
 func (r *LoginRequest) Validate() (UnprocessableEntity, error) {

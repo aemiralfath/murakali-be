@@ -44,7 +44,7 @@ func (r *RegisterUserRequest) Validate() (UnprocessableEntity, error) {
 		entity.Fields["password"] = InvalidPasswordFormatMessage
 	}
 
-	if strings.Contains(strings.ToLower(r.Password), r.Username) {
+	if strings.Contains(strings.ToLower(r.Password), strings.ToLower(r.Username)) {
 		unprocessableEntity = true
 		entity.Fields["password"] = InvalidPasswordFormatMessage
 	}

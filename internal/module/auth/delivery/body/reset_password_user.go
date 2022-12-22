@@ -9,9 +9,6 @@ import (
 
 type ResetPasswordUserRequest struct {
 	Password string `json:"password"`
-
-	IsPasswordSameOldPassword  bool
-	IsPasswordContainsUsername bool
 }
 
 func (r *ResetPasswordUserRequest) Validate() (UnprocessableEntity, error) {
@@ -26,16 +23,6 @@ func (r *ResetPasswordUserRequest) Validate() (UnprocessableEntity, error) {
 	if !util.VerifyPassword(r.Password) {
 		unprocessableEntity = true
 		entity.Fields["password"] = InvalidPasswordFormatMessage
-	}
-
-	if r.IsPasswordContainsUsername {
-		unprocessableEntity = true
-		entity.Fields["password"] = InvalidPasswordFormatMessage
-	}
-
-	if r.IsPasswordSameOldPassword {
-		unprocessableEntity = true
-		entity.Fields["password"] = InvalidPasswordSameOldPasswordMessage
 	}
 
 	if unprocessableEntity {

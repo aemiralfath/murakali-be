@@ -59,19 +59,19 @@ func (u *authUC) Login(ctx context.Context, requestBody body.LoginRequest) (*mod
 	return &model.Token{AccessToken: accessToken, RefreshToken: refreshToken}, nil
 }
 
-func (u *authUC) RefreshToken(ctx context.Context, id string) (string, error) {
+func (u *authUC) RefreshToken(ctx context.Context, id string) (*model.AccessToken, error) {
 	user, err := u.authRepo.GetUserByID(ctx, id)
 	if err != nil {
 		if err == sql.ErrNoRows {
-			return "", httperror.New(http.StatusUnauthorized, response.UnauthorizedMessage)
+			return nil, httperror.New(http.StatusUnauthorized, response.UnauthorizedMessage)
 		}
 
-		return "", err
+		return nil, err
 	}
 
 	accessToken, err := jwt.GenerateJWTAccessToken(user.ID.String(), user.RoleID, u.cfg)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
 	return accessToken, nil
@@ -246,12 +246,10 @@ func (u *authUC) ResetPasswordUser(ctx context.Context, email string, requestBod
 
 	err = bcrypt.CompareHashAndPassword([]byte(*user.Password), []byte(requestBody.Password))
 	if err == nil {
-		requestBody.IsPasswordSameOldPassword = true
 		return nil, httperror.New(http.StatusBadRequest, response.PasswordSameOldPasswordMessage)
 	}
 
-	if strings.Contains(strings.ToLower(requestBody.Password), *user.Username) {
-		requestBody.IsPasswordContainsUsername = true
+	if strings.Contains(strings.ToLower(requestBody.Password), strings.ToLower(*user.Username)) {
 		return nil, httperror.New(http.StatusBadRequest, response.PasswordContainUsernameMessage)
 	}
 
