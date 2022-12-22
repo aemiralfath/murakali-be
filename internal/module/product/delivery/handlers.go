@@ -28,7 +28,7 @@ func (h *productHandlers) GetCategories(c *gin.Context) {
 	if err != nil {
 		var e *httperror.Error
 		if !errors.As(err, &e) {
-			h.logger.Errorf("HandlerAuth, Error: %s", err)
+			h.logger.Errorf("HandlerProduct, Error: %s", err)
 			response.ErrorResponse(c.Writer, response.InternalServerErrorMessage, http.StatusInternalServerError)
 			return
 		}
@@ -48,7 +48,7 @@ func (h *productHandlers) GetCategoriesByNameLevelOne(c *gin.Context) {
 	if err != nil {
 		var e *httperror.Error
 		if !errors.As(err, &e) {
-			h.logger.Errorf("HandlerAuth, Error: %s", err)
+			h.logger.Errorf("HandlerProduct, Error: %s", err)
 			response.ErrorResponse(c.Writer, response.InternalServerErrorMessage, http.StatusInternalServerError)
 			return
 		}
@@ -68,7 +68,7 @@ func (h *productHandlers) GetCategoriesByNameLevelTwo(c *gin.Context) {
 	if err != nil {
 		var e *httperror.Error
 		if !errors.As(err, &e) {
-			h.logger.Errorf("HandlerAuth, Error: %s", err)
+			h.logger.Errorf("HandlerProduct, Error: %s", err)
 			response.ErrorResponse(c.Writer, response.InternalServerErrorMessage, http.StatusInternalServerError)
 			return
 		}
@@ -88,7 +88,7 @@ func (h *productHandlers) GetCategoriesByNameLevelThree(c *gin.Context) {
 	if err != nil {
 		var e *httperror.Error
 		if !errors.As(err, &e) {
-			h.logger.Errorf("HandlerAuth, Error: %s", err)
+			h.logger.Errorf("HandlerProduct, Error: %s", err)
 			response.ErrorResponse(c.Writer, response.InternalServerErrorMessage, http.StatusInternalServerError)
 			return
 		}
