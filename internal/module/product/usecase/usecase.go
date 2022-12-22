@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"fmt"
 	"murakali/config"
+	"murakali/internal/model"
 	"murakali/internal/module/product"
 	"murakali/internal/module/product/delivery/body"
 	"murakali/pkg/postgre"
@@ -49,6 +50,17 @@ func (u *productUC) GetCategories(ctx context.Context) ([]*body.CategoryResponse
 	}
 
 	return categoryResponse, nil
+}
+
+func (u *productUC) GetBanners(ctx context.Context) ([]*model.Banner, error) {
+	banners, err := u.productRepo.GetBanners(ctx)
+	if err != nil {
+		if err != sql.ErrNoRows {
+			return nil, err
+		}
+	}
+
+	return banners, nil
 }
 
 func (u *productUC) GetCategoriesByName(ctx context.Context, name string) ([]*body.CategoryResponse, error) {

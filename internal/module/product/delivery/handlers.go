@@ -40,6 +40,23 @@ func (h *productHandlers) GetCategories(c *gin.Context) {
 	response.SuccessResponse(c.Writer, categoriesResponse, http.StatusOK)
 }
 
+func (h *productHandlers) GetBanners(c *gin.Context) {
+	banners, err := h.productUC.GetBanners(c)
+	if err != nil {
+		var e *httperror.Error
+		if !errors.As(err, &e) {
+			h.logger.Errorf("HandlerAuth, Error: %s", err)
+			response.ErrorResponse(c.Writer, response.InternalServerErrorMessage, http.StatusInternalServerError)
+			return
+		}
+
+		response.ErrorResponse(c.Writer, e.Err.Error(), e.Status)
+		return
+	}
+
+	response.SuccessResponse(c.Writer, banners, http.StatusOK)
+}
+
 func (h *productHandlers) GetCategoriesByNameLevelOne(c *gin.Context) {
 	var requestPath body.CategoryRequest
 	requestPath.NameLevelOne = c.Param("name_lvl_one")

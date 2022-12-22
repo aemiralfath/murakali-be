@@ -59,3 +59,8 @@ VALUES
 INSERT INTO "cart_item" (id, user_id, product_detail_id, quantity)
 VALUES
 ('d37f3e57-94d9-433c-a3c8-316f6b7194d8' ,'7950eca2-58d5-44f0-b873-22b23d8107da', '0c53ef3d-3682-4359-90e1-814eb6ab5191', 1);
+
+INSERT INTO "banner" (id, title, content, image_url, page_url, is_active)
+VALUES
+('9a4de0f5-0556-491b-ba1b-0873933262da' ,'festival hari ibu', 'festival di hari ibu', 'https://cf.shopee.co.id/file/776fa8ed99c660a7913666544a3c228d','https://shopee.co.id/m/festival-hari-ibu', true),
+('37817b2c-c4b0-42ec-8422-055d44e47fbe' ,'tanggal tua', 'diskon di tanggal tua', 'https://cf.shopee.co.id/file/f73747bf997bd9d0f20f0b33727f018e','https://shopee.co.id/m/mall-super-category-day', true);
