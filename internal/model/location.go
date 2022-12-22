@@ -9,3 +9,7 @@ type City struct {
 	CityID string `json:"city_id"`
 	City   string `json:"city"`
 }
+
+type SubDistrict struct {
+	SubDistrict string `json:"sub_district"`
+}

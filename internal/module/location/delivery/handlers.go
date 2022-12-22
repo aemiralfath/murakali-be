@@ -63,3 +63,28 @@ func (h *locationHandlers) GetCity(c *gin.Context) {
 
 	response.SuccessResponse(c.Writer, city, http.StatusOK)
 }
+
+func (h *locationHandlers) GetSubDistrict(c *gin.Context) {
+	province := strings.TrimSpace(c.Query("province"))
+	city := strings.TrimSpace(c.Query("city"))
+
+	if province == "" || city == "" {
+		response.ErrorResponse(c.Writer, response.BadRequestMessage, http.StatusBadRequest)
+		return
+	}
+
+	subDistrict, err := h.locationUC.GetSubDistrict(c, province, city)
+	if err != nil {
+		var e *httperror.Error
+		if !errors.As(err, &e) {
+			h.logger.Errorf("HandlerLocation, Error: %s", err)
+			response.ErrorResponse(c.Writer, response.InternalServerErrorMessage, http.StatusInternalServerError)
+			return
+		}
+
+		response.ErrorResponse(c.Writer, e.Err.Error(), e.Status)
+		return
+	}
+
+	response.SuccessResponse(c.Writer, subDistrict, http.StatusOK)
+}

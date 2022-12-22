@@ -18,9 +18,26 @@ type CityResponse struct {
 	Rows []model.City `json:"rows"`
 }
 
+type SubDistrictResponse struct {
+	Rows []model.SubDistrict `json:"rows"`
+}
+
 type StatusResponse struct {
 	Code        int    `json:"code"`
 	Description string `json:"description"`
+}
+
+type KodePosResponse struct {
+	Code     int    `json:"code"`
+	Status   bool   `json:"status"`
+	Messages string `json:"messages"`
+	Data     []struct {
+		Province    string `json:"province"`
+		City        string `json:"city"`
+		Subdistrict string `json:"subdistrict"`
+		Urban       string `json:"urban"`
+		Postalcode  string `json:"postalcode"`
+	} `json:"data"`
 }
 
 type RajaOngkirProvinceResponse struct {

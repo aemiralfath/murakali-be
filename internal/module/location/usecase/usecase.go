@@ -10,6 +10,7 @@ import (
 	"murakali/internal/module/location/delivery/body"
 	"murakali/pkg/postgre"
 	"net/http"
+	"strings"
 )
 
 type locationUC struct {
@@ -86,6 +87,43 @@ func (u *locationUC) GetCity(ctx context.Context, provinceID int) (*body.CityRes
 	return &city, nil
 }
 
+func (u *locationUC) GetSubDistrict(ctx context.Context, province, city string) (*body.SubDistrictResponse, error) {
+	subDistrict := body.SubDistrictResponse{Rows: make([]model.SubDistrict, 0)}
+	subDistrictRedis, err := u.locationRepo.GetSubDistrictRedis(ctx, province, city)
+	if err != nil {
+		res, err := u.GetDataFromKodePos(province, city, "")
+		if err != nil {
+			return nil, err
+		}
+
+		subDistrictMap := make(map[string]model.SubDistrict)
+		for _, value := range res.Data {
+			_, ok := subDistrictMap[value.Subdistrict]
+			if strings.Contains(value.Province, province) && strings.Contains(value.City, city) && !ok {
+				subDistrictMap[value.Subdistrict] = model.SubDistrict{SubDistrict: value.Subdistrict}
+				subDistrict.Rows = append(subDistrict.Rows, subDistrictMap[value.Subdistrict])
+			}
+		}
+
+		redisValue, err := json.Marshal(subDistrict)
+		if err != nil {
+			return nil, err
+		}
+
+		if err := u.locationRepo.InsertSubDistrictRedis(ctx, province, city, string(redisValue)); err != nil {
+			return nil, err
+		}
+
+		return &subDistrict, nil
+	}
+
+	if err := json.Unmarshal([]byte(subDistrictRedis), &subDistrict); err != nil {
+		return nil, err
+	}
+
+	return &subDistrict, nil
+}
+
 func (u *locationUC) GetProvinceRajaOngkir() (*body.RajaOngkirProvinceResponse, error) {
 	var responseOngkir body.RajaOngkirProvinceResponse
 	url := fmt.Sprintf("%s/province", u.cfg.External.OngkirAPIURL)
@@ -131,4 +169,27 @@ func (u *locationUC) GetCityRajaOngkir(provinceID int) (*body.RajaOngkirCityResp
 	}
 
 	return &responseOngkir, nil
+}
+
+func (u *locationUC) GetDataFromKodePos(province, city, subdistrict string) (*body.KodePosResponse, error) {
+	var responseKodePos body.KodePosResponse
+	url := fmt.Sprintf("%s/search/?q=%s %s %s", u.cfg.External.KodePosURL, province, city, subdistrict)
+	fmt.Println(url)
+	req, err := http.NewRequest("GET", url, http.NoBody)
+	if err != nil {
+		return nil, err
+	}
+
+	res, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return nil, err
+	}
+
+	defer res.Body.Close()
+	readErr := json.NewDecoder(res.Body).Decode(&responseKodePos)
+	if readErr != nil {
+		return nil, err
+	}
+
+	return &responseKodePos, nil
 }
