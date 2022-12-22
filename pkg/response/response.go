@@ -31,6 +31,7 @@ const (
 	OTPIsNotValidMessage           = "OTP is not valid."
 	UserAlreadyHaveShop            = "User already have shop."
 	ShopAlreadyExists              = "Shop already exists."
+	PictureSizeTooBig              = "Picture size too big"
 )
 
 type JSONResponse struct {

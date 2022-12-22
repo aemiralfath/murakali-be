@@ -6,6 +6,9 @@ import (
 	authDelivery "murakali/internal/module/auth/delivery"
 	authRepository "murakali/internal/module/auth/repository"
 	authUseCase "murakali/internal/module/auth/usecase"
+	cartDelivery "murakali/internal/module/cart/delivery"
+	cartRepository "murakali/internal/module/cart/repository"
+	cartUseCase "murakali/internal/module/cart/usecase"
 	locationDelivery "murakali/internal/module/location/delivery"
 	locationRepository "murakali/internal/module/location/repository"
 	locationUseCase "murakali/internal/module/location/usecase"
@@ -39,6 +42,10 @@ func (s *Server) MapHandlers() error {
 	productUC := productUseCase.NewProductUseCase(s.cfg, txRepo, productRepo)
 	productHandlers := productDelivery.NewProductHandlers(s.cfg, productUC, s.log)
 
+	cartRepo := cartRepository.NewCartRepository(s.db, s.redisClient)
+	cartUC := cartUseCase.NewCartUseCase(s.cfg, txRepo, cartRepo)
+	cartHandlers := cartDelivery.NewCartHandlers(s.cfg, cartUC, s.log)
+
 	locationRepo := locationRepository.NewLocationRepository(s.db, s.redisClient)
 	locationUC := locationUseCase.NewLocationUseCase(s.cfg, txRepo, locationRepo)
 	locationHandlers := locationDelivery.NewLocationHandlers(s.cfg, locationUC, s.log)
@@ -63,12 +70,14 @@ func (s *Server) MapHandlers() error {
 	authGroup := v1.Group("/auth")
 	userGroup := v1.Group("/user")
 	productGroup := v1.Group("/product")
+	cartGroup := v1.Group("/cart")
 	locationGroup := v1.Group("/location")
 
 	mw := middleware.NewMiddlewareManager(s.cfg, []string{"*"}, s.log)
 	authDelivery.MapAuthRoutes(authGroup, authHandlers)
 	userDelivery.MapUserRoutes(userGroup, userHandlers, mw)
 	productDelivery.MapProductRoutes(productGroup, productHandlers)
+	cartDelivery.MapCartRoutes(cartGroup, cartHandlers, mw)
 	locationDelivery.MapAuthRoutes(locationGroup, locationHandlers)
 
 	return nil

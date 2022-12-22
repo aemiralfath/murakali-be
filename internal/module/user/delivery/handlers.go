@@ -4,8 +4,10 @@ import (
 	"errors"
 	"fmt"
 	"murakali/config"
+	"murakali/internal/constant"
 	"murakali/internal/module/user"
 	"murakali/internal/module/user/delivery/body"
+	"murakali/internal/util"
 	"murakali/pkg/httperror"
 	"murakali/pkg/logger"
 	"murakali/pkg/pagination"
@@ -483,5 +485,76 @@ func (h *userHandlers) DeleteSealabsPay(c *gin.Context) {
 		return
 	}
 
+	response.SuccessResponse(c.Writer, nil, http.StatusOK)
+}
+
+func (h *userHandlers) GetUserProfile(c *gin.Context) {
+	userID, exist := c.Get("userID")
+	if !exist {
+		response.ErrorResponse(c.Writer, response.UnauthorizedMessage, http.StatusUnauthorized)
+		return
+	}
+
+	profile, err := h.userUC.GetUserProfile(c, userID.(string))
+	if err != nil {
+		var e *httperror.Error
+		if !errors.As(err, &e) {
+			h.logger.Errorf("HandlerUser, Error: %s", err)
+			response.ErrorResponse(c.Writer, response.InternalServerErrorMessage, http.StatusInternalServerError)
+			return
+		}
+
+		response.ErrorResponse(c.Writer, e.Err.Error(), e.Status)
+		return
+	}
+
+	response.SuccessResponse(c.Writer, profile, http.StatusOK)
+}
+
+func (h *userHandlers) UploadProfilePicture(c *gin.Context) {
+	type Sizer interface {
+		Size() int64
+	}
+
+	var imgURL string
+	var img body.ImageRequest
+
+	userID, exist := c.Get("userID")
+	if !exist {
+		response.ErrorResponse(c.Writer, response.UnauthorizedMessage, http.StatusUnauthorized)
+		return
+	}
+
+	err := c.ShouldBind(&img)
+	if err != nil {
+		response.ErrorResponse(c.Writer, response.InternalServerErrorMessage, http.StatusInternalServerError)
+		return
+	}
+	data, _, _ := c.Request.FormFile("Img")
+
+	if data.(Sizer).Size() > constant.ImgMaxSize {
+		response.ErrorResponse(c.Writer, response.PictureSizeTooBig, http.StatusInternalServerError)
+		return
+	}
+
+	if data == nil {
+		response.ErrorResponse(c.Writer, response.InternalServerErrorMessage, http.StatusInternalServerError)
+		return
+	}
+	imgURL = util.UploadImageToCloudinary(c, h.cfg, data)
+
+	err = h.userUC.UploadProfilePicture(c, imgURL, userID.(string))
+
+	if err != nil {
+		var e *httperror.Error
+		if !errors.As(err, &e) {
+			h.logger.Errorf("HandlerUser, Error: %s", err)
+			response.ErrorResponse(c.Writer, response.InternalServerErrorMessage, http.StatusInternalServerError)
+			return
+		}
+
+		response.ErrorResponse(c.Writer, e.Err.Error(), e.Status)
+		return
+	}
 	response.SuccessResponse(c.Writer, nil, http.StatusOK)
 }

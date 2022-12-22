@@ -203,7 +203,7 @@ func (r *userRepo) GetUserByID(ctx context.Context, id string) (*model.User, err
 	var userModel model.User
 	if err := r.PSQL.QueryRowContext(ctx, GetUserByIDQuery, id).
 		Scan(&userModel.ID, &userModel.RoleID, &userModel.Email, &userModel.Username, &userModel.PhoneNo,
-			&userModel.FullName, &userModel.Gender, &userModel.BirthDate, &userModel.IsVerify); err != nil {
+			&userModel.FullName, &userModel.Gender, &userModel.BirthDate, &userModel.IsVerify, &userModel.PhotoURL); err != nil {
 		return nil, err
 	}
 
@@ -416,6 +416,14 @@ func (r *userRepo) AddShop(ctx context.Context, userID, shopName string) error {
 
 func (r *userRepo) UpdateRole(ctx context.Context, userID string) error {
 	if _, err := r.PSQL.ExecContext(ctx, UpdateRoleQuery, userID); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (r *userRepo) UpdateProfileImage(ctx context.Context, imgURL, userID string) error {
+	if _, err := r.PSQL.ExecContext(ctx, UpdateProfileImageQuery, imgURL, userID); err != nil {
 		return err
 	}
 
