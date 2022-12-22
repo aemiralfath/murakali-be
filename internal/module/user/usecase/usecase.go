@@ -534,7 +534,7 @@ func (u *userUC) SendOTPEmail(ctx context.Context, email string) error {
 		return err
 	}
 
-	subject := "Email Verification!"
+	subject := "Change Password Verification!"
 	msg := smtp.VerificationEmailBody(otp)
 	go smtp.SendEmail(u.cfg, email, subject, msg)
 
