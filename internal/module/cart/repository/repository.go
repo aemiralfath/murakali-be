@@ -48,7 +48,7 @@ func (r *cartRepo) GetCartHoverHome(ctx context.Context, userID string, limit in
 			&cartItem.Title,
 			&cartItem.ThumbnailURL,
 			&cartItem.Price,
-			&cartItem.DiscountPersentase,
+			&cartItem.DiscountPercentage,
 			&cartItem.DiscountFixPrice,
 			&cartItem.MinProductPrice,
 			&cartItem.MaxDiscountPrice,
@@ -59,16 +59,16 @@ func (r *cartRepo) GetCartHoverHome(ctx context.Context, userID string, limit in
 			return nil, err
 		}
 
-		if cartItem.Price >= cartItem.MinProductPrice && cartItem.DiscountPersentase > 0 {
+		if cartItem.Price >= cartItem.MinProductPrice && cartItem.DiscountPercentage > 0 {
 			cartItem.ResultDiscount = math.Min(cartItem.MaxDiscountPrice,
-				cartItem.Price*(cartItem.DiscountPersentase/100))
+				cartItem.Price*(cartItem.DiscountPercentage/100))
 		}
 
 		if cartItem.Price >= cartItem.MinProductPrice && cartItem.DiscountFixPrice > 0 {
 			cartItem.ResultDiscount = math.Max(cartItem.ResultDiscount, cartItem.DiscountFixPrice)
 
 			cartItem.ResultDiscount = math.Min(cartItem.MaxDiscountPrice,
-				cartItem.Price*(cartItem.DiscountPersentase/100))
+				cartItem.Price*(cartItem.DiscountPercentage/100))
 		}
 
 		if cartItem.ResultDiscount > 0 {

@@ -20,7 +20,7 @@ type CartHome struct {
 	Title              string  `json:"title" db:"title"`
 	ThumbnailURL       string  `json:"thumbnail_url" db:"thumbnail_url"`
 	Price              float64 `json:"price" db:"price"`
-	DiscountPersentase float64 `json:"discount_percentage" db:"discount_percentage"`
+	DiscountPercentage float64 `json:"discount_percentage" db:"discount_percentage"`
 	DiscountFixPrice   float64 `json:"discount_fix_price" db:"discount_fix_price"`
 	MinProductPrice    float64 `json:"min_product_price" db:"min_product_price"`
 	MaxDiscountPrice   float64 `json:"max_discount_price" db:"max_discount_price"`
