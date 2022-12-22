@@ -18,4 +18,7 @@ type Handlers interface {
 	RegisterMerchant(c *gin.Context)
 	GetUserProfile(c *gin.Context)
 	UploadProfilePicture(c *gin.Context)
+	VerifyPasswordChange(c *gin.Context)
+	VerifyOTP(c *gin.Context)
+	ChangePassword(c *gin.Context)
 }

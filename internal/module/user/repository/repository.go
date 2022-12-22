@@ -210,6 +210,16 @@ func (r *userRepo) GetUserByID(ctx context.Context, id string) (*model.User, err
 	return &userModel, nil
 }
 
+func (r *userRepo) GetPasswordByID(ctx context.Context, id string) (string, error) {
+	var password string
+	if err := r.PSQL.QueryRowContext(ctx, GetPasswordByIDQuery, id).
+		Scan(&password); err != nil {
+		return "", err
+	}
+
+	return password, nil
+}
+
 func (r *userRepo) CheckEmailHistory(ctx context.Context, email string) (*model.EmailHistory, error) {
 	var emailHistory model.EmailHistory
 	if err := r.PSQL.QueryRowContext(ctx, CheckEmailHistoryQuery, email).
@@ -427,5 +437,13 @@ func (r *userRepo) UpdateProfileImage(ctx context.Context, imgURL, userID string
 		return err
 	}
 
+	return nil
+}
+
+func (r *userRepo) UpdatePasswordByID(ctx context.Context, userID string, newPassword string) error {
+	_, err := r.PSQL.ExecContext(ctx, UpdatePasswordQuery, newPassword, userID)
+	if err != nil {
+		return err
+	}
 	return nil
 }

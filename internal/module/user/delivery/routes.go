@@ -24,4 +24,7 @@ func MapUserRoutes(userGroup *gin.RouterGroup, h user.Handlers, mw *middleware.M
 	userGroup.POST("/register-merchant", h.RegisterMerchant)
 	userGroup.GET("/profile", h.GetUserProfile)
 	userGroup.POST("/profile/picture", h.UploadProfilePicture)
+	userGroup.POST("/password", h.VerifyPasswordChange)
+	userGroup.POST("/verify", h.VerifyOTP)
+	userGroup.PATCH("/password", h.ChangePassword)
 }

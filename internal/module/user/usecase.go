@@ -23,4 +23,8 @@ type UseCase interface {
 	RegisterMerchant(ctx context.Context, userID string, shopName string) error
 	GetUserProfile(ctx context.Context, userID string) (*body.ProfileResponse, error)
 	UploadProfilePicture(ctx context.Context, imgURL, userID string) error
+	VerifyPasswordChange(ctx context.Context, userID string) error
+	SendOTPEmail(ctx context.Context, email string) error
+	VerifyOTP(ctx context.Context, requestBody body.VerifyOTPRequest, userID string) (string, error)
+	ChangePassword(ctx context.Context, userID string, newPassword string) error
 }

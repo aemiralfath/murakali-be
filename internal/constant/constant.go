@@ -1,9 +1,10 @@
 package constant
 
 const (
-	RegisterTokenCookie      = "register_token"
-	RefreshTokenCookie       = "refresh_token"
-	ResetPasswordTokenCookie = "reset_password_token"
+	RegisterTokenCookie       = "register_token"
+	RefreshTokenCookie        = "refresh_token"
+	ResetPasswordTokenCookie  = "reset_password_token"
+	ChangePasswordTokenCookie = "change_password_token"
 
 	OtpKey      = "user:otp"
 	OtpDuration = "30m"

@@ -14,11 +14,15 @@ import (
 	"murakali/internal/util"
 	smtp "murakali/pkg/email"
 	"murakali/pkg/httperror"
+	"murakali/pkg/jwt"
 	"murakali/pkg/pagination"
 	"murakali/pkg/postgre"
 	"murakali/pkg/response"
 	"net/http"
+	"strings"
 	"time"
+
+	"golang.org/x/crypto/bcrypt"
 )
 
 type userUC struct {
@@ -503,5 +507,96 @@ func (u *userUC) UploadProfilePicture(ctx context.Context, imgURL, userID string
 	if err != nil {
 		return err
 	}
+	return nil
+}
+
+func (u *userUC) VerifyPasswordChange(ctx context.Context, userID string) error {
+	user, err := u.userRepo.GetUserByID(ctx, userID)
+	if err != nil {
+		return err
+	}
+
+	err = u.SendOTPEmail(ctx, user.Email)
+	if err != nil {
+		return err
+	}
+	return nil
+
+}
+
+func (u *userUC) SendOTPEmail(ctx context.Context, email string) error {
+	otp, err := util.GenerateOTP(6)
+	if err != nil {
+		return err
+	}
+
+	if err := u.userRepo.InsertNewOTPKey(ctx, email, otp); err != nil {
+		return err
+	}
+
+	subject := "Email Verification!"
+	msg := smtp.VerificationEmailBody(otp)
+	go smtp.SendEmail(u.cfg, email, subject, msg)
+
+	return nil
+}
+
+func (u *userUC) VerifyOTP(ctx context.Context, requestBody body.VerifyOTPRequest, userID string) (string, error) {
+	user, err := u.userRepo.GetUserByID(ctx, userID)
+	if err != nil {
+		return "", err
+	}
+	value, err := u.userRepo.GetOTPValue(ctx, user.Email)
+	if err != nil {
+		return "", httperror.New(http.StatusBadRequest, response.OTPAlreadyExpiredMessage)
+	}
+
+	if value != requestBody.OTP {
+		return "", httperror.New(http.StatusBadRequest, response.OTPIsNotValidMessage)
+	}
+
+	changePasswordToken, err := jwt.GenerateJWTChangePasswordToken(user.ID.String(), u.cfg)
+	if err != nil {
+		return "", err
+	}
+
+	_, err = u.userRepo.DeleteOTPValue(ctx, user.Email)
+	if err != nil {
+		return "", err
+	}
+
+	return changePasswordToken, nil
+}
+
+func (u *userUC) ChangePassword(ctx context.Context, userID string, newPassword string) error {
+	user, err := u.userRepo.GetUserByID(ctx, userID)
+	if err != nil {
+		return err
+	}
+	userPassword, err := u.userRepo.GetPasswordByID(ctx, userID)
+	if err != nil {
+		return err
+	}
+	err = bcrypt.CompareHashAndPassword([]byte(userPassword), []byte(newPassword))
+	if err == nil {
+		return httperror.New(http.StatusBadRequest, response.PasswordSameOldPasswordMessage)
+	}
+
+	if strings.Contains(strings.ToLower(newPassword), strings.ToLower(*user.Username)) {
+		return httperror.New(http.StatusBadRequest, response.PasswordContainUsernameMessage)
+	}
+
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(newPassword), bcrypt.DefaultCost)
+	if err != nil {
+		return err
+	}
+
+	password := string(hashedPassword)
+
+	err = u.userRepo.UpdatePasswordByID(ctx, userID, password)
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
