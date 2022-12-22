@@ -43,39 +43,39 @@ func (r *cartRepo) GetCartHoverHome(ctx context.Context, userID string, limit in
 	defer res.Close()
 
 	for res.Next() {
-		var CartHome body.CartHome
+		var cartItem body.CartHome
 		if errScan := res.Scan(
-			&CartHome.Title,
-			&CartHome.ThumbnailURL,
-			&CartHome.Price,
-			&CartHome.DiscountPersentase,
-			&CartHome.DiscountFixPrice,
-			&CartHome.MinProductPrice,
-			&CartHome.MaxDiscountPrice,
-			&CartHome.Quantity,
-			&CartHome.VariantName,
-			&CartHome.VariantType,
+			&cartItem.Title,
+			&cartItem.ThumbnailURL,
+			&cartItem.Price,
+			&cartItem.DiscountPersentase,
+			&cartItem.DiscountFixPrice,
+			&cartItem.MinProductPrice,
+			&cartItem.MaxDiscountPrice,
+			&cartItem.Quantity,
+			&cartItem.VariantName,
+			&cartItem.VariantType,
 		); errScan != nil {
 			return nil, err
 		}
 
-		if CartHome.Price >= CartHome.MinProductPrice && CartHome.DiscountPersentase > 0 {
-			CartHome.ResultDiscount = math.Min(CartHome.MaxDiscountPrice,
-				CartHome.Price*(CartHome.DiscountPersentase/100))
+		if cartItem.Price >= cartItem.MinProductPrice && cartItem.DiscountPersentase > 0 {
+			cartItem.ResultDiscount = math.Min(cartItem.MaxDiscountPrice,
+				cartItem.Price*(cartItem.DiscountPersentase/100))
 		}
 
-		if CartHome.Price >= CartHome.MinProductPrice && CartHome.DiscountFixPrice > 0 {
-			CartHome.ResultDiscount = math.Max(CartHome.ResultDiscount, CartHome.DiscountFixPrice)
+		if cartItem.Price >= cartItem.MinProductPrice && cartItem.DiscountFixPrice > 0 {
+			cartItem.ResultDiscount = math.Max(cartItem.ResultDiscount, cartItem.DiscountFixPrice)
 
-			CartHome.ResultDiscount = math.Min(CartHome.MaxDiscountPrice,
-				CartHome.Price*(CartHome.DiscountPersentase/100))
+			cartItem.ResultDiscount = math.Min(cartItem.MaxDiscountPrice,
+				cartItem.Price*(cartItem.DiscountPersentase/100))
 		}
 
-		if CartHome.ResultDiscount > 0 {
-			CartHome.SubPrice = CartHome.Price - CartHome.ResultDiscount
+		if cartItem.ResultDiscount > 0 {
+			cartItem.SubPrice = cartItem.Price - cartItem.ResultDiscount
 		}
 
-		cartHomes = append(cartHomes, &CartHome)
+		cartHomes = append(cartHomes, &cartItem)
 	}
 
 	if res.Err() != nil {

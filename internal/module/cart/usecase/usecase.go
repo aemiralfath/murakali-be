@@ -23,7 +23,7 @@ func NewCartUseCase(cfg *config.Config, txRepo *postgre.TxRepo, cartRepo cart.Re
 }
 
 func (u *cartUC) GetCartHoverHome(ctx context.Context, userID string, limit int) (*body.CartHomeResponse, error) {
-	CartHomes, err := u.cartRepo.GetCartHoverHome(ctx, userID, limit)
+	cartHomes, err := u.cartRepo.GetCartHoverHome(ctx, userID, limit)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return nil, httperror.New(http.StatusBadRequest, response.AddressNotExistMessage)
@@ -36,10 +36,11 @@ func (u *cartUC) GetCartHoverHome(ctx context.Context, userID string, limit int)
 		return nil, err
 	}
 
-	CartHomeResponses := &body.CartHomeResponse{
+	cartHomeResponses := &body.CartHomeResponse{
 		Limit:     limit,
 		TotalItem: totalItem,
-		CartHomes: CartHomes,
+		CartHomes: cartHomes,
 	}
-	return CartHomeResponses, nil
+
+	return cartHomeResponses, nil
 }
