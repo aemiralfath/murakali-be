@@ -58,8 +58,8 @@ func (h *authHandlers) Login(c *gin.Context) {
 	}
 
 	c.SetSameSite(http.SameSiteNoneMode)
-	c.SetCookie(constant.RefreshTokenCookie, token.RefreshToken, h.cfg.JWT.RefreshExpMin*60, "/", h.cfg.Server.Domain, true, true)
-	response.SuccessResponse(c.Writer, body.LoginResponse{AccessToken: token.AccessToken}, http.StatusOK)
+	c.SetCookie(constant.RefreshTokenCookie, token.RefreshToken.Token, h.cfg.JWT.RefreshExpMin*60, "/", h.cfg.Server.Domain, true, true)
+	response.SuccessResponse(c.Writer, body.LoginResponse{AccessToken: token.AccessToken.Token, ExpiredAt: token.AccessToken.ExpiredAt}, http.StatusOK)
 }
 
 func (h *authHandlers) RefreshToken(c *gin.Context) {
@@ -88,7 +88,7 @@ func (h *authHandlers) RefreshToken(c *gin.Context) {
 		return
 	}
 
-	response.SuccessResponse(c.Writer, body.LoginResponse{AccessToken: accessToken}, http.StatusOK)
+	response.SuccessResponse(c.Writer, body.LoginResponse{AccessToken: accessToken.Token, ExpiredAt: accessToken.ExpiredAt}, http.StatusOK)
 }
 
 func (h *authHandlers) RegisterEmail(c *gin.Context) {
@@ -253,12 +253,6 @@ func (h *authHandlers) ResetPasswordUser(c *gin.Context) {
 		if !errors.As(err, &e) {
 			h.logger.Errorf("HandlerAuth, Error: %s", err)
 			response.ErrorResponse(c.Writer, response.InternalServerErrorMessage, http.StatusInternalServerError)
-			return
-		}
-
-		invalidFields, err = requestBody.Validate()
-		if err != nil {
-			response.ErrorResponseData(c.Writer, invalidFields, response.UnprocessableEntityMessage, http.StatusUnprocessableEntity)
 			return
 		}
 

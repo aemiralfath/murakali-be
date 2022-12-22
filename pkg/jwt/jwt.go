@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"murakali/config"
+	"murakali/internal/model"
 	"net/http"
 	"strings"
 	"time"
@@ -38,7 +39,7 @@ type ChangePasswordClaims struct {
 	jwt.RegisteredClaims
 }
 
-func GenerateJWTAccessToken(userID string, userRole int, cfg *config.Config) (string, error) {
+func GenerateJWTAccessToken(userID string, userRole int, cfg *config.Config) (*model.AccessToken, error) {
 	claims := &AccessClaims{
 		ID:     userID,
 		RoleID: userRole,
@@ -53,13 +54,17 @@ func GenerateJWTAccessToken(userID string, userRole int, cfg *config.Config) (st
 
 	tokenString, err := token.SignedString([]byte(cfg.JWT.JwtSecretKey))
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
-	return tokenString, nil
+	accessToken := &model.AccessToken{
+		Token:     tokenString,
+		ExpiredAt: claims.ExpiresAt.Time,
+	}
+	return accessToken, nil
 }
 
-func GenerateJWTRefreshToken(userID string, cfg *config.Config) (string, error) {
+func GenerateJWTRefreshToken(userID string, cfg *config.Config) (*model.RefreshToken, error) {
 	claims := &RefreshClaims{
 		ID: userID,
 		RegisteredClaims: jwt.RegisteredClaims{
@@ -73,10 +78,14 @@ func GenerateJWTRefreshToken(userID string, cfg *config.Config) (string, error) 
 
 	tokenString, err := token.SignedString([]byte(cfg.JWT.JwtSecretKey))
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
-	return tokenString, nil
+	refreshToken := &model.RefreshToken{
+		Token:     tokenString,
+		ExpiredAt: claims.ExpiresAt.Time,
+	}
+	return refreshToken, nil
 }
 
 func GenerateJWTRegisterToken(email string, cfg *config.Config) (string, error) {
