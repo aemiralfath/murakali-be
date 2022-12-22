@@ -46,7 +46,7 @@ func (h *cartHandlers) GetCartHoverHome(c *gin.Context) {
 	if err != nil {
 		var e *httperror.Error
 		if !errors.As(err, &e) {
-			h.logger.Errorf("HandlerAuth, Error: %s", err)
+			h.logger.Errorf("HandlerCart, Error: %s", err)
 			response.ErrorResponse(c.Writer, response.InternalServerErrorMessage, http.StatusInternalServerError)
 			return
 		}

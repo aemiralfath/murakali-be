@@ -289,7 +289,7 @@ func (h *userHandlers) EditUser(c *gin.Context) {
 	if err != nil {
 		var e *httperror.Error
 		if !errors.As(err, &e) {
-			h.logger.Errorf("HandlerAuth, Error: %s", err)
+			h.logger.Errorf("HandlerUser, Error: %s", err)
 			response.ErrorResponse(c.Writer, response.InternalServerErrorMessage, http.StatusInternalServerError)
 			return
 		}
@@ -324,7 +324,7 @@ func (h *userHandlers) EditEmail(c *gin.Context) {
 	if err != nil {
 		var e *httperror.Error
 		if !errors.As(err, &e) {
-			h.logger.Errorf("HandlerAuth, Error: %s", err)
+			h.logger.Errorf("HandlerUser, Error: %s", err)
 			response.ErrorResponse(c.Writer, response.InternalServerErrorMessage, http.StatusInternalServerError)
 			return
 		}
@@ -359,7 +359,7 @@ func (h *userHandlers) EditEmailUser(c *gin.Context) {
 	if err != nil {
 		var e *httperror.Error
 		if !errors.As(err, &e) {
-			h.logger.Errorf("HandlerAuth, Error: %s", err)
+			h.logger.Errorf("HandlerUser, Error: %s", err)
 			response.ErrorResponse(c.Writer, response.InternalServerErrorMessage, http.StatusInternalServerError)
 			return
 		}
