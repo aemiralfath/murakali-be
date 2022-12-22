@@ -40,4 +40,5 @@ type Repository interface {
 	CheckShopUnique(ctx context.Context, shopName string) (int64, error)
 	AddShop(ctx context.Context, userID string, shopName string) error
 	UpdateRole(ctx context.Context, userID string) error
+	UpdateProfileImage(ctx context.Context, imgURL, userID string) error
 }

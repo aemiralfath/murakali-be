@@ -16,7 +16,13 @@ require (
 )
 
 require (
+	github.com/creasty/defaults v1.5.1 // indirect
+	github.com/gorilla/schema v1.2.0 // indirect
+)
+
+require (
 	github.com/cespare/xxhash/v2 v2.1.2 // indirect
+	github.com/cloudinary/cloudinary-go/v2 v2.2.0
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/dgryski/go-rendezvous v0.0.0-20200823014737-9f7001d12a5f // indirect
 	github.com/fsnotify/fsnotify v1.6.0 // indirect
