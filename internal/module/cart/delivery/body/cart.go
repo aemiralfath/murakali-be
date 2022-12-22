@@ -5,5 +5,5 @@ const (
 )
 
 type UnprocessableEntity struct {
-	Fields map[string]string `json:"fields"`
+	Fields map[string]interface{} `json:"fields"`
 }
