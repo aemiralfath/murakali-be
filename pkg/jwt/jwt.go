@@ -33,6 +33,11 @@ type ResetPasswordClaims struct {
 	jwt.RegisteredClaims
 }
 
+type ChangePasswordClaims struct {
+	ID string `json:"id"`
+	jwt.RegisteredClaims
+}
+
 func GenerateJWTAccessToken(userID string, userRole int, cfg *config.Config) (string, error) {
 	claims := &AccessClaims{
 		ID:     userID,
@@ -77,6 +82,26 @@ func GenerateJWTRefreshToken(userID string, cfg *config.Config) (string, error) 
 func GenerateJWTRegisterToken(email string, cfg *config.Config) (string, error) {
 	claims := &RegisterClaims{
 		Email: email,
+		RegisteredClaims: jwt.RegisteredClaims{
+			ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Duration(cfg.JWT.RefreshExpMin) * time.Minute)),
+			Issuer:    cfg.JWT.JwtIssuer,
+			IssuedAt:  jwt.NewNumericDate(time.Now()),
+		},
+	}
+
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+
+	tokenString, err := token.SignedString([]byte(cfg.JWT.JwtSecretKey))
+	if err != nil {
+		return "", err
+	}
+
+	return tokenString, nil
+}
+
+func GenerateJWTChangePasswordToken(userID string, cfg *config.Config) (string, error) {
+	claims := &RefreshClaims{
+		ID: userID,
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Duration(cfg.JWT.RefreshExpMin) * time.Minute)),
 			Issuer:    cfg.JWT.JwtIssuer,
