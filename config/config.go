@@ -67,6 +67,9 @@ type ExternalConfig struct {
 	SMTPPassword  string `mapstructure:"SMTP_PASSWORD"`
 	SMTPFrom      string `mapstructure:"SMTP_FROM"`
 	CloudinaryURL string `mapstructure:"CLOUDINARY_URL"`
+	OngkirAPIURL string `mapstructure:"ONGKIR_API_URL"`
+	OngkirAPIKey string `mapstructure:"ONGKIR_API_KEY"`
+	KodePosURL   string `mapstructure:"KODE_POS_URL"`
 }
 
 func LoadConfig() (*viper.Viper, error) {

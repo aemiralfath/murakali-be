@@ -5,8 +5,12 @@ const (
 	RefreshTokenCookie       = "refresh_token"
 	ResetPasswordTokenCookie = "reset_password_token"
 
-	OtpKey      = "user:otp"
-	OtpDuration = "30m"
+	ProvinceKey    = "location:province"
+	CityKey        = "location:city"
+	SubDistrictKey = "location:subdistrict"
+	UrbanKey       = "location:urban"
+	OtpKey         = "user:otp"
+	OtpDuration    = "30m"
 
 	RoleUser   = 1
 	RoleSeller = 2
