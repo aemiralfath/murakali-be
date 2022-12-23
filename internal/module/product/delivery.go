@@ -8,4 +8,5 @@ type Handlers interface {
 	GetCategoriesByNameLevelOne(c *gin.Context)
 	GetCategoriesByNameLevelTwo(c *gin.Context)
 	GetCategoriesByNameLevelThree(c *gin.Context)
+	GetRecommendedProducts(c *gin.Context)
 }
