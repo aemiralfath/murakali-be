@@ -116,3 +116,21 @@ func (h *productHandlers) GetCategoriesByNameLevelThree(c *gin.Context) {
 
 	response.SuccessResponse(c.Writer, categoriesResponse, http.StatusOK)
 }
+
+func (h *productHandlers) GetRecommendedProducts(c *gin.Context) {
+
+	RecommendedProducts, err := h.productUC.GetRecommendedProducts(c)
+	if err != nil {
+		var e *httperror.Error
+		if !errors.As(err, &e) {
+			h.logger.Errorf("HandlerProduct, Error: %s", err)
+			response.ErrorResponse(c.Writer, response.InternalServerErrorMessage, http.StatusInternalServerError)
+			return
+		}
+
+		response.ErrorResponse(c.Writer, e.Err.Error(), e.Status)
+		return
+	}
+
+	response.SuccessResponse(c.Writer, RecommendedProducts, http.StatusOK)
+}

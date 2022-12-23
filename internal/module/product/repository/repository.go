@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"murakali/internal/model"
 	"murakali/internal/module/product"
+	"murakali/internal/module/product/delivery/body"
 
 	"github.com/go-redis/redis/v8"
 	"github.com/google/uuid"
@@ -140,4 +141,47 @@ func (r *productRepo) GetCategoriesByParentID(ctx context.Context, parentID uuid
 	}
 
 	return categories, nil
+}
+
+func (r *productRepo) GetRecommendedProducts(ctx context.Context, limit int) ([]*body.Products, error) {
+
+	products := make([]*body.Products, 0)
+
+	res, err := r.PSQL.QueryContext(
+		ctx, GetRecommendedProductsQuery,
+		limit)
+
+	if err != nil {
+		return nil, err
+	}
+	defer res.Close()
+
+	for res.Next() {
+		var p body.Products
+
+		if errScan := res.Scan(
+			&p.Title,
+			&p.UnitSold,
+			&p.RatingAVG,
+			&p.ThumbnailURL,
+			&p.MinPrice,
+			&p.MaxPrice,
+			&p.PromoDiscountPercentage,
+			&p.PromoDiscountFixPrice,
+			&p.PromoMinProductPrice,
+			&p.PromoMaxDiscountPrice,
+			&p.VoucherDiscountPercentage,
+			&p.VoucherDiscountFixPrice,
+		); errScan != nil {
+			return nil, err
+		}
+
+		products = append(products, &p)
+	}
+
+	if res.Err() != nil {
+		return nil, err
+	}
+
+	return products, nil
 }
