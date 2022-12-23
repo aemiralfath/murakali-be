@@ -147,8 +147,8 @@ func (u *locationUC) GetUrban(ctx context.Context, province, city, subDistrict s
 			return nil, err
 		}
 
-		if err := u.locationRepo.InsertUrbanRedis(ctx, province, city, subDistrict, string(redisValue)); err != nil {
-			return nil, err
+		if errInsert := u.locationRepo.InsertUrbanRedis(ctx, province, city, subDistrict, string(redisValue)); errInsert != nil {
+			return nil, errInsert
 		}
 
 		return &urban, err

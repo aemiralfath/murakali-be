@@ -75,6 +75,7 @@ run:
   tests: false
   skip-dirs:
     - vendor/
+    - fakers/
   skip-dirs-use-default: true
   modules-download-mode: vendor
   skip-files:
