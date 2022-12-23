@@ -121,7 +121,6 @@ func (u *productUC) GetCategoriesByParentID(ctx context.Context, parentID uuid.U
 }
 
 func (u *productUC) GetRecommendedProducts(ctx context.Context) (*body.RecommendedProductResponse, error) {
-
 	limit := 18
 	products, promotions, vouchers, err := u.productRepo.GetRecommendedProducts(ctx, limit)
 	if err != nil {
@@ -137,7 +136,7 @@ func (u *productUC) GetRecommendedProducts(ctx context.Context) (*body.Recommend
 			Title:                     products[i].Title,
 			UnitSold:                  products[i].UnitSold,
 			RatingAVG:                 products[i].RatingAvg,
-			ThumbnailURL:              products[i].ThumbnailUrl,
+			ThumbnailURL:              products[i].ThumbnailURL,
 			MinPrice:                  products[i].MinPrice,
 			MaxPrice:                  products[i].MaxPrice,
 			PromoDiscountPercentage:   promotions[i].DiscountPercentage,
@@ -159,11 +158,10 @@ func (u *productUC) GetRecommendedProducts(ctx context.Context) (*body.Recommend
 }
 
 func (u *productUC) CalculateDiscountProduct(p *body.Products) *body.Products {
-
 	if p.PromoMaxDiscountPrice == nil {
 		return p
 	}
-	var maxDiscountPrice float64 = *p.PromoMaxDiscountPrice
+	var maxDiscountPrice float64
 	var minProductPrice float64
 	var discountPercentage float64
 	var discountFixPrice float64
@@ -172,6 +170,7 @@ func (u *productUC) CalculateDiscountProduct(p *body.Products) *body.Products {
 		minProductPrice = *p.PromoMinProductPrice
 	}
 
+	maxDiscountPrice = *p.PromoMaxDiscountPrice
 	if p.PromoDiscountPercentage != nil {
 		discountPercentage = *p.PromoDiscountPercentage
 		if p.MinPrice >= minProductPrice && *p.PromoDiscountPercentage > 0 {

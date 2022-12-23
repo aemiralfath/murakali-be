@@ -118,7 +118,6 @@ func (h *productHandlers) GetCategoriesByNameLevelThree(c *gin.Context) {
 }
 
 func (h *productHandlers) GetRecommendedProducts(c *gin.Context) {
-
 	RecommendedProducts, err := h.productUC.GetRecommendedProducts(c)
 	if err != nil {
 		var e *httperror.Error

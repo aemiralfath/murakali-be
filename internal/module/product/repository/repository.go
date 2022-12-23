@@ -143,7 +143,6 @@ func (r *productRepo) GetCategoriesByParentID(ctx context.Context, parentID uuid
 }
 
 func (r *productRepo) GetRecommendedProducts(ctx context.Context, limit int) ([]*model.Product, []*model.Promotion, []*model.Voucher, error) {
-
 	products := make([]*model.Product, 0)
 	promotions := make([]*model.Promotion, 0)
 	vouchers := make([]*model.Voucher, 0)
@@ -158,17 +157,17 @@ func (r *productRepo) GetRecommendedProducts(ctx context.Context, limit int) ([]
 	defer res.Close()
 
 	for res.Next() {
-		var product model.Product
+		var productData model.Product
 		var promo model.Promotion
 		var voucher model.Voucher
 
 		if errScan := res.Scan(
-			&product.Title,
-			&product.UnitSold,
-			&product.RatingAvg,
-			&product.ThumbnailUrl,
-			&product.MinPrice,
-			&product.MaxPrice,
+			&productData.Title,
+			&productData.UnitSold,
+			&productData.RatingAvg,
+			&productData.ThumbnailURL,
+			&productData.MinPrice,
+			&productData.MaxPrice,
 			&promo.DiscountPercentage,
 			&promo.DiscountFixPrice,
 			&promo.MinProductPrice,
@@ -179,7 +178,7 @@ func (r *productRepo) GetRecommendedProducts(ctx context.Context, limit int) ([]
 			return nil, nil, nil, err
 		}
 
-		products = append(products, &product)
+		products = append(products, &productData)
 		promotions = append(promotions, &promo)
 		vouchers = append(vouchers, &voucher)
 	}
