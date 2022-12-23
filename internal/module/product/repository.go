@@ -12,4 +12,5 @@ type Repository interface {
 	GetBanners(ctx context.Context) ([]*model.Banner, error)
 	GetCategoriesByName(ctx context.Context, name string) ([]*model.Category, error)
 	GetCategoriesByParentID(ctx context.Context, parentID uuid.UUID) ([]*model.Category, error)
+	GetRecommendedProducts(ctx context.Context, limit int) ([]*model.Product, []*model.Promotion, []*model.Voucher, error)
 }

@@ -141,3 +141,51 @@ func (r *productRepo) GetCategoriesByParentID(ctx context.Context, parentID uuid
 
 	return categories, nil
 }
+
+func (r *productRepo) GetRecommendedProducts(ctx context.Context, limit int) ([]*model.Product, []*model.Promotion, []*model.Voucher, error) {
+	products := make([]*model.Product, 0)
+	promotions := make([]*model.Promotion, 0)
+	vouchers := make([]*model.Voucher, 0)
+
+	res, err := r.PSQL.QueryContext(
+		ctx, GetRecommendedProductsQuery,
+		limit)
+
+	if err != nil {
+		return nil, nil, nil, err
+	}
+	defer res.Close()
+
+	for res.Next() {
+		var productData model.Product
+		var promo model.Promotion
+		var voucher model.Voucher
+
+		if errScan := res.Scan(
+			&productData.Title,
+			&productData.UnitSold,
+			&productData.RatingAvg,
+			&productData.ThumbnailURL,
+			&productData.MinPrice,
+			&productData.MaxPrice,
+			&promo.DiscountPercentage,
+			&promo.DiscountFixPrice,
+			&promo.MinProductPrice,
+			&promo.MaxDiscountPrice,
+			&voucher.DiscountPercentage,
+			&voucher.DiscountFixPrice,
+		); errScan != nil {
+			return nil, nil, nil, err
+		}
+
+		products = append(products, &productData)
+		promotions = append(promotions, &promo)
+		vouchers = append(vouchers, &voucher)
+	}
+
+	if res.Err() != nil {
+		return nil, nil, nil, err
+	}
+
+	return products, promotions, vouchers, err
+}

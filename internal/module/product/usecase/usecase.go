@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"math"
 	"murakali/config"
 	"murakali/internal/model"
 	"murakali/internal/module/product"
@@ -117,4 +118,79 @@ func (u *productUC) GetCategoriesByParentID(ctx context.Context, parentID uuid.U
 	}
 
 	return categoryResponse, nil
+}
+
+func (u *productUC) GetRecommendedProducts(ctx context.Context) (*body.RecommendedProductResponse, error) {
+	limit := 18
+	products, promotions, vouchers, err := u.productRepo.GetRecommendedProducts(ctx, limit)
+	if err != nil {
+		if err != sql.ErrNoRows {
+			return nil, err
+		}
+	}
+
+	resultProduct := make([]*body.Products, 0)
+	totalData := len(products)
+	for i := 0; i < totalData; i++ {
+		p := &body.Products{
+			Title:                     products[i].Title,
+			UnitSold:                  products[i].UnitSold,
+			RatingAVG:                 products[i].RatingAvg,
+			ThumbnailURL:              products[i].ThumbnailURL,
+			MinPrice:                  products[i].MinPrice,
+			MaxPrice:                  products[i].MaxPrice,
+			PromoDiscountPercentage:   promotions[i].DiscountPercentage,
+			PromoDiscountFixPrice:     promotions[i].DiscountFixPrice,
+			PromoMinProductPrice:      promotions[i].MinProductPrice,
+			PromoMaxDiscountPrice:     promotions[i].MaxDiscountPrice,
+			VoucherDiscountPercentage: vouchers[i].DiscountPercentage,
+			VoucherDiscountFixPrice:   vouchers[i].DiscountFixPrice,
+		}
+		p = u.CalculateDiscountProduct(p)
+		resultProduct = append(resultProduct, p)
+	}
+
+	recommendedProductResponse := &body.RecommendedProductResponse{
+		Limit:    limit,
+		Products: resultProduct,
+	}
+	return recommendedProductResponse, nil
+}
+
+func (u *productUC) CalculateDiscountProduct(p *body.Products) *body.Products {
+	if p.PromoMaxDiscountPrice == nil {
+		return p
+	}
+	var maxDiscountPrice float64
+	var minProductPrice float64
+	var discountPercentage float64
+	var discountFixPrice float64
+	var resultDiscount float64
+	if p.PromoMinProductPrice != nil {
+		minProductPrice = *p.PromoMinProductPrice
+	}
+
+	maxDiscountPrice = *p.PromoMaxDiscountPrice
+	if p.PromoDiscountPercentage != nil {
+		discountPercentage = *p.PromoDiscountPercentage
+		if p.MinPrice >= minProductPrice && *p.PromoDiscountPercentage > 0 {
+			resultDiscount = math.Min(maxDiscountPrice,
+				p.MinPrice*(discountPercentage/100.00))
+		}
+	}
+
+	if p.PromoDiscountFixPrice != nil {
+		discountFixPrice = *p.PromoDiscountFixPrice
+		if p.MinPrice >= minProductPrice && discountFixPrice > 0 {
+			resultDiscount = math.Max(resultDiscount, discountFixPrice)
+			resultDiscount = math.Min(resultDiscount, maxDiscountPrice)
+		}
+	}
+
+	if resultDiscount > 0 {
+		p.ResultDiscount = &resultDiscount
+		p.SubPrice = p.MinPrice - resultDiscount
+	}
+
+	return p
 }
