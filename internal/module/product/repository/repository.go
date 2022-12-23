@@ -5,7 +5,6 @@ import (
 	"database/sql"
 	"murakali/internal/model"
 	"murakali/internal/module/product"
-	"murakali/internal/module/product/delivery/body"
 
 	"github.com/go-redis/redis/v8"
 	"github.com/google/uuid"
@@ -143,45 +142,51 @@ func (r *productRepo) GetCategoriesByParentID(ctx context.Context, parentID uuid
 	return categories, nil
 }
 
-func (r *productRepo) GetRecommendedProducts(ctx context.Context, limit int) ([]*body.Products, error) {
+func (r *productRepo) GetRecommendedProducts(ctx context.Context, limit int) ([]*model.Product, []*model.Promotion, []*model.Voucher, error) {
 
-	products := make([]*body.Products, 0)
+	products := make([]*model.Product, 0)
+	promotions := make([]*model.Promotion, 0)
+	vouchers := make([]*model.Voucher, 0)
 
 	res, err := r.PSQL.QueryContext(
 		ctx, GetRecommendedProductsQuery,
 		limit)
 
 	if err != nil {
-		return nil, err
+		return nil, nil, nil, err
 	}
 	defer res.Close()
 
 	for res.Next() {
-		var p body.Products
+		var product model.Product
+		var promo model.Promotion
+		var voucher model.Voucher
 
 		if errScan := res.Scan(
-			&p.Title,
-			&p.UnitSold,
-			&p.RatingAVG,
-			&p.ThumbnailURL,
-			&p.MinPrice,
-			&p.MaxPrice,
-			&p.PromoDiscountPercentage,
-			&p.PromoDiscountFixPrice,
-			&p.PromoMinProductPrice,
-			&p.PromoMaxDiscountPrice,
-			&p.VoucherDiscountPercentage,
-			&p.VoucherDiscountFixPrice,
+			&product.Title,
+			&product.UnitSold,
+			&product.RatingAvg,
+			&product.ThumbnailUrl,
+			&product.MinPrice,
+			&product.MaxPrice,
+			&promo.DiscountPercentage,
+			&promo.DiscountFixPrice,
+			&promo.MinProductPrice,
+			&promo.MaxDiscountPrice,
+			&voucher.DiscountPercentage,
+			&voucher.DiscountFixPrice,
 		); errScan != nil {
-			return nil, err
+			return nil, nil, nil, err
 		}
 
-		products = append(products, &p)
+		products = append(products, &product)
+		promotions = append(promotions, &promo)
+		vouchers = append(vouchers, &voucher)
 	}
 
 	if res.Err() != nil {
-		return nil, err
+		return nil, nil, nil, err
 	}
 
-	return products, nil
+	return products, promotions, vouchers, err
 }

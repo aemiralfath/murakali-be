@@ -123,20 +123,37 @@ func (u *productUC) GetCategoriesByParentID(ctx context.Context, parentID uuid.U
 func (u *productUC) GetRecommendedProducts(ctx context.Context) (*body.RecommendedProductResponse, error) {
 
 	limit := 18
-	products, err := u.productRepo.GetRecommendedProducts(ctx, limit)
+	products, promotions, vouchers, err := u.productRepo.GetRecommendedProducts(ctx, limit)
 	if err != nil {
 		if err != sql.ErrNoRows {
 			return nil, err
 		}
 	}
 
-	for _, product := range products {
-		product = u.CalculateDiscountProduct(product)
+	resultProduct := make([]*body.Products, 0)
+	totalData := len(products)
+	for i := 0; i < totalData; i++ {
+		p := &body.Products{
+			Title:                     products[i].Title,
+			UnitSold:                  products[i].UnitSold,
+			RatingAVG:                 products[i].RatingAvg,
+			ThumbnailURL:              products[i].ThumbnailUrl,
+			MinPrice:                  products[i].MinPrice,
+			MaxPrice:                  products[i].MaxPrice,
+			PromoDiscountPercentage:   promotions[i].DiscountPercentage,
+			PromoDiscountFixPrice:     promotions[i].DiscountFixPrice,
+			PromoMinProductPrice:      promotions[i].MinProductPrice,
+			PromoMaxDiscountPrice:     promotions[i].MaxDiscountPrice,
+			VoucherDiscountPercentage: vouchers[i].DiscountPercentage,
+			VoucherDiscountFixPrice:   vouchers[i].DiscountFixPrice,
+		}
+		p = u.CalculateDiscountProduct(p)
+		resultProduct = append(resultProduct, p)
 	}
 
 	recommendedProductResponse := &body.RecommendedProductResponse{
 		Limit:    limit,
-		Products: products,
+		Products: resultProduct,
 	}
 	return recommendedProductResponse, nil
 }
