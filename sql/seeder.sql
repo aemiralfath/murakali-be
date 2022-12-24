@@ -1,29 +1,9 @@
-INSERT INTO "category" (id, name, photo_url)
-VALUES ('d92a0995-78cd-4eba-a855-dfc096ffec5b', 'laptop',
-        'https://cf.shopee.co.id/file/c139370836a9daa649da70876a326b58'),
-       ('5d5bd121-adc2-4f62-9cad-d4172bec9a40', 'electronik',
-        'https://cf.shopee.co.id/file/dcd61dcb7c1448a132f49f938b0cb553_tn'),
-       ('5778e73c-f8b7-4c6b-a2f4-472079b164c5', 'pakaian pria',
-        'https://cf.shopee.co.id/file/04dba508f1ad19629518defb94999ef9_tn'),
-       ('63f58102-9cb6-4249-b8d4-82f65f315c59', 'hobi & koleksi',
-        'https://cf.shopee.co.id/file/42394b78fac1169d67c6291973a3b132_tn');
-
-INSERT INTO "category" (id, name, parent_id, photo_url)
-VALUES ('d99373d1-c55d-4769-a56e-f797db20235d', 'outfit Hangat', '5778e73c-f8b7-4c6b-a2f4-472079b164c5',
-        'https://cf.shopee.co.id/file/d89df04fd3435962af59be0408ec4786'),
-       ('159aa7d7-2fa0-4cc8-a708-3328d1d08eb5', 'sweeter', 'd99373d1-c55d-4769-a56e-f797db20235d',
-        'https://cf.shopee.co.id/file/19b8238c917f3dec99b689809ea43a79_tn'),
-       ('0774dbda-194f-439d-97e3-eec0e325fe5a', 'mouse & keyboard', '5d5bd121-adc2-4f62-9cad-d4172bec9a40',
-        'https://cf.shopee.co.id/file/6e70e5f93250a3e8344cda4fc79b0c3f'),
-       ('1aaaed1f-9d23-47ef-8647-17b862becc27', 'webcam', '5d5bd121-adc2-4f62-9cad-d4172bec9a40',
-        'https://cf.shopee.co.id/file/45ee92cbf6243007a66f0f338058da80');
-
 INSERT INTO "shop" (id, user_id, name, total_product, total_rating, rating_avg)
 VALUES ('e8854443-c2c7-488e-93d5-b9d93708b8a3', 'f8d8d66a-e8eb-4633-bc2d-4ccd941fed47', 'jualan', 1, 1, 1);
 
 INSERT INTO "product" (id, category_id, shop_id, sku, title, description, view_count, favorite_count, unit_sold,
                        listed_status, thumbnail_url, rating_avg, min_price, max_price)
-VALUES ('d6489799-9cc3-4480-9517-7b226a120f08', 'f7c9c484-18a8-4ad6-b214-86363225ead4',
+VALUES ('d6489799-9cc3-4480-9517-7b226a120f08', '0774dbda-194f-439d-97e3-eec0e325fe5a',
         'e8854443-c2c7-488e-93d5-b9d93708b8a3', 'sku product', 'nama produk', 'deskripsi produk', 10, 5, 1, true,
         'https://cf.shopee.co.id/file/76a0969b7d64065bc13493bf55df1849_tn', 1, 10000, 100000);
 

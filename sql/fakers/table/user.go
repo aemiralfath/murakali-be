@@ -25,7 +25,7 @@ type UserFaker struct {
 	Email  []string
 }
 
-func NewUserFaker(size, roleID int, gender string, userID []string, email []string) ISeeder {
+func NewUserFaker(size, roleID int, gender string, userID, email []string) ISeeder {
 	return &UserFaker{Size: size, RoleID: roleID, Gender: gender, UserID: userID, Email: email}
 }
 
