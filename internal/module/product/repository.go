@@ -3,6 +3,7 @@ package product
 import (
 	"context"
 	"murakali/internal/model"
+	"murakali/internal/module/product/delivery/body"
 
 	"github.com/google/uuid"
 )
@@ -13,4 +14,6 @@ type Repository interface {
 	GetCategoriesByName(ctx context.Context, name string) ([]*model.Category, error)
 	GetCategoriesByParentID(ctx context.Context, parentID uuid.UUID) ([]*model.Category, error)
 	GetRecommendedProducts(ctx context.Context, limit int) ([]*model.Product, []*model.Promotion, []*model.Voucher, error)
+	GetProductInfo(ctx context.Context, productID string) (*body.ProductInfo, error)
+	GetProductDetail(ctx context.Context, productID string) ([]*body.ProductDetail, error)
 }

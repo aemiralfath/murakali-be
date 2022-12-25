@@ -24,4 +24,21 @@ const (
 	ORDER BY "p"."unit_sold" DESC
 	limit $1;
 	`
+	GetProductInfoQuery = `select
+	a.id,a.sku,a.title,a.description,a.view_count,a.favorite_count,a.unit_sold,a.listed_status,a.thumbnail_url,a.rating_avg,a.min_price,a.max_price
+	from 
+	product a 
+	join product_detail b on a.id = b.product_id 
+	join photo g on b.id = g.product_detail_id
+	where a.id = $1`
+
+	GetProductDetailQuery = `select
+	b.id,b.price,b.stock,b.weight,b.size,b.hazardous,b.condition,b.bulk_price,g.url
+	from 
+	product_detail b 
+	join photo g on b.id = g.product_detail_id
+	where b.product_id = $1`
+
+	GetVariantDetailQuery = `select b.type,b.name from variant a join variant_detail b on a.variant_detail_id = b.id
+	where a.product_detail_id = $1 `
 )
