@@ -11,4 +11,5 @@ type UseCase interface {
 	GetBanners(ctx context.Context) ([]*model.Banner, error)
 	GetCategoriesByName(ctx context.Context, name string) ([]*body.CategoryResponse, error)
 	GetRecommendedProducts(ctx context.Context) (*body.RecommendedProductResponse, error)
+	GetProductDetail(ctx context.Context, productID string) (*body.ProductDetailResponse, error)
 }

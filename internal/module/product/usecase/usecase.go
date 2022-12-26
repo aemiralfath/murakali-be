@@ -194,3 +194,32 @@ func (u *productUC) CalculateDiscountProduct(p *body.Products) *body.Products {
 
 	return p
 }
+
+func (u *productUC) GetProductDetail(ctx context.Context, productID string) (*body.ProductDetailResponse, error) {
+	productInfo, err := u.productRepo.GetProductInfo(ctx, productID)
+	if err != nil {
+		if err != sql.ErrNoRows {
+			return nil, err
+		}
+	}
+
+	promotionInfo, err := u.productRepo.GetPromotionInfo(ctx, productID)
+	if err != nil {
+		if err != sql.ErrNoRows {
+			return nil, err
+		}
+	}
+
+	details, err := u.productRepo.GetProductDetail(ctx, productID)
+	if err != nil {
+		if err != sql.ErrNoRows {
+			return nil, err
+		}
+	}
+	result := body.ProductDetailResponse{
+		ProductInfo:   productInfo,
+		PromotionInfo: promotionInfo,
+		ProductDetail: details,
+	}
+	return &result, nil
+}
