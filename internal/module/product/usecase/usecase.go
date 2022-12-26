@@ -9,6 +9,7 @@ import (
 	"murakali/internal/model"
 	"murakali/internal/module/product"
 	"murakali/internal/module/product/delivery/body"
+	"murakali/pkg/pagination"
 	"murakali/pkg/postgre"
 
 	"github.com/google/uuid"
@@ -120,9 +121,17 @@ func (u *productUC) GetCategoriesByParentID(ctx context.Context, parentID uuid.U
 	return categoryResponse, nil
 }
 
-func (u *productUC) GetRecommendedProducts(ctx context.Context) (*body.RecommendedProductResponse, error) {
-	limit := 18
-	products, promotions, vouchers, err := u.productRepo.GetRecommendedProducts(ctx, limit)
+func (u *productUC) GetRecommendedProducts(ctx context.Context, pgn *pagination.Pagination) (*pagination.Pagination, error) {
+
+	totalRows, err := u.productRepo.GetTotalProduct(ctx)
+	if err != nil {
+		return nil, err
+	}
+	totalPages := int(math.Ceil(float64(totalRows) / float64(pgn.Limit)))
+	pgn.TotalRows = totalRows
+	pgn.TotalPages = totalPages
+
+	products, promotions, vouchers, shops, categories, err := u.productRepo.GetRecommendedProducts(ctx, pgn)
 	if err != nil {
 		if err != sql.ErrNoRows {
 			return nil, err
@@ -145,16 +154,15 @@ func (u *productUC) GetRecommendedProducts(ctx context.Context) (*body.Recommend
 			PromoMaxDiscountPrice:     promotions[i].MaxDiscountPrice,
 			VoucherDiscountPercentage: vouchers[i].DiscountPercentage,
 			VoucherDiscountFixPrice:   vouchers[i].DiscountFixPrice,
+			ShopName:                  shops[i].Name,
+			CategoryName:              categories[i].Name,
 		}
 		p = u.CalculateDiscountProduct(p)
 		resultProduct = append(resultProduct, p)
 	}
+	pgn.Rows = resultProduct
 
-	recommendedProductResponse := &body.RecommendedProductResponse{
-		Limit:    limit,
-		Products: resultProduct,
-	}
-	return recommendedProductResponse, nil
+	return pgn, nil
 }
 
 func (u *productUC) CalculateDiscountProduct(p *body.Products) *body.Products {

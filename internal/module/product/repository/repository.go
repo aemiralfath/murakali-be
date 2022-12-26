@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"murakali/internal/model"
 	"murakali/internal/module/product"
+	"murakali/pkg/pagination"
 
 	"github.com/go-redis/redis/v8"
 	"github.com/google/uuid"
@@ -142,17 +143,21 @@ func (r *productRepo) GetCategoriesByParentID(ctx context.Context, parentID uuid
 	return categories, nil
 }
 
-func (r *productRepo) GetRecommendedProducts(ctx context.Context, limit int) ([]*model.Product, []*model.Promotion, []*model.Voucher, error) {
+func (r *productRepo) GetRecommendedProducts(ctx context.Context, pgn *pagination.Pagination) ([]*model.Product, []*model.Promotion, []*model.Voucher, []*model.Shop, []*model.Category, error) {
 	products := make([]*model.Product, 0)
 	promotions := make([]*model.Promotion, 0)
 	vouchers := make([]*model.Voucher, 0)
+	shops := make([]*model.Shop, 0)
+	categories := make([]*model.Category, 0)
 
 	res, err := r.PSQL.QueryContext(
 		ctx, GetRecommendedProductsQuery,
-		limit)
+		// pgn.GetSort(),
+		pgn.GetLimit(),
+		pgn.GetOffset())
 
 	if err != nil {
-		return nil, nil, nil, err
+		return nil, nil, nil, nil, nil, err
 	}
 	defer res.Close()
 
@@ -160,6 +165,8 @@ func (r *productRepo) GetRecommendedProducts(ctx context.Context, limit int) ([]
 		var productData model.Product
 		var promo model.Promotion
 		var voucher model.Voucher
+		var shop model.Shop
+		var category model.Category
 
 		if errScan := res.Scan(
 			&productData.Title,
@@ -174,18 +181,32 @@ func (r *productRepo) GetRecommendedProducts(ctx context.Context, limit int) ([]
 			&promo.MaxDiscountPrice,
 			&voucher.DiscountPercentage,
 			&voucher.DiscountFixPrice,
+			&shop.Name,
+			&category.Name,
 		); errScan != nil {
-			return nil, nil, nil, err
+			return nil, nil, nil, nil, nil, err
 		}
 
 		products = append(products, &productData)
 		promotions = append(promotions, &promo)
 		vouchers = append(vouchers, &voucher)
+		shops = append(shops, &shop)
+		categories = append(categories, &category)
 	}
 
 	if res.Err() != nil {
-		return nil, nil, nil, err
+		return nil, nil, nil, nil, nil, err
 	}
 
-	return products, promotions, vouchers, err
+	return products, promotions, vouchers, shops, categories, err
+}
+
+func (r *productRepo) GetTotalProduct(ctx context.Context) (int64, error) {
+
+	var total int64
+	if err := r.PSQL.QueryRowContext(ctx, GetTotalProductQuery).Scan(&total); err != nil {
+		return 0, err
+	}
+
+	return total, nil
 }

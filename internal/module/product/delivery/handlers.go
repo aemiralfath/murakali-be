@@ -2,13 +2,17 @@ package delivery
 
 import (
 	"errors"
+	"fmt"
 	"murakali/config"
 	"murakali/internal/module/product"
 	"murakali/internal/module/product/delivery/body"
 	"murakali/pkg/httperror"
 	"murakali/pkg/logger"
+	"murakali/pkg/pagination"
 	"murakali/pkg/response"
 	"net/http"
+	"strconv"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 )
@@ -118,7 +122,9 @@ func (h *productHandlers) GetCategoriesByNameLevelThree(c *gin.Context) {
 }
 
 func (h *productHandlers) GetRecommendedProducts(c *gin.Context) {
-	RecommendedProducts, err := h.productUC.GetRecommendedProducts(c)
+
+	pgn := h.ValidateQueryRecommendProduct(c)
+	RecommendedProducts, err := h.productUC.GetRecommendedProducts(c, pgn)
 	if err != nil {
 		var e *httperror.Error
 		if !errors.As(err, &e) {
@@ -132,4 +138,50 @@ func (h *productHandlers) GetRecommendedProducts(c *gin.Context) {
 	}
 
 	response.SuccessResponse(c.Writer, RecommendedProducts, http.StatusOK)
+}
+
+func (h *productHandlers) ValidateQueryRecommendProduct(c *gin.Context) *pagination.Pagination {
+
+	sort := strings.TrimSpace(c.Query("sort"))
+	sortBy := strings.TrimSpace(c.Query("sortBy"))
+	limit := strings.TrimSpace(c.Query("limit"))
+	page := strings.TrimSpace(c.Query("page"))
+
+	var sortFilter string
+	var sortByFilter string
+	var limitFilter int
+	var pageFilter int
+
+	switch sort {
+	case "asc":
+		sortFilter = sort
+	default:
+		sortFilter = "DESC"
+	}
+
+	switch sortBy {
+	case "view_count":
+		sortByFilter = sortBy
+	case "favorite_count":
+		sortByFilter = sortBy
+	default:
+		sortByFilter = "unit_sold"
+	}
+
+	limitFilter, err := strconv.Atoi(limit)
+	if err != nil || limitFilter < 1 {
+		limitFilter = 18
+	}
+
+	pageFilter, err = strconv.Atoi(page)
+	if err != nil || pageFilter < 1 {
+		pageFilter = 1
+	}
+	pgn := &pagination.Pagination{
+		Limit: limitFilter,
+		Page:  pageFilter,
+		Sort:  fmt.Sprintf("%s %s", sortByFilter, sortFilter),
+	}
+
+	return pgn
 }
