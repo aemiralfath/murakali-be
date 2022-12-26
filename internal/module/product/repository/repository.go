@@ -220,7 +220,6 @@ func (r *productRepo) GetProductInfo(ctx context.Context, productID string) (*bo
 			&productInfo.CategoryName,
 			&productInfo.CategoryURL,
 		); err != nil {
-
 		return nil, err
 	}
 
@@ -238,7 +237,6 @@ func (r *productRepo) GetProductDetail(ctx context.Context, productID string) ([
 	}
 	defer res.Close()
 	for res.Next() {
-
 		var detail body.ProductDetail
 
 		if errScan := res.Scan(
@@ -257,18 +255,15 @@ func (r *productRepo) GetProductDetail(ctx context.Context, productID string) ([
 
 		variantDetail := make([]*body.VariantDetail, 0)
 
-		res2, err := r.PSQL.QueryContext(
+		res2, err2 := r.PSQL.QueryContext(
 			ctx, GetVariantDetailQuery, detail.ProductDetailID)
 
-		if err != nil {
-			return nil, err
+		if err2 != nil {
+			return nil, err2
 		}
 
-		defer res2.Close()
 		for res2.Next() {
-
 			var variant body.VariantDetail
-
 			if errScan := res2.Scan(
 				&variant.Type,
 				&variant.Name,
@@ -281,12 +276,10 @@ func (r *productRepo) GetProductDetail(ctx context.Context, productID string) ([
 		detail.Variant = variantDetail
 
 		productDetail = append(productDetail, &detail)
-
 	}
 	if res.Err() != nil {
 		return nil, err
 	}
 
 	return productDetail, nil
-
 }
