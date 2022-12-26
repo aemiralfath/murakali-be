@@ -207,16 +207,6 @@ func (r *productRepo) GetProductInfo(ctx context.Context, productID string) (*bo
 			&productInfo.RatingAVG,
 			&productInfo.MinPrice,
 			&productInfo.MaxPrice,
-			&productInfo.PromotionName,
-			&productInfo.DiscountPercentage,
-			&productInfo.DiscountFixPrice,
-			&productInfo.MinProductPrice,
-			&productInfo.MaxDiscountPrice,
-			&productInfo.Quota,
-			&productInfo.MaxQuantity,
-			&productInfo.ActiveDate,
-			&productInfo.ExpiryDate,
-			&productInfo.ParentID,
 			&productInfo.CategoryName,
 			&productInfo.CategoryURL,
 		); err != nil {
@@ -224,6 +214,26 @@ func (r *productRepo) GetProductInfo(ctx context.Context, productID string) (*bo
 	}
 
 	return &productInfo, nil
+}
+
+func (r *productRepo) GetPromotionInfo(ctx context.Context, productID string) (*body.PromotionInfo, error) {
+	var promotionInfo body.PromotionInfo
+
+	if err := r.PSQL.QueryRowContext(ctx, GetPromotionDetailQuery, productID).
+		Scan(&promotionInfo.PromotionName,
+			&promotionInfo.PromotionDiscountPercentage,
+			&promotionInfo.PromotionDiscountFixPrice,
+			&promotionInfo.PromotionMinProductPrice,
+			&promotionInfo.PromotionMaxDiscountPrice,
+			&promotionInfo.PromotionQuota,
+			&promotionInfo.PromotionMaxQuantity,
+			&promotionInfo.PromotionActiveDate,
+			&promotionInfo.PromotionExpiryDate,
+		); err != nil {
+		return nil, err
+	}
+
+	return &promotionInfo, nil
 }
 
 func (r *productRepo) GetProductDetail(ctx context.Context, productID string) ([]*body.ProductDetail, error) {
@@ -241,7 +251,7 @@ func (r *productRepo) GetProductDetail(ctx context.Context, productID string) ([
 
 		if errScan := res.Scan(
 			&detail.ProductDetailID,
-			&detail.Price,
+			&detail.NormalPrice,
 			&detail.Stock,
 			&detail.Weight,
 			&detail.Size,
@@ -253,7 +263,7 @@ func (r *productRepo) GetProductDetail(ctx context.Context, productID string) ([
 			return nil, err
 		}
 
-		variantDetail := make([]*body.VariantDetail, 0)
+		mapVariant := make(map[string]string, 0)
 
 		res2, err2 := r.PSQL.QueryContext(
 			ctx, GetVariantDetailQuery, detail.ProductDetailID)
@@ -271,9 +281,9 @@ func (r *productRepo) GetProductDetail(ctx context.Context, productID string) ([
 				return nil, err
 			}
 
-			variantDetail = append(variantDetail, &variant)
+			mapVariant[variant.Type] = variant.Name
 		}
-		detail.Variant = variantDetail
+		detail.Variant = mapVariant
 
 		productDetail = append(productDetail, &detail)
 	}

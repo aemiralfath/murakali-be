@@ -25,24 +25,27 @@ const (
 	limit $1;
 	`
 	GetProductInfoQuery = `select
-	a.id,a.sku,a.title,a.description,a.view_count,a.favorite_count,a.unit_sold,a.listed_status,a.thumbnail_url,a.rating_avg,a.min_price,a.max_price
-	,p.name,p.discount_percentage,p.discount_fix_price,p.min_product_price,p.max_discount_price,p.quota,p.max_quantity,p.actived_date,p.expired_date
-	,e.parent_id,e.name,e.photo_url
+	pr.id,pr.sku,pr.title,pr.description,pr.view_count,pr.favorite_count,pr.unit_sold,pr.listed_status,pr.thumbnail_url,pr.rating_avg,pr.min_price,pr.max_price
+	,c.name,c.photo_url
 	from 
-	product a 
-	join product_detail b on a.id = b.product_id 
-	join photo g on b.id = g.product_detail_id
-	join promotion p on a.id = p.product_id
-	join category e on e.id = a.category_id
-	where a.id = $1`
+	product pr 
+	join product_detail b on pr.id = b.product_id 
+	join category c on c.id = pr.category_id
+	where pr.id = $1`
 
 	GetProductDetailQuery = `select
-	b.id,b.price,b.stock,b.weight,b.size,b.hazardous,b.condition,b.bulk_price,g.url
+	pd.id,pd.price,pd.stock,pd.weight,pd.size,pd.hazardous,pd.condition,pd.bulk_price,g.url
 	from 
-	product_detail b 
-	join photo g on b.id = g.product_detail_id
-	where b.product_id = $1`
+	product_detail pd
+	join photo g on pd.id = g.product_detail_id
+	where pd.product_id = $1`
 
 	GetVariantDetailQuery = `select b.type,b.name from variant a join variant_detail b on a.variant_detail_id = b.id
 	where a.product_detail_id = $1`
+
+	GetPromotionDetailQuery = `select
+	pro.name,pro.discount_percentage,pro.discount_fix_price,pro.min_product_price,pro.max_discount_price,pro.quota,pro.max_quantity,pro.actived_date,pro.expired_date
+	from 
+	promotion pro
+	where pro.product_id = $1`
 )
