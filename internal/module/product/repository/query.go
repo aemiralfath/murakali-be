@@ -26,10 +26,14 @@ const (
 	`
 	GetProductInfoQuery = `select
 	a.id,a.sku,a.title,a.description,a.view_count,a.favorite_count,a.unit_sold,a.listed_status,a.thumbnail_url,a.rating_avg,a.min_price,a.max_price
+	,p.name,p.discount_percentage,p.discount_fix_price,p.min_product_price,p.max_discount_price,p.quota,p.max_quantity,p.actived_date,p.expired_date
+	,e.parent_id,e.name,e.photo_url
 	from 
 	product a 
 	join product_detail b on a.id = b.product_id 
 	join photo g on b.id = g.product_detail_id
+	join promotion p on a.id = p.product_id
+	join category e on e.id = a.category_id
 	where a.id = $1`
 
 	GetProductDetailQuery = `select
@@ -40,5 +44,5 @@ const (
 	where b.product_id = $1`
 
 	GetVariantDetailQuery = `select b.type,b.name from variant a join variant_detail b on a.variant_detail_id = b.id
-	where a.product_detail_id = $1 `
+	where a.product_detail_id = $1`
 )

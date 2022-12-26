@@ -207,6 +207,18 @@ func (r *productRepo) GetProductInfo(ctx context.Context, productID string) (*bo
 			&productInfo.RatingAVG,
 			&productInfo.MinPrice,
 			&productInfo.MaxPrice,
+			&productInfo.PromotionName,
+			&productInfo.DiscountPercentage,
+			&productInfo.DiscountFixPrice,
+			&productInfo.MinProductPrice,
+			&productInfo.MaxDiscountPrice,
+			&productInfo.Quota,
+			&productInfo.MaxQuantity,
+			&productInfo.ActiveDate,
+			&productInfo.ExpiryDate,
+			&productInfo.ParentID,
+			&productInfo.CategoryName,
+			&productInfo.CategoryURL,
 		); err != nil {
 
 		return nil, err
