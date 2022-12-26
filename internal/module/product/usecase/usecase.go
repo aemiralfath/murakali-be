@@ -122,7 +122,6 @@ func (u *productUC) GetCategoriesByParentID(ctx context.Context, parentID uuid.U
 }
 
 func (u *productUC) GetRecommendedProducts(ctx context.Context, pgn *pagination.Pagination) (*pagination.Pagination, error) {
-
 	totalRows, err := u.productRepo.GetTotalProduct(ctx)
 	if err != nil {
 		return nil, err
@@ -131,7 +130,7 @@ func (u *productUC) GetRecommendedProducts(ctx context.Context, pgn *pagination.
 	pgn.TotalRows = totalRows
 	pgn.TotalPages = totalPages
 
-	products, promotions, vouchers, shops, categories, err := u.productRepo.GetRecommendedProducts(ctx, pgn)
+	products, promotions, vouchers, err := u.productRepo.GetRecommendedProducts(ctx, pgn)
 	if err != nil {
 		if err != sql.ErrNoRows {
 			return nil, err
@@ -144,7 +143,7 @@ func (u *productUC) GetRecommendedProducts(ctx context.Context, pgn *pagination.
 		p := &body.Products{
 			Title:                     products[i].Title,
 			UnitSold:                  products[i].UnitSold,
-			RatingAVG:                 products[i].RatingAvg,
+			RatingAVG:                 products[i].RatingAVG,
 			ThumbnailURL:              products[i].ThumbnailURL,
 			MinPrice:                  products[i].MinPrice,
 			MaxPrice:                  products[i].MaxPrice,
@@ -154,8 +153,8 @@ func (u *productUC) GetRecommendedProducts(ctx context.Context, pgn *pagination.
 			PromoMaxDiscountPrice:     promotions[i].MaxDiscountPrice,
 			VoucherDiscountPercentage: vouchers[i].DiscountPercentage,
 			VoucherDiscountFixPrice:   vouchers[i].DiscountFixPrice,
-			ShopName:                  shops[i].Name,
-			CategoryName:              categories[i].Name,
+			ShopName:                  products[i].ShopName,
+			CategoryName:              products[i].CategoryName,
 		}
 		p = u.CalculateDiscountProduct(p)
 		resultProduct = append(resultProduct, p)
