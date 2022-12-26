@@ -1,6 +1,3 @@
-INSERT INTO "shop" (id, user_id, name, total_product, total_rating, rating_avg)
-VALUES ('e8854443-c2c7-488e-93d5-b9d93708b8a3', 'f8d8d66a-e8eb-4633-bc2d-4ccd941fed47', 'jualan', 1, 1, 1);
-
 INSERT INTO "product" (id, category_id, shop_id, sku, title, description, view_count, favorite_count, unit_sold,
                        listed_status, thumbnail_url, rating_avg, min_price, max_price)
 VALUES ('d6489799-9cc3-4480-9517-7b226a120f08', '0774dbda-194f-439d-97e3-eec0e325fe5a',
@@ -8,8 +5,7 @@ VALUES ('d6489799-9cc3-4480-9517-7b226a120f08', '0774dbda-194f-439d-97e3-eec0e32
         'https://cf.shopee.co.id/file/76a0969b7d64065bc13493bf55df1849_tn', 1, 10000, 100000);
 
 INSERT INTO "product_detail" (id, product_id, price, stock, weight, size, hazardous, condition, bulk_price)
-VALUES ('0c53ef3d-3682-4359-90e1-814eb6ab5191', 'd6489799-9cc3-4480-9517-7b226a120f08', 10000, 4, 2, 2, false, 'bagus',
-        false);
+VALUES ('0c53ef3d-3682-4359-90e1-814eb6ab5191', 'd6489799-9cc3-4480-9517-7b226a120f08', 10000, 4, 2, 2, false, 'bagus', false);
 
 INSERT INTO "variant_detail" (id, name, type)
 VALUES ('b11feaf3-8776-4a99-9230-7b90fa310ef5', 'warna', 'hitam'),
