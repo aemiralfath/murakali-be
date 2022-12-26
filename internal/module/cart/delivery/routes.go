@@ -10,4 +10,5 @@ import (
 func MapCartRoutes(cartGroup *gin.RouterGroup, h cart.Handlers, mw *middleware.MWManager) {
 	cartGroup.Use(mw.AuthJWTMiddleware())
 	cartGroup.GET("/hover-home", h.GetCartHoverHome)
+	cartGroup.GET("/items", h.GetCartItems)
 }

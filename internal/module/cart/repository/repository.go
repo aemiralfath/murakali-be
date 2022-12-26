@@ -6,8 +6,10 @@ import (
 	"math"
 	"murakali/internal/module/cart"
 	"murakali/internal/module/cart/delivery/body"
+	"murakali/pkg/pagination"
 
 	"github.com/go-redis/redis/v8"
+	"github.com/lib/pq"
 )
 
 type cartRepo struct {
@@ -83,4 +85,67 @@ func (r *cartRepo) GetCartHoverHome(ctx context.Context, userID string, limit in
 	}
 
 	return cartHomes, nil
+}
+
+func (r *cartRepo) GetCartItems(ctx context.Context, userID string, pgn *pagination.Pagination) ([]*body.CartItemsResponse,
+	[]*body.ProductResponse, []*body.PromoResponse, error) {
+	cartItems := make([]*body.CartItemsResponse, 0)
+	products := make([]*body.ProductResponse, 0)
+	promos := make([]*body.PromoResponse, 0)
+	res, err := r.PSQL.QueryContext(
+		ctx, GetCartItemsQuery,
+		userID,
+		pgn.GetLimit(),
+		pgn.GetOffset())
+
+	if err != nil {
+		return nil, nil, nil, err
+	}
+	defer res.Close()
+
+	for res.Next() {
+		var cartItem body.CartItemsResponse
+		var productData body.ProductResponse
+		var promo body.PromoResponse
+		var shop body.ShopResponse
+		var VariantName []string
+		var VariantType []string
+		if errScan := res.Scan(
+			&cartItem.ID,
+			&productData.Quantity,
+			&productData.ID,
+			&productData.Title,
+			&shop.ID,
+			&shop.Name,
+			&productData.ThumbnailURL,
+			&productData.ProductPrice,
+			&productData.ProductStock,
+			&promo.DiscountPercentage,
+			&promo.DiscountFixPrice,
+			&promo.MinProductPrice,
+			&promo.MaxDiscountPrice,
+			(*pq.StringArray)(&VariantName),
+			(*pq.StringArray)(&VariantType),
+		); errScan != nil {
+			return nil, nil, nil, err
+		}
+		mapVariant := make(map[string]string, 0)
+		n := len(VariantName)
+		for i := 0; i < n; i++ {
+			mapVariant[VariantName[i]] = VariantType[i]
+		}
+
+		productData.Variant = mapVariant
+		cartItem.Shop = &shop
+
+		cartItems = append(cartItems, &cartItem)
+		products = append(products, &productData)
+		promos = append(promos, &promo)
+	}
+
+	if res.Err() != nil {
+		return nil, nil, nil, err
+	}
+
+	return cartItems, products, promos, err
 }
