@@ -7,8 +7,11 @@ import (
 	"murakali/internal/module/product/delivery/body"
 	"murakali/pkg/httperror"
 	"murakali/pkg/logger"
+	"murakali/pkg/pagination"
 	"murakali/pkg/response"
 	"net/http"
+	"strconv"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 )
@@ -118,7 +121,8 @@ func (h *productHandlers) GetCategoriesByNameLevelThree(c *gin.Context) {
 }
 
 func (h *productHandlers) GetRecommendedProducts(c *gin.Context) {
-	RecommendedProducts, err := h.productUC.GetRecommendedProducts(c)
+	pgn := h.ValidateQueryRecommendProduct(c)
+	RecommendedProducts, err := h.productUC.GetRecommendedProducts(c, pgn)
 	if err != nil {
 		var e *httperror.Error
 		if !errors.As(err, &e) {
@@ -150,4 +154,29 @@ func (h *productHandlers) GetProductDetail(c *gin.Context) {
 	}
 
 	response.SuccessResponse(c.Writer, productDetail, http.StatusOK)
+}
+
+func (h *productHandlers) ValidateQueryRecommendProduct(c *gin.Context) *pagination.Pagination {
+	limit := strings.TrimSpace(c.Query("limit"))
+	page := strings.TrimSpace(c.Query("page"))
+
+	var limitFilter int
+	var pageFilter int
+
+	limitFilter, err := strconv.Atoi(limit)
+	if err != nil || limitFilter < 1 {
+		limitFilter = 18
+	}
+
+	pageFilter, err = strconv.Atoi(page)
+	if err != nil || pageFilter < 1 {
+		pageFilter = 1
+	}
+	pgn := &pagination.Pagination{
+		Limit: limitFilter,
+		Page:  pageFilter,
+		Sort:  "unit_sold DESC",
+	}
+
+	return pgn
 }

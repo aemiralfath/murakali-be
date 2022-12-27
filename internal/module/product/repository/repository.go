@@ -6,6 +6,8 @@ import (
 	"murakali/internal/model"
 	"murakali/internal/module/product"
 	"murakali/internal/module/product/delivery/body"
+	"murakali/pkg/pagination"
+	"murakali/internal/module/product/delivery/body"
 
 	"github.com/go-redis/redis/v8"
 	"github.com/google/uuid"
@@ -143,14 +145,16 @@ func (r *productRepo) GetCategoriesByParentID(ctx context.Context, parentID uuid
 	return categories, nil
 }
 
-func (r *productRepo) GetRecommendedProducts(ctx context.Context, limit int) ([]*model.Product, []*model.Promotion, []*model.Voucher, error) {
-	products := make([]*model.Product, 0)
+func (r *productRepo) GetRecommendedProducts(ctx context.Context, pgn *pagination.Pagination) ([]*body.Products,
+	[]*model.Promotion, []*model.Voucher, error) {
+	products := make([]*body.Products, 0)
 	promotions := make([]*model.Promotion, 0)
 	vouchers := make([]*model.Voucher, 0)
 
 	res, err := r.PSQL.QueryContext(
 		ctx, GetRecommendedProductsQuery,
-		limit)
+		pgn.GetLimit(),
+		pgn.GetOffset())
 
 	if err != nil {
 		return nil, nil, nil, err
@@ -158,14 +162,14 @@ func (r *productRepo) GetRecommendedProducts(ctx context.Context, limit int) ([]
 	defer res.Close()
 
 	for res.Next() {
-		var productData model.Product
+		var productData body.Products
 		var promo model.Promotion
 		var voucher model.Voucher
 
 		if errScan := res.Scan(
 			&productData.Title,
 			&productData.UnitSold,
-			&productData.RatingAvg,
+			&productData.RatingAVG,
 			&productData.ThumbnailURL,
 			&productData.MinPrice,
 			&productData.MaxPrice,
@@ -175,6 +179,8 @@ func (r *productRepo) GetRecommendedProducts(ctx context.Context, limit int) ([]
 			&promo.MaxDiscountPrice,
 			&voucher.DiscountPercentage,
 			&voucher.DiscountFixPrice,
+			&productData.ShopName,
+			&productData.CategoryName,
 		); errScan != nil {
 			return nil, nil, nil, err
 		}
@@ -292,4 +298,13 @@ func (r *productRepo) GetProductDetail(ctx context.Context, productID string) ([
 	}
 
 	return productDetail, nil
+}
+
+func (r *productRepo) GetTotalProduct(ctx context.Context) (int64, error) {
+	var total int64
+	if err := r.PSQL.QueryRowContext(ctx, GetTotalProductQuery).Scan(&total); err != nil {
+		return 0, err
+	}
+
+	return total, nil
 }
