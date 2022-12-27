@@ -48,23 +48,23 @@ func (r *cartRepo) GetProductDetailByID(ctx context.Context, productDetailID str
 }
 
 func (r *cartRepo) GetCartProductDetail(ctx context.Context, userID, productDetailID string) (*model.CartItem, error) {
-	var cart model.CartItem
+	var cartModel model.CartItem
 	if err := r.PSQL.QueryRowContext(ctx, GetCartProductDetailQuery, userID, productDetailID).
-		Scan(&cart.ID, &cart.UserID, &cart.ProductDetailID, &cart.Quantity); err != nil {
+		Scan(&cartModel.ID, &cartModel.UserID, &cartModel.ProductDetailID, &cartModel.Quantity); err != nil {
 		return nil, err
 	}
 
-	return &cart, nil
+	return &cartModel, nil
 }
 
 func (r *cartRepo) CreateCart(ctx context.Context, userID, productDetailID string, quantity float64) (*model.CartItem, error) {
-	var cart model.CartItem
+	var cartModel model.CartItem
 	if err := r.PSQL.QueryRowContext(ctx, CreateCartQuery, userID, productDetailID, quantity).
-		Scan(&cart.ID); err != nil {
+		Scan(&cartModel.ID); err != nil {
 		return nil, err
 	}
 
-	return &cart, nil
+	return &cartModel, nil
 }
 
 func (r *cartRepo) UpdateCartByID(ctx context.Context, cartItem *model.CartItem) error {

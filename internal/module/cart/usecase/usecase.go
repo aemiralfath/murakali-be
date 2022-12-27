@@ -113,7 +113,7 @@ func (u *cartUC) AddCartItems(ctx context.Context, userID string, requestBody bo
 		if requestBody.Quantity > productDetail.Stock {
 			return httperror.New(http.StatusBadRequest, response.QuantityReachedMaximum)
 		}
-		cartProductDetail, err = u.cartRepo.CreateCart(ctx, userModel.ID.String(), productDetail.ID.String(), requestBody.Quantity)
+		_, err = u.cartRepo.CreateCart(ctx, userModel.ID.String(), productDetail.ID.String(), requestBody.Quantity)
 		if err != nil {
 			return err
 		}
