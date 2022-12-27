@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"math"
+	"murakali/internal/model"
 	"murakali/internal/module/cart"
 	"murakali/internal/module/cart/delivery/body"
 	"murakali/pkg/pagination"
@@ -22,6 +23,57 @@ func NewCartRepository(psql *sql.DB, client *redis.Client) cart.Repository {
 		PSQL:        psql,
 		RedisClient: client,
 	}
+}
+
+func (r *cartRepo) GetUserByID(ctx context.Context, id string) (*model.User, error) {
+	var userModel model.User
+	if err := r.PSQL.QueryRowContext(ctx, GetUserByIDQuery, id).
+		Scan(&userModel.ID, &userModel.RoleID, &userModel.Email, &userModel.Username, &userModel.PhoneNo,
+			&userModel.FullName, &userModel.Gender, &userModel.BirthDate, &userModel.IsVerify, &userModel.PhotoURL); err != nil {
+		return nil, err
+	}
+
+	return &userModel, nil
+}
+
+func (r *cartRepo) GetProductDetailByID(ctx context.Context, productDetailID string) (*model.ProductDetail, error) {
+	var ProductDetailData model.ProductDetail
+	if err := r.PSQL.QueryRowContext(ctx, GetProductDetailByIDQuery, productDetailID).
+		Scan(&ProductDetailData.ID, &ProductDetailData.ProductID, &ProductDetailData.Price,
+			&ProductDetailData.Stock, &ProductDetailData.Weight, &ProductDetailData.Size); err != nil {
+		return nil, err
+	}
+
+	return &ProductDetailData, nil
+}
+
+func (r *cartRepo) GetCartProductDetail(ctx context.Context, userID, productDetailID string) (*model.CartItem, error) {
+	var cart model.CartItem
+	if err := r.PSQL.QueryRowContext(ctx, GetCartProductDetailQuery, userID, productDetailID).
+		Scan(&cart.ID, &cart.UserID, &cart.ProductDetailID, &cart.Quantity); err != nil {
+		return nil, err
+	}
+
+	return &cart, nil
+}
+
+func (r *cartRepo) CreateCart(ctx context.Context, userID, productDetailID string, quantity float64) (*model.CartItem, error) {
+	var cart model.CartItem
+	if err := r.PSQL.QueryRowContext(ctx, CreateCartQuery, userID, productDetailID, quantity).
+		Scan(&cart.ID); err != nil {
+		return nil, err
+	}
+
+	return &cart, nil
+}
+
+func (r *cartRepo) UpdateCartByID(ctx context.Context, cartItem *model.CartItem) error {
+	_, err := r.PSQL.ExecContext(ctx, UpdateCartByIDQuery, cartItem.Quantity, cartItem.UpdatedAt, cartItem.ID.String())
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func (r *cartRepo) GetTotalCart(ctx context.Context, userID string) (int64, error) {
