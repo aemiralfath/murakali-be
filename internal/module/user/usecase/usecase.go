@@ -162,7 +162,7 @@ func (u *userUC) UpdateAddressByID(ctx context.Context, userID, addressID string
 }
 
 func (u *userUC) GetAddress(ctx context.Context, userID, name string, pgn *pagination.Pagination,
-	DefaultRequest *body.GetAddressDefaultRequest) (*pagination.Pagination, error) {
+	defaultRequest *body.GetAddressDefaultRequest) (*pagination.Pagination, error) {
 	userModel, err := u.userRepo.GetUserByID(ctx, userID)
 	if err != nil {
 		if err == sql.ErrNoRows {
@@ -183,14 +183,15 @@ func (u *userUC) GetAddress(ctx context.Context, userID, name string, pgn *pagin
 
 	var addresses []*model.Address
 
-	if DefaultRequest.IsDefault == "" && DefaultRequest.ShopDefault == "" {
+	if defaultRequest.IsDefault == "" && defaultRequest.ShopDefault == "" {
 		addresses, err = u.userRepo.GetAddresses(ctx, userModel.ID.String(), name, pgn)
 		if err != nil {
 			return nil, err
 		}
 	}
 
-	if DefaultRequest.IsDefault == "true" {
+	const TRUE = "true"
+	if defaultRequest.IsDefault == TRUE {
 		defaultAdress, err := u.userRepo.GetDefaultUserAddress(ctx, userModel.ID.String())
 		if err != nil {
 			return nil, err
@@ -198,7 +199,7 @@ func (u *userUC) GetAddress(ctx context.Context, userID, name string, pgn *pagin
 		addresses = append(addresses, defaultAdress)
 	}
 
-	if DefaultRequest.ShopDefault == "true" {
+	if defaultRequest.ShopDefault == TRUE {
 		shopAdress, err := u.userRepo.GetDefaultShopAddress(ctx, userModel.ID.String())
 		if err != nil {
 			return nil, err
