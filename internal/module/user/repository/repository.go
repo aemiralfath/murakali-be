@@ -77,7 +77,22 @@ func (r *userRepo) GetAddressByID(ctx context.Context, userID, addressID string)
 
 func (r *userRepo) GetDefaultUserAddress(ctx context.Context, userID string) (*model.Address, error) {
 	var address model.Address
-	if err := r.PSQL.QueryRowContext(ctx, GetDefaultAddressQuery, userID, true).Scan(&address.ID, &address.UserID, &address.IsDefault); err != nil {
+	if err := r.PSQL.QueryRowContext(ctx, GetDefaultAddressQuery, userID, true).Scan(
+		&address.ID,
+		&address.UserID,
+		&address.Name,
+		&address.ProvinceID,
+		&address.CityID,
+		&address.Province,
+		&address.City,
+		&address.District,
+		&address.SubDistrict,
+		&address.AddressDetail,
+		&address.ZipCode,
+		&address.IsDefault,
+		&address.IsShopDefault,
+		&address.CreatedAt,
+		&address.UpdatedAt); err != nil {
 		return nil, err
 	}
 
@@ -87,7 +102,21 @@ func (r *userRepo) GetDefaultUserAddress(ctx context.Context, userID string) (*m
 func (r *userRepo) GetDefaultShopAddress(ctx context.Context, userID string) (*model.Address, error) {
 	var address model.Address
 	if err := r.PSQL.QueryRowContext(ctx, GetDefaultShopAddressQuery, userID, true).
-		Scan(&address.ID, &address.UserID, &address.IsShopDefault); err != nil {
+		Scan(&address.ID,
+			&address.UserID,
+			&address.Name,
+			&address.ProvinceID,
+			&address.CityID,
+			&address.Province,
+			&address.City,
+			&address.District,
+			&address.SubDistrict,
+			&address.AddressDetail,
+			&address.ZipCode,
+			&address.IsDefault,
+			&address.IsShopDefault,
+			&address.CreatedAt,
+			&address.UpdatedAt); err != nil {
 		return nil, err
 	}
 

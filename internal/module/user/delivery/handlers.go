@@ -205,10 +205,14 @@ func (h *userHandlers) GetAddress(c *gin.Context) {
 		return
 	}
 
+	DefaultRequest := &body.GetAddressDefaultRequest{
+		IsDefault:   strings.TrimSpace(c.Query("is_default")),
+		ShopDefault: strings.TrimSpace(c.Query("shop_default")),
+	}
 	pgn := &pagination.Pagination{}
 	name := h.ValidateQueryAddress(c, pgn)
 
-	addresses, err := h.userUC.GetAddress(c, userID.(string), name, pgn)
+	addresses, err := h.userUC.GetAddress(c, userID.(string), name, pgn, DefaultRequest)
 	if err != nil {
 		var e *httperror.Error
 		if !errors.As(err, &e) {
