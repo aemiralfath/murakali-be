@@ -1,10 +1,11 @@
 package middleware
 
 import (
-	"github.com/gin-gonic/gin"
 	"murakali/pkg/jwt"
 	"murakali/pkg/response"
 	"net/http"
+
+	"github.com/gin-gonic/gin"
 )
 
 func (mw *MWManager) AuthJWTMiddleware() gin.HandlerFunc {

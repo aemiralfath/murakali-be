@@ -103,6 +103,15 @@ func (r *userRepo) GetTotalAddress(ctx context.Context, userID, name string) (in
 	return total, nil
 }
 
+func (r *userRepo) GetTotalOrder(ctx context.Context, userID string) (int64, error) {
+	var total int64
+	if err := r.PSQL.QueryRowContext(ctx, GetTotalOrderQuery, userID).Scan(&total); err != nil {
+		return 0, err
+	}
+
+	return total, nil
+}
+
 func (r *userRepo) UpdateAddress(ctx context.Context, tx postgre.Transaction, address *model.Address) error {
 	_, err := tx.ExecContext(ctx, UpdateAddressByIDQuery,
 		address.Name,
@@ -197,6 +206,71 @@ func (r *userRepo) GetAddresses(ctx context.Context, userID, name string, pgn *p
 	}
 
 	return addresses, nil
+}
+
+func (r *userRepo) GetOrders(ctx context.Context, userID string, pgn *pagination.Pagination) ([]*model.Order, error) {
+	orders := make([]*model.Order, 0)
+	res, err := r.PSQL.QueryContext(
+		ctx, GetOrdersQuery,
+		userID,
+		pgn.GetLimit(),
+		pgn.GetOffset())
+
+	if err != nil {
+		return nil, err
+	}
+	defer res.Close()
+
+	for res.Next() {
+		var order model.Order
+		if errScan := res.Scan(
+			&order.OrderID,
+			&order.OrderStatus,
+			&order.TotalPrice,
+			&order.DeliveryFee,
+			&order.ResiNumber,
+			&order.ShopID,
+			&order.ShopName,
+			&order.VoucherCode,
+			&order.CreatedAt,
+		); errScan != nil {
+			return nil, err
+		}
+
+		orderDetail := make([]*model.OrderDetail, 0)
+
+		res2, err2 := r.PSQL.QueryContext(
+			ctx, GetOrderDetailQuery, order.OrderID)
+
+		if err2 != nil {
+			return nil, err2
+		}
+
+		for res2.Next() {
+			var detail model.OrderDetail
+			if errScan := res2.Scan(
+				&detail.ProductDetailID,
+				&detail.ProductID,
+				&detail.ProductTitle,
+				&detail.ProductDetailURL,
+				&detail.OrderQuantity,
+				&detail.ItemPrice,
+				&detail.TotalPrice,
+			); errScan != nil {
+				return nil, err
+			}
+			orderDetail = append(orderDetail, &detail)
+		}
+
+		order.Detail = orderDetail
+
+		orders = append(orders, &order)
+	}
+
+	if res.Err() != nil {
+		return nil, err
+	}
+	return orders, nil
 }
 
 func (r *userRepo) GetUserByID(ctx context.Context, id string) (*model.User, error) {

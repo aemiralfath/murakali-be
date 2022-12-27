@@ -189,6 +189,24 @@ func (u *userUC) GetAddress(ctx context.Context, userID, name string, pgn *pagin
 	return pgn, nil
 }
 
+func (u *userUC) GetOrder(ctx context.Context, userID string, pgn *pagination.Pagination) (*pagination.Pagination, error) {
+	totalRows, err := u.userRepo.GetTotalOrder(ctx, userID)
+	if err != nil {
+		return nil, err
+	}
+
+	totalPages := int(math.Ceil(float64(totalRows) / float64(pgn.Limit)))
+	pgn.TotalRows = totalRows
+	pgn.TotalPages = totalPages
+
+	orders, err := u.userRepo.GetOrders(ctx, userID, pgn)
+	if err != nil {
+		return nil, err
+	}
+	pgn.Rows = orders
+	return pgn, nil
+}
+
 func (u *userUC) GetAddressByID(ctx context.Context, userID, addressID string) (*model.Address, error) {
 	userModel, err := u.userRepo.GetUserByID(ctx, userID)
 	if err != nil {

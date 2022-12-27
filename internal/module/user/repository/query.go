@@ -2,6 +2,7 @@ package repository
 
 const (
 	GetTotalAddressQuery          = `SELECT count(id) FROM "address" WHERE "user_id" = $1 AND "name" ILIKE $2 AND "deleted_at" IS NULL`
+	GetTotalOrderQuery            = `SELECT count(id) FROM "order" WHERE "user_id" = $1`
 	GetDefaultAddressQuery        = `SELECT "id", "user_id", "is_default" FROM "address" WHERE "user_id" = $1 AND "is_default" = $2 AND "deleted_at" IS NULL`
 	GetDefaultShopAddressQuery    = `SELECT "id", "user_id", "is_shop_default" FROM "address" WHERE "user_id" = $1 AND "is_shop_default" = $2 AND "deleted_at" IS NULL`
 	UpdateDefaultAddressQuery     = `UPDATE "address" SET "is_default" = $1 WHERE "id" = $2`
@@ -16,6 +17,17 @@ const (
     	"id", "user_id", "name", "province_id", "city_id", "province", "city", "district", "sub_district",  
     	"address_detail", "zip_code", "is_default", "is_shop_default", "created_at", "updated_at" 
 	FROM "address" WHERE "user_id" = $1 AND "name" ILIKE $2 AND "deleted_at" IS NULL ORDER BY $3 LIMIT $4 OFFSET $5`
+
+	GetOrdersQuery = `SELECT o.id,o.order_status_id,o.total_price,o.delivery_fee,o.resi_no,s.id,s.name,v.code,o.created_at
+	from "order" o
+	join "shop" s on s.id = o.shop_id
+	join "voucher" v on v.id = o.voucher_shop_id WHERE o.user_id = $1 ORDER BY o.created_at asc LIMIT $2 OFFSET $3
+	`
+
+	GetOrderDetailQuery = `SELECT pd.id,pd.product_id,p.title,ph.url,oi.quantity,oi.item_price,oi.total_price
+	from  "product_detail" pd 
+	join "photo" ph on pd.id = ph.product_detail_id join "order_item" oi on pd.id = oi.product_detail_id 
+	join "product" p on p.id = pd.product_id WHERE oi.order_id = $1`
 
 	GetAddressByIDQuery = `SELECT
 		"id", "user_id", "name", "province_id", "city_id", "province", "city", "district", "sub_district",  
