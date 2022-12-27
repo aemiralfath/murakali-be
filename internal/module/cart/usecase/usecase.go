@@ -77,14 +77,14 @@ func (u *cartUC) GetCartItems(ctx context.Context, userID string, pgn *paginatio
 
 		p.Promo = promo
 		p = u.CalculateDiscountProduct(p)
-		CartResults[idx].Product = append(CartResults[idx].Product, p)
+		CartResults[idx].ProductDetails = append(CartResults[idx].ProductDetails, p)
 	}
 	pgn.Rows = CartResults
 
 	return pgn, nil
 }
 
-func (u *cartUC) CalculateDiscountProduct(p *body.ProductResponse) *body.ProductResponse {
+func (u *cartUC) CalculateDiscountProduct(p *body.ProductDetailResponse) *body.ProductDetailResponse {
 	if p.Promo.MaxDiscountPrice == nil {
 		return p
 	}

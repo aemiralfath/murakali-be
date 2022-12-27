@@ -88,9 +88,9 @@ func (r *cartRepo) GetCartHoverHome(ctx context.Context, userID string, limit in
 }
 
 func (r *cartRepo) GetCartItems(ctx context.Context, userID string, pgn *pagination.Pagination) ([]*body.CartItemsResponse,
-	[]*body.ProductResponse, []*body.PromoResponse, error) {
+	[]*body.ProductDetailResponse, []*body.PromoResponse, error) {
 	cartItems := make([]*body.CartItemsResponse, 0)
-	products := make([]*body.ProductResponse, 0)
+	products := make([]*body.ProductDetailResponse, 0)
 	promos := make([]*body.PromoResponse, 0)
 	res, err := r.PSQL.QueryContext(
 		ctx, GetCartItemsQuery,
@@ -105,7 +105,7 @@ func (r *cartRepo) GetCartItems(ctx context.Context, userID string, pgn *paginat
 
 	for res.Next() {
 		var cartItem body.CartItemsResponse
-		var productData body.ProductResponse
+		var productData body.ProductDetailResponse
 		var promo body.PromoResponse
 		var shop body.ShopResponse
 		var VariantName []string

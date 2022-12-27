@@ -3,9 +3,9 @@ package body
 import "github.com/google/uuid"
 
 type CartItemsResponse struct {
-	ID      uuid.UUID          `json:"id" db:"id"`
-	Shop    *ShopResponse      `json:"shop"`
-	Product []*ProductResponse `json:"product"`
+	ID             uuid.UUID                `json:"id" db:"id"`
+	Shop           *ShopResponse            `json:"shop"`
+	ProductDetails []*ProductDetailResponse `json:"product_details"`
 }
 
 type ShopResponse struct {
@@ -13,7 +13,7 @@ type ShopResponse struct {
 	Name string    `json:"name"`
 }
 
-type ProductResponse struct {
+type ProductDetailResponse struct {
 	ID           string            `json:"id"`
 	Title        string            `json:"title"`
 	ThumbnailURL string            `json:"thumbnail_url"`
