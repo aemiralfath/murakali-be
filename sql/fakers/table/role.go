@@ -12,10 +12,10 @@ func NewRoleFaker(name []string) ISeeder {
 	return &RoleFaker{Name: name}
 }
 
-func (u *RoleFaker) GenerateData(tx postgre.Transaction) error {
+func (f *RoleFaker) GenerateData(tx postgre.Transaction) error {
 	const InsertRoleQuery = `INSERT INTO "role" (name) VALUES ($1)`
 
-	for _, val := range u.Name {
+	for _, val := range f.Name {
 		_, err := tx.Exec(InsertRoleQuery, val)
 		if err != nil {
 			return err
