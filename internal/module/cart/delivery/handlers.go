@@ -7,8 +7,11 @@ import (
 	"murakali/internal/module/cart/delivery/body"
 	"murakali/pkg/httperror"
 	"murakali/pkg/logger"
+	"murakali/pkg/pagination"
 	"murakali/pkg/response"
 	"net/http"
+	"strconv"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 )
@@ -56,4 +59,53 @@ func (h *cartHandlers) GetCartHoverHome(c *gin.Context) {
 	}
 
 	response.SuccessResponse(c.Writer, carts, http.StatusCreated)
+}
+
+func (h *cartHandlers) GetCartItems(c *gin.Context) {
+	userID, exist := c.Get("userID")
+	if !exist {
+		response.ErrorResponse(c.Writer, response.UnauthorizedMessage, http.StatusUnauthorized)
+		return
+	}
+
+	pgn := h.setLimitQueryCartItems(c)
+	cartItems, err := h.cartUC.GetCartItems(c, userID.(string), pgn)
+	if err != nil {
+		var e *httperror.Error
+		if !errors.As(err, &e) {
+			h.logger.Errorf("HandlerCart, Error: %s", err)
+			response.ErrorResponse(c.Writer, response.InternalServerErrorMessage, http.StatusInternalServerError)
+			return
+		}
+
+		response.ErrorResponse(c.Writer, e.Err.Error(), e.Status)
+		return
+	}
+
+	response.SuccessResponse(c.Writer, cartItems, http.StatusOK)
+}
+
+func (h *cartHandlers) setLimitQueryCartItems(c *gin.Context) *pagination.Pagination {
+	limit := strings.TrimSpace(c.Query("limit"))
+	page := strings.TrimSpace(c.Query("page"))
+
+	var limitFilter int
+	var pageFilter int
+
+	limitFilter, err := strconv.Atoi(limit)
+	if err != nil || limitFilter < 1 {
+		limitFilter = 100
+	}
+
+	pageFilter, err = strconv.Atoi(page)
+	if err != nil || pageFilter < 1 {
+		pageFilter = 1
+	}
+	pgn := &pagination.Pagination{
+		Limit: limitFilter,
+		Page:  pageFilter,
+		Sort:  "created_at DESC",
+	}
+
+	return pgn
 }
