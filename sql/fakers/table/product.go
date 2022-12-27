@@ -4,7 +4,6 @@ import (
 	"github.com/go-faker/faker/v4"
 	"github.com/google/uuid"
 	"github.com/gosimple/slug"
-	"math"
 	"math/rand"
 	"murakali/internal/model"
 	"murakali/pkg/postgre"
@@ -19,11 +18,13 @@ type ProductFaker struct {
 	Size       int
 	ShopID     string
 	CategoryID string
+	MinPrice   int
+	MaxPrice   int
 	ID         []string
 }
 
-func NewProductFaker(size int, shopID, categoryID string, id []string) ISeeder {
-	return &ProductFaker{Size: size, ShopID: shopID, ID: id, CategoryID: categoryID}
+func NewProductFaker(size int, shopID, categoryID string, minPrice, maxPrice int, id []string) ISeeder {
+	return &ProductFaker{Size: size, ShopID: shopID, ID: id, MinPrice: minPrice, MaxPrice: maxPrice, CategoryID: categoryID}
 }
 
 func (f *ProductFaker) GenerateData(tx postgre.Transaction) error {
@@ -97,7 +98,7 @@ func (f *ProductFaker) GenerateProductDetail(id, productID uuid.UUID, price floa
 		ProductID: productID,
 		Price:     price,
 		Stock:     int64(rand.Intn(20000)),
-		Weight:    float64(rand.Intn(10)),
+		Weight:    float64(rand.Intn(10-1) + 1),
 		Size:      float64(rand.Intn(20000)),
 		Hazardous: false,
 		Condition: "new",
@@ -106,8 +107,8 @@ func (f *ProductFaker) GenerateProductDetail(id, productID uuid.UUID, price floa
 }
 
 func (f *ProductFaker) GenerateProduct(id, categoryID, shopID uuid.UUID) *model.Product {
-	name := faker.Name()
-	price := fakePrice()
+	name := faker.Username()
+	price := rand.Intn(f.MaxPrice-f.MinPrice) + f.MinPrice
 	return &model.Product{
 		ID:            id,
 		CategoryID:    categoryID,
@@ -116,21 +117,12 @@ func (f *ProductFaker) GenerateProduct(id, categoryID, shopID uuid.UUID) *model.
 		Title:         name,
 		Description:   faker.Paragraph(),
 		ViewCount:     int64(rand.Intn(20000)),
-		FavoriteCount: int64(rand.Intn(20000)),
+		FavoriteCount: 0,
 		UnitSold:      0,
 		ListedStatus:  true,
 		ThumbnailURL:  "https://cf.shopee.co.id/file/76a0969b7d64065bc13493bf55df1849_tn",
 		RatingAvg:     0,
-		MinPrice:      price,
-		MaxPrice:      price,
+		MinPrice:      float64(price),
+		MaxPrice:      float64(price),
 	}
-}
-
-func fakePrice() float64 {
-	return precision(rand.Float64()*math.Pow10(rand.Intn(8)), rand.Intn(2)+1)
-}
-
-func precision(val float64, pre int) float64 {
-	div := math.Pow10(pre)
-	return float64(int64(val*div)) / div
 }
