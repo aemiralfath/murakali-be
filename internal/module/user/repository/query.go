@@ -25,6 +25,17 @@ const (
     	"address_detail", "zip_code", "is_default", "is_shop_default", "created_at", "updated_at" 
 	FROM "address" WHERE "user_id" = $1 AND "name" ILIKE $2 AND "deleted_at" IS NULL AND "is_default" = $3 AND "is_shop_default" = $4 ORDER BY $5 LIMIT $6 OFFSET $7`
 
+	GetOrdersQuery = `SELECT o.id,o.order_status_id,o.total_price,o.delivery_fee,o.resi_no,s.id,s.name,v.code,o.created_at
+	from "order" o
+	join "shop" s on s.id = o.shop_id
+	join "voucher" v on v.id = o.voucher_shop_id WHERE o.user_id = $1 ORDER BY o.created_at asc LIMIT $2 OFFSET $3
+	`
+
+	GetOrderDetailQuery = `SELECT pd.id,pd.product_id,p.title,ph.url,oi.quantity,oi.item_price,oi.total_price
+	from  "product_detail" pd 
+	join "photo" ph on pd.id = ph.product_detail_id join "order_item" oi on pd.id = oi.product_detail_id 
+	join "product" p on p.id = pd.product_id WHERE oi.order_id = $1`
+
 	GetAddressByIDQuery = `SELECT
 		"id", "user_id", "name", "province_id", "city_id", "province", "city", "district", "sub_district",  
     	"address_detail", "zip_code", "is_default", "is_shop_default", "created_at", "updated_at"
@@ -35,6 +46,7 @@ const (
 		"sub_district" = $7, "address_detail" = $8, "zip_code" = $9, "is_default" = $10, "is_shop_default" = $11, "updated_at" = $12
 	WHERE "id" = $13`
 
+	GetTotalOrderQuery             = `SELECT count(id) FROM "order" WHERE "user_id" = $1`
 	GetSealabsPayByIdQuery         = `SELECT * from sealabs_pay where user_id = $1 and deleted_at is null`
 	CreateSealabsPayQuery          = `INSERT INTO "sealabs_pay" (card_number, user_id, name, is_default,active_date) VALUES ($1, $2, $3, $4, $5)`
 	CheckDefaultSealabsPayQuery    = `SELECT card_number from "sealabs_pay" where user_id = $1 and is_default is true and deleted_at is null`

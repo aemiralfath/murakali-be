@@ -38,6 +38,11 @@ func (h *userHandlers) RegisterMerchant(c *gin.Context) {
 		return
 	}
 
+	if !exist {
+		response.ErrorResponse(c.Writer, response.UnauthorizedMessage, http.StatusUnauthorized)
+		return
+	}
+
 	var requestBody body.RegisterMerchant
 	if err := c.ShouldBind(&requestBody); err != nil {
 		response.ErrorResponse(c.Writer, response.BadRequestMessage, http.StatusBadRequest)
@@ -290,6 +295,54 @@ func (h *userHandlers) ValidateQueryAddress(c *gin.Context, pgn *pagination.Pagi
 	queryRequest.IsShopDefaultBool = isShopDefaultFilter
 
 	return queryRequest
+}
+
+func (h *userHandlers) GetOrder(c *gin.Context) {
+	userID, exist := c.Get("userID")
+	if !exist {
+		response.ErrorResponse(c.Writer, response.UnauthorizedMessage, http.StatusUnauthorized)
+		return
+	}
+
+	pgn := &pagination.Pagination{}
+
+	h.ValidateQueryOrder(c, pgn)
+
+	orders, err := h.userUC.GetOrder(c, userID.(string), pgn)
+	if err != nil {
+		var e *httperror.Error
+		if !errors.As(err, &e) {
+			h.logger.Errorf("HandlerUser, Error: %s", err)
+			response.ErrorResponse(c.Writer, response.InternalServerErrorMessage, http.StatusInternalServerError)
+			return
+		}
+
+		response.ErrorResponse(c.Writer, e.Err.Error(), e.Status)
+		return
+	}
+
+	response.SuccessResponse(c.Writer, orders, http.StatusOK)
+}
+
+func (h *userHandlers) ValidateQueryOrder(c *gin.Context, pgn *pagination.Pagination) {
+	limit := strings.TrimSpace(c.Query("limit"))
+	page := strings.TrimSpace(c.Query("page"))
+
+	var limitFilter int
+	var pageFilter int
+
+	limitFilter, err := strconv.Atoi(limit)
+	if err != nil || limitFilter < 1 {
+		limitFilter = 10
+	}
+
+	pageFilter, err = strconv.Atoi(page)
+	if err != nil || pageFilter < 1 {
+		pageFilter = 1
+	}
+
+	pgn.Limit = limitFilter
+	pgn.Page = pageFilter
 }
 
 func (h *userHandlers) EditUser(c *gin.Context) {
