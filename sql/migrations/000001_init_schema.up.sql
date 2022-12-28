@@ -104,7 +104,7 @@ CREATE TABLE IF NOT EXISTS "cart_item"
 ),
     "user_id" UUID,
     "product_detail_id" UUID,
-    "quantity" int,
+    "quantity" float,
     "created_at" timestamptz NOT NULL DEFAULT
 (
     NOW
