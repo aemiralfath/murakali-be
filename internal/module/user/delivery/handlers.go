@@ -205,14 +205,10 @@ func (h *userHandlers) GetAddress(c *gin.Context) {
 		return
 	}
 
-	DefaultRequest := &body.GetAddressDefaultRequest{
-		IsDefault:   strings.TrimSpace(c.Query("is_default")),
-		ShopDefault: strings.TrimSpace(c.Query("shop_default")),
-	}
 	pgn := &pagination.Pagination{}
-	name := h.ValidateQueryAddress(c, pgn)
+	queryRequest := h.ValidateQueryAddress(c, pgn)
 
-	addresses, err := h.userUC.GetAddress(c, userID.(string), name, pgn, DefaultRequest)
+	addresses, err := h.userUC.GetAddress(c, userID.(string), pgn, queryRequest)
 	if err != nil {
 		var e *httperror.Error
 		if !errors.As(err, &e) {
@@ -228,8 +224,13 @@ func (h *userHandlers) GetAddress(c *gin.Context) {
 	response.SuccessResponse(c.Writer, addresses, http.StatusOK)
 }
 
-func (h *userHandlers) ValidateQueryAddress(c *gin.Context, pgn *pagination.Pagination) string {
+func (h *userHandlers) ValidateQueryAddress(c *gin.Context, pgn *pagination.Pagination) *body.GetAddressQueryRequest {
+	queryRequest := &body.GetAddressQueryRequest{}
+
 	name := strings.TrimSpace(c.Query("name"))
+	isDefault := strings.TrimSpace(c.Query("is_default"))
+	isShopDefault := strings.TrimSpace(c.Query("is_shop_default"))
+
 	sort := strings.TrimSpace(c.Query("sort"))
 	sortBy := strings.TrimSpace(c.Query("sortBy"))
 	limit := strings.TrimSpace(c.Query("limit"))
@@ -239,6 +240,22 @@ func (h *userHandlers) ValidateQueryAddress(c *gin.Context, pgn *pagination.Pagi
 	var sortByFilter string
 	var limitFilter int
 	var pageFilter int
+	var isDefaultFilter bool
+	var isShopDefaultFilter bool
+
+	switch isDefault {
+	case "true":
+		isDefaultFilter = true
+	default:
+		isDefaultFilter = false
+	}
+
+	switch isShopDefault {
+	case "true":
+		isShopDefaultFilter = true
+	default:
+		isShopDefaultFilter = false
+	}
 
 	switch sort {
 	case "asc":
@@ -268,7 +285,11 @@ func (h *userHandlers) ValidateQueryAddress(c *gin.Context, pgn *pagination.Pagi
 	pgn.Page = pageFilter
 	pgn.Sort = fmt.Sprintf("%s %s", sortByFilter, sortFilter)
 
-	return name
+	queryRequest.Name = name
+	queryRequest.IsDefaultBool = isDefaultFilter
+	queryRequest.IsShopDefaultBool = isShopDefaultFilter
+
+	return queryRequest
 }
 
 func (h *userHandlers) EditUser(c *gin.Context) {

@@ -123,9 +123,9 @@ func (r *userRepo) GetDefaultShopAddress(ctx context.Context, userID string) (*m
 	return &address, nil
 }
 
-func (r *userRepo) GetTotalAddress(ctx context.Context, userID, name string) (int64, error) {
+func (r *userRepo) GetTotalAddress(ctx context.Context, userID, name string, isDefault, isShopDefault bool) (int64, error) {
 	var total int64
-	if err := r.PSQL.QueryRowContext(ctx, GetTotalAddressQuery, userID, fmt.Sprintf("%%%s%%", name)).Scan(&total); err != nil {
+	if err := r.PSQL.QueryRowContext(ctx, GetTotalAddressQuery, userID, fmt.Sprintf("%%%s%%", name), isDefault, isShopDefault).Scan(&total); err != nil {
 		return 0, err
 	}
 
@@ -182,12 +182,14 @@ func (r *userRepo) DeleteAddress(ctx context.Context, addressID string) error {
 	return nil
 }
 
-func (r *userRepo) GetAddresses(ctx context.Context, userID, name string, pgn *pagination.Pagination) ([]*model.Address, error) {
+func (r *userRepo) GetAddresses(ctx context.Context, userID, name string, isDefault, isShopDefault bool, pgn *pagination.Pagination) ([]*model.Address, error) {
 	addresses := make([]*model.Address, 0)
 	res, err := r.PSQL.QueryContext(
 		ctx, GetAddressesQuery,
 		userID,
 		fmt.Sprintf("%%%s%%", name),
+		isDefault,
+		isShopDefault,
 		pgn.GetSort(),
 		pgn.GetLimit(),
 		pgn.GetOffset())

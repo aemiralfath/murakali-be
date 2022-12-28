@@ -1,7 +1,7 @@
 package repository
 
 const (
-	GetTotalAddressQuery   = `SELECT count(id) FROM "address" WHERE "user_id" = $1 AND "name" ILIKE $2 AND "deleted_at" IS NULL`
+	GetTotalAddressQuery   = `SELECT count(id) FROM "address" WHERE "user_id" = $1 AND "name" ILIKE $2 AND "deleted_at" IS NULL AND "is_default" = $3 AND "is_shop_default" = $4`
 	GetDefaultAddressQuery = `
 		SELECT "id", "user_id", "name", "province_id", "city_id", "province", "city", "district", "sub_district",  
 			"address_detail", "zip_code", "is_default", "is_shop_default", "created_at", "updated_at" 
@@ -23,7 +23,7 @@ const (
 	GetAddressesQuery = `SELECT 
     	"id", "user_id", "name", "province_id", "city_id", "province", "city", "district", "sub_district",  
     	"address_detail", "zip_code", "is_default", "is_shop_default", "created_at", "updated_at" 
-	FROM "address" WHERE "user_id" = $1 AND "name" ILIKE $2 AND "deleted_at" IS NULL ORDER BY $3 LIMIT $4 OFFSET $5`
+	FROM "address" WHERE "user_id" = $1 AND "name" ILIKE $2 AND "deleted_at" IS NULL AND "is_default" = $3 AND "is_shop_default" = $4 ORDER BY $5 LIMIT $6 OFFSET $7`
 
 	GetAddressByIDQuery = `SELECT
 		"id", "user_id", "name", "province_id", "city_id", "province", "city", "district", "sub_district",  
