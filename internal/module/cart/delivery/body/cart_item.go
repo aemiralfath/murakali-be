@@ -1,6 +1,13 @@
 package body
 
-import "github.com/google/uuid"
+import (
+	"murakali/pkg/httperror"
+	"murakali/pkg/response"
+	"net/http"
+	"strings"
+
+	"github.com/google/uuid"
+)
 
 type CartItemsResponse struct {
 	ID             uuid.UUID                `json:"id" db:"id"`
@@ -31,4 +38,39 @@ type PromoResponse struct {
 	MaxDiscountPrice   *float64 `json:"max_discount_price" db:"max_discount_price"`
 	ResultDiscount     float64  `json:"result_discount" db:"result_discount"`
 	SubPrice           float64  `json:"sub_price" db:"sub_price"`
+}
+
+type CartItemRequest struct {
+	ProductDetailID string  `json:"product_detail_id"`
+	Quantity        float64 `json:"quantity"`
+}
+
+func (r *CartItemRequest) Validate() (UnprocessableEntity, error) {
+	unprocessableEntity := false
+	entity := UnprocessableEntity{
+		Fields: map[string]interface{}{
+			"product_detail_id": "",
+			"quantity":          "",
+		},
+	}
+
+	r.ProductDetailID = strings.TrimSpace(r.ProductDetailID)
+	if r.ProductDetailID == "" {
+		unprocessableEntity = true
+		entity.Fields["product_detail_id"] = FieldCannotBeEmptyMessage
+	}
+
+	if r.Quantity < 1 {
+		unprocessableEntity = true
+		entity.Fields["quantity"] = InvalidQuantityValueMessage
+	}
+
+	if unprocessableEntity {
+		return entity, httperror.New(
+			http.StatusUnprocessableEntity,
+			response.UnprocessableEntityMessage,
+		)
+	}
+
+	return entity, nil
 }

@@ -135,6 +135,43 @@ func (u *cartUC) AddCartItems(ctx context.Context, userID string, requestBody bo
 	return nil
 }
 
+func (u *cartUC) UpdateCartItems(ctx context.Context, userID string, requestBody body.CartItemRequest) error {
+	userModel, err := u.cartRepo.GetUserByID(ctx, userID)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return httperror.New(http.StatusBadRequest, response.UserNotExistMessage)
+		}
+		return err
+	}
+
+	productDetail, err := u.cartRepo.GetProductDetailByID(ctx, requestBody.ProductDetailID)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return httperror.New(http.StatusBadRequest, response.ProductDetailNotExistMessage)
+		}
+		return err
+	}
+
+	cartProductDetail, err := u.cartRepo.GetCartProductDetail(ctx, userModel.ID.String(), productDetail.ID.String())
+	if err != nil {
+		return err
+	}
+
+	cartProductDetail.Quantity = requestBody.Quantity
+	if cartProductDetail.Quantity > productDetail.Stock {
+		return httperror.New(http.StatusBadRequest, response.QuantityReachedMaximum)
+	}
+
+	cartProductDetail.UpdatedAt.Time = time.Now()
+	cartProductDetail.UpdatedAt.Valid = true
+	err = u.cartRepo.UpdateCartByID(ctx, cartProductDetail)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func (u *cartUC) CalculateDiscountProduct(p *body.ProductDetailResponse) *body.ProductDetailResponse {
 	if p.Promo.MaxDiscountPrice == nil {
 		return p

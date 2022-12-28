@@ -12,4 +12,5 @@ func MapCartRoutes(cartGroup *gin.RouterGroup, h cart.Handlers, mw *middleware.M
 	cartGroup.GET("/hover-home", h.GetCartHoverHome)
 	cartGroup.GET("/items", h.GetCartItems)
 	cartGroup.POST("/items", h.AddCartItems)
+	cartGroup.PUT("/items", h.UpdateCartItems)
 }
