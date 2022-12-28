@@ -53,7 +53,7 @@ func (h *sellerHandlers) GetOrder(c *gin.Context) {
 	if err != nil {
 		var e *httperror.Error
 		if !errors.As(err, &e) {
-			h.logger.Errorf("HandlerUser, Error: %s", err)
+			h.logger.Errorf("HandlerSeller, Error: %s", err)
 			response.ErrorResponse(c.Writer, response.InternalServerErrorMessage, http.StatusInternalServerError)
 			return
 		}
