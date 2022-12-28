@@ -16,6 +16,28 @@ services:
       - redis
       - adminer
 
+  adminer:
+    container_name: murakali_adminer
+    image: adminer:standalone
+    restart: on-failure
+    ports:
+      - "8081:8080"
+
+  seeder:
+      container_name: seeder_service
+      image: golang:1.19
+      restart: "no"
+      volumes:
+        - ./:/murakali-seeder
+      working_dir: /murakali-seeder
+      command: /bin/bash -c "go run ./cmd/seeder/main.go"
+      ports:
+        - "8083:8080"
+      env_file: .env
+      depends_on:
+        - postgres
+        - adminer
+
   postgres:
     container_name: murakali_postgres
     image: postgres:alpine
@@ -44,13 +66,6 @@ services:
       default:
         aliases:
           - redis_murakali
-
-  adminer:
-    container_name: murakali_adminer
-    image: adminer:standalone
-    restart: on-failure
-    ports:
-      - "8081:8080"
 
   migrate-up:
     image: migrate/migrate

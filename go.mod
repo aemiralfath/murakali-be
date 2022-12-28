@@ -5,9 +5,11 @@ go 1.19
 require (
 	github.com/gin-contrib/cors v1.4.0
 	github.com/gin-gonic/gin v1.8.1
+	github.com/go-faker/faker/v4 v4.0.0-beta.4
 	github.com/go-redis/redis/v8 v8.11.5
 	github.com/golang-jwt/jwt/v4 v4.4.3
 	github.com/google/uuid v1.3.0
+	github.com/gosimple/slug v1.13.1
 	github.com/jackc/pgx/v5 v5.2.0
 	github.com/lib/pq v1.10.7
 	github.com/spf13/viper v1.14.0
@@ -19,6 +21,7 @@ require (
 require (
 	github.com/creasty/defaults v1.5.1 // indirect
 	github.com/gorilla/schema v1.2.0 // indirect
+	github.com/gosimple/unidecode v1.0.1 // indirect
 )
 
 require (

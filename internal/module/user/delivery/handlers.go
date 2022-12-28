@@ -640,6 +640,7 @@ func (h *userHandlers) VerifyOTP(c *gin.Context) {
 		return
 	}
 
+	c.SetSameSite(http.SameSiteNoneMode)
 	c.SetCookie(constant.ChangePasswordTokenCookie, changePasswordToken, h.cfg.JWT.RefreshExpMin*60, "/", h.cfg.Server.Domain, true, true)
 	response.SuccessResponse(c.Writer, nil, http.StatusOK)
 }
@@ -681,6 +682,7 @@ func (h *userHandlers) ChangePassword(c *gin.Context) {
 		return
 	}
 
-	c.SetCookie(constant.ChangePasswordTokenCookie, "", -1, "/", h.cfg.Server.Domain, false, true)
+	c.SetSameSite(http.SameSiteNoneMode)
+	c.SetCookie(constant.ChangePasswordTokenCookie, "", -1, "/", h.cfg.Server.Domain, true, true)
 	response.SuccessResponse(c.Writer, nil, http.StatusOK)
 }
