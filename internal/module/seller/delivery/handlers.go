@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"murakali/config"
 	"murakali/internal/module/seller"
+	"murakali/internal/module/seller/delivery/body"
 	"murakali/pkg/httperror"
 	"murakali/pkg/logger"
 	"murakali/pkg/pagination"
@@ -84,4 +85,51 @@ func (h *sellerHandlers) ValidateQueryOrder(c *gin.Context, pgn *pagination.Pagi
 
 	pgn.Limit = limitFilter
 	pgn.Page = pageFilter
+}
+
+func (h *sellerHandlers) ChangeOrderStatus(c *gin.Context) {
+	var requestBody body.ChangeOrderStatusRequest
+	if err := c.ShouldBind(&requestBody); err != nil {
+		response.ErrorResponse(c.Writer, response.BadRequestMessage, http.StatusBadRequest)
+		return
+	}
+
+	invalidFields, err := requestBody.Validate()
+	if err != nil {
+		response.ErrorResponseData(c.Writer, invalidFields, response.UnprocessableEntityMessage, http.StatusUnprocessableEntity)
+		return
+	}
+
+	userID, exist := c.Get("userID")
+	if !exist {
+		response.ErrorResponse(c.Writer, response.UnauthorizedMessage, http.StatusUnauthorized)
+		return
+	}
+
+	userRole, exist := c.Get("roleID")
+	if !exist {
+		response.ErrorResponse(c.Writer, response.UnauthorizedMessage, http.StatusUnauthorized)
+		return
+	}
+	userRoleString := fmt.Sprintf("%v", userRole)
+
+	if userRoleString != "2" {
+		response.ErrorResponse(c.Writer, response.ForbiddenMessage, http.StatusUnauthorized)
+		return
+	}
+
+	err = h.sellerUC.ChangeOrderStatus(c, fmt.Sprintf("%v", userID), requestBody)
+	if err != nil {
+		var e *httperror.Error
+		if !errors.As(err, &e) {
+			h.logger.Errorf("HandlerUser, Error: %s", err)
+			response.ErrorResponse(c.Writer, response.InternalServerErrorMessage, http.StatusInternalServerError)
+			return
+		}
+
+		response.ErrorResponse(c.Writer, e.Err.Error(), e.Status)
+		return
+	}
+
+	response.SuccessResponse(c.Writer, nil, http.StatusOK)
 }

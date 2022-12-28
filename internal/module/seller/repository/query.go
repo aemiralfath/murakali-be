@@ -15,4 +15,8 @@ const (
 	join "product" p on p.id = pd.product_id WHERE oi.order_id = $1`
 
 	GetShopIDByUserQuery = `SELECT id from shop where user_id = $1 and deleted_at is null`
+
+	GetShopIDByOrderQuery = `SELECT shop_id from "order" where id = $1 `
+
+	ChangeOrderStatusQuery = `UPDATE "order" SET "order_status_id" = $1 WHERE "id" = $2`
 )

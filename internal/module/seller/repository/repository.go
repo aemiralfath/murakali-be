@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"murakali/internal/model"
 	"murakali/internal/module/seller"
+	"murakali/internal/module/seller/delivery/body"
 	"murakali/pkg/pagination"
 
 	"github.com/go-redis/redis/v8"
@@ -34,6 +35,15 @@ func (r *sellerRepo) GetTotalOrder(ctx context.Context, shopID string) (int64, e
 func (r *sellerRepo) GetShopIDByUser(ctx context.Context, userID string) (string, error) {
 	var shopID string
 	if err := r.PSQL.QueryRowContext(ctx, GetShopIDByUserQuery, userID).Scan(&shopID); err != nil {
+		return "", err
+	}
+
+	return shopID, nil
+}
+
+func (r *sellerRepo) GetShopIDByOrder(ctx context.Context, OrderID string) (string, error) {
+	var shopID string
+	if err := r.PSQL.QueryRowContext(ctx, GetShopIDByOrderQuery, OrderID).Scan(&shopID); err != nil {
 		return "", err
 	}
 
@@ -102,4 +112,14 @@ func (r *sellerRepo) GetOrders(ctx context.Context, shopID string, pgn *paginati
 		return nil, err
 	}
 	return orders, nil
+}
+
+func (r *sellerRepo) ChangeOrderStatus(ctx context.Context, requestBody body.ChangeOrderStatusRequest) error {
+	_, err := r.PSQL.ExecContext(
+		ctx, ChangeOrderStatusQuery, requestBody.OrderStatusID, requestBody.OrderID)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

@@ -2,11 +2,16 @@ package usecase
 
 import (
 	"context"
+	"fmt"
 	"math"
 	"murakali/config"
 	"murakali/internal/module/seller"
+	"murakali/internal/module/seller/delivery/body"
+	"murakali/pkg/httperror"
 	"murakali/pkg/pagination"
 	"murakali/pkg/postgre"
+	"murakali/pkg/response"
+	"net/http"
 )
 
 type sellerUC struct {
@@ -41,4 +46,28 @@ func (u *sellerUC) GetOrder(ctx context.Context, userID string, pgn *pagination.
 
 	pgn.Rows = orders
 	return pgn, nil
+}
+
+func (u *sellerUC) ChangeOrderStatus(ctx context.Context, userID string, requestBody body.ChangeOrderStatusRequest) error {
+	shopIDFromUser, err := u.sellerRepo.GetShopIDByUser(ctx, userID)
+	if err != nil {
+		return err
+	}
+	fmt.Println("11")
+	shopIDFromOrder, err := u.sellerRepo.GetShopIDByOrder(ctx, requestBody.OrderID)
+	if err != nil {
+		return err
+	}
+	fmt.Println("22")
+
+	if shopIDFromUser != shopIDFromOrder {
+		return httperror.New(http.StatusUnauthorized, response.UnauthorizedMessage)
+	}
+	fmt.Println("33")
+
+	err = u.sellerRepo.ChangeOrderStatus(ctx, requestBody)
+	if err != nil {
+		return err
+	}
+	return nil
 }
