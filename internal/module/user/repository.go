@@ -10,8 +10,8 @@ import (
 
 type Repository interface {
 	GetUserByID(ctx context.Context, id string) (*model.User, error)
-	GetTotalAddress(ctx context.Context, userID, name string) (int64, error)
-	GetAddresses(ctx context.Context, userID, name string, pagination *pagination.Pagination) ([]*model.Address, error)
+	GetTotalAddress(ctx context.Context, userID, name string, isDefault, isShopDefault bool) (int64, error)
+	GetAddresses(ctx context.Context, userID, name string, isDefault, isShopDefault bool, pagination *pagination.Pagination) ([]*model.Address, error)
 	GetAddressByID(ctx context.Context, userID, addressID string) (*model.Address, error)
 	GetDefaultUserAddress(ctx context.Context, userID string) (*model.Address, error)
 	GetDefaultShopAddress(ctx context.Context, userID string) (*model.Address, error)

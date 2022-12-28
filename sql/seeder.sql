@@ -150,3 +150,10 @@ INSERT INTO "variant" (id, product_detail_id, variant_detail_id)
 VALUES
 ('614fa874-d6a7-414a-9ebc-9b43cf765745', '0c53ef3d-3682-4359-90e1-814eb6ab5231', 'fe997ee9-6bb1-4ddc-bff9-4a2bc0d2ad24'),
 ('ff4b9968-39ba-48f3-ad77-088a118b7c4a', '0c53ef3d-3682-4359-90e1-814eb6ab5111', '4e18d196-f84a-4a95-a897-fe085d38347f');
+
+INSERT INTO "address" (user_id, name, province_id, city_id, province, city, district, sub_district, address_detail,
+                       zip_code, is_default, is_shop_default)
+VALUES ('7950eca2-58d5-44f0-b873-22b23d8107da', 'abc', 5, 41, 'DI Yogyakarta', 'Bantul', 'Pleret', 'Segoroyoso',
+        'no 91', '55791', true, false),
+        ('7950eca2-58d5-44f0-b873-22b23d8107da', 'shop default', 5, 41, 'DI Yogyakarta', 'Bantul', 'Pleret', 'Segoroyoso',
+        'no 91', '55791', false, true);
