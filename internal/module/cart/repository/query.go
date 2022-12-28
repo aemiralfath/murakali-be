@@ -53,4 +53,5 @@ const (
 	`
 	CreateCartQuery     = `INSERT INTO "cart_item" (user_id, product_detail_id, quantity) VALUES ($1, $2, $3) RETURNING "id";`
 	UpdateCartByIDQuery = `UPDATE "cart_item" SET "quantity" = $1, "updated_at" = $2 WHERE "id" = $3;`
+	DeleteCartByIDQuery = `DELETE FROM "cart_item" WHERE "id" = $1`
 )

@@ -7,4 +7,5 @@ type Handlers interface {
 	GetCartItems(c *gin.Context)
 	AddCartItems(c *gin.Context)
 	UpdateCartItems(c *gin.Context)
+	DeleteCartItems(c *gin.Context)
 }

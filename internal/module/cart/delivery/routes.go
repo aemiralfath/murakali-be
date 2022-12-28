@@ -13,4 +13,5 @@ func MapCartRoutes(cartGroup *gin.RouterGroup, h cart.Handlers, mw *middleware.M
 	cartGroup.GET("/items", h.GetCartItems)
 	cartGroup.POST("/items", h.AddCartItems)
 	cartGroup.PUT("/items", h.UpdateCartItems)
+	cartGroup.DELETE("/items/:id", h.DeleteCartItems)
 }

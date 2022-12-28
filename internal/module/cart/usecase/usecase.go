@@ -172,6 +172,36 @@ func (u *cartUC) UpdateCartItems(ctx context.Context, userID string, requestBody
 	return nil
 }
 
+func (u *cartUC) DeleteCartItems(ctx context.Context, userID, productDetailID string) error {
+	userModel, err := u.cartRepo.GetUserByID(ctx, userID)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return httperror.New(http.StatusBadRequest, response.UserNotExistMessage)
+		}
+		return err
+	}
+
+	productDetail, err := u.cartRepo.GetProductDetailByID(ctx, productDetailID)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return httperror.New(http.StatusBadRequest, response.ProductDetailNotExistMessage)
+		}
+		return err
+	}
+
+	cartProductDetail, err := u.cartRepo.GetCartProductDetail(ctx, userModel.ID.String(), productDetail.ID.String())
+	if err != nil {
+		return err
+	}
+
+	err = u.cartRepo.DeleteCartByID(ctx, cartProductDetail)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func (u *cartUC) CalculateDiscountProduct(p *body.ProductDetailResponse) *body.ProductDetailResponse {
 	if p.Promo.MaxDiscountPrice == nil {
 		return p

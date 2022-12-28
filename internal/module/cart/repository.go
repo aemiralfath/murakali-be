@@ -13,6 +13,7 @@ type Repository interface {
 	GetCartProductDetail(ctx context.Context, userID, productDetailID string) (*model.CartItem, error)
 	CreateCart(ctx context.Context, userID, productDetailID string, quantity float64) (*model.CartItem, error)
 	UpdateCartByID(ctx context.Context, cartItem *model.CartItem) error
+	DeleteCartByID(ctx context.Context, cartItem *model.CartItem) error
 	GetTotalCart(ctx context.Context, userID string) (int64, error)
 	GetCartHoverHome(ctx context.Context, userID string, limit int) ([]*body.CartHome, error)
 	GetCartItems(ctx context.Context, userID string, pgn *pagination.Pagination) ([]*body.CartItemsResponse,

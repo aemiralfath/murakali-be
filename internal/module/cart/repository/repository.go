@@ -76,6 +76,15 @@ func (r *cartRepo) UpdateCartByID(ctx context.Context, cartItem *model.CartItem)
 	return nil
 }
 
+func (r *cartRepo) DeleteCartByID(ctx context.Context, cartItem *model.CartItem) error {
+	_, err := r.PSQL.ExecContext(ctx, DeleteCartByIDQuery, cartItem.ID.String())
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func (r *cartRepo) GetTotalCart(ctx context.Context, userID string) (int64, error) {
 	var total int64
 	if err := r.PSQL.QueryRowContext(ctx, GetTotalCartQuery, userID).Scan(&total); err != nil {
