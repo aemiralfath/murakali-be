@@ -31,6 +31,8 @@ const (
 	OTPIsNotValidMessage           = "OTP is not valid."
 	UserAlreadyHaveShop            = "User already have shop."
 	ShopAlreadyExists              = "Shop already exists."
+	QuantityReachedMaximum         = "Quantity has reached the maximum limit!"
+	ProductDetailNotExistMessage   = "Product Detail not exist."
 	PictureSizeTooBig              = "Picture size too big"
 )
 

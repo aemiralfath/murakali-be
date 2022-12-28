@@ -1,6 +1,7 @@
 package repository
 
 const (
+	GetUserByIDQuery      = `SELECT "id", "role_id", "email", "username", "phone_no", "fullname", "gender", "birth_date", "is_verify","photo_url" FROM "user" WHERE "id" = $1`
 	GetTotalCartQuery     = `SELECT count(id) FROM "cart_item" WHERE "user_id" = $1 AND "deleted_at" IS NULL`
 	GetCartHoverHomeQuery = `
 	SELECT "p"."title" as "title", "p"."thumbnail_url" as "thumbnail_url", "pd"."price" as "price", "promo"."discount_percentage" as "discount_percentage",
@@ -38,7 +39,18 @@ const (
 	WHERE "ci"."user_id" = $1 AND "ci"."deleted_at" IS NULL
 	GROUP BY "ci"."id", "pd"."id", "p"."id", "s"."id", "promo"."discount_percentage", "promo"."discount_fix_price", "promo"."min_product_price",
 		"promo"."max_discount_price"
-	ORDER BY "ci"."created_at" DESC LIMIT $2 OFFSET $3
-	;
+	ORDER BY "ci"."created_at" DESC LIMIT $2 OFFSET $3;
 	`
+	GetProductDetailByIDQuery = `
+	SELECT "id", "product_id", "price", "stock", "weight", "size"
+	FROM "product_detail"
+	WHERE id = $1 AND "deleted_at" IS NULL;
+	`
+	GetCartProductDetailQuery = `
+	SELECT "id", "user_id", "product_detail_id", "quantity"
+	FROM "cart_item"
+	WHERE "user_id" = $1 AND "product_detail_id" = $2 AND "deleted_at" IS NULL;
+	`
+	CreateCartQuery     = `INSERT INTO "cart_item" (user_id, product_detail_id, quantity) VALUES ($1, $2, $3) RETURNING "id";`
+	UpdateCartByIDQuery = `UPDATE "cart_item" SET "quantity" = $1, "updated_at" = $2 WHERE "id" = $3;`
 )

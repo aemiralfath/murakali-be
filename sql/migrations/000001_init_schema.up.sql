@@ -104,7 +104,7 @@ CREATE TABLE IF NOT EXISTS "cart_item"
 ),
     "user_id" UUID,
     "product_detail_id" UUID,
-    "quantity" int,
+    "quantity" float,
     "created_at" timestamptz NOT NULL DEFAULT
 (
     NOW
@@ -177,7 +177,7 @@ CREATE TABLE IF NOT EXISTS "transaction"
     "wallet_id" UUID,
     "card_number" varchar,
     "invoice" varchar UNIQUE,
-    "total_price" int,
+    "total_price" float,
     "paid_at" timestamptz,
     "canceled_at" timestamptz,
     "expired_at" timestamptz
@@ -281,8 +281,8 @@ CREATE TABLE IF NOT EXISTS "product_detail"
     "product_id" uuid,
     "price" float,
     "stock" bigint,
-    "weight" int,
-    "size" int,
+    "weight" float,
+    "size" float,
     "hazardous" boolean DEFAULT false,
     "condition" varchar,
     "bulk_price" boolean DEFAULT false,
