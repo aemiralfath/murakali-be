@@ -229,6 +229,49 @@ func (h *userHandlers) GetAddress(c *gin.Context) {
 	response.SuccessResponse(c.Writer, addresses, http.StatusOK)
 }
 
+func (h *userHandlers) ValidateQueryAddress(c *gin.Context, pgn *pagination.Pagination) string {
+	name := strings.TrimSpace(c.Query("name"))
+	sort := strings.TrimSpace(c.Query("sort"))
+	sortBy := strings.TrimSpace(c.Query("sortBy"))
+	limit := strings.TrimSpace(c.Query("limit"))
+	page := strings.TrimSpace(c.Query("page"))
+
+	var sortFilter string
+	var sortByFilter string
+	var limitFilter int
+	var pageFilter int
+
+	switch sort {
+	case "asc":
+		sortFilter = sort
+	default:
+		sortFilter = "desc"
+	}
+
+	switch sortBy {
+	case "province":
+		sortByFilter = sortBy
+	default:
+		sortByFilter = "created_at"
+	}
+
+	limitFilter, err := strconv.Atoi(limit)
+	if err != nil || limitFilter < 1 {
+		limitFilter = 10
+	}
+
+	pageFilter, err = strconv.Atoi(page)
+	if err != nil || pageFilter < 1 {
+		pageFilter = 1
+	}
+
+	pgn.Limit = limitFilter
+	pgn.Page = pageFilter
+	pgn.Sort = fmt.Sprintf("%s %s", sortByFilter, sortFilter)
+
+	return name
+}
+
 func (h *userHandlers) GetOrder(c *gin.Context) {
 	userID, exist := c.Get("userID")
 	if !exist {
@@ -275,49 +318,6 @@ func (h *userHandlers) ValidateQueryOrder(c *gin.Context, pgn *pagination.Pagina
 
 	pgn.Limit = limitFilter
 	pgn.Page = pageFilter
-}
-
-func (h *userHandlers) ValidateQueryAddress(c *gin.Context, pgn *pagination.Pagination) string {
-	name := strings.TrimSpace(c.Query("name"))
-	sort := strings.TrimSpace(c.Query("sort"))
-	sortBy := strings.TrimSpace(c.Query("sortBy"))
-	limit := strings.TrimSpace(c.Query("limit"))
-	page := strings.TrimSpace(c.Query("page"))
-
-	var sortFilter string
-	var sortByFilter string
-	var limitFilter int
-	var pageFilter int
-
-	switch sort {
-	case "asc":
-		sortFilter = sort
-	default:
-		sortFilter = "desc"
-	}
-
-	switch sortBy {
-	case "province":
-		sortByFilter = sortBy
-	default:
-		sortByFilter = "created_at"
-	}
-
-	limitFilter, err := strconv.Atoi(limit)
-	if err != nil || limitFilter < 1 {
-		limitFilter = 10
-	}
-
-	pageFilter, err = strconv.Atoi(page)
-	if err != nil || pageFilter < 1 {
-		pageFilter = 1
-	}
-
-	pgn.Limit = limitFilter
-	pgn.Page = pageFilter
-	pgn.Sort = fmt.Sprintf("%s %s", sortByFilter, sortFilter)
-
-	return name
 }
 
 func (h *userHandlers) EditUser(c *gin.Context) {
