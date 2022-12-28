@@ -97,7 +97,7 @@ func (f *ProductFaker) GenerateProductDetail(id, productID uuid.UUID, price floa
 		ID:        id,
 		ProductID: productID,
 		Price:     price,
-		Stock:     int64(rand.Intn(20000)),
+		Stock:     float64(rand.Intn(20000)),
 		Weight:    float64(rand.Intn(10-1) + 1),
 		Size:      float64(rand.Intn(20000)),
 		Hazardous: false,

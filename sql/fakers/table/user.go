@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"github.com/go-faker/faker/v4"
 	"github.com/google/uuid"
+	"murakali/internal/constant"
 	"murakali/internal/model"
 	"murakali/pkg/postgre"
 	"time"
@@ -14,8 +15,8 @@ const InsertUserQuery = `INSERT INTO "user"
     	(id, role_id, username, email, phone_no, fullname, password, gender, photo_url, birth_date, is_sso, is_verify)
 	VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)`
 const InsertUserAddressQuery = `INSERT INTO "address" 
-    (user_id, name, province_id, city_id, province, city, district, sub_district, address_detail, zip_code)
-VALUES ($1, 'Home', 33, 327, 'Sumatera Selatan', 'Palembang', 'Ilir Timur II', '2 Ilir', 'no 91', '30118')`
+    (user_id, name, province_id, city_id, province, city, district, sub_district, address_detail, zip_code, is_default, is_shop_default)
+VALUES ($1, 'Home', 33, 327, 'Sumatera Selatan', 'Palembang', 'Ilir Timur II', '2 Ilir', 'no 91', '30118', $2, $3)`
 
 type UserFaker struct {
 	Size   int
@@ -80,7 +81,11 @@ func (u *UserFaker) GenerateEmailHistory(tx postgre.Transaction, email string) e
 }
 
 func (u *UserFaker) GenerateUserAddress(tx postgre.Transaction, userID string) error {
-	_, err := tx.Exec(InsertUserAddressQuery, userID)
+	isShopDefault := false
+	if u.RoleID == constant.RoleSeller {
+		isShopDefault = true
+	}
+	_, err := tx.Exec(InsertUserAddressQuery, userID, true, isShopDefault)
 	if err != nil {
 		return err
 	}
