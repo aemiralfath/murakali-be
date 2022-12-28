@@ -22,11 +22,11 @@ type Order struct {
 }
 
 type OrderDetail struct {
-	ProductDetailID  string   `json:"id"`
+	ProductDetailID  string   `json:"product_detail_id"`
 	ProductID        string   `json:"product_id"`
-	ProductTitle     string   `json:"title"`
-	ProductDetailURL string   `json:"url"`
-	OrderQuantity    int      `json:"quantity"`
-	ItemPrice        *float64 `json:"item_price"`
-	TotalPrice       *float64 `json:"total_price"`
+	ProductTitle     string   `json:"product_title"`
+	ProductDetailURL string   `json:"product_detail_url"`
+	OrderQuantity    int      `json:"order_quantity"`
+	ItemPrice        *float64 `json:"order_item_price"`
+	TotalPrice       *float64 `json:"order_total_price"`
 }

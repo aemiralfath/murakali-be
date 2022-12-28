@@ -1,0 +1,105 @@
+package repository
+
+import (
+	"context"
+	"database/sql"
+	"murakali/internal/model"
+	"murakali/internal/module/seller"
+	"murakali/pkg/pagination"
+
+	"github.com/go-redis/redis/v8"
+)
+
+type sellerRepo struct {
+	PSQL        *sql.DB
+	RedisClient *redis.Client
+}
+
+func NewSellerRepository(psql *sql.DB, client *redis.Client) seller.Repository {
+	return &sellerRepo{
+		PSQL:        psql,
+		RedisClient: client,
+	}
+}
+
+func (r *sellerRepo) GetTotalOrder(ctx context.Context, shopID string) (int64, error) {
+	var total int64
+	if err := r.PSQL.QueryRowContext(ctx, GetTotalOrderQuery, shopID).Scan(&total); err != nil {
+		return 0, err
+	}
+
+	return total, nil
+}
+
+func (r *sellerRepo) GetShopIDByUser(ctx context.Context, userID string) (string, error) {
+	var shopID string
+	if err := r.PSQL.QueryRowContext(ctx, GetShopIDByUserQuery, userID).Scan(&shopID); err != nil {
+		return "", err
+	}
+
+	return shopID, nil
+}
+
+func (r *sellerRepo) GetOrders(ctx context.Context, shopID string, pgn *pagination.Pagination) ([]*model.Order, error) {
+	orders := make([]*model.Order, 0)
+	res, err := r.PSQL.QueryContext(
+		ctx, GetOrdersQuery,
+		shopID,
+		pgn.GetLimit(),
+		pgn.GetOffset())
+
+	if err != nil {
+		return nil, err
+	}
+	defer res.Close()
+
+	for res.Next() {
+		var order model.Order
+		if errScan := res.Scan(
+			&order.OrderID,
+			&order.OrderStatus,
+			&order.TotalPrice,
+			&order.DeliveryFee,
+			&order.ResiNumber,
+			&order.ShopID,
+			&order.ShopName,
+			&order.VoucherCode,
+			&order.CreatedAt,
+		); errScan != nil {
+			return nil, err
+		}
+
+		orderDetail := make([]*model.OrderDetail, 0)
+
+		res2, err2 := r.PSQL.QueryContext(
+			ctx, GetOrderDetailQuery, order.OrderID)
+
+		if err2 != nil {
+			return nil, err2
+		}
+
+		for res2.Next() {
+			var detail model.OrderDetail
+			if errScan := res2.Scan(
+				&detail.ProductDetailID,
+				&detail.ProductID,
+				&detail.ProductTitle,
+				&detail.ProductDetailURL,
+				&detail.OrderQuantity,
+				&detail.ItemPrice,
+				&detail.TotalPrice,
+			); errScan != nil {
+				return nil, err
+			}
+			orderDetail = append(orderDetail, &detail)
+		}
+
+		order.Detail = orderDetail
+
+		orders = append(orders, &order)
+	}
+	if res.Err() != nil {
+		return nil, err
+	}
+	return orders, nil
+}

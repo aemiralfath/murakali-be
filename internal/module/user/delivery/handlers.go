@@ -38,6 +38,11 @@ func (h *userHandlers) RegisterMerchant(c *gin.Context) {
 		return
 	}
 
+	if !exist {
+		response.ErrorResponse(c.Writer, response.UnauthorizedMessage, http.StatusUnauthorized)
+		return
+	}
+
 	var requestBody body.RegisterMerchant
 	if err := c.ShouldBind(&requestBody); err != nil {
 		response.ErrorResponse(c.Writer, response.BadRequestMessage, http.StatusBadRequest)
