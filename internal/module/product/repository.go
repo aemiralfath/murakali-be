@@ -3,6 +3,8 @@ package product
 import (
 	"context"
 	"murakali/internal/model"
+	"murakali/internal/module/product/delivery/body"
+	"murakali/pkg/pagination"
 
 	"github.com/google/uuid"
 )
@@ -12,5 +14,9 @@ type Repository interface {
 	GetBanners(ctx context.Context) ([]*model.Banner, error)
 	GetCategoriesByName(ctx context.Context, name string) ([]*model.Category, error)
 	GetCategoriesByParentID(ctx context.Context, parentID uuid.UUID) ([]*model.Category, error)
-	GetRecommendedProducts(ctx context.Context, limit int) ([]*model.Product, []*model.Promotion, []*model.Voucher, error)
+	GetRecommendedProducts(ctx context.Context, pgn *pagination.Pagination) ([]*body.Products, []*model.Promotion, []*model.Voucher, error)
+	GetTotalProduct(ctx context.Context) (int64, error)
+	GetProductInfo(ctx context.Context, productID string) (*body.ProductInfo, error)
+	GetProductDetail(ctx context.Context, productID string) ([]*body.ProductDetail, error)
+	GetPromotionInfo(ctx context.Context, productID string) (*body.PromotionInfo, error)
 }

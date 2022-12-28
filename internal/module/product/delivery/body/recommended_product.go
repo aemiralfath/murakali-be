@@ -23,4 +23,6 @@ type Products struct {
 	ResultDiscount            *float64 `json:"result_discount" db:"result_discount"`
 	VoucherDiscountPercentage *float64 `json:"voucher_discount_percentage" db:"voucher_discount_percentage"`
 	VoucherDiscountFixPrice   *float64 `json:"voucher_discount_fix_price" db:"voucher_discount_fix_price"`
+	ShopName                  string   `json:"shop_name" db:"shop_name"`
+	CategoryName              string   `json:"category_name" db:"category_name"`
 }

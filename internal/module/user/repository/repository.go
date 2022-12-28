@@ -77,7 +77,22 @@ func (r *userRepo) GetAddressByID(ctx context.Context, userID, addressID string)
 
 func (r *userRepo) GetDefaultUserAddress(ctx context.Context, userID string) (*model.Address, error) {
 	var address model.Address
-	if err := r.PSQL.QueryRowContext(ctx, GetDefaultAddressQuery, userID, true).Scan(&address.ID, &address.UserID, &address.IsDefault); err != nil {
+	if err := r.PSQL.QueryRowContext(ctx, GetDefaultAddressQuery, userID, true).Scan(
+		&address.ID,
+		&address.UserID,
+		&address.Name,
+		&address.ProvinceID,
+		&address.CityID,
+		&address.Province,
+		&address.City,
+		&address.District,
+		&address.SubDistrict,
+		&address.AddressDetail,
+		&address.ZipCode,
+		&address.IsDefault,
+		&address.IsShopDefault,
+		&address.CreatedAt,
+		&address.UpdatedAt); err != nil {
 		return nil, err
 	}
 
@@ -87,16 +102,30 @@ func (r *userRepo) GetDefaultUserAddress(ctx context.Context, userID string) (*m
 func (r *userRepo) GetDefaultShopAddress(ctx context.Context, userID string) (*model.Address, error) {
 	var address model.Address
 	if err := r.PSQL.QueryRowContext(ctx, GetDefaultShopAddressQuery, userID, true).
-		Scan(&address.ID, &address.UserID, &address.IsShopDefault); err != nil {
+		Scan(&address.ID,
+			&address.UserID,
+			&address.Name,
+			&address.ProvinceID,
+			&address.CityID,
+			&address.Province,
+			&address.City,
+			&address.District,
+			&address.SubDistrict,
+			&address.AddressDetail,
+			&address.ZipCode,
+			&address.IsDefault,
+			&address.IsShopDefault,
+			&address.CreatedAt,
+			&address.UpdatedAt); err != nil {
 		return nil, err
 	}
 
 	return &address, nil
 }
 
-func (r *userRepo) GetTotalAddress(ctx context.Context, userID, name string) (int64, error) {
+func (r *userRepo) GetTotalAddress(ctx context.Context, userID, name string, isDefault, isShopDefault bool) (int64, error) {
 	var total int64
-	if err := r.PSQL.QueryRowContext(ctx, GetTotalAddressQuery, userID, fmt.Sprintf("%%%s%%", name)).Scan(&total); err != nil {
+	if err := r.PSQL.QueryRowContext(ctx, GetTotalAddressQuery, userID, fmt.Sprintf("%%%s%%", name), isDefault, isShopDefault).Scan(&total); err != nil {
 		return 0, err
 	}
 
@@ -153,12 +182,14 @@ func (r *userRepo) DeleteAddress(ctx context.Context, addressID string) error {
 	return nil
 }
 
-func (r *userRepo) GetAddresses(ctx context.Context, userID, name string, pgn *pagination.Pagination) ([]*model.Address, error) {
+func (r *userRepo) GetAddresses(ctx context.Context, userID, name string, isDefault, isShopDefault bool, pgn *pagination.Pagination) ([]*model.Address, error) {
 	addresses := make([]*model.Address, 0)
 	res, err := r.PSQL.QueryContext(
 		ctx, GetAddressesQuery,
 		userID,
 		fmt.Sprintf("%%%s%%", name),
+		isDefault,
+		isShopDefault,
 		pgn.GetSort(),
 		pgn.GetLimit(),
 		pgn.GetOffset())

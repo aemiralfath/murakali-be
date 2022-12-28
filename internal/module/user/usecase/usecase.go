@@ -161,7 +161,7 @@ func (u *userUC) UpdateAddressByID(ctx context.Context, userID, addressID string
 	return nil
 }
 
-func (u *userUC) GetAddress(ctx context.Context, userID, name string, pgn *pagination.Pagination) (*pagination.Pagination, error) {
+func (u *userUC) GetAddress(ctx context.Context, userID string, pgn *pagination.Pagination, queryRequest *body.GetAddressQueryRequest) (*pagination.Pagination, error) {
 	userModel, err := u.userRepo.GetUserByID(ctx, userID)
 	if err != nil {
 		if err == sql.ErrNoRows {
@@ -171,7 +171,7 @@ func (u *userUC) GetAddress(ctx context.Context, userID, name string, pgn *pagin
 		return nil, err
 	}
 
-	totalRows, err := u.userRepo.GetTotalAddress(ctx, userModel.ID.String(), name)
+	totalRows, err := u.userRepo.GetTotalAddress(ctx, userModel.ID.String(), queryRequest.Name, queryRequest.IsDefaultBool, queryRequest.IsShopDefaultBool)
 	if err != nil {
 		return nil, err
 	}
@@ -180,7 +180,8 @@ func (u *userUC) GetAddress(ctx context.Context, userID, name string, pgn *pagin
 	pgn.TotalRows = totalRows
 	pgn.TotalPages = totalPages
 
-	addresses, err := u.userRepo.GetAddresses(ctx, userModel.ID.String(), name, pgn)
+	var addresses []*model.Address
+	addresses, err = u.userRepo.GetAddresses(ctx, userModel.ID.String(), queryRequest.Name, queryRequest.IsDefaultBool, queryRequest.IsShopDefaultBool, pgn)
 	if err != nil {
 		return nil, err
 	}
