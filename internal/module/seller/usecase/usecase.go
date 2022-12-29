@@ -4,6 +4,7 @@ import (
 	"context"
 	"math"
 	"murakali/config"
+	"murakali/internal/model"
 	"murakali/internal/module/seller"
 	"murakali/internal/module/seller/delivery/body"
 	"murakali/pkg/httperror"
@@ -66,4 +67,13 @@ func (u *sellerUC) ChangeOrderStatus(ctx context.Context, userID string, request
 		return err
 	}
 	return nil
+}
+
+func (u *sellerUC) GetOrderByOrderID(ctx context.Context, orderID string) (*model.Order, error) {
+	order, err := u.sellerRepo.GetOrderByOrderID(ctx, orderID)
+	if err != nil {
+		return nil, err
+	}
+
+	return order, nil
 }
