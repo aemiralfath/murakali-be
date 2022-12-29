@@ -2,7 +2,6 @@ package usecase
 
 import (
 	"context"
-	"fmt"
 	"math"
 	"murakali/config"
 	"murakali/internal/module/seller"
@@ -53,17 +52,14 @@ func (u *sellerUC) ChangeOrderStatus(ctx context.Context, userID string, request
 	if err != nil {
 		return err
 	}
-	fmt.Println("11")
 	shopIDFromOrder, err := u.sellerRepo.GetShopIDByOrder(ctx, requestBody.OrderID)
 	if err != nil {
 		return err
 	}
-	fmt.Println("22")
 
 	if shopIDFromUser != shopIDFromOrder {
 		return httperror.New(http.StatusUnauthorized, response.UnauthorizedMessage)
 	}
-	fmt.Println("33")
 
 	err = u.sellerRepo.ChangeOrderStatus(ctx, requestBody)
 	if err != nil {

@@ -15,6 +15,7 @@ import (
 	"strings"
 
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 )
 
 type sellerHandlers struct {
@@ -34,15 +35,11 @@ func (h *sellerHandlers) GetOrder(c *gin.Context) {
 		return
 	}
 
-	userRole, exist := c.Get("roleID")
-	if !exist {
-		response.ErrorResponse(c.Writer, response.UnauthorizedMessage, http.StatusUnauthorized)
-		return
-	}
-	userRoleString := fmt.Sprintf("%v", userRole)
+	userIDString := fmt.Sprintf("%v", userID)
 
-	if userRoleString != "2" {
-		response.ErrorResponse(c.Writer, response.ForbiddenMessage, http.StatusUnauthorized)
+	_, err := uuid.Parse(userIDString)
+	if err != nil {
+		response.ErrorResponse(c.Writer, response.BadRequestMessage, http.StatusBadRequest)
 		return
 	}
 
@@ -105,16 +102,11 @@ func (h *sellerHandlers) ChangeOrderStatus(c *gin.Context) {
 		response.ErrorResponse(c.Writer, response.UnauthorizedMessage, http.StatusUnauthorized)
 		return
 	}
+	userIDString := fmt.Sprintf("%v", userID)
 
-	userRole, exist := c.Get("roleID")
-	if !exist {
-		response.ErrorResponse(c.Writer, response.UnauthorizedMessage, http.StatusUnauthorized)
-		return
-	}
-	userRoleString := fmt.Sprintf("%v", userRole)
-
-	if userRoleString != "2" {
-		response.ErrorResponse(c.Writer, response.ForbiddenMessage, http.StatusUnauthorized)
+	_, err = uuid.Parse(userIDString)
+	if err != nil {
+		response.ErrorResponse(c.Writer, response.BadRequestMessage, http.StatusBadRequest)
 		return
 	}
 
