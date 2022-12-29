@@ -15,5 +15,6 @@ func (mw *MWManager) SellerJWTMiddleware() gin.HandlerFunc {
 			c.Abort()
 			return
 		}
+		c.Next()
 	}
 }
