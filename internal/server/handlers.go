@@ -69,6 +69,7 @@ func (s *Server) MapHandlers() error {
 		MaxAge: 12 * time.Hour,
 	}))
 
+	s.gin.Static("/docs", "dist/")
 	s.gin.NoRoute(func(c *gin.Context) {
 		response.ErrorResponse(c.Writer, response.NotFoundMessage, http.StatusNotFound)
 	})
