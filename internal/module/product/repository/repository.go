@@ -241,7 +241,7 @@ func (r *productRepo) GetPromotionInfo(ctx context.Context, productID string) (*
 	return &promotionInfo, nil
 }
 
-func (r *productRepo) GetProductDetail(ctx context.Context, productID string) ([]*body.ProductDetail, error) {
+func (r *productRepo) GetProductDetail(ctx context.Context, productID string, promo *body.PromotionInfo) ([]*body.ProductDetail, error) {
 	productDetail := make([]*body.ProductDetail, 0)
 
 	res, err := r.PSQL.QueryContext(
@@ -266,6 +266,25 @@ func (r *productRepo) GetProductDetail(ctx context.Context, productID string) ([
 			&detail.ProductURL,
 		); errScan != nil {
 			return nil, err
+		}
+
+		if promo.PromotionDiscountPercentage != nil {
+			if *detail.NormalPrice >= *promo.PromotionMinProductPrice {
+				discountedPrice := *detail.NormalPrice - (*detail.NormalPrice * (*promo.PromotionDiscountPercentage / float64(100)))
+				if discountedPrice > *promo.PromotionMaxDiscountPrice {
+					discountedPrice = *detail.NormalPrice - *promo.PromotionMaxDiscountPrice
+				}
+				detail.DiscountPrice = &discountedPrice
+			}
+		}
+		if promo.PromotionDiscountFixPrice != nil {
+			if *detail.NormalPrice >= *promo.PromotionMinProductPrice {
+				discountedPrice := *detail.NormalPrice - float64(*promo.PromotionDiscountFixPrice)
+				if float64(*promo.PromotionDiscountFixPrice) > *promo.PromotionMaxDiscountPrice {
+					discountedPrice = *detail.NormalPrice - *promo.PromotionMaxDiscountPrice
+				}
+				detail.DiscountPrice = &discountedPrice
+			}
 		}
 
 		mapVariant := make(map[string]string, 0)

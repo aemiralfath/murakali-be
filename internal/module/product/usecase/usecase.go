@@ -215,12 +215,13 @@ func (u *productUC) GetProductDetail(ctx context.Context, productID string) (*bo
 		}
 	}
 
-	details, err := u.productRepo.GetProductDetail(ctx, productID)
+	details, err := u.productRepo.GetProductDetail(ctx, productID, promotionInfo)
 	if err != nil {
 		if err != sql.ErrNoRows {
 			return nil, err
 		}
 	}
+
 	result := body.ProductDetailResponse{
 		ProductInfo:   productInfo,
 		PromotionInfo: promotionInfo,

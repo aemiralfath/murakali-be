@@ -17,6 +17,6 @@ type Repository interface {
 	GetRecommendedProducts(ctx context.Context, pgn *pagination.Pagination) ([]*body.Products, []*model.Promotion, []*model.Voucher, error)
 	GetTotalProduct(ctx context.Context) (int64, error)
 	GetProductInfo(ctx context.Context, productID string) (*body.ProductInfo, error)
-	GetProductDetail(ctx context.Context, productID string) ([]*body.ProductDetail, error)
+	GetProductDetail(ctx context.Context, productID string, promo *body.PromotionInfo) ([]*body.ProductDetail, error)
 	GetPromotionInfo(ctx context.Context, productID string) (*body.PromotionInfo, error)
 }
