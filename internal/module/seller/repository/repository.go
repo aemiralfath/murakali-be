@@ -41,13 +41,57 @@ func (r *sellerRepo) GetShopIDByUser(ctx context.Context, userID string) (string
 	return shopID, nil
 }
 
-func (r *sellerRepo) GetShopIDByOrder(ctx context.Context, OrderID string) (string, error) {
+func (r *sellerRepo) GetShopIDByOrder(ctx context.Context, orderID string) (string, error) {
 	var shopID string
-	if err := r.PSQL.QueryRowContext(ctx, GetShopIDByOrderQuery, OrderID).Scan(&shopID); err != nil {
+	if err := r.PSQL.QueryRowContext(ctx, GetShopIDByOrderQuery, orderID).Scan(&shopID); err != nil {
 		return "", err
 	}
 
 	return shopID, nil
+}
+
+func (r *sellerRepo) GetOrderByOrderID(ctx context.Context, orderID string) (*model.Order, error) {
+	var order model.Order
+	if err := r.PSQL.QueryRowContext(ctx, GetOrderByOrderID, orderID).Scan(
+		&order.OrderID,
+		&order.OrderStatus,
+		&order.TotalPrice,
+		&order.DeliveryFee,
+		&order.ResiNumber,
+		&order.ShopID,
+		&order.ShopName,
+		&order.VoucherCode,
+		&order.CreatedAt,
+	); err != nil {
+		return nil, err
+	}
+
+	orderDetail := make([]*model.OrderDetail, 0)
+
+	res, err := r.PSQL.QueryContext(
+		ctx, GetOrderDetailQuery, order.OrderID)
+
+	if err != nil {
+		return nil, err
+	}
+	for res.Next() {
+		var detail model.OrderDetail
+		if errScan := res.Scan(
+			&detail.ProductDetailID,
+			&detail.ProductID,
+			&detail.ProductTitle,
+			&detail.ProductDetailURL,
+			&detail.OrderQuantity,
+			&detail.ItemPrice,
+			&detail.TotalPrice,
+		); errScan != nil {
+			return nil, errScan
+		}
+		orderDetail = append(orderDetail, &detail)
+	}
+
+	order.Detail = orderDetail
+	return &order, nil
 }
 
 func (r *sellerRepo) GetOrders(ctx context.Context, shopID string, pgn *pagination.Pagination) ([]*model.Order, error) {
