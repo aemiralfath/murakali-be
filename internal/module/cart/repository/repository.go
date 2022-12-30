@@ -3,7 +3,7 @@ package repository
 import (
 	"context"
 	"database/sql"
-	"math"
+	"fmt"
 	"murakali/internal/model"
 	"murakali/internal/module/cart"
 	"murakali/internal/module/cart/delivery/body"
@@ -106,6 +106,8 @@ func (r *cartRepo) GetCartHoverHome(ctx context.Context, userID string, limit in
 	defer res.Close()
 
 	for res.Next() {
+		var VariantName []string
+		var VariantType []string
 		var cartItem body.CartHome
 		if errScan := res.Scan(
 			&cartItem.Title,
@@ -116,27 +118,20 @@ func (r *cartRepo) GetCartHoverHome(ctx context.Context, userID string, limit in
 			&cartItem.MinProductPrice,
 			&cartItem.MaxDiscountPrice,
 			&cartItem.Quantity,
-			&cartItem.VariantName,
-			&cartItem.VariantType,
+			(*pq.StringArray)(&VariantName),
+			(*pq.StringArray)(&VariantType),
 		); errScan != nil {
+			fmt.Println(errScan)
 			return nil, err
 		}
 
-		if cartItem.Price >= cartItem.MinProductPrice && cartItem.DiscountPercentage > 0 {
-			cartItem.ResultDiscount = math.Min(cartItem.MaxDiscountPrice,
-				cartItem.Price*(cartItem.DiscountPercentage/100))
+		mapVariant := make(map[string]string, 0)
+		n := len(VariantName)
+		for i := 0; i < n; i++ {
+			mapVariant[VariantName[i]] = VariantType[i]
 		}
 
-		if cartItem.Price >= cartItem.MinProductPrice && cartItem.DiscountFixPrice > 0 {
-			cartItem.ResultDiscount = math.Max(cartItem.ResultDiscount, cartItem.DiscountFixPrice)
-
-			cartItem.ResultDiscount = math.Min(cartItem.MaxDiscountPrice,
-				cartItem.Price*(cartItem.DiscountPercentage/100))
-		}
-
-		if cartItem.ResultDiscount > 0 {
-			cartItem.SubPrice = cartItem.Price - cartItem.ResultDiscount
-		}
+		cartItem.Variant = mapVariant
 
 		cartHomes = append(cartHomes, &cartItem)
 	}
