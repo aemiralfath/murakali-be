@@ -34,6 +34,42 @@ func (u *cartUC) GetCartHoverHome(ctx context.Context, userID string, limit int)
 		return nil, err
 	}
 
+	for _, cart := range cartHomes {
+		var maxDiscountPrice float64
+		var minProductPrice float64
+		var discountPercentage float64
+		var discountFixPrice float64
+		var resultDiscount float64
+		if cart.MaxDiscountPrice == nil {
+			continue
+		}
+		if cart.MinProductPrice != nil {
+			minProductPrice = *cart.MinProductPrice
+		}
+
+		maxDiscountPrice = *cart.MaxDiscountPrice
+		if cart.DiscountPercentage != nil {
+			discountPercentage = *cart.DiscountPercentage
+			if cart.Price >= minProductPrice && discountPercentage > 0 {
+				resultDiscount = math.Min(maxDiscountPrice,
+					cart.Price*(discountPercentage/100.00))
+			}
+		}
+
+		if cart.DiscountFixPrice != nil {
+			discountFixPrice = *cart.DiscountFixPrice
+			if cart.Price >= minProductPrice && discountFixPrice > 0 {
+				resultDiscount = math.Max(resultDiscount, discountFixPrice)
+				resultDiscount = math.Min(resultDiscount, maxDiscountPrice)
+			}
+		}
+
+		if resultDiscount > 0 {
+			cart.ResultDiscount = resultDiscount
+			cart.SubPrice = cart.Price - resultDiscount
+		}
+	}
+
 	totalItem, err := u.cartRepo.GetTotalCart(ctx, userID)
 	if err != nil {
 		return nil, err
