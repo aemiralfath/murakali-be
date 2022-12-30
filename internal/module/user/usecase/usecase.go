@@ -22,6 +22,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/google/uuid"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -161,7 +162,8 @@ func (u *userUC) UpdateAddressByID(ctx context.Context, userID, addressID string
 	return nil
 }
 
-func (u *userUC) GetAddress(ctx context.Context, userID string, pgn *pagination.Pagination, queryRequest *body.GetAddressQueryRequest) (*pagination.Pagination, error) {
+func (u *userUC) GetAddress(ctx context.Context, userID string, pgn *pagination.Pagination,
+	queryRequest *body.GetAddressQueryRequest) (*pagination.Pagination, error) {
 	userModel, err := u.userRepo.GetUserByID(ctx, userID)
 	if err != nil {
 		if err == sql.ErrNoRows {
@@ -171,7 +173,8 @@ func (u *userUC) GetAddress(ctx context.Context, userID string, pgn *pagination.
 		return nil, err
 	}
 
-	totalRows, err := u.userRepo.GetTotalAddress(ctx, userModel.ID.String(), queryRequest.Name, queryRequest.IsDefaultBool, queryRequest.IsShopDefaultBool)
+	totalRows, err := u.userRepo.GetTotalAddress(ctx, userModel.ID.String(), queryRequest.Name,
+		queryRequest.IsDefaultBool, queryRequest.IsShopDefaultBool)
 	if err != nil {
 		return nil, err
 	}
@@ -181,13 +184,14 @@ func (u *userUC) GetAddress(ctx context.Context, userID string, pgn *pagination.
 	pgn.TotalPages = totalPages
 
 	var addresses []*model.Address
-	if queryRequest.IsDefaultBool == false && queryRequest.IsShopDefaultBool == false {
+	if !queryRequest.IsDefaultBool && !queryRequest.IsShopDefaultBool {
 		addresses, err = u.userRepo.GetAllAddresses(ctx, userModel.ID.String(), queryRequest.Name, pgn)
 		if err != nil {
 			return nil, err
 		}
 	} else {
-		addresses, err = u.userRepo.GetAddresses(ctx, userModel.ID.String(), queryRequest.Name, queryRequest.IsDefaultBool, queryRequest.IsShopDefaultBool, pgn)
+		addresses, err = u.userRepo.GetAddresses(ctx, userModel.ID.String(), queryRequest.Name,
+			queryRequest.IsDefaultBool, queryRequest.IsShopDefaultBool, pgn)
 		if err != nil {
 			return nil, err
 		}
@@ -630,35 +634,35 @@ func (u *userUC) CreateTransaction(ctx context.Context, userID string, requestBo
 	transactionData := &model.Transaction{}
 	orderResponses := make([]*body.OrderResponse, 0)
 
-	userModel, err := u.userRepo.GetUserByID(ctx, userID)
-	if err != nil {
-		if err == sql.ErrNoRows {
+	userModel, errUser := u.userRepo.GetUserByID(ctx, userID)
+	if errUser != nil {
+		if errUser == sql.ErrNoRows {
 			return httperror.New(http.StatusUnauthorized, response.UnauthorizedMessage)
 		}
-		return err
+		return errUser
 	}
 
 	if requestBody.WalletID != "" {
-		walletUser, err := u.userRepo.GetWalletUser(ctx, userModel.ID.String(), requestBody.WalletID)
-		if err != nil {
-			return err
+		walletUser, errWallet := u.userRepo.GetWalletUser(ctx, userModel.ID.String(), requestBody.WalletID)
+		if errWallet != nil {
+			return errWallet
 		}
 		transactionData.WalletID = &walletUser.ID
 	}
 
 	if requestBody.CardNumber != "" {
-		SealabsPayUser, err := u.userRepo.GetSealabsPayUser(ctx, userModel.ID.String(), requestBody.CardNumber)
-		if err != nil {
-			return err
+		SealabsPayUser, errSealabpay := u.userRepo.GetSealabsPayUser(ctx, userModel.ID.String(), requestBody.CardNumber)
+		if errSealabpay != nil {
+			return errSealabpay
 		}
 		transactionData.CardNumber = &SealabsPayUser.CardNumber
 	}
 
 	if requestBody.VoucherMarketplaceID != "" {
-		voucherMarketplace, err := u.userRepo.GetVoucherMarketplacebyID(ctx, requestBody.VoucherMarketplaceID)
-		if err != nil {
-			if err != sql.ErrNoRows {
-				return err
+		voucherMarketplace, errVoucherMP := u.userRepo.GetVoucherMarketplacebyID(ctx, requestBody.VoucherMarketplaceID)
+		if errVoucherMP != nil {
+			if errVoucherMP != sql.ErrNoRows {
+				return errVoucherMP
 			}
 		}
 		transactionData.VoucherMarketplaceID = &voucherMarketplace.ID
@@ -673,12 +677,16 @@ func (u *userUC) CreateTransaction(ctx context.Context, userID string, requestBo
 			}
 			return err
 		}
-
-		voucherShop, err := u.userRepo.GetVoucherShopbyID(ctx, cart.VoucherShopID, cartShop.ID.String())
-		if err != nil {
-			if err != sql.ErrNoRows {
-				return err
+		var voucherShop *model.Voucher
+		var voucherShopID *uuid.UUID
+		if cart.VoucherShopID != "" {
+			voucherShop, err = u.userRepo.GetVoucherShopbyID(ctx, cart.VoucherShopID, cartShop.ID.String())
+			if err != nil {
+				if err != sql.ErrNoRows {
+					return err
+				}
 			}
+			voucherShopID = &voucherShop.ID
 		}
 
 		courierShop, err := u.userRepo.GetCourierShopbyID(ctx, cart.CourierID, cartShop.ID.String())
@@ -716,7 +724,7 @@ func (u *userUC) CreateTransaction(ctx context.Context, userID string, requestBo
 		}
 		orderData.ShopID = cartShop.ID
 		orderData.UserID = userModel.ID
-		orderData.VoucherShopID = &voucherShop.ID
+		orderData.VoucherShopID = voucherShopID
 		orderData.CourierID = courierShop.ID
 		orderData.DeliveryFee = 15000
 		orderData.OrderStatusID = 1
@@ -732,7 +740,7 @@ func (u *userUC) CreateTransaction(ctx context.Context, userID string, requestBo
 		OrderResponses:  orderResponses,
 	}
 
-	err = u.txRepo.WithTransaction(func(tx postgre.Transaction) error {
+	err := u.txRepo.WithTransaction(func(tx postgre.Transaction) error {
 		transactionID, errTrans := u.userRepo.CreateTransaction(ctx, tx, transactionResponse.TransactionData)
 		if errTrans != nil {
 			return errTrans

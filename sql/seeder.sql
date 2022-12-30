@@ -73,8 +73,5 @@ VALUES ('410a1545-1834-4dca-9624-8c1c7e1439de', '7950eca2-58d5-44f0-b873-22b23d8
 INSERT INTO "wallet" (id, user_id, balance, pin, attempt_count)
 VALUES ('60a54e99-33a7-40d8-8ed0-979413a8c33d','7950eca2-58d5-44f0-b873-22b23d8107da', 1000000, '123456', 0);
 
-INSERT INTO "shop_courier" (shop_id, courier_id)
-VALUES ('07315003-5369-465f-9f05-09482d951645','98c1921e-b80e-40f3-9cba-fe8806097517');
-
 INSERT INTO "order_status" (id, name)
 VALUES (1, 'pending to pay');

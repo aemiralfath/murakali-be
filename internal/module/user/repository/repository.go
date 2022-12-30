@@ -192,7 +192,8 @@ func (r *userRepo) DeleteAddress(ctx context.Context, addressID string) error {
 	return nil
 }
 
-func (r *userRepo) GetAddresses(ctx context.Context, userID, name string, isDefault, isShopDefault bool, pgn *pagination.Pagination) ([]*model.Address, error) {
+func (r *userRepo) GetAddresses(ctx context.Context, userID, name string, isDefault, isShopDefault bool,
+	pgn *pagination.Pagination) ([]*model.Address, error) {
 	addresses := make([]*model.Address, 0)
 	res, err := r.PSQL.QueryContext(
 		ctx, GetAddressesQuery,
@@ -615,9 +616,9 @@ func (r *userRepo) GetWalletUser(ctx context.Context, userID, walletID string) (
 	return &walletUser, nil
 }
 
-func (r *userRepo) GetSealabsPayUser(ctx context.Context, userID, CardNumber string) (*model.SealabsPay, error) {
+func (r *userRepo) GetSealabsPayUser(ctx context.Context, userID, cardNumber string) (*model.SealabsPay, error) {
 	var sealabsPayUser model.SealabsPay
-	if err := r.PSQL.QueryRowContext(ctx, GetWalletUserQuery, userID, CardNumber).Scan(
+	if err := r.PSQL.QueryRowContext(ctx, GetWalletUserQuery, userID, cardNumber).Scan(
 		&sealabsPayUser.CardNumber,
 		&sealabsPayUser.UserID,
 		&sealabsPayUser.Name,
@@ -659,9 +660,9 @@ func (r *userRepo) GetShopbyID(ctx context.Context, shopID string) (*model.Shop,
 	return &shopCart, nil
 }
 
-func (r *userRepo) GetVoucherShopbyID(ctx context.Context, VoucherShopID, shopID string) (*model.Voucher, error) {
+func (r *userRepo) GetVoucherShopbyID(ctx context.Context, voucherShopID, shopID string) (*model.Voucher, error) {
 	var VoucherShop model.Voucher
-	if err := r.PSQL.QueryRowContext(ctx, GetVoucherShopbyIDQuery, VoucherShopID, shopID).Scan(
+	if err := r.PSQL.QueryRowContext(ctx, GetVoucherShopbyIDQuery, voucherShopID, shopID).Scan(
 		&VoucherShop.ID,
 		&VoucherShop.ShopID,
 		&VoucherShop.Code,
@@ -678,9 +679,9 @@ func (r *userRepo) GetVoucherShopbyID(ctx context.Context, VoucherShopID, shopID
 	return &VoucherShop, nil
 }
 
-func (r *userRepo) GetCourierShopbyID(ctx context.Context, CourierID, shopID string) (*model.Courier, error) {
+func (r *userRepo) GetCourierShopbyID(ctx context.Context, courierID, shopID string) (*model.Courier, error) {
 	var CourierShop model.Courier
-	if err := r.PSQL.QueryRowContext(ctx, GetCourierShopbyIDQuery, CourierID, shopID).Scan(
+	if err := r.PSQL.QueryRowContext(ctx, GetCourierShopbyIDQuery, courierID, shopID).Scan(
 		&CourierShop.ID,
 		&CourierShop.Name,
 		&CourierShop.Code,
