@@ -14,6 +14,7 @@ import (
 	"murakali/pkg/postgre"
 
 	"github.com/go-redis/redis/v8"
+	"github.com/google/uuid"
 )
 
 type userRepo struct {
@@ -125,7 +126,7 @@ func (r *userRepo) GetDefaultShopAddress(ctx context.Context, userID string) (*m
 
 func (r *userRepo) GetTotalAddress(ctx context.Context, userID, name string, isDefault, isShopDefault bool) (int64, error) {
 	var total int64
-	if err := r.PSQL.QueryRowContext(ctx, GetTotalAddressQuery, userID, fmt.Sprintf("%%%s%%", name), isDefault, isShopDefault).Scan(&total); err != nil {
+	if err := r.PSQL.QueryRowContext(ctx, GetTotalAddressQuery, userID, fmt.Sprintf("%%%s%%", name)).Scan(&total); err != nil {
 		return 0, err
 	}
 
@@ -191,7 +192,8 @@ func (r *userRepo) DeleteAddress(ctx context.Context, addressID string) error {
 	return nil
 }
 
-func (r *userRepo) GetAddresses(ctx context.Context, userID, name string, isDefault, isShopDefault bool, pgn *pagination.Pagination) ([]*model.Address, error) {
+func (r *userRepo) GetAddresses(ctx context.Context, userID, name string, isDefault, isShopDefault bool,
+	pgn *pagination.Pagination) ([]*model.Address, error) {
 	addresses := make([]*model.Address, 0)
 	res, err := r.PSQL.QueryContext(
 		ctx, GetAddressesQuery,
@@ -199,6 +201,52 @@ func (r *userRepo) GetAddresses(ctx context.Context, userID, name string, isDefa
 		fmt.Sprintf("%%%s%%", name),
 		isDefault,
 		isShopDefault,
+		pgn.GetSort(),
+		pgn.GetLimit(),
+		pgn.GetOffset())
+
+	if err != nil {
+		return nil, err
+	}
+	defer res.Close()
+
+	for res.Next() {
+		var address model.Address
+		if errScan := res.Scan(
+			&address.ID,
+			&address.UserID,
+			&address.Name,
+			&address.ProvinceID,
+			&address.CityID,
+			&address.Province,
+			&address.City,
+			&address.District,
+			&address.SubDistrict,
+			&address.AddressDetail,
+			&address.ZipCode,
+			&address.IsDefault,
+			&address.IsShopDefault,
+			&address.CreatedAt,
+			&address.UpdatedAt); errScan != nil {
+			return nil, err
+		}
+
+		addresses = append(addresses, &address)
+	}
+
+	if res.Err() != nil {
+		return nil, err
+	}
+
+	return addresses, nil
+}
+
+func (r *userRepo) GetAllAddresses(ctx context.Context, userID, name string, pgn *pagination.Pagination) ([]*model.Address, error) {
+	addresses := make([]*model.Address, 0)
+	res, err := r.PSQL.QueryContext(
+		ctx, GetAllAddressesQuery,
+		userID,
+		fmt.Sprintf("%%%s%%", name),
 		pgn.GetSort(),
 		pgn.GetLimit(),
 		pgn.GetOffset())
@@ -452,7 +500,6 @@ func (r *userRepo) GetSealabsPay(ctx context.Context, userid string) ([]*model.S
 }
 
 func (r *userRepo) CheckDefaultSealabsPay(ctx context.Context, userid string) (*string, error) {
-	fmt.Println("1")
 	var temp *string
 	if err := r.PSQL.QueryRowContext(ctx, CheckDefaultSealabsPayQuery, userid).
 		Scan(&temp); err != nil {
@@ -547,6 +594,193 @@ func (r *userRepo) UpdateProfileImage(ctx context.Context, imgURL, userID string
 
 func (r *userRepo) UpdatePasswordByID(ctx context.Context, userID, newPassword string) error {
 	_, err := r.PSQL.ExecContext(ctx, UpdatePasswordQuery, newPassword, userID)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (r *userRepo) GetWalletUser(ctx context.Context, userID, walletID string) (*model.Wallet, error) {
+	var walletUser model.Wallet
+	if err := r.PSQL.QueryRowContext(ctx, GetWalletUserQuery, userID, walletID).Scan(
+		&walletUser.ID,
+		&walletUser.UserID,
+		&walletUser.Balance,
+		&walletUser.AttemptCount,
+		&walletUser.AttemptAt,
+		&walletUser.UnlockedAt,
+		&walletUser.ActiveDate); err != nil {
+		return nil, err
+	}
+
+	return &walletUser, nil
+}
+
+func (r *userRepo) GetSealabsPayUser(ctx context.Context, userID, cardNumber string) (*model.SealabsPay, error) {
+	var sealabsPayUser model.SealabsPay
+	if err := r.PSQL.QueryRowContext(ctx, GetWalletUserQuery, userID, cardNumber).Scan(
+		&sealabsPayUser.CardNumber,
+		&sealabsPayUser.UserID,
+		&sealabsPayUser.Name,
+		&sealabsPayUser.IsDefault,
+		&sealabsPayUser.ActiveDate); err != nil {
+		return nil, err
+	}
+
+	return &sealabsPayUser, nil
+}
+
+func (r *userRepo) GetVoucherMarketplacebyID(ctx context.Context, voucherMarketplaceID string) (*model.Voucher, error) {
+	var VoucherMarketplace model.Voucher
+	if err := r.PSQL.QueryRowContext(ctx, GetVoucherMarketplacebyIDQuery, voucherMarketplaceID).Scan(
+		&VoucherMarketplace.ID,
+		&VoucherMarketplace.ShopID,
+		&VoucherMarketplace.Code,
+		&VoucherMarketplace.Quota,
+		&VoucherMarketplace.ActivedDate,
+		&VoucherMarketplace.ExpiredDate,
+		&VoucherMarketplace.DiscountPercentage,
+		&VoucherMarketplace.DiscountFixPrice,
+		&VoucherMarketplace.MinProductPrice,
+		&VoucherMarketplace.MaxDiscountPrice); err != nil {
+		return nil, err
+	}
+
+	return &VoucherMarketplace, nil
+}
+
+func (r *userRepo) GetShopbyID(ctx context.Context, shopID string) (*model.Shop, error) {
+	var shopCart model.Shop
+	if err := r.PSQL.QueryRowContext(ctx, GetShopbyIDQuery, shopID).Scan(
+		&shopCart.ID,
+		&shopCart.Name); err != nil {
+		return nil, err
+	}
+
+	return &shopCart, nil
+}
+
+func (r *userRepo) GetVoucherShopbyID(ctx context.Context, voucherShopID, shopID string) (*model.Voucher, error) {
+	var VoucherShop model.Voucher
+	if err := r.PSQL.QueryRowContext(ctx, GetVoucherShopbyIDQuery, voucherShopID, shopID).Scan(
+		&VoucherShop.ID,
+		&VoucherShop.ShopID,
+		&VoucherShop.Code,
+		&VoucherShop.Quota,
+		&VoucherShop.ActivedDate,
+		&VoucherShop.ExpiredDate,
+		&VoucherShop.DiscountPercentage,
+		&VoucherShop.DiscountFixPrice,
+		&VoucherShop.MinProductPrice,
+		&VoucherShop.MaxDiscountPrice); err != nil {
+		return nil, err
+	}
+
+	return &VoucherShop, nil
+}
+
+func (r *userRepo) GetCourierShopbyID(ctx context.Context, courierID, shopID string) (*model.Courier, error) {
+	var CourierShop model.Courier
+	if err := r.PSQL.QueryRowContext(ctx, GetCourierShopbyIDQuery, courierID, shopID).Scan(
+		&CourierShop.ID,
+		&CourierShop.Name,
+		&CourierShop.Code,
+		&CourierShop.Service,
+		&CourierShop.Description); err != nil {
+		return nil, err
+	}
+
+	return &CourierShop, nil
+}
+
+func (r *userRepo) GetProductDetailByID(ctx context.Context, productDetailID string) (*model.ProductDetail, error) {
+	var pd model.ProductDetail
+	if err := r.PSQL.QueryRowContext(ctx, GetProductDetailByIDQuery, productDetailID).Scan(
+		&pd.ID,
+		&pd.Price,
+		&pd.Stock,
+		&pd.Size,
+		&pd.Weight,
+		&pd.Hazardous,
+		&pd.Condition,
+		&pd.BulkPrice); err != nil {
+		return nil, err
+	}
+
+	return &pd, nil
+}
+
+func (r *userRepo) CreateTransaction(ctx context.Context, tx postgre.Transaction,
+	transactionData *model.Transaction) (*uuid.UUID, error) {
+	var transactionID *uuid.UUID
+	if err := tx.QueryRowContext(ctx, CreateTransactionQuery,
+		transactionData.VoucherMarketplaceID,
+		transactionData.WalletID,
+		transactionData.CardNumber,
+		transactionData.TotalPrice).Scan(&transactionID); err != nil {
+		return nil, err
+	}
+
+	return transactionID, nil
+}
+
+func (r *userRepo) CreateOrder(ctx context.Context, tx postgre.Transaction, orderData *model.OrderModel) (*uuid.UUID, error) {
+	var orderID *uuid.UUID
+	if err := tx.QueryRowContext(ctx, CreateOrderQuery,
+		orderData.TransactionID,
+		orderData.ShopID,
+		orderData.UserID,
+		orderData.CourierID,
+		orderData.VoucherShopID,
+		orderData.OrderStatusID,
+		orderData.TotalPrice,
+		orderData.DeliveryFee).Scan(&orderID); err != nil {
+		return nil, err
+	}
+
+	return orderID, nil
+}
+
+func (r *userRepo) CreateOrderItem(ctx context.Context, tx postgre.Transaction, item *model.OrderItem) (*uuid.UUID, error) {
+	var orderItemID *uuid.UUID
+	if err := tx.QueryRowContext(ctx, CreateOrderItemQuery,
+		item.OrderID,
+		item.ProductDetailID,
+		item.Quantity,
+		item.ItemPrice,
+		item.TotalPrice).Scan(&orderItemID); err != nil {
+		return nil, err
+	}
+
+	return orderItemID, nil
+}
+
+func (r *userRepo) GetCartItemUser(ctx context.Context, userID, productDetailID string) (*model.CartItem, error) {
+	var CartItemResult model.CartItem
+	if err := r.PSQL.QueryRowContext(ctx, GetCartItemUserQuery,
+		userID, productDetailID).Scan(
+		&CartItemResult.ID,
+		&CartItemResult.UserID,
+		&CartItemResult.ProductDetailID,
+		&CartItemResult.Quantity); err != nil {
+		return nil, err
+	}
+
+	return &CartItemResult, nil
+}
+
+func (r *userRepo) UpdateProductDetailStock(ctx context.Context, tx postgre.Transaction,
+	productDetailData *model.ProductDetail) error {
+	_, err := tx.ExecContext(ctx, UpdateProductDetailStockQuery, productDetailData.Stock, productDetailData.ID)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (r *userRepo) DeleteCartItemByID(ctx context.Context, tx postgre.Transaction, cartItemData *model.CartItem) error {
+	_, err := r.PSQL.ExecContext(ctx, DeleteCartItemByIDQuery, cartItemData.ID.String())
 	if err != nil {
 		return err
 	}

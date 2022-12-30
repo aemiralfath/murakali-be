@@ -22,6 +22,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/google/uuid"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -161,7 +162,8 @@ func (u *userUC) UpdateAddressByID(ctx context.Context, userID, addressID string
 	return nil
 }
 
-func (u *userUC) GetAddress(ctx context.Context, userID string, pgn *pagination.Pagination, queryRequest *body.GetAddressQueryRequest) (*pagination.Pagination, error) {
+func (u *userUC) GetAddress(ctx context.Context, userID string, pgn *pagination.Pagination,
+	queryRequest *body.GetAddressQueryRequest) (*pagination.Pagination, error) {
 	userModel, err := u.userRepo.GetUserByID(ctx, userID)
 	if err != nil {
 		if err == sql.ErrNoRows {
@@ -171,7 +173,8 @@ func (u *userUC) GetAddress(ctx context.Context, userID string, pgn *pagination.
 		return nil, err
 	}
 
-	totalRows, err := u.userRepo.GetTotalAddress(ctx, userModel.ID.String(), queryRequest.Name, queryRequest.IsDefaultBool, queryRequest.IsShopDefaultBool)
+	totalRows, err := u.userRepo.GetTotalAddress(ctx, userModel.ID.String(), queryRequest.Name,
+		queryRequest.IsDefaultBool, queryRequest.IsShopDefaultBool)
 	if err != nil {
 		return nil, err
 	}
@@ -181,9 +184,17 @@ func (u *userUC) GetAddress(ctx context.Context, userID string, pgn *pagination.
 	pgn.TotalPages = totalPages
 
 	var addresses []*model.Address
-	addresses, err = u.userRepo.GetAddresses(ctx, userModel.ID.String(), queryRequest.Name, queryRequest.IsDefaultBool, queryRequest.IsShopDefaultBool, pgn)
-	if err != nil {
-		return nil, err
+	if !queryRequest.IsDefaultBool && !queryRequest.IsShopDefaultBool {
+		addresses, err = u.userRepo.GetAllAddresses(ctx, userModel.ID.String(), queryRequest.Name, pgn)
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		addresses, err = u.userRepo.GetAddresses(ctx, userModel.ID.String(), queryRequest.Name,
+			queryRequest.IsDefaultBool, queryRequest.IsShopDefaultBool, pgn)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	pgn.Rows = addresses
@@ -616,5 +627,152 @@ func (u *userUC) ChangePassword(ctx context.Context, userID, newPassword string)
 		return err
 	}
 
+	return nil
+}
+
+func (u *userUC) CreateTransaction(ctx context.Context, userID string, requestBody body.CreateTransactionRequest) error {
+	transactionData := &model.Transaction{}
+	orderResponses := make([]*body.OrderResponse, 0)
+
+	userModel, errUser := u.userRepo.GetUserByID(ctx, userID)
+	if errUser != nil {
+		if errUser == sql.ErrNoRows {
+			return httperror.New(http.StatusUnauthorized, response.UnauthorizedMessage)
+		}
+		return errUser
+	}
+
+	if requestBody.WalletID != "" {
+		walletUser, errWallet := u.userRepo.GetWalletUser(ctx, userModel.ID.String(), requestBody.WalletID)
+		if errWallet != nil {
+			return errWallet
+		}
+		transactionData.WalletID = &walletUser.ID
+	}
+
+	if requestBody.CardNumber != "" {
+		SealabsPayUser, errSealabpay := u.userRepo.GetSealabsPayUser(ctx, userModel.ID.String(), requestBody.CardNumber)
+		if errSealabpay != nil {
+			return errSealabpay
+		}
+		transactionData.CardNumber = &SealabsPayUser.CardNumber
+	}
+
+	if requestBody.VoucherMarketplaceID != "" {
+		voucherMarketplace, errVoucherMP := u.userRepo.GetVoucherMarketplacebyID(ctx, requestBody.VoucherMarketplaceID)
+		if errVoucherMP != nil {
+			if errVoucherMP != sql.ErrNoRows {
+				return errVoucherMP
+			}
+		}
+		transactionData.VoucherMarketplaceID = &voucherMarketplace.ID
+	}
+
+	for _, cart := range requestBody.CartItems {
+		orderData := &model.OrderModel{}
+		cartShop, err := u.userRepo.GetShopbyID(ctx, cart.ShopID)
+		if err != nil {
+			if err == sql.ErrNoRows {
+				return httperror.New(http.StatusBadRequest, response.UnknownShop)
+			}
+			return err
+		}
+		var voucherShop *model.Voucher
+		var voucherShopID *uuid.UUID
+		if cart.VoucherShopID != "" {
+			voucherShop, err = u.userRepo.GetVoucherShopbyID(ctx, cart.VoucherShopID, cartShop.ID.String())
+			if err != nil {
+				if err != sql.ErrNoRows {
+					return err
+				}
+			}
+			voucherShopID = &voucherShop.ID
+		}
+
+		courierShop, err := u.userRepo.GetCourierShopbyID(ctx, cart.CourierID, cartShop.ID.String())
+		if err != nil {
+			return httperror.New(http.StatusBadRequest, response.SelectShippingCourier)
+		}
+		orderResponse := &body.OrderResponse{
+			Items: make([]*body.OrderItemResponse, 0),
+		}
+
+		for _, bodyProductDetail := range cart.ProductDetails {
+			productDetailData, err := u.userRepo.GetProductDetailByID(ctx, bodyProductDetail.ID)
+			if err != nil {
+				return err
+			}
+
+			cartData, err := u.userRepo.GetCartItemUser(ctx, userModel.ID.String(), productDetailData.ID.String())
+			if err != nil {
+				return httperror.New(http.StatusBadRequest, response.CartItemNotExist)
+			}
+
+			orderItem := &model.OrderItem{
+				ProductDetailID: productDetailData.ID,
+				Quantity:        bodyProductDetail.Quantity,
+				ItemPrice:       bodyProductDetail.SubPrice,
+				TotalPrice:      bodyProductDetail.SubPrice * float64(bodyProductDetail.Quantity),
+			}
+			item := &body.OrderItemResponse{
+				Item:              orderItem,
+				ProductDetailData: productDetailData,
+				CartItemData:      cartData,
+			}
+			orderResponse.Items = append(orderResponse.Items, item)
+			orderData.TotalPrice += orderItem.TotalPrice
+		}
+		orderData.ShopID = cartShop.ID
+		orderData.UserID = userModel.ID
+		orderData.VoucherShopID = voucherShopID
+		orderData.CourierID = courierShop.ID
+		orderData.DeliveryFee = 15000
+		orderData.OrderStatusID = 1
+
+		orderResponse.OrderData = orderData
+		transactionData.TotalPrice += orderData.TotalPrice + orderData.DeliveryFee
+
+		orderResponses = append(orderResponses, orderResponse)
+	}
+
+	transactionResponse := &body.TransactionResponse{
+		TransactionData: transactionData,
+		OrderResponses:  orderResponses,
+	}
+
+	err := u.txRepo.WithTransaction(func(tx postgre.Transaction) error {
+		transactionID, errTrans := u.userRepo.CreateTransaction(ctx, tx, transactionResponse.TransactionData)
+		if errTrans != nil {
+			return errTrans
+		}
+
+		for _, o := range transactionResponse.OrderResponses {
+			o.OrderData.TransactionID = *transactionID
+			orderID, errOrder := u.userRepo.CreateOrder(ctx, tx, o.OrderData)
+			if errOrder != nil {
+				return errOrder
+			}
+			for _, i := range o.Items {
+				i.Item.OrderID = *orderID
+				_, errItem := u.userRepo.CreateOrderItem(ctx, tx, i.Item)
+				if errItem != nil {
+					return errItem
+				}
+				i.ProductDetailData.Stock -= i.CartItemData.Quantity
+				errProduct := u.userRepo.UpdateProductDetailStock(ctx, tx, i.ProductDetailData)
+				if errProduct != nil {
+					return errProduct
+				}
+				errCart := u.userRepo.DeleteCartItemByID(ctx, tx, i.CartItemData)
+				if errCart != nil {
+					return errCart
+				}
+			}
+		}
+		return nil
+	})
+	if err != nil {
+		return err
+	}
 	return nil
 }

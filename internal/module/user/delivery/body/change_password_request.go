@@ -1,7 +1,6 @@
 package body
 
 import (
-	"fmt"
 	"murakali/internal/util"
 	"murakali/pkg/httperror"
 	"murakali/pkg/response"
@@ -26,7 +25,6 @@ func (r *ChangePasswordRequest) Validate() (UnprocessableEntity, error) {
 		unprocessableEntity = true
 		entity.Fields["password"] = FieldCannotBeEmptyMessage
 	}
-	fmt.Println(r.NewPassword)
 	if !util.VerifyPassword(r.NewPassword) {
 		unprocessableEntity = true
 		entity.Fields["password"] = InvalidPasswordFormatMessage

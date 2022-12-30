@@ -8,7 +8,8 @@ import (
 )
 
 type UseCase interface {
-	GetAddress(ctx context.Context, userID string, pagination *pagination.Pagination, queryRequest *body.GetAddressQueryRequest) (*pagination.Pagination, error)
+	GetAddress(ctx context.Context, userID string, pagination *pagination.Pagination,
+		queryRequest *body.GetAddressQueryRequest) (*pagination.Pagination, error)
 	CreateAddress(ctx context.Context, userID string, requestBody body.CreateAddressRequest) error
 	GetAddressByID(ctx context.Context, userID, addressID string) (*model.Address, error)
 	UpdateAddressByID(ctx context.Context, userID, addressID string, requestBody body.UpdateAddressRequest) error
@@ -27,5 +28,6 @@ type UseCase interface {
 	SendOTPEmail(ctx context.Context, email string) error
 	VerifyOTP(ctx context.Context, requestBody body.VerifyOTPRequest, userID string) (string, error)
 	ChangePassword(ctx context.Context, userID string, newPassword string) error
+	CreateTransaction(ctx context.Context, userID string, requestBody body.CreateTransactionRequest) error
 	GetOrder(ctx context.Context, userID string, pgn *pagination.Pagination) (*pagination.Pagination, error)
 }
