@@ -14,6 +14,7 @@ import (
 	"strings"
 
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 )
 
 type cartHandlers struct {
@@ -160,8 +161,13 @@ func (h *cartHandlers) DeleteCartItems(c *gin.Context) {
 		return
 	}
 
-	productDetailID := c.Param("id")
-	if err := h.cartUC.DeleteCartItems(c, userID.(string), productDetailID); err != nil {
+	id := c.Param("id")
+	productDetailID, err := uuid.Parse(id)
+	if err != nil {
+		response.ErrorResponse(c.Writer, response.BadRequestMessage, http.StatusBadRequest)
+		return
+	}
+	if err := h.cartUC.DeleteCartItems(c, userID.(string), productDetailID.String()); err != nil {
 		var e *httperror.Error
 		if !errors.As(err, &e) {
 			h.logger.Errorf("HandlerCart, Error: %s", err)

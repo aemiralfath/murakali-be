@@ -56,7 +56,7 @@ func (r *CreateTransactionRequest) Validate() (UnprocessableEntity, error) {
 	r.CardNumber = strings.TrimSpace(r.CardNumber)
 	if (r.WalletID == "" && r.CardNumber == "") || (r.WalletID != "" && r.CardNumber != "") {
 		unprocessableEntity = true
-		entity.Fields["payment_method"] = InvalidSelectPaymentMethod
+		entity.Fields["payment_method"] = InvalidPaymentMethod
 	}
 
 	if r.CartItems == nil {
