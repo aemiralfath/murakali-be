@@ -43,6 +43,7 @@ type PromotionInfo struct {
 type ProductDetail struct {
 	ProductDetailID string            `json:"id"`
 	NormalPrice     *float64          `json:"normal_price"`
+	DiscountPrice   *float64          `json:"discount_price"`
 	Stock           *int              `json:"stock"`
 	Weight          *int              `json:"weight"`
 	Size            *int              `json:"size"`
