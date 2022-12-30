@@ -3,7 +3,6 @@ package usecase
 import (
 	"context"
 	"database/sql"
-	"fmt"
 	"math"
 	"murakali/config"
 	"murakali/internal/model"
@@ -37,7 +36,6 @@ func (u *productUC) GetCategories(ctx context.Context) ([]*body.CategoryResponse
 	for _, category := range categories {
 		childCategories, err := u.GetCategoriesByParentID(ctx, category.ID)
 		if err != nil {
-			fmt.Println("child category:", childCategories)
 			return nil, err
 		}
 

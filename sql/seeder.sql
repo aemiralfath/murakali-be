@@ -53,6 +53,9 @@ INSERT INTO voucher(id, shop_id, code, quota, actived_date, expired_date, discou
                     min_product_price, max_discount_price, created_at, updated_at, deleted_at)
 VALUES ('59bfcd74-e278-4c70-a889-d9c8515bf71c', 'e8854443-c2c7-488e-93d5-b9d93708b8a3', 'ASD123', 11,
         '2022-12-22 21:43:56.202214+00', '2023-02-01 21:43:56.202214+00', 0, 5000, 5000, 100000,
+        '2022-12-23 02:34:38.854025+00', NULL, NULL),
+        ('59bfcd74-e278-4c70-a889-d9c8515bf72c', '07315003-5369-465f-9f05-09482d951645', 'DSA123', 11,
+        '2022-12-22 21:43:56.202214+00', '2023-02-01 21:43:56.202214+00', 0, 5000, 5000, 100000,
         '2022-12-23 02:34:38.854025+00', NULL, NULL);
 -- Update the id with generated id seeder
 
@@ -66,3 +69,12 @@ VALUES ('410a1545-1834-4dca-9624-8c1c7e1439de', '7950eca2-58d5-44f0-b873-22b23d8
        ('d37f3e57-94d9-433c-a3c8-316f6b719418', '7950eca2-58d5-44f0-b873-22b23d8107da',
         '0c53ef3d-3682-4359-90e1-814eb6ab5111', 2);
 -- Update the id with generated id seeder
+
+INSERT INTO "wallet" (id, user_id, balance, pin, attempt_count)
+VALUES ('60a54e99-33a7-40d8-8ed0-979413a8c33d','7950eca2-58d5-44f0-b873-22b23d8107da', 1000000, '123456', 0);
+
+INSERT INTO "shop_courier" (shop_id, courier_id)
+VALUES ('07315003-5369-465f-9f05-09482d951645','98c1921e-b80e-40f3-9cba-fe8806097517');
+
+INSERT INTO "order_status" (id, name)
+VALUES (1, 'pending to pay');

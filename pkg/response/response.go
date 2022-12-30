@@ -34,6 +34,10 @@ const (
 	QuantityReachedMaximum         = "Quantity has reached the maximum limit!"
 	ProductDetailNotExistMessage   = "Product Detail not exist."
 	PictureSizeTooBig              = "Picture size too big"
+	SelectOnlyOnePaymentMethod     = "Select only one payment method."
+	SelectShippingCourier          = "Select shipping Courier"
+	UnknownShop                    = "Unknown shop."
+	CartItemNotExist               = "Cart Item not exist."
 )
 
 type JSONResponse struct {

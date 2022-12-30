@@ -6,12 +6,15 @@ import (
 	"murakali/internal/module/user/delivery/body"
 	"murakali/pkg/pagination"
 	"murakali/pkg/postgre"
+
+	"github.com/google/uuid"
 )
 
 type Repository interface {
 	GetUserByID(ctx context.Context, id string) (*model.User, error)
 	GetTotalAddress(ctx context.Context, userID, name string, isDefault, isShopDefault bool) (int64, error)
 	GetAddresses(ctx context.Context, userID, name string, isDefault, isShopDefault bool, pagination *pagination.Pagination) ([]*model.Address, error)
+	GetAllAddresses(ctx context.Context, userID, name string, pagination *pagination.Pagination) ([]*model.Address, error)
 	GetAddressByID(ctx context.Context, userID, addressID string) (*model.Address, error)
 	GetDefaultUserAddress(ctx context.Context, userID string) (*model.Address, error)
 	GetDefaultShopAddress(ctx context.Context, userID string) (*model.Address, error)
@@ -45,4 +48,17 @@ type Repository interface {
 	GetPasswordByID(ctx context.Context, id string) (string, error)
 	GetTotalOrder(ctx context.Context, userID string) (int64, error)
 	GetOrders(ctx context.Context, userID string, pgn *pagination.Pagination) ([]*model.Order, error)
+	GetWalletUser(ctx context.Context, userID, walletID string) (*model.Wallet, error)
+	GetSealabsPayUser(ctx context.Context, userID, CardNumber string) (*model.SealabsPay, error)
+	GetVoucherMarketplacebyID(ctx context.Context, voucherMarketplaceID string) (*model.Voucher, error)
+	GetShopbyID(ctx context.Context, shopID string) (*model.Shop, error)
+	GetVoucherShopbyID(ctx context.Context, VoucherShopID, shopID string) (*model.Voucher, error)
+	GetCourierShopbyID(ctx context.Context, CourierID, shopID string) (*model.Courier, error)
+	GetProductDetailByID(ctx context.Context, productDetailID string) (*model.ProductDetail, error)
+	GetCartItemUser(ctx context.Context, userID, productDetailID string) (*model.CartItem, error)
+	CreateTransaction(ctx context.Context, tx postgre.Transaction, transactionData *model.Transaction) (*uuid.UUID, error)
+	CreateOrder(ctx context.Context, tx postgre.Transaction, orderData *model.OrderModel) (*uuid.UUID, error)
+	CreateOrderItem(ctx context.Context, tx postgre.Transaction, item *model.OrderItem) (*uuid.UUID, error)
+	UpdateProductDetailStock(ctx context.Context, tx postgre.Transaction, productDetailData *model.ProductDetail) error
+	DeleteCartItemByID(ctx context.Context, tx postgre.Transaction, cartItemData *model.CartItem) error
 }
