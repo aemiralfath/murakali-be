@@ -21,6 +21,8 @@ tags:
     description: Related to Cart perspective.
   - name: Location
     description: Related to Location perspective.
+  - name: Seller
+    description: Related to Seller perspective.
 paths:
   '/api/v1/auth/register':
     post:
@@ -728,6 +730,45 @@ paths:
               schema:
                 $ref: '#/components/schemas/DefaultSuccess'
 
+  '/api/v1/user/order':
+    get:
+      summary: Get User Orders 
+      description: >-
+        Get User Orders
+      tags:
+        - User
+      security:
+        - BEARER: []
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: 
+                $ref: '#/components/schemas/GetOrdersResponse'
+
+  '/api/v1/user/transaction':
+    post:
+      summary: user create transaction 
+      description: >-
+        user create transaction
+      tags:
+        - User
+      security:
+        - BEARER: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateTransactionRequest'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DefaultSuccess'
+                
   '/api/v1/product/':
     get:
       summary: Get Product {WIP}
@@ -1038,7 +1079,8 @@ paths:
         Get User Cart In Home
       tags:
         - Cart
-
+      security:
+        - BEARER: [ ]
       parameters:
         - in: query
           name: limit
@@ -1061,6 +1103,8 @@ paths:
         get user all item cart
       tags:
         - Cart
+      security:
+        - BEARER: [ ]
       responses:
         '200':
           description: OK
@@ -1133,7 +1177,68 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/DefaultSuccess'
+      
+  '/api/v1/seller/order':            
+    get:
+      summary: Get Seller Order
+      description: >-
+        Get Seller Order
+      tags:
+        - Seller
+      security:
+        - BEARER: []
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetSellerOrderResponse'
+                                
+  '/api/v1/seller/order/{order_id}':            
+    get:
+      summary: Get Seller Orders
+      description: >-
+        Get Seller Orders
+      tags:
+        - Seller
+      security:
+        - BEARER: []
+      parameters: 
+        - in: path
+          name: order_id
+          schema:
+            type: string
+          required: true
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetOrderDetailResponse'
 
+  '/api/v1/seller/order-status':
+    patch:
+      summary: Get Seller Orders
+      description: >-
+        Get Seller Orders
+      tags:
+        - Seller
+      security:
+        - BEARER: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ChangeOrderStatusRequest'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DefaultSuccess'
 components:
   schemas:
 
@@ -2159,6 +2264,52 @@ components:
           type: string
           example: "Password"
 
+    CreateTransactionRequest:
+      title: CreateTransactionRequest
+      type: object
+      description: Create Transaction Request data model.
+      properties:
+        wallet_id:
+          type: string
+        card_number:
+          type: string
+        voucher_marketplace_id:
+         type: string
+        cart_items:
+          type: array
+          items:
+            type: object
+            properties:
+              shop_id:
+                type: string
+              voucher_shop_id:
+                type: string
+              courier_id:
+                type: string
+              product_details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      type: string
+                    quantity:
+                      type: number
+                    sub_price:
+                      type: number
+      example:
+        wallet_id: "60a54e99-33a7-40d8-8ed0-979413a8c33d"
+        card_number: ''
+        voucher_marketplace_id: ''
+        cart_items:
+        - shop_id: "07315003-5369-465f-9f05-09482d951645"
+          voucher_shop_id: "59bfcd74-e278-4c70-a889-d9c8515bf72c"
+          courier_id: "98c1921e-b80e-40f3-9cba-fe8806097517"
+          product_details:
+          - id: "s"
+            quantity: 3
+            sub_price: 70000
+
     CreateSeaLabPayResponse:
       title: CreateSeaLabPayResponse
       type: object
@@ -2398,8 +2549,7 @@ components:
                 result_discount:
                 voucher_discount_percentage: 0
                 voucher_discount_fix_price: 5000
-
-
+     
     GetProductDetailResponse:
       title: GetProductDetailResponse
       type: object
@@ -2411,143 +2561,133 @@ components:
         data:
           type: object
           properties:
-            id:
-              type: string
-            title:
-              type: string
-            view_count:
-              type: number
-            favorite_count:
-              type: number
-            unit_sold:
-              type: number
-            listed_status:
-              type: boolean
-            thumbnail_url:
-              type: string
-            rating_avg:
-              type: number
-            min_price:
-              type: number
-            max_price:
-              type: number
-            shop:
+            product_info:
               type: object
               properties:
-                name:
+                id:
                   type: string
-            category:
+                sku:
+                  type: string
+                title:
+                  type: string
+                description: 
+                  type: string
+                view_count: 
+                  type: number
+                favorite_count:
+                  type: number
+                unit_sold: 
+                  type: number
+                listed_status: 
+                  type: boolean
+                thumbnail_url: 
+                  type: string
+                rating_avg: 
+                  type: number
+                min_price: 
+                  type: number
+                max_price: 
+                  type: number
+                category_name: 
+                  type: string
+                category_url:
+                  type: string
+            promotions_info:
               type: object
               properties:
-                name:
+                promotion_name:
                   type: string
-                parent_category:
-                  type: object
-            product_detail:
+                promotion_discount_percentage:
+                  type: number
+                promotion_discount_fix_price:
+                  type: number
+                promotion_min_product_price: 
+                  type: number
+                promotion_max_discount_price: 
+                  type: number
+                promotion_quota: 
+                  type: number
+                promotion_max_quantity: 
+                  type: number
+                promotion_active_date: 
+                  type: string
+                promotion_expiry_date:
+                  type: string
+            products_detail:
               type: array
               items:
                 type: object
                 properties:
-                  id:
+                  id: 
                     type: string
-                  price:
+                  normal_price:
                     type: number
-                  stock:
+                  stock: 
                     type: number
+                  weight: 
+                    type: number
+                  size: 
+                    type: number
+                  hazardous: 
+                    type: boolean
+                  condition: 
+                    type: string
+                  bulk_price: 
+                    type: boolean
+                  product_url: 
+                    type: string
                   variant:
-                    type: array
-                    items:
-                      type: object
-                      properties:
-                        name:
-                          type: string
-                        type:
-                          type: string
-            promotion:
-              type: object
-              properties:
-                discount_percentage:
-                  type: number
-                discount_fix_price:
-                  type: number
-                min_product_price:
-                  type: number
-                max_discount_price:
-                  type: number
-                quota:
-                  type: number
-                max_quantity:
-                  type: number
-                active_date:
-                  type: string
-                expired_date:
-                  type: string
-            voucher:
-              type: object
-              properties:
-                code:
-                  type: string
-                quota:
-                  type: number
-                actived_date:
-                  type: string
-                expired_date:
-                  type: string
-                discount_percentage:
-                  type: number
-                discount_fix_price:
-                  type: number
-                min_product_price:
-                  type: number
-                max_discount_price:
-                  type: number
+                    type: object
           example:
-            id: "8b9e5380-6906-43d6-bc76-a8c4a1943bc0"
-            title: "baju Pria dewasa"
-            view_count: 100
-            favorite_count: 5
-            unit_sold: 50
-            listed_status: false
-            thumbnail_url: "http://google.com/asdwnid.asiqwnea"
-            rating_avg: 4.5
-            min_price: 5000
-            max_price: 29900
-            shop:
-              name: "matahari"
-            category:
-              name: "baju pria"
-              parent_category:
-                name: "baju"
-                parent_category:
-                  name: "fashion"
-            product_detail:
-              - id: "8b9e5380-6906-43d6-bc76-a8c4a1943bc0"
-                price: 5000
-                stock: 1000
-                weight:
-                variant:
-                  - name: "size"
-                    type: "L"
-                  - name: "color"
-                    type: "merah"
-            promotion:
-              discount_percentage: 50
-              discount_fix_price: 1000
-              min_product_price: 1000
-              max_discount_price: 2000
-              quota: 5
-              max_quantity: 4
-              active_date: "2025-12-23T05:00:52.731695Z"
-              expired_date: "2025-12-23T05:00:52.731695Z"
-            voucher:
-              code: "MUR123"
-              quota: 5
-              actived_date: "2025-12-23T05:00:52.731695Z"
-              expired_date: "2025-12-23T05:00:52.731695Z"
-              discount_percentage: 50
-              discount_fix_price: 1000
-              min_product_price: 1000
-              max_discount_price: 2000
+            products_info:
+              id: "6f16e578-fd85-4aa3-a321-9195ee38e86c"
+              sku: "UGG-BB-PUR-06"
+              title: "baju zara"
+              description: "lorem ipsum bla bla bla"
+              view_count: 2
+              favorite_count: 5
+              unit_sold: 190
+              listed_status: true
+              thumbnail_url: "yahoo.com"
+              rating_avg: 4
+              min_price: 15000
+              max_price: 25000
+              category_name: "laptop"
+              category_url: "https://cf.shopee.co.id/file/c139370836a9daa649da70876a326b58"
+            promotions_info:
+              promotion_name: '1212'
+              promotion_discount_percentage: 15
+              promotion_discount_fix_price:
+              promotion_min_product_price: 10000
+              promotion_max_discount_price: 20000
+              promotion_quota: 100
+              promotion_max_quantity: 5
+              promotion_active_date: '2022-12-23T07:15:23.487612Z'
+              promotion_expiry_date:
+            products_detail:
+            - id: "208a47a9-4890-45db-9243-8dd4144a3896"
+              normal_price: 15000
+              stock: 25
+              weight: 100
+              size: 20
+              hazardous: true
+              condition: "new"
+              bulk_price: false
+              product_url: "google.com"
+              variant:
+                ukuran: "xl"
+                warna: "hitam"
+            - id: "450ba9c5-eafc-409f-99d3-99f931c9fbf2"
+              normal_price: 29000
+              stock: 19
+              weight: 20
+              size: 19
+              hazardous: true
+              condition: "used"
+              bulk_price: true
+              product_url: "yahoo.com"
+              variant:
+                warna: "hitam"
 
     CreateProductReviewRequest:
       title: CreateProductReviewRequest
@@ -2816,6 +2956,169 @@ components:
           type: number
           example: 5
 
+    GetSellerOrderResponse:
+      title: GetSellerOrderResponse
+      type: object
+      description: Get Seller Order response data model.
+      properties:
+        message:
+          type: string
+          example: "success"
+        data:
+          type: object
+          properties:
+            limit:
+              type: number
+            page:
+              type: number
+            total_rows:
+              type: number
+            total_pages:
+              type: number
+            rows:
+              type: array
+              items:
+                type: object
+                properties:
+                  order_id:
+                    type: string
+                  order_status:
+                    type: number
+                  total_price:
+                    type: number
+                  delivery_fee:
+                    type: number
+                  resi_no:
+                    type: string
+                  shop_id:
+                    type: string
+                  shop_name:
+                    type: string
+                  voucher_code:
+                    type: string
+                  created_at:
+                    type: string
+                  detail:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        product_detail_id:
+                          type: string
+                        product_id:
+                          type: string
+                        product_title:
+                          type: string
+                        product_detail_url:
+                          type: string
+                        order_quantity:
+                          type: number
+                        order_item_price:
+                          type: number
+                        order_total_price:
+                          type: number
+          example:
+            limit: 10
+            page: 1
+            total_rows: 2
+            total_pages: 1
+            rows:
+            - order_id: "466844d8-e93b-4835-81d4-a75192e74958"
+              order_status: 1
+              total_price: 250000
+              delivery_fee: 30000
+              resi_no: '1'
+              shop_id: "2829d48b-b1db-4445-937c-a5c90cc1c633"
+              shop_name: "test_shop"
+              voucher_code: "voucher_shop_1"
+              created_at: '2022-12-27T05:24:10.434065Z'
+              detail:
+              - product_detail_id: "450ba9c5-eafc-409f99d3-99f931c9fbf2"
+                product_id: "6f16e578-fd85-4aa3-a321-9195ee38e86c"
+                product_title: "baju zara"
+                product_detail_url: "yahoo.com"
+                order_quantity: 4
+                order_item_price: 2000
+                order_total_price: 8000
+
+    GetOrderDetailResponse:
+      title: GetOrderDetailResponse
+      type: object
+      description: Get Order detail response data model.
+      properties:
+        message:
+          type: string
+          example: "success"
+        data:
+          type: object
+          properties:
+            order_id:
+              type: string
+            order_status:
+              type: number
+            total_price:
+              type: number
+            delivery_fee:
+              type: number
+            resi_no:
+              type: string
+            shop_id:
+              type: string
+            shop_name:
+              type: string
+            voucher_code:
+              type: string
+            created_at:
+              type: string
+            detail:
+              type: array
+              items:
+                type: object
+                properties:
+                  product_detail_id:
+                    type: string
+                  product_id:
+                    type: string
+                  product_title:
+                    type: string
+                  product_detail_url:
+                    type: string
+                  order_quantity:
+                    type: number
+                  order_item_price:
+                    type: number
+                  order_total_price:
+                    type: number
+          example:
+            order_id: "466844d8-e93b-4835-81d4-a75192e74958"
+            order_status: 1
+            total_price: 250000
+            delivery_fee: 30000
+            resi_no: '1'
+            shop_id: "2829d48b-b1db-4445-937c-a5c90cc1c633"
+            shop_name: "test_shop"
+            voucher_code: "voucher_shop_1"
+            created_at: '2022-12-27T05:24:10.434065Z'
+            detail:
+            - product_detail_id: "450ba9c5-eafc-409f99d3-99f931c9fbf2"
+              product_id: "6f16e578-fd85-4aa3-a321-9195ee38e86c"
+              product_title: "baju zara"
+              product_detail_url: "yahoo.com"
+              order_quantity: 4
+              order_item_price: 2000
+              order_total_price: 8000
+      
+    ChangeOrderStatusRequest:
+      title: ChangeOrderStatusRequest
+      type: object
+      description: Change Order Status Request data model.
+      properties:
+        order_id:
+          type: string
+          example: "466844d8-e93b-4835-81d4-a75192e74958"
+        order_status_id:
+          type: number
+          example: 2
 
     DefaultSuccess:
       title: DefaultSuccess
