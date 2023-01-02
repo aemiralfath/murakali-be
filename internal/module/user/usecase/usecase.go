@@ -440,7 +440,9 @@ func (u *userUC) GetSealabsPay(ctx context.Context, userid string) ([]*model.Sea
 func (u *userUC) AddSealabsPay(ctx context.Context, request body.AddSealabsPayRequest, userid string) error {
 	cardNumber, err := u.userRepo.CheckDefaultSealabsPay(ctx, userid)
 	if err != nil {
-		return err
+		if err == sql.ErrNoRows {
+			return httperror.New(http.StatusUnauthorized, response.UnauthorizedMessage)
+		}
 	}
 
 	err = u.txRepo.WithTransaction(func(tx postgre.Transaction) error {
@@ -448,7 +450,7 @@ func (u *userUC) AddSealabsPay(ctx context.Context, request body.AddSealabsPayRe
 			return err
 		}
 
-		err = u.userRepo.AddSealabsPay(ctx, tx, request)
+		err = u.userRepo.AddSealabsPay(ctx, tx, request, userid)
 		if err != nil {
 			return err
 		}
