@@ -11,7 +11,9 @@ linters-settings:
   golint:
     min-confidence: 0
   gocyclo:
-    min-complexity: 20
+    min-complexity: 30
+  nestif:
+    min-complexity: 7
   maligned:
     suggest-new: true
   goconst:
@@ -35,8 +37,8 @@ linters-settings:
       - ifElseChain
       - octalLiteral
   funlen:
-    lines: 100
-    statements: 50
+    lines: 150
+    statements: 75
 
 linters: # don't use --enable-all
   disable-all: true
@@ -76,6 +78,7 @@ run:
   skip-dirs:
     - vendor/
     - fakers/
+    - sql/
   skip-dirs-use-default: true
   modules-download-mode: vendor
   skip-files:
