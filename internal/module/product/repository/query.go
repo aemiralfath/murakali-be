@@ -54,7 +54,7 @@ const (
 
 
 
-	GetSearchProductsQuery  = `
+	GetProductsQuery  = `
 	SELECT "p"."title" as "title", "p"."unit_sold" as "unit_sold", "p"."rating_avg" as "rating_avg", "p"."thumbnail_url" as "thumbnail_url",
 		"p"."min_price" as "min_price", "p"."max_price" as "max_price", "promo"."discount_percentage" as "promo_discount_percentage",  "promo"."discount_fix_price" as "promo_discount_fix_price",
 		"promo"."min_product_price" as "promo_min_product_price",  "promo"."max_discount_price" as "promo_max_discount_price",
@@ -70,10 +70,20 @@ const (
 		WHERE now() BETWEEN "voucher"."actived_date" AND "voucher"."expired_date"
 	) as "v" ON "v"."shop_id" = "s"."id"
 	INNER JOIN "category" as "c" ON "c"."id" = "p"."category_id"
-	WHERE "p".title ILIKE $1 AND  "c".name ILIKE $2 AND "p"."deleted_at" IS NULL
-	ORDER BY %s LIMIT $3 OFFSET $4;
+	WHERE "p".title ILIKE $1 
+	AND  "c".name ILIKE $2
+	AND "s".name  ILIKE $3
+	 AND "p"."deleted_at" IS NULL
+	ORDER BY %s LIMIT $4 OFFSET $5;
 	`
 
 
-	GetTotalSearchProductQuery         = `SELECT count(id) FROM "product" WHERE title ILIKE $1 AND "deleted_at" IS NULL `
+	GetAllTotalProductQuery         = `
+	SELECT count("p"."id") FROM "product" as "p" 
+	INNER JOIN "category" as "c" ON "c"."id" = "p"."category_id" 
+	INNER JOIN "shop" as "s" ON "s"."id" = "p"."shop_id"
+	WHERE "p".title ILIKE $1 
+	AND  "c".name ILIKE $2 
+	AND "s".name  ILIKE $3
+	 AND "p"."deleted_at" IS NULL `
 )

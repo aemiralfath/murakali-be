@@ -21,7 +21,7 @@ type Repository interface {
 	GetPromotionInfo(ctx context.Context, productID string) (*body.PromotionInfo, error)
 
 
-	GetSearchProducts(ctx context.Context, pgn *pagination.Pagination, query *body.GetSearchProductQueryRequest) ([]*body.Products,
+	GetProducts(ctx context.Context, pgn *pagination.Pagination, query *body.GetProductQueryRequest) ([]*body.Products,
 	[]*model.Promotion, []*model.Voucher, error) 
-	GetTotalSearchProduct(ctx context.Context, query *body.GetSearchProductQueryRequest) (int64, error) 
+	GetAllTotalProduct(ctx context.Context, query *body.GetProductQueryRequest) (int64, error) 
 }

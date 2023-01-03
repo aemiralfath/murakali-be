@@ -12,5 +12,5 @@ type Handlers interface {
 	GetProductDetail(c *gin.Context)
 
 
-	GetSearchProducts(c *gin.Context) 
+	GetProducts(c *gin.Context) 
 }
