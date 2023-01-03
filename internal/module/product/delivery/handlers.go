@@ -211,13 +211,13 @@ func (h *productHandlers) ValidateQuerySearchProduct(c *gin.Context) (*paginatio
 	search := strings.TrimSpace(c.Query("search"))
 
 	sort := strings.TrimSpace(c.Query("sort"))
-	sortBy  := strings.TrimSpace(c.Query("sortBy"))
+	sortBy  := strings.TrimSpace(c.Query("sort_by"))
 
-	minPrice := strings.TrimSpace(c.Query("minPrice"))
-	maxPrice  := strings.TrimSpace(c.Query("maxPrice"))
+	minPrice := strings.TrimSpace(c.Query("min_price"))
+	maxPrice  := strings.TrimSpace(c.Query("max_price"))
 	category := strings.TrimSpace(c.Query("category"))
-	minRating := strings.TrimSpace(c.Query("minRating"))
-	maxRating := strings.TrimSpace(c.Query("maxRating"))
+	minRating := strings.TrimSpace(c.Query("min_rating"))
+	maxRating := strings.TrimSpace(c.Query("max_rating"))
 
 
 	var limitFilter,pageFilter int
@@ -232,6 +232,14 @@ func (h *productHandlers) ValidateQuerySearchProduct(c *gin.Context) (*paginatio
 		limitFilter = 30
 	}
 
+
+	if  sortBy == "" {
+		sortBy = "p.unit_sold"
+	}	
+	if  sort == "" {
+		sort = "desc"
+	}
+
 	pageFilter, err = strconv.Atoi(page)
 	if err != nil || pageFilter < 1 {
 		pageFilter = 1
@@ -239,7 +247,7 @@ func (h *productHandlers) ValidateQuerySearchProduct(c *gin.Context) (*paginatio
 	pgn := &pagination.Pagination{
 		Limit: limitFilter,
 		Page:  pageFilter,
-		Sort:  "unit_sold DESC",
+		Sort:  sortBy+" "+sort,
 	}
 
 
@@ -260,18 +268,13 @@ func (h *productHandlers) ValidateQuerySearchProduct(c *gin.Context) (*paginatio
 		maxRatingFilter= 5
 	}
 
-	
-	if  sort == "" {
-		sort = "desc"
-	}
 
 
 	searchFilter := fmt.Sprintf("%%%s%%", search)
 
 	query := &body.GetSearchProductQueryRequest{
 		Search  : searchFilter ,
-		Sort  : sort,
-		SortBy : sortBy,
+
 
 		Category: category,
 		MinPrice: minPriceFilter,
