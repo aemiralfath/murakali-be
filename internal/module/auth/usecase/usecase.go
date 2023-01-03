@@ -355,3 +355,25 @@ func (u *authUC) SendLinkOTPEmail(ctx context.Context, email string) error {
 
 	return nil
 }
+
+func (u *authUC) CheckUniqueUsername(ctx context.Context, username string) (bool, error) {
+	_, err := u.authRepo.GetUserByUsername(ctx, username)
+	if err != nil {
+		if err != sql.ErrNoRows {
+			return false, err
+		}
+		return true, nil
+	}
+	return false, nil
+}
+
+func (u *authUC) CheckUniquePhoneNo(ctx context.Context, phoneNo string) (bool, error) {
+	_, err := u.authRepo.GetUserByPhoneNo(ctx, phoneNo)
+	if err != nil {
+		if err != sql.ErrNoRows {
+			return false, err
+		}
+		return true, nil
+	}
+	return false, nil
+}

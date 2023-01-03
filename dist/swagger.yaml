@@ -2,7 +2,7 @@ openapi: 3.0.0
 servers:
   # Added by API Auto Mocking Plugin
   - description: SwaggerHub API Auto Mocking
-  - url: https://3d50-143-92-127-33.ap.ngrok.io
+  - url: https://c52b-103-86-128-2.ap.ngrok.io/
   - url: https://virtserver.swaggerhub.com/JULIUSBECKHAM/Murakali/1.0.0
 
 info:
@@ -193,6 +193,48 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/DefaultSuccess'
+
+  '/api/v1/auth/unique/username/{username}':
+    get:
+      summary: Check Unique Username 
+      description: >-
+        Check Unique Username
+      tags:
+        - Auth
+      parameters:
+        - in: path
+          name: username
+          schema:
+            type: string
+          required: true
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CheckUniqueTrueSuccess'
+
+  '/api/v1/auth/unique/phone-no/{phone_no}':
+    get:
+      summary: Check Unique Phone Number 
+      description: >-
+        Check Unique Phone Number
+      tags:
+        - Auth
+      parameters:
+        - in: path
+          name: phone_no
+          schema:
+            type: string
+          required: true
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CheckUniqueTrueSuccess'
 
   '/api/v1/location/province':
     get:
@@ -3119,6 +3161,34 @@ components:
         order_status_id:
           type: number
           example: 2
+
+    CheckUniqueTrueSuccess:
+      title: CheckUniqueTrueSuccess
+      type: object
+      description: Check Unique True Success.
+      properties:
+        message:
+          type: string
+          example: success
+          description: Success message from server.
+        data:
+          type: boolean
+          example: true
+          description: the data is unique
+
+    CheckUniqueFalseSuccess:
+      title: CheckUniqueFalseSuccess
+      type: object
+      description: Check Unique False Success.
+      properties:
+        message:
+          type: string
+          example: success
+          description: Success message from server.
+        data:
+          type: boolean
+          example: false
+          description: the data is not unique
 
     DefaultSuccess:
       title: DefaultSuccess
