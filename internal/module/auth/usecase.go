@@ -15,4 +15,6 @@ type UseCase interface {
 	RefreshToken(ctx context.Context, id string) (*model.AccessToken, error)
 	ResetPasswordEmail(ctx context.Context, body body2.ResetPasswordEmailRequest) (*model.User, error)
 	ResetPasswordUser(ctx context.Context, email string, body *body2.ResetPasswordUserRequest) (*model.User, error)
+	CheckUniqueUsername(ctx context.Context, username string) (bool, error)
+	CheckUniquePhoneNo(ctx context.Context, phoneNo string) (bool, error)
 }

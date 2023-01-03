@@ -31,7 +31,7 @@ type ProductInfo struct {
 type PromotionInfo struct {
 	PromotionName               string     `json:"promotion_name"`
 	PromotionDiscountPercentage *float64   `json:"promotion_discount_percentage"`
-	PromotionDiscountFixPrice   *int       `json:"promotion_discount_fix_price"`
+	PromotionDiscountFixPrice   *float64   `json:"promotion_discount_fix_price"`
 	PromotionMinProductPrice    *float64   `json:"promotion_min_product_price"`
 	PromotionMaxDiscountPrice   *float64   `json:"promotion_max_discount_price"`
 	PromotionQuota              *int       `json:"promotion_quota"`
@@ -44,9 +44,9 @@ type ProductDetail struct {
 	ProductDetailID string            `json:"id"`
 	NormalPrice     *float64          `json:"normal_price"`
 	DiscountPrice   *float64          `json:"discount_price"`
-	Stock           *int              `json:"stock"`
-	Weight          *int              `json:"weight"`
-	Size            *int              `json:"size"`
+	Stock           *float64          `json:"stock"`
+	Weight          *float64          `json:"weight"`
+	Size            *float64          `json:"size"`
 	Hazardous       bool              `json:"hazardous"`
 	Condition       string            `json:"condition"`
 	BulkPrice       bool              `json:"bulk_price"`
