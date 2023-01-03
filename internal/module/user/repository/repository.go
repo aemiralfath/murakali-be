@@ -124,9 +124,24 @@ func (r *userRepo) GetDefaultShopAddress(ctx context.Context, userID string) (*m
 	return &address, nil
 }
 
-func (r *userRepo) GetTotalAddress(ctx context.Context, userID, name string, isDefault, isShopDefault bool) (int64, error) {
+func (r *userRepo) GetTotalAddress(ctx context.Context, userID, name string) (int64, error) {
 	var total int64
 	if err := r.PSQL.QueryRowContext(ctx, GetTotalAddressQuery, userID, fmt.Sprintf("%%%s%%", name)).Scan(&total); err != nil {
+		return 0, err
+	}
+
+	return total, nil
+}
+
+func (r *userRepo) GetTotalAddressDefault(ctx context.Context, userID, name string, isDefault, isShopDefault bool) (int64, error) {
+	var total int64
+	if err := r.PSQL.QueryRowContext(
+		ctx,
+		GetTotalAddressDefaultQuery,
+		userID,
+		fmt.Sprintf("%%%s%%", name),
+		isDefault,
+		isShopDefault).Scan(&total); err != nil {
 		return 0, err
 	}
 
@@ -196,7 +211,7 @@ func (r *userRepo) GetAddresses(ctx context.Context, userID, name string, isDefa
 	pgn *pagination.Pagination) ([]*model.Address, error) {
 	addresses := make([]*model.Address, 0)
 	res, err := r.PSQL.QueryContext(
-		ctx, GetAddressesQuery,
+		ctx, GetAddressesDefaultQuery,
 		userID,
 		fmt.Sprintf("%%%s%%", name),
 		isDefault,

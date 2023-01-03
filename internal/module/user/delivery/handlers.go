@@ -249,14 +249,14 @@ func (h *userHandlers) ValidateQueryAddress(c *gin.Context, pgn *pagination.Pagi
 	var isShopDefaultFilter bool
 
 	switch isDefault {
-	case "true":
+	case constant.AddressDefault:
 		isDefaultFilter = true
 	default:
 		isDefaultFilter = false
 	}
 
 	switch isShopDefault {
-	case "true":
+	case constant.AddressDefault:
 		isShopDefaultFilter = true
 	default:
 		isShopDefaultFilter = false

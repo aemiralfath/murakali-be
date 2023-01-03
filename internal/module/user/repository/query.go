@@ -1,8 +1,9 @@
 package repository
 
 const (
-	GetTotalAddressQuery   = `SELECT count(id) FROM "address" WHERE "user_id" = $1 AND "name" ILIKE $2 AND "deleted_at" IS NULL`
-	GetDefaultAddressQuery = `
+	GetTotalAddressQuery        = `SELECT count(id) FROM "address" WHERE "user_id" = $1 AND "name" ILIKE $2 AND "deleted_at" IS NULL`
+	GetTotalAddressDefaultQuery = `SELECT count(id) FROM "address" WHERE "user_id" = $1 AND "name" ILIKE $2 AND "deleted_at" IS NULL AND "is_default" = $3 AND "is_shop_default" = $4`
+	GetDefaultAddressQuery      = `
 		SELECT "id", "user_id", "name", "province_id", "city_id", "province", "city", "district", "sub_district",  
 			"address_detail", "zip_code", "is_default", "is_shop_default", "created_at", "updated_at" 
 		FROM "address" WHERE "user_id" = $1 AND "is_default" = $2 AND "deleted_at" IS NULL
@@ -20,7 +21,7 @@ const (
     	(user_id, name, province_id, city_id, province, city, district, sub_district, address_detail, zip_code, is_default, is_shop_default)
     	VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)`
 
-	GetAddressesQuery = `SELECT 
+	GetAddressesDefaultQuery = `SELECT 
     	"id", "user_id", "name", "province_id", "city_id", "province", "city", "district", "sub_district",  
     	"address_detail", "zip_code", "is_default", "is_shop_default", "created_at", "updated_at" 
 	FROM "address" WHERE "user_id" = $1 AND "name" ILIKE $2 AND "deleted_at" IS NULL AND "is_default" = $3 AND "is_shop_default" = $4 ORDER BY $5 LIMIT $6 OFFSET $7`
