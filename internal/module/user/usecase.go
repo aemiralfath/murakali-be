@@ -29,5 +29,6 @@ type UseCase interface {
 	VerifyOTP(ctx context.Context, requestBody body.VerifyOTPRequest, userID string) (string, error)
 	ChangePassword(ctx context.Context, userID string, newPassword string) error
 	CreateTransaction(ctx context.Context, userID string, requestBody body.CreateTransactionRequest) error
+	CreateSLPPayment(ctx context.Context, string2 string) (string, error)
 	GetOrder(ctx context.Context, userID string, pgn *pagination.Pagination) (*pagination.Pagination, error)
 }

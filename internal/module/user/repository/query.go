@@ -77,19 +77,20 @@ const (
 
 	GetWalletUserQuery             = `SELECT "id", "user_id", "balance", "attempt_count", "attempt_at", "unlocked_at", "active_date" FROM "wallet" WHERE "user_id" = $1 AND "id" = $2 AND "deleted_at" IS NULL;`
 	GetSealabsPayUserQuery         = `SELECT "card_number", "user_id", "name", "is_default", "active_date" FROM "sealabs_pay" WHERE "user_id" = $1 AND "card_number" = $2 AND "deleted_at" IS NULL;`
-	GetVoucherMarketplacebyIDQuery = `SELECT "id", "shop_id", "code", "quota", "actived_date", "expired_date", "discount_percentage", "discount_fix_price", "min_product_price", "max_discount_price" FROM "voucher"
+	GetVoucherMarketplaceByIDQuery = `SELECT "id", "shop_id", "code", "quota", "actived_date", "expired_date", "discount_percentage", "discount_fix_price", "min_product_price", "max_discount_price" FROM "voucher"
 		WHERE "id" = $1 AND "shop_id" is NULL AND "deleted_at" IS NULL AND now() BETWEEN "actived_date" AND "expired_date";`
-	GetVoucherShopbyIDQuery = `SELECT "id", "shop_id", "code", "quota", "actived_date", "expired_date", "discount_percentage", "discount_fix_price", "min_product_price", "max_discount_price" FROM "voucher"
+	GetVoucherShopByIDQuery = `SELECT "id", "shop_id", "code", "quota", "actived_date", "expired_date", "discount_percentage", "discount_fix_price", "min_product_price", "max_discount_price" FROM "voucher"
 		WHERE "id" = $1 AND "shop_id" = $2 AND "deleted_at" IS NULL AND now() BETWEEN "actived_date" AND "expired_date";`
-	GetCourierShopbyIDQuery = `SELECT "c"."id", "c"."name", "c"."code", "c"."service", "c"."description" FROM "courier" as "c"
+	GetCourierShopByIDQuery = `SELECT "c"."id", "c"."name", "c"."code", "c"."service", "c"."description" FROM "courier" as "c"
 		INNER JOIN "shop_courier" as sc ON "sc"."courier_id" = "c"."id"
 		WHERE "c"."id" = $1 AND "sc"."shop_id" = $2 AND "c"."deleted_at" IS NULL;`
 	GetProductDetailByIDQuery     = `SELECT "id", "price", "stock", "weight", "size", "hazardous", "condition", "bulk_price" FROM "product_detail" WHERE "id" = $1 AND "deleted_at" IS NULL;`
-	GetShopbyIDQuery              = `SELECT "id", "name" FROM "shop" WHERE "id" = $1 AND "deleted_at" IS NULL;`
-	CreateTransactionQuery        = `INSERT INTO "transaction" (voucher_marketplace_id, wallet_id, card_number, total_price) VALUES ($1, $2, $3, $4) RETURNING "id";`
+	GetShopByIDQuery              = `SELECT "id", "name" FROM "shop" WHERE "id" = $1 AND "deleted_at" IS NULL;`
+	CreateTransactionQuery        = `INSERT INTO "transaction" (voucher_marketplace_id, wallet_id, card_number, total_price, expired_at) VALUES ($1, $2, $3, $4, $5) RETURNING "id";`
 	CreateOrderQuery              = `INSERT INTO "order" (transaction_id, shop_id, user_id, courier_id, voucher_shop_id, order_status_id, total_price, delivery_fee) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING "id";`
 	CreateOrderItemQuery          = `INSERT INTO "order_item" (order_id, product_detail_id, quantity, item_price, total_price) VALUES ($1, $2, $3, $4, $5) RETURNING "id";`
 	GetCartItemUserQuery          = `SELECT "id", "user_id", "product_detail_id", "quantity" FROM "cart_item" WHERE "user_id" = $1 AND "product_detail_id" = $2 AND "deleted_at" IS NULL;`
 	UpdateProductDetailStockQuery = `UPDATE "product_detail" SET "stock" = $1, "updated_at" = now() WHERE "id" = $2;`
 	DeleteCartItemByIDQuery       = `DELETE FROM "cart_item" WHERE "id" = $1`
+	GetTransactionByIDQuery       = `SELECT "id", "card_number", "total_price", "paid_at", "canceled_at", "expired_at" FROM "transaction" WHERE "id" = $1;`
 )

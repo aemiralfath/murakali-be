@@ -11,6 +11,7 @@ import (
 )
 
 type Repository interface {
+	GetTransactionByID(ctx context.Context, transactionID string) (*model.Transaction, error)
 	GetUserByID(ctx context.Context, id string) (*model.User, error)
 	GetTotalAddress(ctx context.Context, userID, name string) (int64, error)
 	GetTotalAddressDefault(ctx context.Context, userID, name string, isDefault, isShopDefault bool) (int64, error)
@@ -51,10 +52,10 @@ type Repository interface {
 	GetOrders(ctx context.Context, userID string, pgn *pagination.Pagination) ([]*model.Order, error)
 	GetWalletUser(ctx context.Context, userID, walletID string) (*model.Wallet, error)
 	GetSealabsPayUser(ctx context.Context, userID, CardNumber string) (*model.SealabsPay, error)
-	GetVoucherMarketplacebyID(ctx context.Context, voucherMarketplaceID string) (*model.Voucher, error)
-	GetShopbyID(ctx context.Context, shopID string) (*model.Shop, error)
-	GetVoucherShopbyID(ctx context.Context, VoucherShopID, shopID string) (*model.Voucher, error)
-	GetCourierShopbyID(ctx context.Context, CourierID, shopID string) (*model.Courier, error)
+	GetVoucherMarketplaceByID(ctx context.Context, voucherMarketplaceID string) (*model.Voucher, error)
+	GetShopByID(ctx context.Context, shopID string) (*model.Shop, error)
+	GetVoucherShopByID(ctx context.Context, VoucherShopID, shopID string) (*model.Voucher, error)
+	GetCourierShopByID(ctx context.Context, CourierID, shopID string) (*model.Courier, error)
 	GetProductDetailByID(ctx context.Context, productDetailID string) (*model.ProductDetail, error)
 	GetCartItemUser(ctx context.Context, userID, productDetailID string) (*model.CartItem, error)
 	CreateTransaction(ctx context.Context, tx postgre.Transaction, transactionData *model.Transaction) (*uuid.UUID, error)

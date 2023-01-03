@@ -14,7 +14,6 @@ const (
 	ForbiddenMessage           = "Forbidden"
 
 	AddressIsDefaultMessage        = "Address is default."
-	UserNotMatchMessage            = "User not match."
 	UserNotASellerMessage          = "User not a seller."
 	EmailAlreadyExistMessage       = "Email already exist."
 	EmailSamePreviousEmailMessage  = "This email same as your current email."
@@ -35,6 +34,9 @@ const (
 	ProductDetailNotExistMessage   = "Product Detail not exist."
 	PictureSizeTooBig              = "Picture size too big"
 	SelectOnlyOnePaymentMethod     = "Select only one payment method."
+	TransactionIDNotExist          = "Transaction not exist."
+	TransactionAlreadyExpired      = "Transaction already expired."
+	TransactionAlreadyFinished     = "Transaction already finished."
 	SelectShippingCourier          = "Select shipping Courier"
 	UnknownShop                    = "Unknown shop."
 	CartItemNotExist               = "Cart Item not exist."

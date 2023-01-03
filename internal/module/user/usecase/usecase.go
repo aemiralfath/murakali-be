@@ -2,8 +2,11 @@ package usecase
 
 import (
 	"context"
+	"crypto/hmac"
 	"crypto/sha256"
 	"database/sql"
+	"encoding/hex"
+	"encoding/json"
 	"fmt"
 	"math"
 	"murakali/config"
@@ -642,6 +645,76 @@ func (u *userUC) ChangePassword(ctx context.Context, userID, newPassword string)
 	return nil
 }
 
+func (u *userUC) CreateSLPPayment(ctx context.Context, transactionID string) (string, error) {
+	transaction, err := u.userRepo.GetTransactionByID(ctx, transactionID)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return "", httperror.New(http.StatusBadRequest, response.TransactionIDNotExist)
+		}
+
+		return "", err
+	}
+
+	if transaction.ExpiredAt.Time.Sub(time.Now()) < 0 {
+		return "", httperror.New(http.StatusBadRequest, response.TransactionAlreadyExpired)
+	}
+
+	if transaction.PaidAt.Valid || transaction.CanceledAt.Valid {
+		return "", httperror.New(http.StatusBadRequest, response.TransactionAlreadyFinished)
+	}
+
+	h := hmac.New(sha256.New, []byte(u.cfg.External.SlpAPIKey))
+	h.Write([]byte(fmt.Sprintf("%s:%d:%s", *transaction.CardNumber, int(transaction.TotalPrice), u.cfg.External.SlpMerchantCode)))
+	sign := hex.EncodeToString(h.Sum(nil))
+
+	redirectURL, err := u.GetRedirectURL(transaction, sign)
+	if err != nil {
+		return "", err
+	}
+
+	return redirectURL, nil
+}
+
+func (u *userUC) GetRedirectURL(transaction *model.Transaction, sign string) (string, error) {
+	var responseSLP body.SLPPaymentResponse
+
+	//url := fmt.Sprintf("%s/v1/transaction/pay", u.cfg.External.SlpURL)
+	url := "https://slp.air-sipp.com/api/v1/transaction/pay"
+	payload := fmt.Sprintf(
+		"card_number=%s&amount=%d&merchant_code=%s&redirect_url=%s&callback_url=%s&signature=%s",
+		*transaction.CardNumber, int(transaction.TotalPrice), u.cfg.External.SlpMerchantCode, "https://www.google.com", "https://www.google.com", sign)
+
+	req, err := http.NewRequest("POST", url, strings.NewReader(payload))
+	if err != nil {
+		return "", err
+	}
+
+	client := &http.Client{
+		CheckRedirect: func(req *http.Request, via []*http.Request) error {
+			return http.ErrUseLastResponse
+		},
+	}
+
+	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
+	res, err := client.Do(req)
+	if err != nil {
+		return "", err
+	}
+	defer res.Body.Close()
+
+	fmt.Println(res.Header)
+	if res.StatusCode != 303 {
+		readErr := json.NewDecoder(res.Body).Decode(&responseSLP)
+		if readErr != nil {
+			return "", err
+		}
+
+		return "", httperror.New(res.StatusCode, responseSLP.Message)
+	}
+
+	return res.Header.Get("Location"), nil
+}
+
 func (u *userUC) CreateTransaction(ctx context.Context, userID string, requestBody body.CreateTransactionRequest) error {
 	transactionData := &model.Transaction{}
 	orderResponses := make([]*body.OrderResponse, 0)
@@ -671,7 +744,7 @@ func (u *userUC) CreateTransaction(ctx context.Context, userID string, requestBo
 	}
 
 	if requestBody.VoucherMarketplaceID != "" {
-		voucherMarketplace, errVoucherMP := u.userRepo.GetVoucherMarketplacebyID(ctx, requestBody.VoucherMarketplaceID)
+		voucherMarketplace, errVoucherMP := u.userRepo.GetVoucherMarketplaceByID(ctx, requestBody.VoucherMarketplaceID)
 		if errVoucherMP != nil {
 			if errVoucherMP != sql.ErrNoRows {
 				return errVoucherMP
@@ -682,7 +755,7 @@ func (u *userUC) CreateTransaction(ctx context.Context, userID string, requestBo
 
 	for _, cart := range requestBody.CartItems {
 		orderData := &model.OrderModel{}
-		cartShop, err := u.userRepo.GetShopbyID(ctx, cart.ShopID)
+		cartShop, err := u.userRepo.GetShopByID(ctx, cart.ShopID)
 		if err != nil {
 			if err == sql.ErrNoRows {
 				return httperror.New(http.StatusBadRequest, response.UnknownShop)
@@ -692,7 +765,7 @@ func (u *userUC) CreateTransaction(ctx context.Context, userID string, requestBo
 		var voucherShop *model.Voucher
 		var voucherShopID *uuid.UUID
 		if cart.VoucherShopID != "" {
-			voucherShop, err = u.userRepo.GetVoucherShopbyID(ctx, cart.VoucherShopID, cartShop.ID.String())
+			voucherShop, err = u.userRepo.GetVoucherShopByID(ctx, cart.VoucherShopID, cartShop.ID.String())
 			if err != nil {
 				if err != sql.ErrNoRows {
 					return err
@@ -701,7 +774,7 @@ func (u *userUC) CreateTransaction(ctx context.Context, userID string, requestBo
 			voucherShopID = &voucherShop.ID
 		}
 
-		courierShop, err := u.userRepo.GetCourierShopbyID(ctx, cart.CourierID, cartShop.ID.String())
+		courierShop, err := u.userRepo.GetCourierShopByID(ctx, cart.CourierID, cartShop.ID.String())
 		if err != nil {
 			return httperror.New(http.StatusBadRequest, response.SelectShippingCourier)
 		}
@@ -747,11 +820,13 @@ func (u *userUC) CreateTransaction(ctx context.Context, userID string, requestBo
 		orderResponses = append(orderResponses, orderResponse)
 	}
 
+	transactionData.ExpiredAt.Valid = true
+	transactionData.ExpiredAt.Time = time.Now().Add(time.Hour * 24)
+
 	transactionResponse := &body.TransactionResponse{
 		TransactionData: transactionData,
 		OrderResponses:  orderResponses,
 	}
-
 	err := u.txRepo.WithTransaction(func(tx postgre.Transaction) error {
 		transactionID, errTrans := u.userRepo.CreateTransaction(ctx, tx, transactionResponse.TransactionData)
 		if errTrans != nil {

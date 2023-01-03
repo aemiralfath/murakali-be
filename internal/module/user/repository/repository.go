@@ -367,6 +367,16 @@ func (r *userRepo) GetOrders(ctx context.Context, userID string, pgn *pagination
 	return orders, nil
 }
 
+func (r *userRepo) GetTransactionByID(ctx context.Context, transactionID string) (*model.Transaction, error) {
+	var transaction model.Transaction
+	if err := r.PSQL.QueryRowContext(ctx, GetTransactionByIDQuery, transactionID).
+		Scan(&transaction.ID, &transaction.CardNumber, &transaction.TotalPrice, &transaction.PaidAt, &transaction.CanceledAt, &transaction.ExpiredAt); err != nil {
+		return nil, err
+	}
+
+	return &transaction, nil
+}
+
 func (r *userRepo) GetUserByID(ctx context.Context, id string) (*model.User, error) {
 	var userModel model.User
 	if err := r.PSQL.QueryRowContext(ctx, GetUserByIDQuery, id).
@@ -633,7 +643,7 @@ func (r *userRepo) GetWalletUser(ctx context.Context, userID, walletID string) (
 
 func (r *userRepo) GetSealabsPayUser(ctx context.Context, userID, cardNumber string) (*model.SealabsPay, error) {
 	var sealabsPayUser model.SealabsPay
-	if err := r.PSQL.QueryRowContext(ctx, GetWalletUserQuery, userID, cardNumber).Scan(
+	if err := r.PSQL.QueryRowContext(ctx, GetSealabsPayUserQuery, userID, cardNumber).Scan(
 		&sealabsPayUser.CardNumber,
 		&sealabsPayUser.UserID,
 		&sealabsPayUser.Name,
@@ -645,9 +655,9 @@ func (r *userRepo) GetSealabsPayUser(ctx context.Context, userID, cardNumber str
 	return &sealabsPayUser, nil
 }
 
-func (r *userRepo) GetVoucherMarketplacebyID(ctx context.Context, voucherMarketplaceID string) (*model.Voucher, error) {
+func (r *userRepo) GetVoucherMarketplaceByID(ctx context.Context, voucherMarketplaceID string) (*model.Voucher, error) {
 	var VoucherMarketplace model.Voucher
-	if err := r.PSQL.QueryRowContext(ctx, GetVoucherMarketplacebyIDQuery, voucherMarketplaceID).Scan(
+	if err := r.PSQL.QueryRowContext(ctx, GetVoucherMarketplaceByIDQuery, voucherMarketplaceID).Scan(
 		&VoucherMarketplace.ID,
 		&VoucherMarketplace.ShopID,
 		&VoucherMarketplace.Code,
@@ -664,9 +674,9 @@ func (r *userRepo) GetVoucherMarketplacebyID(ctx context.Context, voucherMarketp
 	return &VoucherMarketplace, nil
 }
 
-func (r *userRepo) GetShopbyID(ctx context.Context, shopID string) (*model.Shop, error) {
+func (r *userRepo) GetShopByID(ctx context.Context, shopID string) (*model.Shop, error) {
 	var shopCart model.Shop
-	if err := r.PSQL.QueryRowContext(ctx, GetShopbyIDQuery, shopID).Scan(
+	if err := r.PSQL.QueryRowContext(ctx, GetShopByIDQuery, shopID).Scan(
 		&shopCart.ID,
 		&shopCart.Name); err != nil {
 		return nil, err
@@ -675,9 +685,9 @@ func (r *userRepo) GetShopbyID(ctx context.Context, shopID string) (*model.Shop,
 	return &shopCart, nil
 }
 
-func (r *userRepo) GetVoucherShopbyID(ctx context.Context, voucherShopID, shopID string) (*model.Voucher, error) {
+func (r *userRepo) GetVoucherShopByID(ctx context.Context, voucherShopID, shopID string) (*model.Voucher, error) {
 	var VoucherShop model.Voucher
-	if err := r.PSQL.QueryRowContext(ctx, GetVoucherShopbyIDQuery, voucherShopID, shopID).Scan(
+	if err := r.PSQL.QueryRowContext(ctx, GetVoucherShopByIDQuery, voucherShopID, shopID).Scan(
 		&VoucherShop.ID,
 		&VoucherShop.ShopID,
 		&VoucherShop.Code,
@@ -694,9 +704,9 @@ func (r *userRepo) GetVoucherShopbyID(ctx context.Context, voucherShopID, shopID
 	return &VoucherShop, nil
 }
 
-func (r *userRepo) GetCourierShopbyID(ctx context.Context, courierID, shopID string) (*model.Courier, error) {
+func (r *userRepo) GetCourierShopByID(ctx context.Context, courierID, shopID string) (*model.Courier, error) {
 	var CourierShop model.Courier
-	if err := r.PSQL.QueryRowContext(ctx, GetCourierShopbyIDQuery, courierID, shopID).Scan(
+	if err := r.PSQL.QueryRowContext(ctx, GetCourierShopByIDQuery, courierID, shopID).Scan(
 		&CourierShop.ID,
 		&CourierShop.Name,
 		&CourierShop.Code,
@@ -732,7 +742,8 @@ func (r *userRepo) CreateTransaction(ctx context.Context, tx postgre.Transaction
 		transactionData.VoucherMarketplaceID,
 		transactionData.WalletID,
 		transactionData.CardNumber,
-		transactionData.TotalPrice).Scan(&transactionID); err != nil {
+		transactionData.TotalPrice,
+		transactionData.ExpiredAt).Scan(&transactionID); err != nil {
 		return nil, err
 	}
 
