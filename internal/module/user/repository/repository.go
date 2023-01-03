@@ -554,8 +554,8 @@ func (r *userRepo) SetDefaultSealabsPay(ctx context.Context, cardNumber, userid 
 	return nil
 }
 
-func (r *userRepo) AddSealabsPay(ctx context.Context, tx postgre.Transaction, request body.AddSealabsPayRequest) error {
-	if _, err := tx.ExecContext(ctx, CreateSealabsPayQuery, request.CardNumber, request.UserID,
+func (r *userRepo) AddSealabsPay(ctx context.Context, tx postgre.Transaction, request body.AddSealabsPayRequest, userid string) error {
+	if _, err := tx.ExecContext(ctx, CreateSealabsPayQuery, request.CardNumber, userid,
 		request.Name, request.IsDefault, request.ActiveDateTime); err != nil {
 		return err
 	}

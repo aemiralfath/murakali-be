@@ -12,4 +12,6 @@ type Handlers interface {
 	ResetPasswordEmail(c *gin.Context)
 	ResetPasswordUser(c *gin.Context)
 	ResetPasswordVerifyOTP(c *gin.Context)
+	CheckUniqueUsername(c *gin.Context)
+	CheckUniquePhoneNo(c *gin.Context)
 }
