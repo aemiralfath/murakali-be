@@ -70,8 +70,8 @@ const (
 		WHERE now() BETWEEN "voucher"."actived_date" AND "voucher"."expired_date"
 	) as "v" ON "v"."shop_id" = "s"."id"
 	INNER JOIN "category" as "c" ON "c"."id" = "p"."category_id"
-	WHERE "p".title ILIKE $1 AND "p"."deleted_at" IS NULL
-	ORDER BY %s LIMIT $2 OFFSET $3;
+	WHERE "p".title ILIKE $1 AND  "c".name ILIKE $2 AND "p"."deleted_at" IS NULL
+	ORDER BY %s LIMIT $3 OFFSET $4;
 	`
 
 

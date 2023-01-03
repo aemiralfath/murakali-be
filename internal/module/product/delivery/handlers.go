@@ -222,14 +222,13 @@ func (h *productHandlers) ValidateQuerySearchProduct(c *gin.Context) (*paginatio
 
 	var limitFilter,pageFilter int
 
-	
 
 	var minPriceFilter, maxPriceFilter, minRatingFilter, maxRatingFilter float64
 
 
 	limitFilter, err := strconv.Atoi(limit)
 	if err != nil || limitFilter < 1 {
-		limitFilter = 30
+		limitFilter = 12
 	}
 
 
@@ -271,12 +270,13 @@ func (h *productHandlers) ValidateQuerySearchProduct(c *gin.Context) (*paginatio
 
 
 	searchFilter := fmt.Sprintf("%%%s%%", search)
+	categoryFilter := fmt.Sprintf("%%%s%%", category)
 
 	query := &body.GetSearchProductQueryRequest{
 		Search  : searchFilter ,
 
 
-		Category: category,
+		Category: categoryFilter,
 		MinPrice: minPriceFilter,
 		MaxPrice: maxPriceFilter,
 		MinRating : minRatingFilter,

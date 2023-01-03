@@ -346,6 +346,7 @@ func (r *productRepo) GetSearchProducts(ctx context.Context, pgn *pagination.Pag
 	res, err := r.PSQL.QueryContext(
 		ctx, q,
 		query.Search,
+		query.Category,
 		pgn.GetLimit(),
 		pgn.GetOffset())
 
