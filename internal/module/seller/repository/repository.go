@@ -96,7 +96,6 @@ func (r *sellerRepo) GetOrderByOrderID(ctx context.Context, orderID string) (*mo
 }
 
 func (r *sellerRepo) GetOrders(ctx context.Context, shopID, orderStatusID string, pgn *pagination.Pagination) ([]*model.Order, error) {
-
 	orders := make([]*model.Order, 0)
 
 	res, err := r.PSQL.QueryContext(
