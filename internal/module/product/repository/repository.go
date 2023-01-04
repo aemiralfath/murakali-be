@@ -1,6 +1,7 @@
 package repository
 
 import (
+	"fmt"
 	"context"
 	"database/sql"
 	"murakali/internal/model"
@@ -339,8 +340,9 @@ func (r *productRepo) GetSearchProducts(ctx context.Context, pgn *pagination.Pag
 	promotions := make([]*model.Promotion, 0)
 	vouchers := make([]*model.Voucher, 0)
 
+	q := fmt.Sprintf(GetSearchProductsQuery, pgn.GetSort())
 	res, err := r.PSQL.QueryContext(
-		ctx, GetSearchProductsQuery,
+		ctx, q,
 		query.Search,
 		pgn.GetLimit(),
 		pgn.GetOffset())
