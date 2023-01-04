@@ -735,7 +735,7 @@ func (u *userUC) UpdateTransaction(ctx context.Context, transactionID string, re
 		return err
 	}
 
-	if transaction.PaidAt.Valid {
+	if transaction.PaidAt.Valid || transaction.CanceledAt.Valid {
 		return httperror.New(http.StatusBadRequest, response.TransactionAlreadyFinished)
 	}
 
@@ -866,7 +866,7 @@ func (u *userUC) CreateTransaction(ctx context.Context, userID string, requestBo
 		orderData.UserID = userModel.ID
 		orderData.VoucherShopID = voucherShopID
 		orderData.CourierID = courierShop.ID
-		orderData.DeliveryFee = 15000 // TODO use rajaongkir
+		orderData.DeliveryFee = cart.CourierFee
 		orderData.OrderStatusID = 1
 
 		orderResponse.OrderData = orderData

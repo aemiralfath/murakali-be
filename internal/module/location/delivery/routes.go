@@ -10,4 +10,5 @@ func MapAuthRoutes(locationGroup *gin.RouterGroup, h location.Handlers) {
 	locationGroup.GET("/province/city", h.GetCity)
 	locationGroup.GET("/province/city/subdistrict", h.GetSubDistrict)
 	locationGroup.GET("/province/city/subdistrict/urban", h.GetUrban)
+	locationGroup.POST("/cost", h.GetShippingCost)
 }

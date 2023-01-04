@@ -342,7 +342,7 @@ paths:
       tags:
         - User
       security:
-        - BEARER: []
+        - BEARER: [ ]
 
       responses:
         "200":
@@ -359,7 +359,7 @@ paths:
       tags:
         - User
       security:
-        - BEARER: []
+        - BEARER: [ ]
 
       requestBody:
         content:
@@ -382,7 +382,7 @@ paths:
       tags:
         - User
       security:
-        - BEARER: []
+        - BEARER: [ ]
 
       requestBody:
         content:
@@ -403,7 +403,7 @@ paths:
       tags:
         - User
       security:
-        - BEARER: []
+        - BEARER: [ ]
 
       requestBody:
         content:
@@ -425,7 +425,7 @@ paths:
       tags:
         - User
       security:
-        - BEARER: []
+        - BEARER: [ ]
 
       requestBody:
         content:
@@ -448,18 +448,18 @@ paths:
       tags:
         - User
       security:
-        - BEARER: []
+        - BEARER: [ ]
       parameters:
         - in: query
           name: is_default
           schema:
             type: string
-            enum: ["true", "false"]
+            enum: [ "true", "false" ]
         - in: query
           name: shop_default
           schema:
             type: string
-            enum: ["true", "false"]
+            enum: [ "true", "false" ]
       responses:
         "200":
           description: OK
@@ -475,7 +475,7 @@ paths:
       tags:
         - User
       security:
-        - BEARER: []
+        - BEARER: [ ]
 
       requestBody:
         content:
@@ -497,7 +497,7 @@ paths:
       tags:
         - User
       security:
-        - BEARER: []
+        - BEARER: [ ]
       parameters:
         - in: path
           name: address_id
@@ -518,7 +518,7 @@ paths:
       tags:
         - User
       security:
-        - BEARER: []
+        - BEARER: [ ]
       parameters:
         - in: path
           name: address_id
@@ -544,7 +544,7 @@ paths:
       tags:
         - User
       security:
-        - BEARER: []
+        - BEARER: [ ]
       parameters:
         - in: path
           name: address_id
@@ -567,7 +567,7 @@ paths:
       tags:
         - User
       security:
-        - BEARER: []
+        - BEARER: [ ]
       requestBody:
         content:
           application/json:
@@ -589,7 +589,7 @@ paths:
       tags:
         - User
       security:
-        - BEARER: []
+        - BEARER: [ ]
 
       responses:
         "200":
@@ -605,7 +605,7 @@ paths:
       tags:
         - User
       security:
-        - BEARER: []
+        - BEARER: [ ]
 
       requestBody:
         content:
@@ -628,7 +628,7 @@ paths:
       tags:
         - User
       security:
-        - BEARER: []
+        - BEARER: [ ]
       parameters:
         - in: path
           name: card_number
@@ -649,7 +649,7 @@ paths:
       tags:
         - User
       security:
-        - BEARER: []
+        - BEARER: [ ]
       parameters:
         - in: path
           name: card_number
@@ -672,7 +672,7 @@ paths:
       tags:
         - User
       security:
-        - BEARER: []
+        - BEARER: [ ]
 
       requestBody:
         content:
@@ -693,7 +693,7 @@ paths:
       tags:
         - User
       security:
-        - BEARER: []
+        - BEARER: [ ]
 
       responses:
         "200":
@@ -709,7 +709,7 @@ paths:
       tags:
         - User
       security:
-        - BEARER: []
+        - BEARER: [ ]
 
       requestBody:
         content:
@@ -732,7 +732,7 @@ paths:
       tags:
         - User
       security:
-        - BEARER: []
+        - BEARER: [ ]
 
       requestBody:
         content:
@@ -753,7 +753,7 @@ paths:
       tags:
         - User
       security:
-        - BEARER: []
+        - BEARER: [ ]
 
       requestBody:
         content:
@@ -776,7 +776,7 @@ paths:
       tags:
         - User
       security:
-        - BEARER: []
+        - BEARER: [ ]
       responses:
         "200":
           description: OK
@@ -793,7 +793,7 @@ paths:
       tags:
         - User
       security:
-        - BEARER: []
+        - BEARER: [ ]
       requestBody:
         content:
           application/json:
@@ -828,7 +828,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/CreateSlpPaymentResponse'
-                
+
   '/api/v1/product/':
     get:
       summary: Get Product {WIP}
@@ -874,14 +874,14 @@ paths:
           name: sort_by
           schema:
             type: string
-            enum: [min_price, unit_sold, created_at, view_count, recommended]
+            enum: [ min_price, unit_sold, created_at, view_count, recommended ]
             description: >-
               query for sort by product
         - in: query
           name: sort
           schema:
             type: string
-            enum: [asc, desc]
+            enum: [ asc, desc ]
             description: >-
               query for sort order product descrending or ascending
         - in: query
@@ -967,14 +967,14 @@ paths:
           name: sort_by
           schema:
             type: string
-            enum: [min_price, unit_sold, created_at, view_count, recommended]
+            enum: [ min_price, unit_sold, created_at, view_count, recommended ]
             description: >-
               query for sort by product
         - in: query
           name: sort
           schema:
             type: string
-            enum: [asc, desc]
+            enum: [ asc, desc ]
             description: >-
               query for sort order product descrending or ascending
         - in: query
@@ -1109,7 +1109,7 @@ paths:
         - Product
 
       security:
-        - BEARER: []
+        - BEARER: [ ]
       parameters:
         - in: path
           name: product_id
@@ -1262,7 +1262,7 @@ paths:
       tags:
         - Cart
       security:
-        - BEARER: []
+        - BEARER: [ ]
       parameters:
         - in: query
           name: limit
@@ -1286,7 +1286,7 @@ paths:
       tags:
         - Cart
       security:
-        - BEARER: []
+        - BEARER: [ ]
       responses:
         "200":
           description: OK
@@ -1301,7 +1301,7 @@ paths:
       tags:
         - Cart
       security:
-        - BEARER: []
+        - BEARER: [ ]
 
       requestBody:
         content:
@@ -1322,7 +1322,7 @@ paths:
       tags:
         - Cart
       security:
-        - BEARER: []
+        - BEARER: [ ]
 
       requestBody:
         content:
@@ -1345,7 +1345,7 @@ paths:
       tags:
         - Cart
       security:
-        - BEARER: []
+        - BEARER: [ ]
       parameters:
         - in: path
           name: id
@@ -1368,7 +1368,7 @@ paths:
       tags:
         - Seller
       security:
-        - BEARER: []
+        - BEARER: [ ]
       responses:
         "200":
           description: OK
@@ -1385,7 +1385,7 @@ paths:
       tags:
         - Seller
       security:
-        - BEARER: []
+        - BEARER: [ ]
       responses:
         "200":
           description: OK
@@ -1402,7 +1402,7 @@ paths:
       tags:
         - Seller
       security:
-        - BEARER: []
+        - BEARER: [ ]
       parameters:
         - in: path
           name: order_id
@@ -1425,7 +1425,7 @@ paths:
       tags:
         - Seller
       security:
-        - BEARER: []
+        - BEARER: [ ]
       requestBody:
         content:
           application/json:
@@ -2284,7 +2284,7 @@ components:
                           parent_id: "93e975af-3e9c-4dc2-8202-762128985982"
                           name: "sweeter"
                           photo_url: "https://cf.shopee.co.id/file/19b8238c917f3dec99b689809ea43a79_tn"
-                          child_category: []
+                          child_category: [ ]
 
     GetCategoryByNameLvlTwoResponse:
       title: GetCategoryByNameLvlOneResponse
@@ -2322,7 +2322,7 @@ components:
                       parent_id: "93e975af-3e9c-4dc2-8202-762128985982"
                       name: "sweeter"
                       photo_url: "https://cf.shopee.co.id/file/19b8238c917f3dec99b689809ea43a79_tn"
-                      child_category: []
+                      child_category: [ ]
 
     GetCategoryByNameLvlThreeResponse:
       title: GetCategoryByNameLvlOneResponse
@@ -2355,7 +2355,7 @@ components:
                   parent_id: "93e975af-3e9c-4dc2-8202-762128985982"
                   name: "sweeter"
                   photo_url: "https://cf.shopee.co.id/file/19b8238c917f3dec99b689809ea43a79_tn"
-                  child_category: []
+                  child_category: [ ]
 
     GetCategoryChildResponse:
       title: GetCategoryChildResponse
@@ -2506,6 +2506,8 @@ components:
               voucher_shop_id:
                 type: string
               courier_id:
+                type: string
+              courier_fee:
                 type: string
               product_details:
                 type: array
