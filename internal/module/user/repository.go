@@ -12,7 +12,8 @@ import (
 
 type Repository interface {
 	GetUserByID(ctx context.Context, id string) (*model.User, error)
-	GetTotalAddress(ctx context.Context, userID, name string, isDefault, isShopDefault bool) (int64, error)
+	GetTotalAddress(ctx context.Context, userID, name string) (int64, error)
+	GetTotalAddressDefault(ctx context.Context, userID, name string, isDefault, isShopDefault bool) (int64, error)
 	GetAddresses(ctx context.Context, userID, name string, isDefault, isShopDefault bool, pagination *pagination.Pagination) ([]*model.Address, error)
 	GetAllAddresses(ctx context.Context, userID, name string, pagination *pagination.Pagination) ([]*model.Address, error)
 	GetAddressByID(ctx context.Context, userID, addressID string) (*model.Address, error)
@@ -24,7 +25,7 @@ type Repository interface {
 	UpdateDefaultShopAddress(ctx context.Context, tx postgre.Transaction, status bool, address *model.Address) error
 	DeleteAddress(ctx context.Context, addressID string) error
 	GetSealabsPay(ctx context.Context, userid string) ([]*model.SealabsPay, error)
-	AddSealabsPay(ctx context.Context, tx postgre.Transaction, request body.AddSealabsPayRequest) error
+	AddSealabsPay(ctx context.Context, tx postgre.Transaction, request body.AddSealabsPayRequest, userid string) error
 	PatchSealabsPay(ctx context.Context, cardNumber string) error
 	CheckDefaultSealabsPay(ctx context.Context, userid string) (*string, error)
 	SetDefaultSealabsPayTrans(ctx context.Context, tx postgre.Transaction, cardNumber *string) error

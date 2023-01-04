@@ -2,6 +2,7 @@ openapi: 3.0.0
 servers:
   # Added by API Auto Mocking Plugin
   - description: SwaggerHub API Auto Mocking
+  - url: http://localhost:8080
   - url: https://3d50-143-92-127-33.ap.ngrok.io
   - url: https://virtserver.swaggerhub.com/JULIUSBECKHAM/Murakali/1.0.0
 
@@ -192,6 +193,48 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/DefaultSuccess"
+
+  "/api/v1/auth/unique/username/{username}":
+    get:
+      summary: Check Unique Username
+      description: >-
+        Check Unique Username
+      tags:
+        - Auth
+      parameters:
+        - in: path
+          name: username
+          schema:
+            type: string
+          required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CheckUniqueTrueSuccess"
+
+  "/api/v1/auth/unique/phone-no/{phone_no}":
+    get:
+      summary: Check Unique Phone Number
+      description: >-
+        Check Unique Phone Number
+      tags:
+        - Auth
+      parameters:
+        - in: path
+          name: phone_no
+          schema:
+            type: string
+          required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CheckUniqueTrueSuccess"
 
   "/api/v1/location/province":
     get:
@@ -1201,6 +1244,23 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/DefaultSuccess"
+
+  "/api/v1/seller/{seller_id}":
+    get:
+      summary: Get Seller Detail
+      description: >-
+        Get Seller Detail
+      tags:
+        - Seller
+      security:
+        - BEARER: []
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GetSellerDetailResponse"
 
   "/api/v1/seller/order":
     get:
@@ -2991,6 +3051,44 @@ components:
           type: number
           example: 5
 
+    GetSellerDetailResponse:
+      title: GetSellerDetailResponse
+      type: object
+      description: Get Seller Detail response data model.
+      properties:
+        message:
+          type: string
+        data:
+          type: object
+          properties:
+            id:
+              type: string
+            user_id:
+              type: string
+            name:
+              type: string
+            total_product:
+              type: integer
+            total_rating:
+              type: integer
+            rating_avg:
+              type: integer
+            photo_url:
+              type: string
+            created_at:
+              type: string
+      example:
+        message: success
+        data:
+          - id: e8854443-c2c7-488e-93d5-b9d93708b8a3
+            user_id: f8d8d66a-e8eb-4633-bc2d-4ccd941fed47
+            name: Laptop Shop
+            total_product: 12510
+            total_rating: 0
+            rating_avg: 0
+            photo_url: https://res.cloudinary.com/dhpao1zxi/image/upload/v1671705602/ldtzmxqeyb4nwu5p6y76.jpg
+            created_at: "2023-01-04T04:50:12.665781Z"
+
     GetSellerOrderResponse:
       title: GetSellerOrderResponse
       type: object
@@ -3154,6 +3252,34 @@ components:
         order_status_id:
           type: number
           example: 2
+
+    CheckUniqueTrueSuccess:
+      title: CheckUniqueTrueSuccess
+      type: object
+      description: Check Unique True Success.
+      properties:
+        message:
+          type: string
+          example: success
+          description: Success message from server.
+        data:
+          type: boolean
+          example: true
+          description: the data is unique
+
+    CheckUniqueFalseSuccess:
+      title: CheckUniqueFalseSuccess
+      type: object
+      description: Check Unique False Success.
+      properties:
+        message:
+          type: string
+          example: success
+          description: Success message from server.
+        data:
+          type: boolean
+          example: false
+          description: the data is not unique
 
     DefaultSuccess:
       title: DefaultSuccess

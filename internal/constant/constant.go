@@ -12,6 +12,7 @@ const (
 	UrbanKey       = "location:urban"
 	OtpKey         = "user:otp"
 	OtpDuration    = "30m"
+	AddressDefault = "true"
 
 	RoleUser   = 1
 	RoleSeller = 2

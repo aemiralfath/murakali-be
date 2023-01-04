@@ -169,27 +169,39 @@ func (u *userUC) GetAddress(ctx context.Context, userID string, pgn *pagination.
 		if err == sql.ErrNoRows {
 			return nil, httperror.New(http.StatusUnauthorized, response.UnauthorizedMessage)
 		}
-
 		return nil, err
 	}
-
-	totalRows, err := u.userRepo.GetTotalAddress(ctx, userModel.ID.String(), queryRequest.Name,
-		queryRequest.IsDefaultBool, queryRequest.IsShopDefaultBool)
-	if err != nil {
-		return nil, err
-	}
-
-	totalPages := int(math.Ceil(float64(totalRows) / float64(pgn.Limit)))
-	pgn.TotalRows = totalRows
-	pgn.TotalPages = totalPages
 
 	var addresses []*model.Address
 	if !queryRequest.IsDefaultBool && !queryRequest.IsShopDefaultBool {
+		totalRows, err := u.userRepo.GetTotalAddress(ctx, userModel.ID.String(), queryRequest.Name)
+		if err != nil {
+			return nil, err
+		}
+
+		totalPages := int(math.Ceil(float64(totalRows) / float64(pgn.Limit)))
+		pgn.TotalRows = totalRows
+		pgn.TotalPages = totalPages
+
 		addresses, err = u.userRepo.GetAllAddresses(ctx, userModel.ID.String(), queryRequest.Name, pgn)
 		if err != nil {
 			return nil, err
 		}
 	} else {
+		totalRows, err := u.userRepo.GetTotalAddressDefault(
+			ctx,
+			userModel.ID.String(),
+			queryRequest.Name,
+			queryRequest.IsDefaultBool,
+			queryRequest.IsShopDefaultBool)
+		if err != nil {
+			return nil, err
+		}
+
+		totalPages := int(math.Ceil(float64(totalRows) / float64(pgn.Limit)))
+		pgn.TotalRows = totalRows
+		pgn.TotalPages = totalPages
+
 		addresses, err = u.userRepo.GetAddresses(ctx, userModel.ID.String(), queryRequest.Name,
 			queryRequest.IsDefaultBool, queryRequest.IsShopDefaultBool, pgn)
 		if err != nil {
@@ -439,7 +451,7 @@ func (u *userUC) GetSealabsPay(ctx context.Context, userid string) ([]*model.Sea
 
 func (u *userUC) AddSealabsPay(ctx context.Context, request body.AddSealabsPayRequest, userid string) error {
 	cardNumber, err := u.userRepo.CheckDefaultSealabsPay(ctx, userid)
-	if err != nil {
+	if err != nil && err != sql.ErrNoRows {
 		return err
 	}
 
@@ -448,7 +460,7 @@ func (u *userUC) AddSealabsPay(ctx context.Context, request body.AddSealabsPayRe
 			return err
 		}
 
-		err = u.userRepo.AddSealabsPay(ctx, tx, request)
+		err = u.userRepo.AddSealabsPay(ctx, tx, request, userid)
 		if err != nil {
 			return err
 		}
