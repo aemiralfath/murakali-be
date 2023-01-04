@@ -28,7 +28,7 @@ type UseCase interface {
 	SendOTPEmail(ctx context.Context, email string) error
 	VerifyOTP(ctx context.Context, requestBody body.VerifyOTPRequest, userID string) (string, error)
 	ChangePassword(ctx context.Context, userID string, newPassword string) error
-	CreateTransaction(ctx context.Context, userID string, requestBody body.CreateTransactionRequest) error
+	CreateTransaction(ctx context.Context, userID string, requestBody body.CreateTransactionRequest) (string, error)
 	CreateSLPPayment(ctx context.Context, string2 string) (string, error)
 	GetOrder(ctx context.Context, userID string, pgn *pagination.Pagination) (*pagination.Pagination, error)
 }

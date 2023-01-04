@@ -788,7 +788,8 @@ func (h *userHandlers) CreateTransaction(c *gin.Context) {
 		return
 	}
 
-	if err = h.userUC.CreateTransaction(c, userID.(string), requestBody); err != nil {
+	transactionID, err := h.userUC.CreateTransaction(c, userID.(string), requestBody)
+	if err != nil {
 		var e *httperror.Error
 		if !errors.As(err, &e) {
 			h.logger.Errorf("HandlerUser, Error: %s", err)
@@ -800,5 +801,5 @@ func (h *userHandlers) CreateTransaction(c *gin.Context) {
 		return
 	}
 
-	response.SuccessResponse(c.Writer, nil, http.StatusOK)
+	response.SuccessResponse(c.Writer, body.CreateTransactionResponse{TransactionID: transactionID}, http.StatusOK)
 }
