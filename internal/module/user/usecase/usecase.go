@@ -49,10 +49,6 @@ func (u *userUC) CreateAddress(ctx context.Context, userID string, requestBody b
 		return err
 	}
 
-	if requestBody.IsShopDefault && userModel.RoleID != constant.RoleSeller {
-		return httperror.New(http.StatusBadRequest, response.UserNotASellerMessage)
-	}
-
 	err = u.txRepo.WithTransaction(func(tx postgre.Transaction) error {
 		if requestBody.IsDefault {
 			defaultAddress, getErr := u.userRepo.GetDefaultUserAddress(ctx, userModel.ID.String())
@@ -108,10 +104,6 @@ func (u *userUC) UpdateAddressByID(ctx context.Context, userID, addressID string
 		}
 
 		return err
-	}
-
-	if requestBody.IsShopDefault && userModel.RoleID != constant.RoleSeller {
-		return httperror.New(http.StatusBadRequest, response.UserNotASellerMessage)
 	}
 
 	err = u.txRepo.WithTransaction(func(tx postgre.Transaction) error {
@@ -175,7 +167,7 @@ func (u *userUC) GetAddress(ctx context.Context, userID string, pgn *pagination.
 		return nil, err
 	}
 
-	var addresses []*model.Address
+	addresses := make([]*model.Address, 0)
 	if !queryRequest.IsDefaultBool && !queryRequest.IsShopDefaultBool {
 		totalRows, err := u.userRepo.GetTotalAddress(ctx, userModel.ID.String(), queryRequest.Name)
 		if err != nil {
@@ -190,26 +182,40 @@ func (u *userUC) GetAddress(ctx context.Context, userID string, pgn *pagination.
 		if err != nil {
 			return nil, err
 		}
-	} else {
-		totalRows, err := u.userRepo.GetTotalAddressDefault(
-			ctx,
-			userModel.ID.String(),
-			queryRequest.Name,
-			queryRequest.IsDefaultBool,
-			queryRequest.IsShopDefaultBool)
+	}
+
+	if queryRequest.IsDefaultBool && !queryRequest.IsShopDefaultBool {
+		address, err := u.userRepo.GetDefaultUserAddress(ctx, userModel.ID.String())
 		if err != nil {
+			if err == sql.ErrNoRows {
+				return nil, httperror.New(http.StatusBadRequest, response.DefaultAddressNotFound)
+			}
 			return nil, err
 		}
 
+		addresses = append(addresses, address)
+
+		totalRows := int64(1)
 		totalPages := int(math.Ceil(float64(totalRows) / float64(pgn.Limit)))
 		pgn.TotalRows = totalRows
 		pgn.TotalPages = totalPages
+	}
 
-		addresses, err = u.userRepo.GetAddresses(ctx, userModel.ID.String(), queryRequest.Name,
-			queryRequest.IsDefaultBool, queryRequest.IsShopDefaultBool, pgn)
+	if !queryRequest.IsDefaultBool && queryRequest.IsShopDefaultBool {
+		address, err := u.userRepo.GetDefaultShopAddress(ctx, userModel.ID.String())
 		if err != nil {
+			if err == sql.ErrNoRows {
+				return nil, httperror.New(http.StatusBadRequest, response.ShopAddressNotFound)
+			}
 			return nil, err
 		}
+
+		addresses = append(addresses, address)
+
+		totalRows := int64(1)
+		totalPages := int(math.Ceil(float64(totalRows) / float64(pgn.Limit)))
+		pgn.TotalRows = totalRows
+		pgn.TotalPages = totalPages
 	}
 
 	pgn.Rows = addresses

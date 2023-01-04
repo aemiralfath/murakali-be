@@ -14,7 +14,6 @@ const (
 	ForbiddenMessage           = "Forbidden"
 
 	AddressIsDefaultMessage        = "Address is default."
-	UserNotASellerMessage          = "User not a seller."
 	EmailAlreadyExistMessage       = "Email already exist."
 	EmailSamePreviousEmailMessage  = "This email same as your current email."
 	EmailNotExistMessage           = "Email not exist."
@@ -39,6 +38,8 @@ const (
 	SelectShippingCourier          = "Select shipping Courier"
 	UnknownShop                    = "Unknown shop."
 	CartItemNotExist               = "Cart Item not exist."
+	ShopAddressNotFound            = "Shop address not found."
+	DefaultAddressNotFound         = "Default address not found."
 )
 
 type JSONResponse struct {
