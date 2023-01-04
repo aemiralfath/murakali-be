@@ -77,3 +77,34 @@ func (u *sellerUC) GetOrderByOrderID(ctx context.Context, orderID string) (*mode
 
 	return order, nil
 }
+
+
+func (u *sellerUC)  GetCourierSeller(ctx context.Context, userID string) (*body.CourierSellerResponse, error) {
+	courierSeller, err := u.sellerRepo.GetCourierSeller(ctx,  userID)
+	if err != nil {
+			return nil, err
+	}
+
+	resultCourierSeller := make([]*body.CourierSellerInfo, 0)
+	totalData := len(courierSeller)
+	for i := 0; i < totalData; i++ {
+		p := &body.CourierSellerInfo{
+			ShopCourierID:             courierSeller[i].ShopCourierID,
+			Name:                  courierSeller[i].Name,
+			Code:                 courierSeller[i].Code,
+			Service:              courierSeller[i].Service,
+			Description:                 courierSeller[i].Description,
+			
+		}
+		
+		resultCourierSeller = append(resultCourierSeller, p)
+	}
+
+	csr:= &body.CourierSellerResponse{
+		
+	}
+
+	csr.Rows = resultCourierSeller
+
+	return csr, nil
+}

@@ -8,7 +8,6 @@ type UnprocessableEntity struct {
 	Fields map[string]string `json:"fields"`
 }
 
-
 type GetProductQueryRequest struct {
 	Search            string
 	Sort     string

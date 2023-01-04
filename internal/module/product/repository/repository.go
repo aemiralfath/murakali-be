@@ -417,8 +417,6 @@ func (r *productRepo) GetAllTotalProduct(ctx context.Context, query *body.GetPro
 }
 
 
-
-
 func (r *productRepo) GetFavoriteProducts(ctx context.Context, pgn *pagination.Pagination, query *body.GetProductQueryRequest, userID string) ([]*body.Products,
 	[]*model.Promotion, []*model.Voucher, error) {
 	products := make([]*body.Products, 0)

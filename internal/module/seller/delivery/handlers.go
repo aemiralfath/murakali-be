@@ -149,3 +149,29 @@ func (h *sellerHandlers) GetOrderByOrderID(c *gin.Context) {
 
 	response.SuccessResponse(c.Writer, data, http.StatusOK)
 }
+
+
+
+func (h *sellerHandlers)  GetCourierSeller(c *gin.Context) {
+	
+	userID, exist := c.Get("userID")
+	if !exist {
+		response.ErrorResponse(c.Writer, response.UnauthorizedMessage, http.StatusUnauthorized)
+		return
+	}
+
+	courierSeller, err := h.sellerUC.GetCourierSeller(c, userID.(string))
+	if err != nil {
+		var e *httperror.Error
+		if !errors.As(err, &e) {
+			h.logger.Errorf("HandlerProduct, Error: %s", err)
+			response.ErrorResponse(c.Writer, response.InternalServerErrorMessage, http.StatusInternalServerError)
+			return
+		}
+
+		response.ErrorResponse(c.Writer, e.Err.Error(), e.Status)
+		return
+	}
+
+	response.SuccessResponse(c.Writer, courierSeller, http.StatusOK)
+}
