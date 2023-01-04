@@ -159,6 +159,32 @@ func (h *productHandlers) GetProducts(c *gin.Context) {
 	response.SuccessResponse(c.Writer, SearchProducts, http.StatusOK)
 }
 
+func (h *productHandlers) GetFavoriteProducts(c *gin.Context) {
+	pgn, query := h.ValidateQueryProduct(c)
+
+	userID, exist := c.Get("userID")
+	if !exist {
+		response.ErrorResponse(c.Writer, response.UnauthorizedMessage, http.StatusUnauthorized)
+		return
+	}
+
+	SearchProducts, err := h.productUC.GetFavoriteProducts(c, pgn, query, userID.(string))
+	if err != nil {
+		var e *httperror.Error
+		if !errors.As(err, &e) {
+			h.logger.Errorf("HandlerProduct, Error: %s", err)
+			response.ErrorResponse(c.Writer, response.InternalServerErrorMessage, http.StatusInternalServerError)
+			return
+		}
+
+		response.ErrorResponse(c.Writer, e.Err.Error(), e.Status)
+		return
+	}
+
+	response.SuccessResponse(c.Writer, SearchProducts, http.StatusOK)
+}
+
+
 func (h *productHandlers) GetProductDetail(c *gin.Context) {
 	productID := c.Param("product_id")
 	productDetail, err := h.productUC.GetProductDetail(c, productID)
@@ -208,7 +234,6 @@ func (h *productHandlers) ValidateQueryProduct(c *gin.Context) (*pagination.Pagi
 	page := strings.TrimSpace(c.Query("page"))
 
 
-
 	search := strings.TrimSpace(c.Query("search"))
 
 	sort := strings.TrimSpace(c.Query("sort"))
@@ -223,8 +248,6 @@ func (h *productHandlers) ValidateQueryProduct(c *gin.Context) (*pagination.Pagi
 	shop:= strings.TrimSpace(c.Query("shop_name"))
 
 	var limitFilter,pageFilter int
-
-
 	var minPriceFilter, maxPriceFilter, minRatingFilter, maxRatingFilter float64
 
 
@@ -232,7 +255,6 @@ func (h *productHandlers) ValidateQueryProduct(c *gin.Context) (*pagination.Pagi
 	if err != nil || limitFilter < 1 {
 		limitFilter = 12
 	}
-
 
 	if  sortBy == "" {
 		sortBy = "p.unit_sold"
@@ -260,7 +282,6 @@ func (h *productHandlers) ValidateQueryProduct(c *gin.Context) (*pagination.Pagi
 	}
 	}
 
-
 	minPriceFilter, err = strconv.ParseFloat(minPrice, 64);
 	if err != nil || minPriceFilter < 0 {
 		minPriceFilter = 0
@@ -281,14 +302,9 @@ func (h *productHandlers) ValidateQueryProduct(c *gin.Context) (*pagination.Pagi
 		maxRatingFilter= 5
 	}
 
-
-
 	searchFilter := fmt.Sprintf("%%%s%%", search)
 	categoryFilter := fmt.Sprintf("%%%s%%", category)
 	shopFilter := fmt.Sprintf("%%%s%%", shop)
-
-	
-
 	
 	query := &body.GetProductQueryRequest{
 		Search  : searchFilter ,

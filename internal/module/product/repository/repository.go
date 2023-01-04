@@ -415,3 +415,88 @@ func (r *productRepo) GetAllTotalProduct(ctx context.Context, query *body.GetPro
 
 	return total, nil
 }
+
+
+
+
+func (r *productRepo) GetFavoriteProducts(ctx context.Context, pgn *pagination.Pagination, query *body.GetProductQueryRequest, userID string) ([]*body.Products,
+	[]*model.Promotion, []*model.Voucher, error) {
+	products := make([]*body.Products, 0)
+	promotions := make([]*model.Promotion, 0)
+	vouchers := make([]*model.Voucher, 0)
+
+	q := fmt.Sprintf(GetFavoriteProductsQuery, pgn.GetSort())
+	res, err := r.PSQL.QueryContext(
+		ctx, q,
+		query.Search,
+		query.Category,
+		query.Shop,
+		query.MinRating,
+		query.MaxRating,
+		query.MinPrice,
+		query.MaxPrice,
+			userID,
+		pgn.GetLimit(),
+		pgn.GetOffset())
+
+	if err != nil {
+		return nil, nil, nil, err
+	}
+	defer res.Close()
+
+	for res.Next() {
+		var productData body.Products
+		var promo model.Promotion
+		var voucher model.Voucher
+
+		if errScan := res.Scan(
+			&productData.Title,
+			&productData.UnitSold,
+			&productData.RatingAVG,
+			&productData.ThumbnailURL,
+			&productData.MinPrice,
+			&productData.MaxPrice,
+			&productData.ViewCount,
+			&promo.DiscountPercentage,
+			&promo.DiscountFixPrice,
+			&promo.MinProductPrice,
+			&promo.MaxDiscountPrice,
+			&voucher.DiscountPercentage,
+			&voucher.DiscountFixPrice,
+			&productData.ShopName,
+			&productData.CategoryName,
+		); errScan != nil {
+			return nil, nil, nil, err
+		}
+
+		products = append(products, &productData)
+		promotions = append(promotions, &promo)
+		vouchers = append(vouchers, &voucher)
+	}
+
+	if res.Err() != nil {
+		return nil, nil, nil, err
+	}
+
+	return products, promotions, vouchers, err
+}
+
+
+func (r *productRepo) GetAllFavoriteTotalProduct(ctx context.Context, query *body.GetProductQueryRequest, userID string) (int64, error) {
+	var total int64
+	if err := r.PSQL.QueryRowContext(ctx, 
+		GetAllTotalFavoriteProductQuery , 
+		query.Search, 
+		query.Category, 
+		query.Shop,
+		query.MinRating,
+		query.MaxRating,
+		query.MinPrice,
+		query.MaxPrice,
+		userID,
+		).Scan(&total); err != nil {
+		return 0, err
+	}
+
+	return total, nil
+}

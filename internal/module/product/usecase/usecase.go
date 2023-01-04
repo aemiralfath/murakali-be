@@ -276,3 +276,49 @@ func (u *productUC) GetProducts(ctx context.Context, pgn *pagination.Pagination,
 
 	return pgn, nil
 }
+
+
+
+func (u *productUC) GetFavoriteProducts(ctx context.Context, pgn *pagination.Pagination, query *body.GetProductQueryRequest, userID string) (*pagination.Pagination, error) {
+	totalRows, err := u.productRepo.GetAllFavoriteTotalProduct(ctx, query, userID)
+	if err != nil {
+		return nil, err
+	}
+	totalPages := int(math.Ceil(float64(totalRows) / float64(pgn.Limit)))
+	pgn.TotalRows = totalRows
+	pgn.TotalPages = totalPages
+
+	products, promotions, vouchers, err := u.productRepo.GetFavoriteProducts(ctx, pgn, query, userID)
+	if err != nil {
+		if err != sql.ErrNoRows {
+			return nil, err
+		}
+	}
+
+	resultProduct := make([]*body.Products, 0)
+	totalData := len(products)
+	for i := 0; i < totalData; i++ {
+		p := &body.Products{
+			Title:                     products[i].Title,
+			UnitSold:                  products[i].UnitSold,
+			RatingAVG:                 products[i].RatingAVG,
+			ThumbnailURL:              products[i].ThumbnailURL,
+			MinPrice:                  products[i].MinPrice,
+			MaxPrice:                  products[i].MaxPrice,
+			ViewCount:                 products[i].ViewCount,
+			PromoDiscountPercentage:   promotions[i].DiscountPercentage,
+			PromoDiscountFixPrice:     promotions[i].DiscountFixPrice,
+			PromoMinProductPrice:      promotions[i].MinProductPrice,
+			PromoMaxDiscountPrice:     promotions[i].MaxDiscountPrice,
+			VoucherDiscountPercentage: vouchers[i].DiscountPercentage,
+			VoucherDiscountFixPrice:   vouchers[i].DiscountFixPrice,
+			ShopName:                  products[i].ShopName,
+			CategoryName:              products[i].CategoryName,
+		}
+		p = u.CalculateDiscountProduct(p)
+		resultProduct = append(resultProduct, p)
+	}
+	pgn.Rows = resultProduct
+
+	return pgn, nil
+}
