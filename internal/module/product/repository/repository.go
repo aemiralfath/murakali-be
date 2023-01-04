@@ -196,6 +196,9 @@ func (r *productRepo) GetRecommendedProducts(ctx context.Context, pgn *paginatio
 	return products, promotions, vouchers, err
 }
 
+
+
+
 func (r *productRepo) GetProductInfo(ctx context.Context, productID string) (*body.ProductInfo, error) {
 	var productInfo body.ProductInfo
 
@@ -267,24 +270,21 @@ func (r *productRepo) GetProductDetail(ctx context.Context, productID string, pr
 		); errScan != nil {
 			return nil, err
 		}
+
 		if promo != nil {
+			discountedPrice := 0.0
 			if promo.PromotionDiscountPercentage != nil {
-				if *detail.NormalPrice >= *promo.PromotionMinProductPrice {
-					discountedPrice := *detail.NormalPrice - (*detail.NormalPrice * (*promo.PromotionDiscountPercentage / float64(100)))
-					if discountedPrice > *promo.PromotionMaxDiscountPrice {
-						discountedPrice = *detail.NormalPrice - *promo.PromotionMaxDiscountPrice
-					}
-					detail.DiscountPrice = &discountedPrice
-				}
+				discountedPrice = *detail.NormalPrice - *promo.PromotionDiscountFixPrice
+			} else if promo.PromotionDiscountFixPrice != nil {
+				discountedPrice = *detail.NormalPrice - (*detail.NormalPrice * (*promo.PromotionDiscountPercentage / float64(100)))
 			}
-			if promo.PromotionDiscountFixPrice != nil {
-				if *detail.NormalPrice >= *promo.PromotionMinProductPrice {
-					discountedPrice := *detail.NormalPrice - *promo.PromotionDiscountFixPrice
-					if *promo.PromotionDiscountFixPrice > *promo.PromotionMaxDiscountPrice {
-						discountedPrice = *detail.NormalPrice - *promo.PromotionMaxDiscountPrice
-					}
-					detail.DiscountPrice = &discountedPrice
+			if *detail.NormalPrice >= *promo.PromotionMinProductPrice {
+				if *promo.PromotionDiscountFixPrice > *promo.PromotionMaxDiscountPrice {
+					discountedPrice = *detail.NormalPrice - *promo.PromotionMaxDiscountPrice
+				} else if discountedPrice > *promo.PromotionMaxDiscountPrice {
+					discountedPrice = *promo.PromotionMaxDiscountPrice
 				}
+				detail.DiscountPrice = &discountedPrice
 			}
 		}
 
@@ -322,6 +322,74 @@ func (r *productRepo) GetProductDetail(ctx context.Context, productID string, pr
 func (r *productRepo) GetTotalProduct(ctx context.Context) (int64, error) {
 	var total int64
 	if err := r.PSQL.QueryRowContext(ctx, GetTotalProductQuery).Scan(&total); err != nil {
+		return 0, err
+	}
+
+	return total, nil
+}
+
+
+
+
+
+
+func (r *productRepo) GetSearchProducts(ctx context.Context, pgn *pagination.Pagination, query *body.GetSearchProductQueryRequest) ([]*body.Products,
+	[]*model.Promotion, []*model.Voucher, error) {
+	products := make([]*body.Products, 0)
+	promotions := make([]*model.Promotion, 0)
+	vouchers := make([]*model.Voucher, 0)
+
+	res, err := r.PSQL.QueryContext(
+		ctx, GetSearchProductsQuery,
+		query.Search,
+		pgn.GetLimit(),
+		pgn.GetOffset())
+
+	if err != nil {
+		return nil, nil, nil, err
+	}
+	defer res.Close()
+
+	for res.Next() {
+		var productData body.Products
+		var promo model.Promotion
+		var voucher model.Voucher
+
+		if errScan := res.Scan(
+			&productData.Title,
+			&productData.UnitSold,
+			&productData.RatingAVG,
+			&productData.ThumbnailURL,
+			&productData.MinPrice,
+			&productData.MaxPrice,
+			&promo.DiscountPercentage,
+			&promo.DiscountFixPrice,
+			&promo.MinProductPrice,
+			&promo.MaxDiscountPrice,
+			&voucher.DiscountPercentage,
+			&voucher.DiscountFixPrice,
+			&productData.ShopName,
+			&productData.CategoryName,
+		); errScan != nil {
+			return nil, nil, nil, err
+		}
+
+		products = append(products, &productData)
+		promotions = append(promotions, &promo)
+		vouchers = append(vouchers, &voucher)
+	}
+
+	if res.Err() != nil {
+		return nil, nil, nil, err
+	}
+
+	return products, promotions, vouchers, err
+}
+
+
+func (r *productRepo) GetTotalSearchProduct(ctx context.Context, query *body.GetSearchProductQueryRequest) (int64, error) {
+	var total int64
+	if err := r.PSQL.QueryRowContext(ctx, GetTotalSearchProductQuery, query.Search).Scan(&total); err != nil {
 		return 0, err
 	}
 
