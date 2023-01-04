@@ -805,9 +805,31 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/DefaultSuccess"
+                $ref: '#/components/schemas/CreateTransactionResponse'
 
-  "/api/v1/product/":
+  '/api/v1/user/transaction/slp-payment':
+    post:
+      summary: user create slp payment
+      description: >-
+        user create slp payment
+      tags:
+        - User
+      security:
+        - BEARER: [ ]
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateSlpPaymentRequest'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreateSlpPaymentResponse'
+                
+  '/api/v1/product/':
     get:
       summary: Get Product {WIP}
       description: >-
@@ -1356,6 +1378,36 @@ components:
             access_token:
               type: string
               example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2Mzg3NzE1NDcsImlhdCI6MTYzODE2Njc0NywianRpIjoiNGE2YTE3MDMtOGM5ZC00Yjk1LTkwODctNjIzNDM3MjIyMmRkIiwic3ViIjoiNDA1OTU2YzMtNDZhZS00NzFjLTkzMWUtNmIwZTFkZWMwYjdhIn0.IUvCSn9GR3tQBJ86PhVl3MBDgG4BdSHEGoRO1SYEcYk"
+
+    CreateTransactionResponse:
+      title: TransactionResponse
+      type: object
+      description: Transaction response data model.
+      properties:
+        message:
+          type: string
+          example: "success"
+        data:
+          type: object
+          properties:
+            transaction_id:
+              type: string
+              example: "e6723204-144a-40fd-a866-952de5695d32"
+
+    CreateSlpPaymentResponse:
+      title: CreateSlpPaymentResponse
+      type: object
+      description: Create Slp Payment response data model.
+      properties:
+        message:
+          type: string
+          example: "success"
+        data:
+          type: object
+          properties:
+            redirect_url:
+              type: string
+              example: "https://slp.air-sipp.com/payment?amount=638183&merchant_name=Murakali&txn_id=3555"
 
     RegisterEmailRequest:
       title: RegisterEmailRequest
@@ -2330,6 +2382,15 @@ components:
         password:
           type: string
           example: "Password"
+
+    CreateSlpPaymentRequest:
+      title: CreateSlpPaymentRequest
+      type: object
+      description: Create Slp Payment.
+      properties:
+        transaction_id:
+          type: string
+          example: "eda8ffa8-ed96-4ab6-94b8-7a532e1f0457"
 
     CreateTransactionRequest:
       title: CreateTransactionRequest

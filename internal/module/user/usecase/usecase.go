@@ -2,8 +2,11 @@ package usecase
 
 import (
 	"context"
+	"crypto/hmac"
 	"crypto/sha256"
 	"database/sql"
+	"encoding/hex"
+	"encoding/json"
 	"fmt"
 	"math"
 	"murakali/config"
@@ -44,10 +47,6 @@ func (u *userUC) CreateAddress(ctx context.Context, userID string, requestBody b
 		}
 
 		return err
-	}
-
-	if requestBody.IsShopDefault && userModel.RoleID != constant.RoleSeller {
-		return httperror.New(http.StatusBadRequest, response.UserNotASellerMessage)
 	}
 
 	err = u.txRepo.WithTransaction(func(tx postgre.Transaction) error {
@@ -105,10 +104,6 @@ func (u *userUC) UpdateAddressByID(ctx context.Context, userID, addressID string
 		}
 
 		return err
-	}
-
-	if requestBody.IsShopDefault && userModel.RoleID != constant.RoleSeller {
-		return httperror.New(http.StatusBadRequest, response.UserNotASellerMessage)
 	}
 
 	err = u.txRepo.WithTransaction(func(tx postgre.Transaction) error {
@@ -172,7 +167,7 @@ func (u *userUC) GetAddress(ctx context.Context, userID string, pgn *pagination.
 		return nil, err
 	}
 
-	var addresses []*model.Address
+	addresses := make([]*model.Address, 0)
 	if !queryRequest.IsDefaultBool && !queryRequest.IsShopDefaultBool {
 		totalRows, err := u.userRepo.GetTotalAddress(ctx, userModel.ID.String(), queryRequest.Name)
 		if err != nil {
@@ -187,26 +182,40 @@ func (u *userUC) GetAddress(ctx context.Context, userID string, pgn *pagination.
 		if err != nil {
 			return nil, err
 		}
-	} else {
-		totalRows, err := u.userRepo.GetTotalAddressDefault(
-			ctx,
-			userModel.ID.String(),
-			queryRequest.Name,
-			queryRequest.IsDefaultBool,
-			queryRequest.IsShopDefaultBool)
+	}
+
+	if queryRequest.IsDefaultBool && !queryRequest.IsShopDefaultBool {
+		address, err := u.userRepo.GetDefaultUserAddress(ctx, userModel.ID.String())
 		if err != nil {
+			if err == sql.ErrNoRows {
+				return nil, httperror.New(http.StatusBadRequest, response.DefaultAddressNotFound)
+			}
 			return nil, err
 		}
 
+		addresses = append(addresses, address)
+
+		totalRows := int64(1)
 		totalPages := int(math.Ceil(float64(totalRows) / float64(pgn.Limit)))
 		pgn.TotalRows = totalRows
 		pgn.TotalPages = totalPages
+	}
 
-		addresses, err = u.userRepo.GetAddresses(ctx, userModel.ID.String(), queryRequest.Name,
-			queryRequest.IsDefaultBool, queryRequest.IsShopDefaultBool, pgn)
+	if !queryRequest.IsDefaultBool && queryRequest.IsShopDefaultBool {
+		address, err := u.userRepo.GetDefaultShopAddress(ctx, userModel.ID.String())
 		if err != nil {
+			if err == sql.ErrNoRows {
+				return nil, httperror.New(http.StatusBadRequest, response.ShopAddressNotFound)
+			}
 			return nil, err
 		}
+
+		addresses = append(addresses, address)
+
+		totalRows := int64(1)
+		totalPages := int(math.Ceil(float64(totalRows) / float64(pgn.Limit)))
+		pgn.TotalRows = totalRows
+		pgn.TotalPages = totalPages
 	}
 
 	pgn.Rows = addresses
@@ -642,22 +651,141 @@ func (u *userUC) ChangePassword(ctx context.Context, userID, newPassword string)
 	return nil
 }
 
-func (u *userUC) CreateTransaction(ctx context.Context, userID string, requestBody body.CreateTransactionRequest) error {
+func (u *userUC) CreateSLPPayment(ctx context.Context, transactionID string) (string, error) {
+	transaction, err := u.userRepo.GetTransactionByID(ctx, transactionID)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return "", httperror.New(http.StatusBadRequest, response.TransactionIDNotExist)
+		}
+
+		return "", err
+	}
+
+	if time.Until(transaction.ExpiredAt.Time) < 0 {
+		return "", httperror.New(http.StatusBadRequest, response.TransactionAlreadyExpired)
+	}
+
+	if transaction.PaidAt.Valid || transaction.CanceledAt.Valid {
+		return "", httperror.New(http.StatusBadRequest, response.TransactionAlreadyFinished)
+	}
+
+	signFormat := fmt.Sprintf("%s:%d:%s", *transaction.CardNumber, int(transaction.TotalPrice), u.cfg.External.SlpMerchantCode)
+	h := hmac.New(sha256.New, []byte(u.cfg.External.SlpAPIKey))
+	h.Write([]byte(signFormat))
+	sign := hex.EncodeToString(h.Sum(nil))
+
+	redirectURL, err := u.GetRedirectURL(transaction, sign)
+	if err != nil {
+		return "", err
+	}
+
+	return redirectURL, nil
+}
+
+func (u *userUC) GetRedirectURL(transaction *model.Transaction, sign string) (string, error) {
+	var responseSLP body.SLPPaymentResponse
+
+	url := fmt.Sprintf("%s/v1/transaction/pay", u.cfg.External.SlpURL)
+	payload := fmt.Sprintf(
+		"card_number=%s&amount=%d&merchant_code=%s&redirect_url=%s&callback_url=%s&signature=%s",
+		*transaction.CardNumber,
+		int(transaction.TotalPrice),
+		u.cfg.External.SlpMerchantCode,
+		"https://www.google.com",
+		fmt.Sprintf("https://%s/api/v1/user/transaction/slp-payment/%s", u.cfg.Server.Domain, transaction.ID.String()),
+		sign)
+
+	req, err := http.NewRequest("POST", url, strings.NewReader(payload))
+	if err != nil {
+		return "", err
+	}
+
+	client := &http.Client{
+		CheckRedirect: func(req *http.Request, via []*http.Request) error {
+			return http.ErrUseLastResponse
+		},
+	}
+
+	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
+	res, err := client.Do(req)
+	if err != nil {
+		return "", err
+	}
+	defer res.Body.Close()
+
+	if res.StatusCode != 303 {
+		readErr := json.NewDecoder(res.Body).Decode(&responseSLP)
+		if readErr != nil {
+			return "", err
+		}
+
+		return "", httperror.New(res.StatusCode, responseSLP.Message)
+	}
+
+	return res.Header.Get("Location"), nil
+}
+
+func (u *userUC) UpdateTransaction(ctx context.Context, transactionID string, requestBody body.SLPCallbackRequest) error {
+	transaction, err := u.userRepo.GetTransactionByID(ctx, transactionID)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return httperror.New(http.StatusBadRequest, response.TransactionIDNotExist)
+		}
+
+		return err
+	}
+
+	if transaction.PaidAt.Valid {
+		return httperror.New(http.StatusBadRequest, response.TransactionAlreadyFinished)
+	}
+
+	orders, err := u.userRepo.GetOrderByTransactionID(ctx, transactionID)
+	if err != nil {
+		return err
+	}
+
+	if requestBody.Status == constant.SLPStatusPaid {
+		err := u.txRepo.WithTransaction(func(tx postgre.Transaction) error {
+			transaction.PaidAt.Valid = true
+			transaction.PaidAt.Time = time.Now()
+			if err := u.userRepo.UpdateTransaction(ctx, tx, transaction); err != nil {
+				return err
+			}
+
+			for _, order := range orders {
+				order.OrderStatusID = constant.OrderStatusWaitingForSeller
+				if err := u.userRepo.UpdateOrder(ctx, tx, order); err != nil {
+					return err
+				}
+			}
+
+			return nil
+		})
+
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (u *userUC) CreateTransaction(ctx context.Context, userID string, requestBody body.CreateTransactionRequest) (string, error) {
 	transactionData := &model.Transaction{}
 	orderResponses := make([]*body.OrderResponse, 0)
 
 	userModel, errUser := u.userRepo.GetUserByID(ctx, userID)
 	if errUser != nil {
 		if errUser == sql.ErrNoRows {
-			return httperror.New(http.StatusUnauthorized, response.UnauthorizedMessage)
+			return "", httperror.New(http.StatusUnauthorized, response.UnauthorizedMessage)
 		}
-		return errUser
+		return "", errUser
 	}
 
 	if requestBody.WalletID != "" {
 		walletUser, errWallet := u.userRepo.GetWalletUser(ctx, userModel.ID.String(), requestBody.WalletID)
 		if errWallet != nil {
-			return errWallet
+			return "", errWallet
 		}
 		transactionData.WalletID = &walletUser.ID
 	}
@@ -665,16 +793,16 @@ func (u *userUC) CreateTransaction(ctx context.Context, userID string, requestBo
 	if requestBody.CardNumber != "" {
 		SealabsPayUser, errSealabpay := u.userRepo.GetSealabsPayUser(ctx, userModel.ID.String(), requestBody.CardNumber)
 		if errSealabpay != nil {
-			return errSealabpay
+			return "", errSealabpay
 		}
 		transactionData.CardNumber = &SealabsPayUser.CardNumber
 	}
 
 	if requestBody.VoucherMarketplaceID != "" {
-		voucherMarketplace, errVoucherMP := u.userRepo.GetVoucherMarketplacebyID(ctx, requestBody.VoucherMarketplaceID)
+		voucherMarketplace, errVoucherMP := u.userRepo.GetVoucherMarketplaceByID(ctx, requestBody.VoucherMarketplaceID)
 		if errVoucherMP != nil {
 			if errVoucherMP != sql.ErrNoRows {
-				return errVoucherMP
+				return "", errVoucherMP
 			}
 		}
 		transactionData.VoucherMarketplaceID = &voucherMarketplace.ID
@@ -682,28 +810,28 @@ func (u *userUC) CreateTransaction(ctx context.Context, userID string, requestBo
 
 	for _, cart := range requestBody.CartItems {
 		orderData := &model.OrderModel{}
-		cartShop, err := u.userRepo.GetShopbyID(ctx, cart.ShopID)
+		cartShop, err := u.userRepo.GetShopByID(ctx, cart.ShopID)
 		if err != nil {
 			if err == sql.ErrNoRows {
-				return httperror.New(http.StatusBadRequest, response.UnknownShop)
+				return "", httperror.New(http.StatusBadRequest, response.UnknownShop)
 			}
-			return err
+			return "", err
 		}
 		var voucherShop *model.Voucher
 		var voucherShopID *uuid.UUID
 		if cart.VoucherShopID != "" {
-			voucherShop, err = u.userRepo.GetVoucherShopbyID(ctx, cart.VoucherShopID, cartShop.ID.String())
+			voucherShop, err = u.userRepo.GetVoucherShopByID(ctx, cart.VoucherShopID, cartShop.ID.String())
 			if err != nil {
 				if err != sql.ErrNoRows {
-					return err
+					return "", err
 				}
 			}
 			voucherShopID = &voucherShop.ID
 		}
 
-		courierShop, err := u.userRepo.GetCourierShopbyID(ctx, cart.CourierID, cartShop.ID.String())
+		courierShop, err := u.userRepo.GetCourierShopByID(ctx, cart.CourierID, cartShop.ID.String())
 		if err != nil {
-			return httperror.New(http.StatusBadRequest, response.SelectShippingCourier)
+			return "", httperror.New(http.StatusBadRequest, response.SelectShippingCourier)
 		}
 		orderResponse := &body.OrderResponse{
 			Items: make([]*body.OrderItemResponse, 0),
@@ -712,12 +840,12 @@ func (u *userUC) CreateTransaction(ctx context.Context, userID string, requestBo
 		for _, bodyProductDetail := range cart.ProductDetails {
 			productDetailData, err := u.userRepo.GetProductDetailByID(ctx, bodyProductDetail.ID)
 			if err != nil {
-				return err
+				return "", err
 			}
 
 			cartData, err := u.userRepo.GetCartItemUser(ctx, userModel.ID.String(), productDetailData.ID.String())
 			if err != nil {
-				return httperror.New(http.StatusBadRequest, response.CartItemNotExist)
+				return "", httperror.New(http.StatusBadRequest, response.CartItemNotExist)
 			}
 
 			orderItem := &model.OrderItem{
@@ -738,7 +866,7 @@ func (u *userUC) CreateTransaction(ctx context.Context, userID string, requestBo
 		orderData.UserID = userModel.ID
 		orderData.VoucherShopID = voucherShopID
 		orderData.CourierID = courierShop.ID
-		orderData.DeliveryFee = 15000
+		orderData.DeliveryFee = 15000 // TODO use rajaongkir
 		orderData.OrderStatusID = 1
 
 		orderResponse.OrderData = orderData
@@ -747,44 +875,47 @@ func (u *userUC) CreateTransaction(ctx context.Context, userID string, requestBo
 		orderResponses = append(orderResponses, orderResponse)
 	}
 
+	transactionData.ExpiredAt.Valid = true
+	transactionData.ExpiredAt.Time = time.Now().Add(time.Hour * 24)
+
 	transactionResponse := &body.TransactionResponse{
 		TransactionData: transactionData,
 		OrderResponses:  orderResponses,
 	}
 
-	err := u.txRepo.WithTransaction(func(tx postgre.Transaction) error {
+	data, err := u.txRepo.WithTransactionReturnData(func(tx postgre.Transaction) (interface{}, error) {
 		transactionID, errTrans := u.userRepo.CreateTransaction(ctx, tx, transactionResponse.TransactionData)
 		if errTrans != nil {
-			return errTrans
+			return nil, errTrans
 		}
 
 		for _, o := range transactionResponse.OrderResponses {
 			o.OrderData.TransactionID = *transactionID
 			orderID, errOrder := u.userRepo.CreateOrder(ctx, tx, o.OrderData)
 			if errOrder != nil {
-				return errOrder
+				return nil, errOrder
 			}
 			for _, i := range o.Items {
 				i.Item.OrderID = *orderID
 				_, errItem := u.userRepo.CreateOrderItem(ctx, tx, i.Item)
 				if errItem != nil {
-					return errItem
+					return nil, errItem
 				}
 				i.ProductDetailData.Stock -= i.CartItemData.Quantity
 				errProduct := u.userRepo.UpdateProductDetailStock(ctx, tx, i.ProductDetailData)
 				if errProduct != nil {
-					return errProduct
+					return nil, errProduct
 				}
 				errCart := u.userRepo.DeleteCartItemByID(ctx, tx, i.CartItemData)
 				if errCart != nil {
-					return errCart
+					return nil, errCart
 				}
 			}
 		}
-		return nil
+		return transactionID.String(), nil
 	})
 	if err != nil {
-		return err
+		return "", err
 	}
-	return nil
+	return data.(string), nil
 }

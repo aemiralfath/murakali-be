@@ -13,6 +13,7 @@ type Transaction interface {
 }
 
 type TxFn func(Transaction) error
+type TxFnData func(Transaction) (interface{}, error)
 
 type TxRepo struct {
 	PSQL *sql.DB
@@ -20,6 +21,27 @@ type TxRepo struct {
 
 func NewTxRepository(psql *sql.DB) *TxRepo {
 	return &TxRepo{psql}
+}
+
+func (tr *TxRepo) WithTransactionReturnData(fn TxFnData) (data interface{}, err error) {
+	tx, err := tr.PSQL.Begin()
+	if err != nil {
+		return nil, err
+	}
+
+	defer func() {
+		if p := recover(); p != nil {
+			err = tx.Rollback()
+			panic(p)
+		} else if err != nil {
+			err = tx.Rollback()
+		} else {
+			err = tx.Commit()
+		}
+	}()
+
+	data, err = fn(tx)
+	return data, err
 }
 
 func (tr *TxRepo) WithTransaction(fn TxFn) (err error) {

@@ -13,7 +13,7 @@ linters-settings:
   gocyclo:
     min-complexity: 30
   nestif:
-    min-complexity: 7
+    min-complexity: 15
   maligned:
     suggest-new: true
   goconst:

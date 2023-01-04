@@ -15,6 +15,10 @@ type CreateTransactionRequest struct {
 	CartItems            []CartItem `json:"cart_items"`
 }
 
+type CreateTransactionResponse struct {
+	TransactionID string `json:"transaction_id"`
+}
+
 type CartItem struct {
 	ShopID         string          `json:"shop_id"`
 	VoucherShopID  string          `json:"voucher_shop_id"`

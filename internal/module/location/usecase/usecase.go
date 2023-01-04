@@ -211,7 +211,6 @@ func (u *locationUC) GetCityRajaOngkir(provinceID int) (*body.RajaOngkirCityResp
 func (u *locationUC) GetDataFromKodePos(province, city, subdistrict string) (*body.KodePosResponse, error) {
 	var responseKodePos body.KodePosResponse
 	url := fmt.Sprintf("%s/search/?q=%s %s %s", u.cfg.External.KodePosURL, province, city, subdistrict)
-	fmt.Println(url)
 	req, err := http.NewRequest("GET", url, http.NoBody)
 	if err != nil {
 		return nil, err
