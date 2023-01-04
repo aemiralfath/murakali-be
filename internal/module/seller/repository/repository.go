@@ -124,13 +124,10 @@ func (r *sellerRepo) GetOrders(ctx context.Context, shopID, orderStatusID string
 			&order.VoucherCode,
 			&order.CreatedAt,
 		); errScan != nil {
-			fmt.Println("222", err)
-
 			return nil, err
 		}
 
 		orderDetail := make([]*model.OrderDetail, 0)
-		fmt.Println("test", orders)
 
 		res2, err2 := r.PSQL.QueryContext(
 			ctx, GetOrderDetailQuery, order.OrderID)
@@ -138,7 +135,6 @@ func (r *sellerRepo) GetOrders(ctx context.Context, shopID, orderStatusID string
 		if err2 != nil {
 			return nil, err2
 		}
-		fmt.Println("test", orders)
 
 		for res2.Next() {
 			var detail model.OrderDetail
@@ -159,7 +155,6 @@ func (r *sellerRepo) GetOrders(ctx context.Context, shopID, orderStatusID string
 		order.Detail = orderDetail
 
 		orders = append(orders, &order)
-		fmt.Println("test", orders)
 	}
 	if res.Err() != nil {
 		return nil, err
