@@ -6,6 +6,8 @@ import (
 	"github.com/google/uuid"
 )
 
+
+
 type CourierSellerResponse struct {
 	Rows []*CourierSellerInfo `json:"rows"`
 }
@@ -17,4 +19,9 @@ type CourierSellerInfo struct {
 	Code        string       `json:"code" db:"code" `
 	Service     string       `json:"service" db:"service" `
 	Description string       `json:"description" db:"description" `
+}
+
+
+type CourierSellerRequest struct {
+	CourierID          string `json:"courier_id"`
 }

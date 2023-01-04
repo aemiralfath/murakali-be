@@ -38,15 +38,17 @@ const (
 	`
 
 
-	GetShopIDByUserIDQuery = `SELECT shop_id from "shop" where user_id = $1 `
-
-	CreateCourierSellerQuery = `INSERT INTO "shop_courier" 
-    	(shop_id, courier_id)
-    	VALUES ($1, $2)
-		WHERE deleted_at IS NULL`
+	
 
 	GetShopIDByShopIDQuery = `SELECT s.id, s.user_id, s.name, s.total_product, s.total_rating, s.rating_avg, s.created_at, u.photo_url
 	from "shop" s 
 	join "user" u on u.id = s.user_id
 	where s.id = $1 and s.deleted_at is null`
+
+
+	GetShopIDByUserIDQuery = `SELECT id from "shop" where user_id = $1 `
+
+	CreateCourierSellerQuery = `INSERT INTO "shop_courier" 
+    	(shop_id, courier_id)
+    	VALUES ($1, $2)`
 )

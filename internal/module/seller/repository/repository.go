@@ -10,7 +10,7 @@ import (
 	"murakali/pkg/pagination"
 
 	"github.com/go-redis/redis/v8"
-)
+)	
 
 type sellerRepo struct {
 	PSQL        *sql.DB
@@ -225,4 +225,25 @@ func (r *sellerRepo) GetSellerBySellerID(ctx context.Context, sellerID string) (
 	}
 
 	return &sellerData, nil
+}
+
+
+func (r *sellerRepo) GetShopIDByUserID(ctx context.Context, userID string) (string, error) {
+	var ID string
+	if err := r.PSQL.QueryRowContext(ctx, GetShopIDByUserIDQuery , userID).Scan(&ID); err != nil {
+		return "", err
+	}
+
+	return ID, nil
+}
+
+func (r *sellerRepo) CreateCourierSeller(ctx context.Context, shopId string, courierId string)  error {
+	
+	if _,err := r.PSQL.ExecContext(ctx, CreateCourierSellerQuery,
+		shopId,
+		courierId); err != nil {
+		return err
+	}
+
+	return  nil
 }

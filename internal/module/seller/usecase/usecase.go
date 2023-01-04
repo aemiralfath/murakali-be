@@ -120,3 +120,23 @@ func (u *sellerUC) GetSellerBySellerID(ctx context.Context, sellerID string) (*b
 
 	return sellerData, nil
 }
+
+
+
+func (u *sellerUC) CreateCourierSeller(ctx context.Context, userID string,  courierId string) error{
+	shopID, err := u.sellerRepo.GetShopIDByUserID(ctx, userID)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return httperror.New(http.StatusBadRequest, response.UserNotExistMessage)
+		}
+
+		return err
+	}
+
+	err = u.sellerRepo.CreateCourierSeller(ctx, shopID, courierId)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}

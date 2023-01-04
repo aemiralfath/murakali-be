@@ -174,8 +174,6 @@ func (h *sellerHandlers) GetSellerBySellerID(c *gin.Context) {
 	response.SuccessResponse(c.Writer, data, http.StatusOK)
 }
 
-
-
 func (h *sellerHandlers)  GetCourierSeller(c *gin.Context) {
 	userID, exist := c.Get("userID")
 	if !exist {
@@ -198,3 +196,42 @@ func (h *sellerHandlers)  GetCourierSeller(c *gin.Context) {
 
 	response.SuccessResponse(c.Writer, courierSeller, http.StatusOK)
 }
+
+
+
+func (h *sellerHandlers) CreateCourierSeller(c *gin.Context) {
+	userID, exist := c.Get("userID")
+	if !exist {
+		response.ErrorResponse(c.Writer, response.UnauthorizedMessage, http.StatusUnauthorized)
+		return
+	}
+
+	var requestBody body.CourierSellerRequest
+	if err := c.ShouldBind(&requestBody); err != nil {
+		response.ErrorResponse(c.Writer, response.BadRequestMessage, http.StatusBadRequest)
+		return
+	}
+
+	// courierId := strings.TrimSpace(requestBody.CourierID)
+	// if courierId == ""{
+	// 	response.ErrorResponseData(c.Writer, invalidFields, body.FieldCannotBeEmptyMessage , http.StatusUnprocessableEntity)
+	// 	return
+	// }
+
+	if err := h.sellerUC.CreateCourierSeller(c, userID.(string), requestBody.CourierID); err != nil {
+		var e *httperror.Error
+		if !errors.As(err, &e) {
+			h.logger.Errorf("HandlerUser, Error: %s", err)
+			response.ErrorResponse(c.Writer, response.InternalServerErrorMessage, http.StatusInternalServerError)
+			return
+		}
+
+		response.ErrorResponse(c.Writer, e.Err.Error(), e.Status)
+		return
+	}
+
+	response.SuccessResponse(c.Writer, nil, http.StatusOK)
+}
+
+
+
