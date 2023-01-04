@@ -3,6 +3,7 @@ package repository
 import (
 	"context"
 	"database/sql"
+	"fmt"
 	"murakali/internal/model"
 	"murakali/internal/module/seller"
 	"murakali/internal/module/seller/delivery/body"
@@ -23,9 +24,9 @@ func NewSellerRepository(psql *sql.DB, client *redis.Client) seller.Repository {
 	}
 }
 
-func (r *sellerRepo) GetTotalOrder(ctx context.Context, shopID string) (int64, error) {
+func (r *sellerRepo) GetTotalOrder(ctx context.Context, shopID, orderStatusID string) (int64, error) {
 	var total int64
-	if err := r.PSQL.QueryRowContext(ctx, GetTotalOrderQuery, shopID).Scan(&total); err != nil {
+	if err := r.PSQL.QueryRowContext(ctx, GetTotalOrderQuery, shopID, fmt.Sprintf("%%%s%%", orderStatusID)).Scan(&total); err != nil {
 		return 0, err
 	}
 
@@ -94,11 +95,14 @@ func (r *sellerRepo) GetOrderByOrderID(ctx context.Context, orderID string) (*mo
 	return &order, nil
 }
 
-func (r *sellerRepo) GetOrders(ctx context.Context, shopID string, pgn *pagination.Pagination) ([]*model.Order, error) {
+func (r *sellerRepo) GetOrders(ctx context.Context, shopID, orderStatusID string, pgn *pagination.Pagination) ([]*model.Order, error) {
+
 	orders := make([]*model.Order, 0)
+
 	res, err := r.PSQL.QueryContext(
 		ctx, GetOrdersQuery,
 		shopID,
+		fmt.Sprintf("%%%s%%", orderStatusID),
 		pgn.GetLimit(),
 		pgn.GetOffset())
 
@@ -120,10 +124,13 @@ func (r *sellerRepo) GetOrders(ctx context.Context, shopID string, pgn *paginati
 			&order.VoucherCode,
 			&order.CreatedAt,
 		); errScan != nil {
+			fmt.Println("222", err)
+
 			return nil, err
 		}
 
 		orderDetail := make([]*model.OrderDetail, 0)
+		fmt.Println("test", orders)
 
 		res2, err2 := r.PSQL.QueryContext(
 			ctx, GetOrderDetailQuery, order.OrderID)
@@ -131,6 +138,7 @@ func (r *sellerRepo) GetOrders(ctx context.Context, shopID string, pgn *paginati
 		if err2 != nil {
 			return nil, err2
 		}
+		fmt.Println("test", orders)
 
 		for res2.Next() {
 			var detail model.OrderDetail
@@ -151,6 +159,7 @@ func (r *sellerRepo) GetOrders(ctx context.Context, shopID string, pgn *paginati
 		order.Detail = orderDetail
 
 		orders = append(orders, &order)
+		fmt.Println("test", orders)
 	}
 	if res.Err() != nil {
 		return nil, err

@@ -44,10 +44,10 @@ func (h *sellerHandlers) GetOrder(c *gin.Context) {
 	}
 
 	pgn := &pagination.Pagination{}
-
+	orderStatusID := c.DefaultQuery("order_status", "")
 	h.ValidateQueryOrder(c, pgn)
 
-	orders, err := h.sellerUC.GetOrder(c, userID.(string), pgn)
+	orders, err := h.sellerUC.GetOrder(c, userID.(string), orderStatusID, pgn)
 	if err != nil {
 		var e *httperror.Error
 		if !errors.As(err, &e) {

@@ -24,13 +24,13 @@ func NewSellerUseCase(cfg *config.Config, txRepo *postgre.TxRepo, sellerRepo sel
 	return &sellerUC{cfg: cfg, txRepo: txRepo, sellerRepo: sellerRepo}
 }
 
-func (u *sellerUC) GetOrder(ctx context.Context, userID string, pgn *pagination.Pagination) (*pagination.Pagination, error) {
+func (u *sellerUC) GetOrder(ctx context.Context, userID, orderStatusID string, pgn *pagination.Pagination) (*pagination.Pagination, error) {
 	shopID, err := u.sellerRepo.GetShopIDByUser(ctx, userID)
 	if err != nil {
 		return nil, err
 	}
 
-	totalRows, err := u.sellerRepo.GetTotalOrder(ctx, shopID)
+	totalRows, err := u.sellerRepo.GetTotalOrder(ctx, shopID, orderStatusID)
 	if err != nil {
 		return nil, err
 	}
@@ -39,7 +39,7 @@ func (u *sellerUC) GetOrder(ctx context.Context, userID string, pgn *pagination.
 	pgn.TotalRows = totalRows
 	pgn.TotalPages = totalPages
 
-	orders, err := u.sellerRepo.GetOrders(ctx, shopID, pgn)
+	orders, err := u.sellerRepo.GetOrders(ctx, shopID, orderStatusID, pgn)
 	if err != nil {
 		return nil, err
 	}
