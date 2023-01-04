@@ -167,3 +167,21 @@ func (r *sellerRepo) ChangeOrderStatus(ctx context.Context, requestBody body.Cha
 
 	return nil
 }
+
+func (r *sellerRepo) GetSellerBySellerID(ctx context.Context, sellerID string) (*body.SellerResponse, error) {
+	var sellerData body.SellerResponse
+	if err := r.PSQL.QueryRowContext(ctx, GetShopIDByShopIDQuery, sellerID).Scan(
+		&sellerData.ID,
+		&sellerData.UserID,
+		&sellerData.Name,
+		&sellerData.TotalProduct,
+		&sellerData.TotalRating,
+		&sellerData.RatingAVG,
+		&sellerData.CreatedAt,
+		&sellerData.PhotoURL,
+	); err != nil {
+		return nil, err
+	}
+
+	return &sellerData, nil
+}
