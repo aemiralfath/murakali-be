@@ -10,4 +10,7 @@ type Handlers interface {
 	GetCategoriesByNameLevelThree(c *gin.Context)
 	GetRecommendedProducts(c *gin.Context)
 	GetProductDetail(c *gin.Context)
+
+
+	GetSearchProducts(c *gin.Context) 
 }

@@ -229,3 +229,49 @@ func (u *productUC) GetProductDetail(ctx context.Context, productID string) (*bo
 	}
 	return &result, nil
 }
+
+
+
+
+func (u *productUC) GetSearchProducts(ctx context.Context, pgn *pagination.Pagination, query *body.GetSearchProductQueryRequest) (*pagination.Pagination, error) {
+	totalRows, err := u.productRepo.GetTotalSearchProduct(ctx, query)
+	if err != nil {
+		return nil, err
+	}
+	totalPages := int(math.Ceil(float64(totalRows) / float64(pgn.Limit)))
+	pgn.TotalRows = totalRows
+	pgn.TotalPages = totalPages
+
+	products, promotions, vouchers, err := u.productRepo.GetSearchProducts(ctx, pgn, query)
+	if err != nil {
+		if err != sql.ErrNoRows {
+			return nil, err
+		}
+	}
+
+	resultProduct := make([]*body.Products, 0)
+	totalData := len(products)
+	for i := 0; i < totalData; i++ {
+		p := &body.Products{
+			Title:                     products[i].Title,
+			UnitSold:                  products[i].UnitSold,
+			RatingAVG:                 products[i].RatingAVG,
+			ThumbnailURL:              products[i].ThumbnailURL,
+			MinPrice:                  products[i].MinPrice,
+			MaxPrice:                  products[i].MaxPrice,
+			PromoDiscountPercentage:   promotions[i].DiscountPercentage,
+			PromoDiscountFixPrice:     promotions[i].DiscountFixPrice,
+			PromoMinProductPrice:      promotions[i].MinProductPrice,
+			PromoMaxDiscountPrice:     promotions[i].MaxDiscountPrice,
+			VoucherDiscountPercentage: vouchers[i].DiscountPercentage,
+			VoucherDiscountFixPrice:   vouchers[i].DiscountFixPrice,
+			ShopName:                  products[i].ShopName,
+			CategoryName:              products[i].CategoryName,
+		}
+		p = u.CalculateDiscountProduct(p)
+		resultProduct = append(resultProduct, p)
+	}
+	pgn.Rows = resultProduct
+
+	return pgn, nil
+}

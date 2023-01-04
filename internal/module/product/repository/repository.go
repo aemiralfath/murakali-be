@@ -196,6 +196,9 @@ func (r *productRepo) GetRecommendedProducts(ctx context.Context, pgn *paginatio
 	return products, promotions, vouchers, err
 }
 
+
+
+
 func (r *productRepo) GetProductInfo(ctx context.Context, productID string) (*body.ProductInfo, error) {
 	var productInfo body.ProductInfo
 
@@ -319,6 +322,74 @@ func (r *productRepo) GetProductDetail(ctx context.Context, productID string, pr
 func (r *productRepo) GetTotalProduct(ctx context.Context) (int64, error) {
 	var total int64
 	if err := r.PSQL.QueryRowContext(ctx, GetTotalProductQuery).Scan(&total); err != nil {
+		return 0, err
+	}
+
+	return total, nil
+}
+
+
+
+
+
+
+func (r *productRepo) GetSearchProducts(ctx context.Context, pgn *pagination.Pagination, query *body.GetSearchProductQueryRequest) ([]*body.Products,
+	[]*model.Promotion, []*model.Voucher, error) {
+	products := make([]*body.Products, 0)
+	promotions := make([]*model.Promotion, 0)
+	vouchers := make([]*model.Voucher, 0)
+
+	res, err := r.PSQL.QueryContext(
+		ctx, GetSearchProductsQuery,
+		query.Search,
+		pgn.GetLimit(),
+		pgn.GetOffset())
+
+	if err != nil {
+		return nil, nil, nil, err
+	}
+	defer res.Close()
+
+	for res.Next() {
+		var productData body.Products
+		var promo model.Promotion
+		var voucher model.Voucher
+
+		if errScan := res.Scan(
+			&productData.Title,
+			&productData.UnitSold,
+			&productData.RatingAVG,
+			&productData.ThumbnailURL,
+			&productData.MinPrice,
+			&productData.MaxPrice,
+			&promo.DiscountPercentage,
+			&promo.DiscountFixPrice,
+			&promo.MinProductPrice,
+			&promo.MaxDiscountPrice,
+			&voucher.DiscountPercentage,
+			&voucher.DiscountFixPrice,
+			&productData.ShopName,
+			&productData.CategoryName,
+		); errScan != nil {
+			return nil, nil, nil, err
+		}
+
+		products = append(products, &productData)
+		promotions = append(promotions, &promo)
+		vouchers = append(vouchers, &voucher)
+	}
+
+	if res.Err() != nil {
+		return nil, nil, nil, err
+	}
+
+	return products, promotions, vouchers, err
+}
+
+
+func (r *productRepo) GetTotalSearchProduct(ctx context.Context, query *body.GetSearchProductQueryRequest) (int64, error) {
+	var total int64
+	if err := r.PSQL.QueryRowContext(ctx, GetTotalSearchProductQuery, query.Search).Scan(&total); err != nil {
 		return 0, err
 	}
 
