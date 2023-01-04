@@ -198,7 +198,6 @@ func (r *sellerRepo) GetCourierSeller(ctx context.Context, userID string) ([]*bo
 		}
 
 		courierSeller = append(courierSeller , &courierSellerData)
-
 	}
 
 	if res.Err() != nil {

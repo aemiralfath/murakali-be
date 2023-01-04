@@ -153,7 +153,6 @@ func (h *sellerHandlers) GetOrderByOrderID(c *gin.Context) {
 
 
 func (h *sellerHandlers)  GetCourierSeller(c *gin.Context) {
-	
 	userID, exist := c.Get("userID")
 	if !exist {
 		response.ErrorResponse(c.Writer, response.UnauthorizedMessage, http.StatusUnauthorized)
