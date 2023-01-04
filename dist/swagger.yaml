@@ -1220,7 +1220,24 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/DefaultSuccess'
-      
+
+  '/api/v1/seller/{seller_id}':            
+    get:
+      summary: Get Seller Detail
+      description: >-
+        Get Seller Detail
+      tags:
+        - Seller
+      security:
+        - BEARER: []
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetSellerDetailResponse' 
+
   '/api/v1/seller/order':            
     get:
       summary: Get Seller Order
@@ -2998,6 +3015,44 @@ components:
         quantity:
           type: number
           example: 5
+
+    GetSellerDetailResponse:
+      title: GetSellerDetailResponse
+      type: object
+      description: Get Seller Detail response data model.
+      properties:
+        message:
+          type: string
+        data:
+          type: object
+          properties:
+            id:
+              type: string
+            user_id:
+              type: string
+            name:
+              type: string
+            total_product:
+              type: integer
+            total_rating:
+              type: integer
+            rating_avg:
+              type: integer
+            photo_url:
+              type: string
+            created_at:
+              type: string
+      example:
+        message: success
+        data:
+        - id: e8854443-c2c7-488e-93d5-b9d93708b8a3
+          user_id: f8d8d66a-e8eb-4633-bc2d-4ccd941fed47
+          name: Laptop Shop
+          total_product: 12510
+          total_rating: 0
+          rating_avg: 0
+          photo_url: https://res.cloudinary.com/dhpao1zxi/image/upload/v1671705602/ldtzmxqeyb4nwu5p6y76.jpg
+          created_at: '2023-01-04T04:50:12.665781Z'
 
     GetSellerOrderResponse:
       title: GetSellerOrderResponse
