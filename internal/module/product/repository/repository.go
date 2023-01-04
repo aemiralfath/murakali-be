@@ -334,17 +334,18 @@ func (r *productRepo) GetTotalProduct(ctx context.Context) (int64, error) {
 
 
 
-func (r *productRepo) GetSearchProducts(ctx context.Context, pgn *pagination.Pagination, query *body.GetSearchProductQueryRequest) ([]*body.Products,
+func (r *productRepo) GetProducts(ctx context.Context, pgn *pagination.Pagination, query *body.GetProductQueryRequest) ([]*body.Products,
 	[]*model.Promotion, []*model.Voucher, error) {
 	products := make([]*body.Products, 0)
 	promotions := make([]*model.Promotion, 0)
 	vouchers := make([]*model.Voucher, 0)
 
-	q := fmt.Sprintf(GetSearchProductsQuery, pgn.GetSort())
+	q := fmt.Sprintf(GetProductsQuery, pgn.GetSort())
 	res, err := r.PSQL.QueryContext(
 		ctx, q,
 		query.Search,
 		query.Category,
+		query.Shop,
 		pgn.GetLimit(),
 		pgn.GetOffset())
 
@@ -390,9 +391,9 @@ func (r *productRepo) GetSearchProducts(ctx context.Context, pgn *pagination.Pag
 }
 
 
-func (r *productRepo) GetTotalSearchProduct(ctx context.Context, query *body.GetSearchProductQueryRequest) (int64, error) {
+func (r *productRepo) GetAllTotalProduct(ctx context.Context, query *body.GetProductQueryRequest) (int64, error) {
 	var total int64
-	if err := r.PSQL.QueryRowContext(ctx, GetTotalSearchProductQuery, query.Search).Scan(&total); err != nil {
+	if err := r.PSQL.QueryRowContext(ctx, GetAllTotalProductQuery, query.Search, query.Category, query.Shop).Scan(&total); err != nil {
 		return 0, err
 	}
 

@@ -233,8 +233,8 @@ func (u *productUC) GetProductDetail(ctx context.Context, productID string) (*bo
 
 
 
-func (u *productUC) GetSearchProducts(ctx context.Context, pgn *pagination.Pagination, query *body.GetSearchProductQueryRequest) (*pagination.Pagination, error) {
-	totalRows, err := u.productRepo.GetTotalSearchProduct(ctx, query)
+func (u *productUC) GetProducts(ctx context.Context, pgn *pagination.Pagination, query *body.GetProductQueryRequest) (*pagination.Pagination, error) {
+	totalRows, err := u.productRepo.GetAllTotalProduct(ctx, query)
 	if err != nil {
 		return nil, err
 	}
@@ -242,7 +242,7 @@ func (u *productUC) GetSearchProducts(ctx context.Context, pgn *pagination.Pagin
 	pgn.TotalRows = totalRows
 	pgn.TotalPages = totalPages
 
-	products, promotions, vouchers, err := u.productRepo.GetSearchProducts(ctx, pgn, query)
+	products, promotions, vouchers, err := u.productRepo.GetProducts(ctx, pgn, query)
 	if err != nil {
 		if err != sql.ErrNoRows {
 			return nil, err

@@ -14,6 +14,7 @@ import (
 	"strings"
 	"fmt"
 	"github.com/gin-gonic/gin"
+
 )
 
 type productHandlers struct {
@@ -140,9 +141,9 @@ func (h *productHandlers) GetRecommendedProducts(c *gin.Context) {
 
 
 
-func (h *productHandlers) GetSearchProducts(c *gin.Context) {
-	pgn, query := h.ValidateQuerySearchProduct(c)
-	SearchProducts, err := h.productUC.GetSearchProducts(c, pgn, query)
+func (h *productHandlers) GetProducts(c *gin.Context) {
+	pgn, query := h.ValidateQueryProduct(c)
+	SearchProducts, err := h.productUC.GetProducts(c, pgn, query)
 	if err != nil {
 		var e *httperror.Error
 		if !errors.As(err, &e) {
@@ -202,7 +203,7 @@ func (h *productHandlers) ValidateQueryRecommendProduct(c *gin.Context) *paginat
 }
 
 
-func (h *productHandlers) ValidateQuerySearchProduct(c *gin.Context) (*pagination.Pagination, *body.GetSearchProductQueryRequest) {
+func (h *productHandlers) ValidateQueryProduct(c *gin.Context) (*pagination.Pagination, *body.GetProductQueryRequest) {
 	limit := strings.TrimSpace(c.Query("limit"))
 	page := strings.TrimSpace(c.Query("page"))
 
@@ -215,10 +216,11 @@ func (h *productHandlers) ValidateQuerySearchProduct(c *gin.Context) (*paginatio
 
 	minPrice := strings.TrimSpace(c.Query("min_price"))
 	maxPrice  := strings.TrimSpace(c.Query("max_price"))
-	category := strings.TrimSpace(c.Query("category"))
 	minRating := strings.TrimSpace(c.Query("min_rating"))
 	maxRating := strings.TrimSpace(c.Query("max_rating"))
 
+	category := strings.TrimSpace(c.Query("category"))
+	shop:= strings.TrimSpace(c.Query("shop_name"))
 
 	var limitFilter,pageFilter int
 
@@ -271,11 +273,14 @@ func (h *productHandlers) ValidateQuerySearchProduct(c *gin.Context) (*paginatio
 
 	searchFilter := fmt.Sprintf("%%%s%%", search)
 	categoryFilter := fmt.Sprintf("%%%s%%", category)
+	shopFilter := fmt.Sprintf("%%%s%%", shop)
 
-	query := &body.GetSearchProductQueryRequest{
+
+	
+	query := &body.GetProductQueryRequest{
 		Search  : searchFilter ,
 
-
+		Shop: shopFilter,
 		Category: categoryFilter,
 		MinPrice: minPriceFilter,
 		MaxPrice: maxPriceFilter,

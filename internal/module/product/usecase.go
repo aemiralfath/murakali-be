@@ -15,5 +15,5 @@ type UseCase interface {
 	GetProductDetail(ctx context.Context, productID string) (*body.ProductDetailResponse, error)
 
 
-	GetSearchProducts(ctx context.Context, pgn *pagination.Pagination, query *body.GetSearchProductQueryRequest) (*pagination.Pagination, error) 
+	GetProducts(ctx context.Context, pgn *pagination.Pagination, query *body.GetProductQueryRequest) (*pagination.Pagination, error) 
 }

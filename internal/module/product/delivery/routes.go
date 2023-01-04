@@ -17,5 +17,5 @@ func MapProductRoutes(productGroup *gin.RouterGroup, h product.Handlers) {
 
 
 
-	productGroup.GET("/", h.GetSearchProducts)
+	productGroup.GET("/", h.GetProducts)
 }
