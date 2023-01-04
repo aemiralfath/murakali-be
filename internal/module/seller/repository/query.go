@@ -24,4 +24,9 @@ const (
 	GetShopIDByOrderQuery = `SELECT shop_id from "order" where id = $1 `
 
 	ChangeOrderStatusQuery = `UPDATE "order" SET "order_status_id" = $1 WHERE "id" = $2`
+
+	GetShopIDByShopIDQuery = `SELECT s.id, s.user_id, s.name, s.total_product, s.total_rating, s.rating_avg, s.created_at, u.photo_url
+	from "shop" s 
+	join "user" u on u.id = s.user_id
+	where s.id = $1 and s.deleted_at is null`
 )

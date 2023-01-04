@@ -2,6 +2,7 @@ package usecase
 
 import (
 	"context"
+	"database/sql"
 	"math"
 	"murakali/config"
 	"murakali/internal/model"
@@ -76,4 +77,16 @@ func (u *sellerUC) GetOrderByOrderID(ctx context.Context, orderID string) (*mode
 	}
 
 	return order, nil
+}
+
+func (u *sellerUC) GetSellerBySellerID(ctx context.Context, sellerID string) (*body.SellerResponse, error) {
+	sellerData, err := u.sellerRepo.GetSellerBySellerID(ctx, sellerID)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, httperror.New(http.StatusNotFound, body.SellerNotFoundMessage)
+		}
+		return nil, err
+	}
+
+	return sellerData, nil
 }

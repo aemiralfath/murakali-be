@@ -267,24 +267,21 @@ func (r *productRepo) GetProductDetail(ctx context.Context, productID string, pr
 		); errScan != nil {
 			return nil, err
 		}
+
 		if promo != nil {
+			discountedPrice := 0.0
 			if promo.PromotionDiscountPercentage != nil {
-				if *detail.NormalPrice >= *promo.PromotionMinProductPrice {
-					discountedPrice := *detail.NormalPrice - (*detail.NormalPrice * (*promo.PromotionDiscountPercentage / float64(100)))
-					if discountedPrice > *promo.PromotionMaxDiscountPrice {
-						discountedPrice = *detail.NormalPrice - *promo.PromotionMaxDiscountPrice
-					}
-					detail.DiscountPrice = &discountedPrice
-				}
+				discountedPrice = *detail.NormalPrice - *promo.PromotionDiscountFixPrice
+			} else if promo.PromotionDiscountFixPrice != nil {
+				discountedPrice = *detail.NormalPrice - (*detail.NormalPrice * (*promo.PromotionDiscountPercentage / float64(100)))
 			}
-			if promo.PromotionDiscountFixPrice != nil {
-				if *detail.NormalPrice >= *promo.PromotionMinProductPrice {
-					discountedPrice := *detail.NormalPrice - float64(*promo.PromotionDiscountFixPrice)
-					if float64(*promo.PromotionDiscountFixPrice) > *promo.PromotionMaxDiscountPrice {
-						discountedPrice = *detail.NormalPrice - *promo.PromotionMaxDiscountPrice
-					}
-					detail.DiscountPrice = &discountedPrice
+			if *detail.NormalPrice >= *promo.PromotionMinProductPrice {
+				if *promo.PromotionDiscountFixPrice > *promo.PromotionMaxDiscountPrice {
+					discountedPrice = *detail.NormalPrice - *promo.PromotionMaxDiscountPrice
+				} else if discountedPrice > *promo.PromotionMaxDiscountPrice {
+					discountedPrice = *promo.PromotionMaxDiscountPrice
 				}
+				detail.DiscountPrice = &discountedPrice
 			}
 		}
 
