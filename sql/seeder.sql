@@ -9,12 +9,12 @@ VALUES ('9a4de0f5-0556-491b-ba1b-0873933262da', 'festival hari ibu', 'festival d
         'https://shopee.co.id/m/mall-super-category-day', true);
 
 INSERT INTO "order_status" (name)
-VALUES ('pending to pay'),
-       ('paid'),
-       ('pending confirmation'),
-       ('confirmed'),
-       ('sent'),
-       ('done'),
+VALUES ('waiting to pay'),
+       ('waiting for seller confirmation'),
+       ('waiting for packing'),
+       ('on delivery'),
+       ('completed'),
+       ('received'),
        ('cancelled');
 
 INSERT INTO "wallet" (id, user_id, balance, pin, attempt_count)

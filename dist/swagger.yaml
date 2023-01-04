@@ -810,7 +810,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/DefaultSuccess'
+                $ref: '#/components/schemas/CreateTransactionResponse'
                 
   '/api/v1/product/':
     get:
@@ -1316,6 +1316,21 @@ components:
             access_token:
               type: string
               example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2Mzg3NzE1NDcsImlhdCI6MTYzODE2Njc0NywianRpIjoiNGE2YTE3MDMtOGM5ZC00Yjk1LTkwODctNjIzNDM3MjIyMmRkIiwic3ViIjoiNDA1OTU2YzMtNDZhZS00NzFjLTkzMWUtNmIwZTFkZWMwYjdhIn0.IUvCSn9GR3tQBJ86PhVl3MBDgG4BdSHEGoRO1SYEcYk"
+
+    CreateTransactionResponse:
+      title: TransactionResponse
+      type: object
+      description: Transaction response data model.
+      properties:
+        message:
+          type: string
+          example: "success"
+        data:
+          type: object
+          properties:
+            transaction_id:
+              type: string
+              example: "e6723204-144a-40fd-a866-952de5695d32"
 
     RegisterEmailRequest:
       title: RegisterEmailRequest

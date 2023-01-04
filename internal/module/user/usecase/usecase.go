@@ -655,7 +655,7 @@ func (u *userUC) CreateSLPPayment(ctx context.Context, transactionID string) (st
 		return "", err
 	}
 
-	if transaction.ExpiredAt.Time.Sub(time.Now()) < 0 {
+	if time.Until(transaction.ExpiredAt.Time) < 0 {
 		return "", httperror.New(http.StatusBadRequest, response.TransactionAlreadyExpired)
 	}
 
@@ -663,8 +663,9 @@ func (u *userUC) CreateSLPPayment(ctx context.Context, transactionID string) (st
 		return "", httperror.New(http.StatusBadRequest, response.TransactionAlreadyFinished)
 	}
 
+	signFormat := fmt.Sprintf("%s:%d:%s", *transaction.CardNumber, int(transaction.TotalPrice), u.cfg.External.SlpMerchantCode)
 	h := hmac.New(sha256.New, []byte(u.cfg.External.SlpAPIKey))
-	h.Write([]byte(fmt.Sprintf("%s:%d:%s", *transaction.CardNumber, int(transaction.TotalPrice), u.cfg.External.SlpMerchantCode)))
+	h.Write([]byte(signFormat))
 	sign := hex.EncodeToString(h.Sum(nil))
 
 	redirectURL, err := u.GetRedirectURL(transaction, sign)
@@ -681,7 +682,12 @@ func (u *userUC) GetRedirectURL(transaction *model.Transaction, sign string) (st
 	url := fmt.Sprintf("%s/v1/transaction/pay", u.cfg.External.SlpURL)
 	payload := fmt.Sprintf(
 		"card_number=%s&amount=%d&merchant_code=%s&redirect_url=%s&callback_url=%s&signature=%s",
-		*transaction.CardNumber, int(transaction.TotalPrice), u.cfg.External.SlpMerchantCode, "https://www.google.com", "https://www.google.com", sign)
+		*transaction.CardNumber,
+		int(transaction.TotalPrice),
+		u.cfg.External.SlpMerchantCode,
+		"https://www.google.com",
+		fmt.Sprintf("https://%s/api/v1/user/transaction/slp-payment/%s", u.cfg.Server.Domain, transaction.ID.String()),
+		sign)
 
 	req, err := http.NewRequest("POST", url, strings.NewReader(payload))
 	if err != nil {
@@ -711,6 +717,51 @@ func (u *userUC) GetRedirectURL(transaction *model.Transaction, sign string) (st
 	}
 
 	return res.Header.Get("Location"), nil
+}
+
+func (u *userUC) UpdateTransaction(ctx context.Context, transactionID string, requestBody body.SLPCallbackRequest) error {
+	transaction, err := u.userRepo.GetTransactionByID(ctx, transactionID)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return httperror.New(http.StatusBadRequest, response.TransactionIDNotExist)
+		}
+
+		return err
+	}
+
+	if transaction.PaidAt.Valid {
+		return httperror.New(http.StatusBadRequest, response.TransactionAlreadyFinished)
+	}
+
+	orders, err := u.userRepo.GetOrderByTransactionID(ctx, transactionID)
+	if err != nil {
+		return err
+	}
+
+	if requestBody.Status == constant.SLPStatusPaid {
+		err := u.txRepo.WithTransaction(func(tx postgre.Transaction) error {
+			transaction.PaidAt.Valid = true
+			transaction.PaidAt.Time = time.Now()
+			if err := u.userRepo.UpdateTransaction(ctx, tx, transaction); err != nil {
+				return err
+			}
+
+			for _, order := range orders {
+				order.OrderStatusID = constant.OrderStatusWaitingForSeller
+				if err := u.userRepo.UpdateOrder(ctx, tx, order); err != nil {
+					return err
+				}
+			}
+
+			return nil
+		})
+
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 func (u *userUC) CreateTransaction(ctx context.Context, userID string, requestBody body.CreateTransactionRequest) (string, error) {
@@ -809,7 +860,7 @@ func (u *userUC) CreateTransaction(ctx context.Context, userID string, requestBo
 		orderData.UserID = userModel.ID
 		orderData.VoucherShopID = voucherShopID
 		orderData.CourierID = courierShop.ID
-		orderData.DeliveryFee = 15000
+		orderData.DeliveryFee = 15000 // TODO use rajaongkir
 		orderData.OrderStatusID = 1
 
 		orderResponse.OrderData = orderData

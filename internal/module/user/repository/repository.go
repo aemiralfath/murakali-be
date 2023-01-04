@@ -243,14 +243,14 @@ func (r *userRepo) GetAddresses(ctx context.Context, userID, name string, isDefa
 			&address.IsShopDefault,
 			&address.CreatedAt,
 			&address.UpdatedAt); errScan != nil {
-			return nil, err
+			return nil, errScan
 		}
 
 		addresses = append(addresses, &address)
 	}
 
 	if res.Err() != nil {
-		return nil, err
+		return nil, res.Err()
 	}
 
 	return addresses, nil
@@ -370,7 +370,16 @@ func (r *userRepo) GetOrders(ctx context.Context, userID string, pgn *pagination
 func (r *userRepo) GetTransactionByID(ctx context.Context, transactionID string) (*model.Transaction, error) {
 	var transaction model.Transaction
 	if err := r.PSQL.QueryRowContext(ctx, GetTransactionByIDQuery, transactionID).
-		Scan(&transaction.ID, &transaction.CardNumber, &transaction.TotalPrice, &transaction.PaidAt, &transaction.CanceledAt, &transaction.ExpiredAt); err != nil {
+		Scan(
+			&transaction.ID,
+			&transaction.VoucherMarketplaceID,
+			&transaction.WalletID,
+			&transaction.CardNumber,
+			&transaction.Invoice,
+			&transaction.TotalPrice,
+			&transaction.PaidAt,
+			&transaction.CanceledAt,
+			&transaction.ExpiredAt); err != nil {
 		return nil, err
 	}
 
@@ -805,8 +814,62 @@ func (r *userRepo) UpdateProductDetailStock(ctx context.Context, tx postgre.Tran
 	return nil
 }
 
+func (r *userRepo) GetOrderByTransactionID(ctx context.Context, transactionID string) ([]*model.OrderModel, error) {
+	orders := make([]*model.OrderModel, 0)
+	res, err := r.PSQL.QueryContext(ctx, GetOrderByTransactionID, transactionID)
+	if err != nil {
+		return nil, err
+	}
+	defer res.Close()
+
+	for res.Next() {
+		var order model.OrderModel
+		if errScan := res.Scan(
+			&order.ID,
+			&order.TransactionID,
+			&order.UserID,
+			&order.ShopID,
+			&order.CourierID,
+			&order.VoucherShopID,
+			&order.OrderStatusID,
+			&order.TotalPrice,
+			&order.DeliveryFee,
+			&order.ResiNo,
+			&order.CreatedAt,
+			&order.ArrivedAt); errScan != nil {
+			return nil, errScan
+		}
+
+		orders = append(orders, &order)
+	}
+
+	if res.Err() != nil {
+		return nil, res.Err()
+	}
+
+	return orders, nil
+}
+
+func (r *userRepo) UpdateTransaction(ctx context.Context, tx postgre.Transaction, transactionData *model.Transaction) error {
+	_, err := tx.ExecContext(ctx, UpdateTransactionByID, transactionData.PaidAt, transactionData.CanceledAt, transactionData.ID)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (r *userRepo) UpdateOrder(ctx context.Context, tx postgre.Transaction, orderData *model.OrderModel) error {
+	_, err := tx.ExecContext(ctx, UpdateOrderByID, orderData.OrderStatusID, orderData.ID)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func (r *userRepo) DeleteCartItemByID(ctx context.Context, tx postgre.Transaction, cartItemData *model.CartItem) error {
-	_, err := r.PSQL.ExecContext(ctx, DeleteCartItemByIDQuery, cartItemData.ID.String())
+	_, err := tx.ExecContext(ctx, DeleteCartItemByIDQuery, cartItemData.ID.String())
 	if err != nil {
 		return err
 	}

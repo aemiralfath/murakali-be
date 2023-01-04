@@ -33,7 +33,6 @@ const (
 	QuantityReachedMaximum         = "Quantity has reached the maximum limit!"
 	ProductDetailNotExistMessage   = "Product Detail not exist."
 	PictureSizeTooBig              = "Picture size too big"
-	SelectOnlyOnePaymentMethod     = "Select only one payment method."
 	TransactionIDNotExist          = "Transaction not exist."
 	TransactionAlreadyExpired      = "Transaction already expired."
 	TransactionAlreadyFinished     = "Transaction already finished."

@@ -769,6 +769,41 @@ func (h *userHandlers) CreateSLPPayment(c *gin.Context) {
 	response.SuccessResponse(c.Writer, body.CreateSLPPaymentResponse{RedirectURL: url}, http.StatusOK)
 }
 
+func (h *userHandlers) SLPPaymentCallback(c *gin.Context) {
+	var requestBody body.SLPCallbackRequest
+	if err := c.ShouldBindJSON(&requestBody); err != nil {
+		response.ErrorResponse(c.Writer, response.BadRequestMessage, http.StatusBadRequest)
+		return
+	}
+
+	invalidFields, err := requestBody.Validate(h.cfg)
+	if err != nil {
+		response.ErrorResponseData(c.Writer, invalidFields, response.UnprocessableEntityMessage, http.StatusUnprocessableEntity)
+		return
+	}
+
+	id := c.Param("id")
+	transactionID, err := uuid.Parse(id)
+	if err != nil {
+		response.ErrorResponse(c.Writer, response.BadRequestMessage, http.StatusBadRequest)
+		return
+	}
+
+	if err := h.userUC.UpdateTransaction(c, transactionID.String(), requestBody); err != nil {
+		var e *httperror.Error
+		if !errors.As(err, &e) {
+			h.logger.Errorf("HandlerUser, Error: %s", err)
+			response.ErrorResponse(c.Writer, response.InternalServerErrorMessage, http.StatusInternalServerError)
+			return
+		}
+
+		response.ErrorResponse(c.Writer, e.Err.Error(), e.Status)
+		return
+	}
+
+	response.SuccessResponse(c.Writer, nil, http.StatusOK)
+}
+
 func (h *userHandlers) CreateTransaction(c *gin.Context) {
 	var requestBody body.CreateTransactionRequest
 	if err := c.ShouldBind(&requestBody); err != nil {

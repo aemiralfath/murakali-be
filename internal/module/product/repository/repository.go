@@ -279,8 +279,8 @@ func (r *productRepo) GetProductDetail(ctx context.Context, productID string, pr
 			}
 			if promo.PromotionDiscountFixPrice != nil {
 				if *detail.NormalPrice >= *promo.PromotionMinProductPrice {
-					discountedPrice := *detail.NormalPrice - float64(*promo.PromotionDiscountFixPrice)
-					if float64(*promo.PromotionDiscountFixPrice) > *promo.PromotionMaxDiscountPrice {
+					discountedPrice := *detail.NormalPrice - *promo.PromotionDiscountFixPrice
+					if *promo.PromotionDiscountFixPrice > *promo.PromotionMaxDiscountPrice {
 						discountedPrice = *detail.NormalPrice - *promo.PromotionMaxDiscountPrice
 					}
 					detail.DiscountPrice = &discountedPrice
