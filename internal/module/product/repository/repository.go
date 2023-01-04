@@ -370,6 +370,7 @@ func (r *productRepo) GetProducts(ctx context.Context, pgn *pagination.Paginatio
 			&productData.ThumbnailURL,
 			&productData.MinPrice,
 			&productData.MaxPrice,
+			&productData.ViewCount,
 			&promo.DiscountPercentage,
 			&promo.DiscountFixPrice,
 			&promo.MinProductPrice,
