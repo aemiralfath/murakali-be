@@ -258,14 +258,17 @@ func (h *productHandlers) ValidateQueryProduct(c *gin.Context) (*pagination.Pagi
 	}
 
 	maxPriceFilter, err = strconv.ParseFloat(maxPrice, 64);
+	if err != nil || maxPriceFilter == 0 {
+		maxPriceFilter= 999999999999
+	}
 
 	minRatingFilter, err = strconv.ParseFloat(minRating, 64);
 	if err != nil || minRatingFilter < 1 {
-		minRatingFilter = 1
+		minRatingFilter = 0
 	}
 
 	maxRatingFilter, err = strconv.ParseFloat(maxRating, 64);
-	if err != nil && maxRatingFilter >5 {
+	if err != nil || maxRatingFilter >5 {
 		maxRatingFilter= 5
 	}
 
@@ -274,7 +277,6 @@ func (h *productHandlers) ValidateQueryProduct(c *gin.Context) (*pagination.Pagi
 	searchFilter := fmt.Sprintf("%%%s%%", search)
 	categoryFilter := fmt.Sprintf("%%%s%%", category)
 	shopFilter := fmt.Sprintf("%%%s%%", shop)
-
 
 	
 	query := &body.GetProductQueryRequest{

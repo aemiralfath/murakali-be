@@ -346,6 +346,10 @@ func (r *productRepo) GetProducts(ctx context.Context, pgn *pagination.Paginatio
 		query.Search,
 		query.Category,
 		query.Shop,
+		query.MinRating,
+		query.MaxRating,
+		query.MinPrice,
+		query.MaxPrice,
 		pgn.GetLimit(),
 		pgn.GetOffset())
 
@@ -393,7 +397,16 @@ func (r *productRepo) GetProducts(ctx context.Context, pgn *pagination.Paginatio
 
 func (r *productRepo) GetAllTotalProduct(ctx context.Context, query *body.GetProductQueryRequest) (int64, error) {
 	var total int64
-	if err := r.PSQL.QueryRowContext(ctx, GetAllTotalProductQuery, query.Search, query.Category, query.Shop).Scan(&total); err != nil {
+	if err := r.PSQL.QueryRowContext(ctx, 
+		GetAllTotalProductQuery, 
+		query.Search, 
+		query.Category, 
+		query.Shop,
+		query.MinRating,
+		query.MaxRating,
+		query.MinPrice,
+		query.MaxPrice,
+		).Scan(&total); err != nil {
 		return 0, err
 	}
 

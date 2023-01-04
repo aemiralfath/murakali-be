@@ -73,8 +73,10 @@ const (
 	WHERE "p".title ILIKE $1 
 	AND  "c".name ILIKE $2
 	AND "s".name  ILIKE $3
+	AND ("p".rating_avg BETWEEN $4 AND $5)
+	AND ("p".min_price BETWEEN $6 AND $7)
 	 AND "p"."deleted_at" IS NULL
-	ORDER BY %s LIMIT $4 OFFSET $5;
+	ORDER BY %s LIMIT $8 OFFSET $9;
 	`
 
 
@@ -83,7 +85,9 @@ const (
 	INNER JOIN "category" as "c" ON "c"."id" = "p"."category_id" 
 	INNER JOIN "shop" as "s" ON "s"."id" = "p"."shop_id"
 	WHERE "p".title ILIKE $1 
-	AND  "c".name ILIKE $2 
+	AND  "c".name ILIKE $2
 	AND "s".name  ILIKE $3
+	AND ("p".rating_avg BETWEEN $4 AND $5)
+	AND ("p".min_price BETWEEN $6 AND $7)
 	 AND "p"."deleted_at" IS NULL `
 )
