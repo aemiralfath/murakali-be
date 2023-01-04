@@ -12,9 +12,20 @@ const (
 	UrbanKey       = "location:urban"
 	OtpKey         = "user:otp"
 	OtpDuration    = "30m"
+	AddressDefault = "true"
 
 	RoleUser   = 1
 	RoleSeller = 2
 
 	ImgMaxSize = 500000
+
+	SLPStatusPaid = "TXN_PAID"
+
+	OrderStatusWaitingToPay      = 1
+	OrderStatusWaitingForSeller  = 2
+	OrderStatusWaitingForPacking = 3
+	OrderStatusOnDelivery        = 4
+	OrderStatusCompleted         = 5
+	OrderStatusReceived          = 6
+	OrderStatusCanceled          = 7
 )

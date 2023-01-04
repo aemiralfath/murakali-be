@@ -2,6 +2,7 @@ openapi: 3.0.0
 servers:
   # Added by API Auto Mocking Plugin
   - description: SwaggerHub API Auto Mocking
+  - url: http://localhost:8080
   - url: https://3d50-143-92-127-33.ap.ngrok.io
   - url: https://virtserver.swaggerhub.com/JULIUSBECKHAM/Murakali/1.0.0
 
@@ -192,6 +193,48 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/DefaultSuccess"
+
+  "/api/v1/auth/unique/username/{username}":
+    get:
+      summary: Check Unique Username
+      description: >-
+        Check Unique Username
+      tags:
+        - Auth
+      parameters:
+        - in: path
+          name: username
+          schema:
+            type: string
+          required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CheckUniqueTrueSuccess"
+
+  "/api/v1/auth/unique/phone-no/{phone_no}":
+    get:
+      summary: Check Unique Phone Number
+      description: >-
+        Check Unique Phone Number
+      tags:
+        - Auth
+      parameters:
+        - in: path
+          name: phone_no
+          schema:
+            type: string
+          required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CheckUniqueTrueSuccess"
 
   "/api/v1/location/province":
     get:
@@ -762,9 +805,31 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/DefaultSuccess"
+                $ref: '#/components/schemas/CreateTransactionResponse'
 
-  "/api/v1/product/":
+  '/api/v1/user/transaction/slp-payment':
+    post:
+      summary: user create slp payment
+      description: >-
+        user create slp payment
+      tags:
+        - User
+      security:
+        - BEARER: [ ]
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateSlpPaymentRequest'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreateSlpPaymentResponse'
+                
+  '/api/v1/product/':
     get:
       summary: Get Product {WIP}
       description: >-
@@ -1295,6 +1360,23 @@ paths:
               schema:
                 $ref: "#/components/schemas/DefaultSuccess"
 
+  "/api/v1/seller/{seller_id}":
+    get:
+      summary: Get Seller Detail
+      description: >-
+        Get Seller Detail
+      tags:
+        - Seller
+      security:
+        - BEARER: []
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GetSellerDetailResponse"
+
   "/api/v1/seller/order":
     get:
       summary: Get Seller Order
@@ -1389,6 +1471,36 @@ components:
             access_token:
               type: string
               example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2Mzg3NzE1NDcsImlhdCI6MTYzODE2Njc0NywianRpIjoiNGE2YTE3MDMtOGM5ZC00Yjk1LTkwODctNjIzNDM3MjIyMmRkIiwic3ViIjoiNDA1OTU2YzMtNDZhZS00NzFjLTkzMWUtNmIwZTFkZWMwYjdhIn0.IUvCSn9GR3tQBJ86PhVl3MBDgG4BdSHEGoRO1SYEcYk"
+
+    CreateTransactionResponse:
+      title: TransactionResponse
+      type: object
+      description: Transaction response data model.
+      properties:
+        message:
+          type: string
+          example: "success"
+        data:
+          type: object
+          properties:
+            transaction_id:
+              type: string
+              example: "e6723204-144a-40fd-a866-952de5695d32"
+
+    CreateSlpPaymentResponse:
+      title: CreateSlpPaymentResponse
+      type: object
+      description: Create Slp Payment response data model.
+      properties:
+        message:
+          type: string
+          example: "success"
+        data:
+          type: object
+          properties:
+            redirect_url:
+              type: string
+              example: "https://slp.air-sipp.com/payment?amount=638183&merchant_name=Murakali&txn_id=3555"
 
     RegisterEmailRequest:
       title: RegisterEmailRequest
@@ -2364,6 +2476,15 @@ components:
           type: string
           example: "Password"
 
+    CreateSlpPaymentRequest:
+      title: CreateSlpPaymentRequest
+      type: object
+      description: Create Slp Payment.
+      properties:
+        transaction_id:
+          type: string
+          example: "eda8ffa8-ed96-4ab6-94b8-7a532e1f0457"
+
     CreateTransactionRequest:
       title: CreateTransactionRequest
       type: object
@@ -3188,6 +3309,44 @@ components:
           type: number
           example: 5
 
+    GetSellerDetailResponse:
+      title: GetSellerDetailResponse
+      type: object
+      description: Get Seller Detail response data model.
+      properties:
+        message:
+          type: string
+        data:
+          type: object
+          properties:
+            id:
+              type: string
+            user_id:
+              type: string
+            name:
+              type: string
+            total_product:
+              type: integer
+            total_rating:
+              type: integer
+            rating_avg:
+              type: integer
+            photo_url:
+              type: string
+            created_at:
+              type: string
+      example:
+        message: success
+        data:
+          - id: e8854443-c2c7-488e-93d5-b9d93708b8a3
+            user_id: f8d8d66a-e8eb-4633-bc2d-4ccd941fed47
+            name: Laptop Shop
+            total_product: 12510
+            total_rating: 0
+            rating_avg: 0
+            photo_url: https://res.cloudinary.com/dhpao1zxi/image/upload/v1671705602/ldtzmxqeyb4nwu5p6y76.jpg
+            created_at: "2023-01-04T04:50:12.665781Z"
+
     GetSellerOrderResponse:
       title: GetSellerOrderResponse
       type: object
@@ -3351,6 +3510,34 @@ components:
         order_status_id:
           type: number
           example: 2
+
+    CheckUniqueTrueSuccess:
+      title: CheckUniqueTrueSuccess
+      type: object
+      description: Check Unique True Success.
+      properties:
+        message:
+          type: string
+          example: success
+          description: Success message from server.
+        data:
+          type: boolean
+          example: true
+          description: the data is unique
+
+    CheckUniqueFalseSuccess:
+      title: CheckUniqueFalseSuccess
+      type: object
+      description: Check Unique False Success.
+      properties:
+        message:
+          type: string
+          example: success
+          description: Success message from server.
+        data:
+          type: boolean
+          example: false
+          description: the data is not unique
 
     DefaultSuccess:
       title: DefaultSuccess

@@ -3,6 +3,7 @@ package repository
 import (
 	"context"
 	"database/sql"
+	"fmt"
 	"murakali/internal/model"
 	"murakali/internal/module/seller"
 	"murakali/internal/module/seller/delivery/body"
@@ -23,9 +24,9 @@ func NewSellerRepository(psql *sql.DB, client *redis.Client) seller.Repository {
 	}
 }
 
-func (r *sellerRepo) GetTotalOrder(ctx context.Context, shopID string) (int64, error) {
+func (r *sellerRepo) GetTotalOrder(ctx context.Context, shopID, orderStatusID string) (int64, error) {
 	var total int64
-	if err := r.PSQL.QueryRowContext(ctx, GetTotalOrderQuery, shopID).Scan(&total); err != nil {
+	if err := r.PSQL.QueryRowContext(ctx, GetTotalOrderQuery, shopID, fmt.Sprintf("%%%s%%", orderStatusID)).Scan(&total); err != nil {
 		return 0, err
 	}
 
@@ -94,11 +95,14 @@ func (r *sellerRepo) GetOrderByOrderID(ctx context.Context, orderID string) (*mo
 	return &order, nil
 }
 
-func (r *sellerRepo) GetOrders(ctx context.Context, shopID string, pgn *pagination.Pagination) ([]*model.Order, error) {
+func (r *sellerRepo) GetOrders(ctx context.Context, shopID, orderStatusID string, pgn *pagination.Pagination) ([]*model.Order, error) {
+
 	orders := make([]*model.Order, 0)
+
 	res, err := r.PSQL.QueryContext(
 		ctx, GetOrdersQuery,
 		shopID,
+		fmt.Sprintf("%%%s%%", orderStatusID),
 		pgn.GetLimit(),
 		pgn.GetOffset())
 
@@ -205,4 +209,21 @@ func (r *sellerRepo) GetCourierSeller(ctx context.Context, userID string) ([]*bo
 	}
 
 	return courierSeller , err
+}
+func (r *sellerRepo) GetSellerBySellerID(ctx context.Context, sellerID string) (*body.SellerResponse, error) {
+	var sellerData body.SellerResponse
+	if err := r.PSQL.QueryRowContext(ctx, GetShopIDByShopIDQuery, sellerID).Scan(
+		&sellerData.ID,
+		&sellerData.UserID,
+		&sellerData.Name,
+		&sellerData.TotalProduct,
+		&sellerData.TotalRating,
+		&sellerData.RatingAVG,
+		&sellerData.CreatedAt,
+		&sellerData.PhotoURL,
+	); err != nil {
+		return nil, err
+	}
+
+	return &sellerData, nil
 }

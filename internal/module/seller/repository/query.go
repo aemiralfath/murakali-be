@@ -1,12 +1,12 @@
 package repository
 
 const (
-	GetTotalOrderQuery = `SELECT count(id) FROM "order" WHERE "shop_id" = $1`
+	GetTotalOrderQuery = `SELECT count(id) FROM "order" WHERE "shop_id" = $1 and "order_status_id"::text LIKE $2`
 
 	GetOrdersQuery = `SELECT o.id,o.order_status_id,o.total_price,o.delivery_fee,o.resi_no,s.id,s.name,v.code,o.created_at
 	from "order" o
 	join "shop" s on s.id = o.shop_id
-	join "voucher" v on v.id = o.voucher_shop_id WHERE o.shop_id = $1 ORDER BY o.created_at asc LIMIT $2 OFFSET $3
+	left join "voucher" v on v.id = o.voucher_shop_id WHERE o.shop_id = $1 and "order_status_id"::text LIKE $2 ORDER BY o.created_at asc LIMIT $3 OFFSET $4
 	`
 
 	GetOrderByOrderID = `SELECT o.id,o.order_status_id,o.total_price,o.delivery_fee,o.resi_no,s.id,s.name,v.code,o.created_at
@@ -45,4 +45,8 @@ const (
     	VALUES ($1, $2)
 		WHERE deleted_at IS NULL`
 
+	GetShopIDByShopIDQuery = `SELECT s.id, s.user_id, s.name, s.total_product, s.total_rating, s.rating_avg, s.created_at, u.photo_url
+	from "shop" s 
+	join "user" u on u.id = s.user_id
+	where s.id = $1 and s.deleted_at is null`
 )

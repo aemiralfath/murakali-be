@@ -15,7 +15,7 @@ type Order struct {
 	ResiNumber  string         `json:"resi_no"`
 	ShopID      string         `json:"shop_id"`
 	ShopName    string         `json:"shop_name"`
-	VoucherCode string         `json:"voucher_code"`
+	VoucherCode *string        `json:"voucher_code"`
 	CreatedAt   time.Time      `json:"created_at" db:"created_at" binding:"omitempty"`
 	Detail      []*OrderDetail `json:"detail"`
 }
@@ -30,7 +30,7 @@ type OrderModel struct {
 	OrderStatusID int          `json:"order_status_id" db:"order_status_id" binding:"omitempty"`
 	TotalPrice    float64      `json:"total_price" db:"total_price" binding:"omitempty"`
 	DeliveryFee   float64      `json:"delivery_fee" db:"delivery_fee" binding:"omitempty"`
-	ResiNo        string       `json:"resi_no" db:"resi_no" binding:"omitempty"`
+	ResiNo        *string      `json:"resi_no" db:"resi_no" binding:"omitempty"`
 	CreatedAt     time.Time    `json:"created_at" db:"created_at" binding:"omitempty"`
 	ArrivedAt     sql.NullTime `json:"arrived_at" db:"arrived_at" binding:"omitempty"`
 }
