@@ -14,6 +14,7 @@ import (
 	"strings"
 	"fmt"
 	"github.com/gin-gonic/gin"
+
 )
 
 type productHandlers struct {
@@ -140,9 +141,9 @@ func (h *productHandlers) GetRecommendedProducts(c *gin.Context) {
 
 
 
-func (h *productHandlers) GetSearchProducts(c *gin.Context) {
-	pgn, query := h.ValidateQuerySearchProduct(c)
-	SearchProducts, err := h.productUC.GetSearchProducts(c, pgn, query)
+func (h *productHandlers) GetProducts(c *gin.Context) {
+	pgn, query := h.ValidateQueryProduct(c)
+	SearchProducts, err := h.productUC.GetProducts(c, pgn, query)
 	if err != nil {
 		var e *httperror.Error
 		if !errors.As(err, &e) {
@@ -202,7 +203,7 @@ func (h *productHandlers) ValidateQueryRecommendProduct(c *gin.Context) *paginat
 }
 
 
-func (h *productHandlers) ValidateQuerySearchProduct(c *gin.Context) (*pagination.Pagination, *body.GetSearchProductQueryRequest) {
+func (h *productHandlers) ValidateQueryProduct(c *gin.Context) (*pagination.Pagination, *body.GetProductQueryRequest) {
 	limit := strings.TrimSpace(c.Query("limit"))
 	page := strings.TrimSpace(c.Query("page"))
 
@@ -211,35 +212,52 @@ func (h *productHandlers) ValidateQuerySearchProduct(c *gin.Context) (*paginatio
 	search := strings.TrimSpace(c.Query("search"))
 
 	sort := strings.TrimSpace(c.Query("sort"))
-	sortBy  := strings.TrimSpace(c.Query("sortBy"))
+	sortBy  := strings.TrimSpace(c.Query("sort_by"))
 
-	minPrice := strings.TrimSpace(c.Query("minPrice"))
-	maxPrice  := strings.TrimSpace(c.Query("maxPrice"))
+	minPrice := strings.TrimSpace(c.Query("min_price"))
+	maxPrice  := strings.TrimSpace(c.Query("max_price"))
+	minRating := strings.TrimSpace(c.Query("min_rating"))
+	maxRating := strings.TrimSpace(c.Query("max_rating"))
+
 	category := strings.TrimSpace(c.Query("category"))
-	minRating := strings.TrimSpace(c.Query("minRating"))
-	maxRating := strings.TrimSpace(c.Query("maxRating"))
-
+	shop:= strings.TrimSpace(c.Query("shop_name"))
 
 	var limitFilter,pageFilter int
 
-	
 
 	var minPriceFilter, maxPriceFilter, minRatingFilter, maxRatingFilter float64
 
 
 	limitFilter, err := strconv.Atoi(limit)
 	if err != nil || limitFilter < 1 {
-		limitFilter = 30
+		limitFilter = 12
+	}
+
+
+	if  sortBy == "" {
+		sortBy = "p.unit_sold"
+	}	
+	if  sort == "" {
+		sort = "desc"
 	}
 
 	pageFilter, err = strconv.Atoi(page)
 	if err != nil || pageFilter < 1 {
 		pageFilter = 1
 	}
+	
 	pgn := &pagination.Pagination{
 		Limit: limitFilter,
 		Page:  pageFilter,
-		Sort:  "unit_sold DESC",
+		Sort:  sortBy+" "+sort,
+	}
+
+	if (sortBy== "recommended"){
+		pgn = &pagination.Pagination{
+		Limit: limitFilter,
+		Page:  pageFilter,
+		Sort:  "view_count "+sort+ ", "+ "unit_sold "+sort,
+	}
 	}
 
 
@@ -249,31 +267,34 @@ func (h *productHandlers) ValidateQuerySearchProduct(c *gin.Context) (*paginatio
 	}
 
 	maxPriceFilter, err = strconv.ParseFloat(maxPrice, 64);
+	if err != nil || maxPriceFilter == 0 {
+		maxPriceFilter= 999999999999
+	}
 
 	minRatingFilter, err = strconv.ParseFloat(minRating, 64);
 	if err != nil || minRatingFilter < 1 {
-		minRatingFilter = 1
+		minRatingFilter = 0
 	}
 
 	maxRatingFilter, err = strconv.ParseFloat(maxRating, 64);
-	if err != nil && maxRatingFilter >5 {
+	if err != nil || maxRatingFilter >5 {
 		maxRatingFilter= 5
 	}
 
-	
-	if  sort == "" {
-		sort = "desc"
-	}
 
 
 	searchFilter := fmt.Sprintf("%%%s%%", search)
+	categoryFilter := fmt.Sprintf("%%%s%%", category)
+	shopFilter := fmt.Sprintf("%%%s%%", shop)
 
-	query := &body.GetSearchProductQueryRequest{
+	
+
+	
+	query := &body.GetProductQueryRequest{
 		Search  : searchFilter ,
-		Sort  : sort,
-		SortBy : sortBy,
 
-		Category: category,
+		Shop: shopFilter,
+		Category: categoryFilter,
 		MinPrice: minPriceFilter,
 		MaxPrice: maxPriceFilter,
 		MinRating : minRatingFilter,

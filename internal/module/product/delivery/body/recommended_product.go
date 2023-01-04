@@ -15,6 +15,7 @@ type Products struct {
 	ThumbnailURL              string   `json:"thumbnail_url" db:"thumbnail_url"`
 	MinPrice                  float64  `json:"min_price" db:"min_price"`
 	MaxPrice                  float64  `json:"max_price" db:"max_price"`
+	ViewCount				  int64    `json:"view_count" db:"view_count"`
 	SubPrice                  float64  `json:"sub_price" db:"sub_price"`
 	PromoDiscountPercentage   *float64 `json:"promo_discount_percentage" db:"promo_discount_percentage"`
 	PromoDiscountFixPrice     *float64 `json:"promo_discount_fix_price" db:"promo_discount_fix_price"`

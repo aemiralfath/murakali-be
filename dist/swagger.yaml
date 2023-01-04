@@ -25,7 +25,7 @@ tags:
   - name: Seller
     description: Related to Seller perspective.
 paths:
-  '/api/v1/auth/register':
+  "/api/v1/auth/register":
     post:
       summary: register user
       description: >-
@@ -36,14 +36,14 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/RegisterEmailRequest'
+              $ref: "#/components/schemas/RegisterEmailRequest"
       responses:
-        '201':
+        "201":
           description: CREATED
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/RegisterEmailResponse'
+                $ref: "#/components/schemas/RegisterEmailResponse"
     put:
       summary: register user after verified email
       description: >-
@@ -54,16 +54,16 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/RegisterRequest'
+              $ref: "#/components/schemas/RegisterRequest"
       responses:
-        '200':
+        "200":
           description: OK
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/DefaultSuccess'
+                $ref: "#/components/schemas/DefaultSuccess"
 
-  '/api/v1/auth/verify':
+  "/api/v1/auth/verify":
     post:
       summary: set user is verify
       description: >-
@@ -74,14 +74,14 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/VerifyEmailRequest'
+              $ref: "#/components/schemas/VerifyEmailRequest"
       responses:
-        '200':
+        "200":
           description: OK
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/DefaultSuccess'
+                $ref: "#/components/schemas/DefaultSuccess"
     get:
       summary: set user is verify
       description: >-
@@ -100,15 +100,14 @@ paths:
             type: string
           required: true
       responses:
-        '200':
+        "200":
           description: OK
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/DefaultSuccess'
+                $ref: "#/components/schemas/DefaultSuccess"
 
-
-  '/api/v1/auth/refresh':
+  "/api/v1/auth/refresh":
     get:
       summary: refresh token
       description: >-
@@ -116,14 +115,14 @@ paths:
       tags:
         - Auth
       responses:
-        '200':
+        "200":
           description: OK
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/RefreshTokenResponse'
+                $ref: "#/components/schemas/RefreshTokenResponse"
 
-  '/api/v1/auth/login':
+  "/api/v1/auth/login":
     post:
       summary: Login
       description: >-
@@ -134,15 +133,15 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/LoginRequest'
+              $ref: "#/components/schemas/LoginRequest"
       responses:
-        '200':
+        "200":
           description: OK
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/LoginResponse'
-  '/api/v1/auth/logout':
+                $ref: "#/components/schemas/LoginResponse"
+  "/api/v1/auth/logout":
     get:
       summary: Logout
       description: >-
@@ -150,14 +149,14 @@ paths:
       tags:
         - Auth
       responses:
-        '200':
+        "200":
           description: OK
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/DefaultSuccess'
+                $ref: "#/components/schemas/DefaultSuccess"
 
-  '/api/v1/auth/reset-password':
+  "/api/v1/auth/reset-password":
     post:
       summary: Reset Password user
       description: >-
@@ -168,14 +167,14 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/RegisterEmailRequest'
+              $ref: "#/components/schemas/RegisterEmailRequest"
       responses:
-        '200':
+        "200":
           description: OK
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/DefaultSuccess'
+                $ref: "#/components/schemas/DefaultSuccess"
     patch:
       summary: Update Password user
       description: >-
@@ -186,18 +185,18 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/NewPasswordRequest'
+              $ref: "#/components/schemas/NewPasswordRequest"
       responses:
-        '200':
+        "200":
           description: OK
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/DefaultSuccess'
+                $ref: "#/components/schemas/DefaultSuccess"
 
-  '/api/v1/auth/unique/username/{username}':
+  "/api/v1/auth/unique/username/{username}":
     get:
-      summary: Check Unique Username 
+      summary: Check Unique Username
       description: >-
         Check Unique Username
       tags:
@@ -209,16 +208,16 @@ paths:
             type: string
           required: true
       responses:
-        '200':
+        "200":
           description: OK
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/CheckUniqueTrueSuccess'
+                $ref: "#/components/schemas/CheckUniqueTrueSuccess"
 
-  '/api/v1/auth/unique/phone-no/{phone_no}':
+  "/api/v1/auth/unique/phone-no/{phone_no}":
     get:
-      summary: Check Unique Phone Number 
+      summary: Check Unique Phone Number
       description: >-
         Check Unique Phone Number
       tags:
@@ -230,14 +229,14 @@ paths:
             type: string
           required: true
       responses:
-        '200':
+        "200":
           description: OK
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/CheckUniqueTrueSuccess'
+                $ref: "#/components/schemas/CheckUniqueTrueSuccess"
 
-  '/api/v1/location/province':
+  "/api/v1/location/province":
     get:
       summary: Get Province
       description: >-
@@ -246,13 +245,13 @@ paths:
         - Location
 
       responses:
-        '200':
+        "200":
           description: OK
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/GetProvinceResponse'
-  '/api/v1/location/province/city':
+                $ref: "#/components/schemas/GetProvinceResponse"
+  "/api/v1/location/province/city":
     get:
       summary: Get City
       description: >-
@@ -266,14 +265,14 @@ paths:
             type: string
           required: true
       responses:
-        '200':
+        "200":
           description: OK
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/GetCityResponse'
+                $ref: "#/components/schemas/GetCityResponse"
 
-  '/api/v1/location/province/city/subdistrict':
+  "/api/v1/location/province/city/subdistrict":
     get:
       summary: Get Sub District
       description: >-
@@ -295,18 +294,16 @@ paths:
             type: string
             description: >-
               query for searching city name
-      
 
       responses:
-        '200':
+        "200":
           description: OK
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/GetSubDistrictResponse'
+                $ref: "#/components/schemas/GetSubDistrictResponse"
 
-
-  '/api/v1/location/province/city/subdistrict/urban':
+  "/api/v1/location/province/city/subdistrict/urban":
     get:
       summary: Get Urban
       description: >-
@@ -330,15 +327,14 @@ paths:
           schema:
             type: string
       responses:
-        '200':
+        "200":
           description: OK
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/GetUrbanResponse'
+                $ref: "#/components/schemas/GetUrbanResponse"
 
-
-  '/api/v1/user/profile':
+  "/api/v1/user/profile":
     get:
       summary: Get User Profile
       description: >-
@@ -346,15 +342,15 @@ paths:
       tags:
         - User
       security:
-        - BEARER: [ ]
+        - BEARER: []
 
       responses:
-        '200':
+        "200":
           description: OK
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/GetUserProfileResponse'
+                $ref: "#/components/schemas/GetUserProfileResponse"
 
     put:
       summary: Edit User Profile
@@ -363,22 +359,22 @@ paths:
       tags:
         - User
       security:
-        - BEARER: [ ]
+        - BEARER: []
 
       requestBody:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/EditProfileRequest'
+              $ref: "#/components/schemas/EditProfileRequest"
       responses:
-        '200':
+        "200":
           description: OK
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/DefaultSuccess'
+                $ref: "#/components/schemas/DefaultSuccess"
 
-  '/api/v1/user/email':
+  "/api/v1/user/email":
     post:
       summary: verification email for change email
       description: >-
@@ -386,20 +382,20 @@ paths:
       tags:
         - User
       security:
-        - BEARER: [ ]
+        - BEARER: []
 
       requestBody:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/EditEmailRequest'
+              $ref: "#/components/schemas/EditEmailRequest"
       responses:
-        '200':
+        "200":
           description: OK
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/DefaultSuccess'
+                $ref: "#/components/schemas/DefaultSuccess"
     patch:
       summary: change email user
       description: >-
@@ -407,21 +403,21 @@ paths:
       tags:
         - User
       security:
-        - BEARER: [ ]
+        - BEARER: []
 
       requestBody:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/EditEmailRequest'
+              $ref: "#/components/schemas/EditEmailRequest"
       responses:
-        '200':
+        "200":
           description: OK
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/DefaultSuccess'
-  '/api/v1/user/profile/picture':
+                $ref: "#/components/schemas/DefaultSuccess"
+  "/api/v1/user/profile/picture":
     post:
       summary: Edit User Profile Picture
       description: >-
@@ -429,22 +425,22 @@ paths:
       tags:
         - User
       security:
-        - BEARER: [ ]
+        - BEARER: []
 
       requestBody:
         content:
           multipart/form-data:
             schema:
-              $ref: '#/components/schemas/EditProfilePictureRequest'
+              $ref: "#/components/schemas/EditProfilePictureRequest"
       responses:
-        '200':
+        "200":
           description: OK
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/DefaultSuccess'
+                $ref: "#/components/schemas/DefaultSuccess"
 
-  '/api/v1/user/address':
+  "/api/v1/user/address":
     get:
       summary: Get User Address
       description: >-
@@ -452,25 +448,25 @@ paths:
       tags:
         - User
       security:
-        - BEARER: [ ]
+        - BEARER: []
       parameters:
         - in: query
           name: is_default
           schema:
             type: string
-            enum: [ "true", "false" ]
+            enum: ["true", "false"]
         - in: query
           name: shop_default
           schema:
             type: string
-            enum: [ "true", "false" ]
+            enum: ["true", "false"]
       responses:
-        '200':
+        "200":
           description: OK
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/GetAddressResponse'
+                $ref: "#/components/schemas/GetAddressResponse"
 
     post:
       summary: Create Address
@@ -479,21 +475,21 @@ paths:
       tags:
         - User
       security:
-        - BEARER: [ ]
+        - BEARER: []
 
       requestBody:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/CreateAddressRequest'
+              $ref: "#/components/schemas/CreateAddressRequest"
       responses:
-        '200':
+        "200":
           description: OK
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/DefaultSuccess'
-  '/api/v1/user/address/{address_id}':
+                $ref: "#/components/schemas/DefaultSuccess"
+  "/api/v1/user/address/{address_id}":
     get:
       summary: Get Address
       description: >-
@@ -501,7 +497,7 @@ paths:
       tags:
         - User
       security:
-        - BEARER: [ ]
+        - BEARER: []
       parameters:
         - in: path
           name: address_id
@@ -509,12 +505,12 @@ paths:
             type: string
           required: true
       responses:
-        '200':
+        "200":
           description: OK
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/GetAddressByIDResponse'
+                $ref: "#/components/schemas/GetAddressByIDResponse"
     put:
       summary: Edit Address
       description: >-
@@ -522,7 +518,7 @@ paths:
       tags:
         - User
       security:
-        - BEARER: [ ]
+        - BEARER: []
       parameters:
         - in: path
           name: address_id
@@ -533,14 +529,14 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/EditAddressRequest'
+              $ref: "#/components/schemas/EditAddressRequest"
       responses:
-        '200':
+        "200":
           description: OK
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/DefaultSuccess'
+                $ref: "#/components/schemas/DefaultSuccess"
     delete:
       summary: Delete Address
       description: >-
@@ -548,7 +544,7 @@ paths:
       tags:
         - User
       security:
-        - BEARER: [ ]
+        - BEARER: []
       parameters:
         - in: path
           name: address_id
@@ -556,14 +552,14 @@ paths:
             type: string
           required: true
       responses:
-        '200':
+        "200":
           description: OK
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/DefaultSuccess'
+                $ref: "#/components/schemas/DefaultSuccess"
 
-  '/api/v1/user/register-merchant':
+  "/api/v1/user/register-merchant":
     post:
       summary: user register merchant / shop
       description: >-
@@ -571,21 +567,21 @@ paths:
       tags:
         - User
       security:
-        - BEARER: [ ]
+        - BEARER: []
       requestBody:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/RegisterMerchantRequest'
+              $ref: "#/components/schemas/RegisterMerchantRequest"
       responses:
-        '200':
+        "200":
           description: OK
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/DefaultSuccess'
+                $ref: "#/components/schemas/DefaultSuccess"
 
-  '/api/v1/user/sealab-pay':
+  "/api/v1/user/sealab-pay":
     get:
       summary: Get all SeaLab Pay Account
       description: >-
@@ -593,15 +589,15 @@ paths:
       tags:
         - User
       security:
-        - BEARER: [ ]
+        - BEARER: []
 
       responses:
-        '200':
+        "200":
           description: OK
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/GetSeaLabPayResponse'
+                $ref: "#/components/schemas/GetSeaLabPayResponse"
     post:
       summary: Create SeaLab Pay
       description: >-
@@ -609,22 +605,22 @@ paths:
       tags:
         - User
       security:
-        - BEARER: [ ]
+        - BEARER: []
 
       requestBody:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/CreateSeaLabPayRequest'
+              $ref: "#/components/schemas/CreateSeaLabPayRequest"
       responses:
-        '200':
+        "200":
           description: OK
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/CreateSeaLabPayResponse'
+                $ref: "#/components/schemas/CreateSeaLabPayResponse"
 
-  '/api/v1/user/sealab-pay/{card_number}':
+  "/api/v1/user/sealab-pay/{card_number}":
     patch:
       summary: Set default SeaLab Pay
       description: >-
@@ -632,7 +628,7 @@ paths:
       tags:
         - User
       security:
-        - BEARER: [ ]
+        - BEARER: []
       parameters:
         - in: path
           name: card_number
@@ -640,12 +636,12 @@ paths:
             type: string
           required: true
       responses:
-        '200':
+        "200":
           description: OK
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/SetDefaultSeaLabPayResponse'
+                $ref: "#/components/schemas/SetDefaultSeaLabPayResponse"
     delete:
       summary: delete SeaLab Pay
       description: >-
@@ -653,7 +649,7 @@ paths:
       tags:
         - User
       security:
-        - BEARER: [ ]
+        - BEARER: []
       parameters:
         - in: path
           name: card_number
@@ -661,14 +657,14 @@ paths:
             type: string
           required: true
       responses:
-        '200':
+        "200":
           description: OK
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/DefaultSuccess'
+                $ref: "#/components/schemas/DefaultSuccess"
 
-  '/api/v1/user/wallet':
+  "/api/v1/user/wallet":
     post:
       summary: Setup pin wallet
       description: >-
@@ -676,20 +672,20 @@ paths:
       tags:
         - User
       security:
-        - BEARER: [ ]
+        - BEARER: []
 
       requestBody:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/SetupPinWalletRequest'
+              $ref: "#/components/schemas/SetupPinWalletRequest"
       responses:
-        '200':
+        "200":
           description: OK
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/SetupPinWalletResponse'
+                $ref: "#/components/schemas/SetupPinWalletResponse"
     get:
       summary: Get user wallet
       description: >-
@@ -697,15 +693,15 @@ paths:
       tags:
         - User
       security:
-        - BEARER: [ ]
+        - BEARER: []
 
       responses:
-        '200':
+        "200":
           description: OK
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/GetWalletResponse'
+                $ref: "#/components/schemas/GetWalletResponse"
     put:
       summary: input pin wallet
       description: >-
@@ -713,23 +709,22 @@ paths:
       tags:
         - User
       security:
-        - BEARER: [ ]
+        - BEARER: []
 
       requestBody:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/InputPinWalletRequest'
+              $ref: "#/components/schemas/InputPinWalletRequest"
       responses:
-        '200':
+        "200":
           description: OK
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/InputPinWalletResponse'
+                $ref: "#/components/schemas/InputPinWalletResponse"
 
-
-  '/api/v1/user/password':
+  "/api/v1/user/password":
     post:
       summary: verification password
       description: >-
@@ -737,20 +732,20 @@ paths:
       tags:
         - User
       security:
-        - BEARER: [ ]
+        - BEARER: []
 
       requestBody:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/VerificationPasswordRequest'
+              $ref: "#/components/schemas/VerificationPasswordRequest"
       responses:
-        '200':
+        "200":
           description: OK
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/DefaultSuccess'
+                $ref: "#/components/schemas/DefaultSuccess"
     patch:
       summary: Update Password
       description: >-
@@ -758,24 +753,24 @@ paths:
       tags:
         - User
       security:
-        - BEARER: [ ]
+        - BEARER: []
 
       requestBody:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/NewPasswordRequest'
+              $ref: "#/components/schemas/NewPasswordRequest"
       responses:
-        '200':
+        "200":
           description: OK
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/DefaultSuccess'
+                $ref: "#/components/schemas/DefaultSuccess"
 
-  '/api/v1/user/order':
+  "/api/v1/user/order":
     get:
-      summary: Get User Orders 
+      summary: Get User Orders
       description: >-
         Get User Orders
       tags:
@@ -783,16 +778,16 @@ paths:
       security:
         - BEARER: []
       responses:
-        '200':
+        "200":
           description: OK
           content:
             application/json:
-              schema: 
-                $ref: '#/components/schemas/GetOrdersResponse'
+              schema:
+                $ref: "#/components/schemas/GetOrdersResponse"
 
-  '/api/v1/user/transaction':
+  "/api/v1/user/transaction":
     post:
-      summary: user create transaction 
+      summary: user create transaction
       description: >-
         user create transaction
       tags:
@@ -803,9 +798,9 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/CreateTransactionRequest'
+              $ref: "#/components/schemas/CreateTransactionRequest"
       responses:
-        '200':
+        "200":
           description: OK
           content:
             application/json:
@@ -844,7 +839,7 @@ paths:
 
       parameters:
         - in: query
-          name: title
+          name: search
           schema:
             type: string
             description: >-
@@ -879,25 +874,55 @@ paths:
           name: sort_by
           schema:
             type: string
+            enum: [min_price, unit_sold, created_at, view_count, recommended]
             description: >-
               query for sort by product
         - in: query
-          name: sort_order
+          name: sort
           schema:
             type: string
-            enum: [ asc, desc ]
+            enum: [asc, desc]
             description: >-
               query for sort order product descrending or ascending
-
+        - in: query
+          name: min_price
+          schema:
+            type: number
+            description: >-
+              query for minimium price show product
+        - in: query
+          name: max_price
+          schema:
+            type: number
+            description: >-
+              query for max price show product
+        - in: query
+          name: min_rating
+          schema:
+            type: number
+            description: >-
+              query for minimum rating show product
+        - in: query
+          name: max_rating
+          schema:
+            type: number
+            description: >-
+              query for max rating show product
+        - in: query
+          name: shop_name
+          schema:
+            type: string
+            description: >-
+              query for shop name show product
       responses:
-        '200':
+        "200":
           description: OK
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/GetProductResponse'
+                $ref: "#/components/schemas/GetProductResponse"
 
-  '/api/v1/product/recommended':
+  "/api/v1/product/recommended":
     get:
       summary: Get Recommended Product List
       description: >-
@@ -906,15 +931,14 @@ paths:
         - Product
 
       responses:
-        '200':
+        "200":
           description: OK
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/GetRecommendedProductListResponse'
+                $ref: "#/components/schemas/GetRecommendedProductListResponse"
 
-
-  '/api/v1/product/{product_id}':
+  "/api/v1/product/{product_id}":
     get:
       summary: Get Product
       description: >-
@@ -929,14 +953,14 @@ paths:
             type: string
           required: true
       responses:
-        '200':
+        "200":
           description: OK
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/GetProductDetailResponse'
+                $ref: "#/components/schemas/GetProductDetailResponse"
 
-  '/api/v1/product/review/{product_id}':
+  "/api/v1/product/review/{product_id}":
     get:
       summary: Get Product review
       description: >-
@@ -978,12 +1002,12 @@ paths:
           schema:
             type: number
       responses:
-        '200':
+        "200":
           description: OK
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/GetProductReviewResponse'
+                $ref: "#/components/schemas/GetProductReviewResponse"
     post:
       summary: create review product
       description: >-
@@ -992,7 +1016,7 @@ paths:
         - Product
 
       security:
-        - BEARER: [ ]
+        - BEARER: []
       parameters:
         - in: path
           name: product_id
@@ -1004,16 +1028,16 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/CreateProductReviewRequest'
+              $ref: "#/components/schemas/CreateProductReviewRequest"
       responses:
-        '200':
+        "200":
           description: OK
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/GetProductReviewResponse'
+                $ref: "#/components/schemas/GetProductReviewResponse"
 
-  '/api/v1/product/category':
+  "/api/v1/product/category":
     get:
       summary: Get Product Category
       description: >-
@@ -1022,14 +1046,14 @@ paths:
         - Product
 
       responses:
-        '200':
+        "200":
           description: OK
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/GetCategoryResponse'
+                $ref: "#/components/schemas/GetCategoryResponse"
 
-  '/api/v1/product/category/{name_lvl_one}':
+  "/api/v1/product/category/{name_lvl_one}":
     get:
       summary: Get Product Category
       description: >-
@@ -1046,14 +1070,14 @@ paths:
             description: >-
               query category name
       responses:
-        '200':
+        "200":
           description: OK
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/GetCategoryByNameLvlOneResponse'
+                $ref: "#/components/schemas/GetCategoryByNameLvlOneResponse"
 
-  '/api/v1/product/category/{name_lvl_one}/{name_lvl_two}':
+  "/api/v1/product/category/{name_lvl_one}/{name_lvl_two}":
     get:
       summary: Get Product Category
       description: >-
@@ -1077,14 +1101,14 @@ paths:
             description: >-
               query category name level two
       responses:
-        '200':
+        "200":
           description: OK
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/GetCategoryByNameLvlTwoResponse'
+                $ref: "#/components/schemas/GetCategoryByNameLvlTwoResponse"
 
-  '/api/v1/product/category/{name_lvl_one}/{name_lvl_two}/{name_lvl_three}':
+  "/api/v1/product/category/{name_lvl_one}/{name_lvl_two}/{name_lvl_three}":
     get:
       summary: Get Product Category
       description: >-
@@ -1115,14 +1139,14 @@ paths:
             description: >-
               query category name level three
       responses:
-        '200':
+        "200":
           description: OK
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/GetCategoryByNameLvlThreeResponse'
+                $ref: "#/components/schemas/GetCategoryByNameLvlThreeResponse"
 
-  '/api/v1/product/banner':
+  "/api/v1/product/banner":
     get:
       summary: Get Banners
       description: >-
@@ -1130,14 +1154,14 @@ paths:
       tags:
         - Product
       responses:
-        '200':
+        "200":
           description: OK
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/GetBannerResponse'
+                $ref: "#/components/schemas/GetBannerResponse"
 
-  '/api/v1/cart/hover-home':
+  "/api/v1/cart/hover-home":
     get:
       summary: Get User Cart In Home
       description: >-
@@ -1145,7 +1169,7 @@ paths:
       tags:
         - Cart
       security:
-        - BEARER: [ ]
+        - BEARER: []
       parameters:
         - in: query
           name: limit
@@ -1154,14 +1178,14 @@ paths:
             description: >-
               query for limit show products
       responses:
-        '200':
+        "200":
           description: OK
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/GetCartInHomeResponse'
+                $ref: "#/components/schemas/GetCartInHomeResponse"
 
-  '/api/v1/cart/items':
+  "/api/v1/cart/items":
     get:
       summary: Get User Cart product
       description: >-
@@ -1169,14 +1193,14 @@ paths:
       tags:
         - Cart
       security:
-        - BEARER: [ ]
+        - BEARER: []
       responses:
-        '200':
+        "200":
           description: OK
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/GetCartResponse'
+                $ref: "#/components/schemas/GetCartResponse"
     post:
       summary: Create User Cart product
       description: >-
@@ -1184,20 +1208,20 @@ paths:
       tags:
         - Cart
       security:
-        - BEARER: [ ]
+        - BEARER: []
 
       requestBody:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/CreateCartRequest'
+              $ref: "#/components/schemas/CreateCartRequest"
       responses:
-        '200':
+        "200":
           description: OK
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/CreateCartResponse'
+                $ref: "#/components/schemas/CreateCartResponse"
     put:
       summary: update User Cart product
       description: >-
@@ -1205,22 +1229,22 @@ paths:
       tags:
         - Cart
       security:
-        - BEARER: [ ]
+        - BEARER: []
 
       requestBody:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/UpdateCartRequest'
+              $ref: "#/components/schemas/UpdateCartRequest"
       responses:
-        '200':
+        "200":
           description: OK
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/CreateCartResponse'
+                $ref: "#/components/schemas/CreateCartResponse"
 
-  '/api/v1/cart/items/{id}':
+  "/api/v1/cart/items/{id}":
     delete:
       summary: delete Cart Item
       description: >-
@@ -1228,7 +1252,7 @@ paths:
       tags:
         - Cart
       security:
-        - BEARER: [ ]
+        - BEARER: []
       parameters:
         - in: path
           name: id
@@ -1236,14 +1260,14 @@ paths:
             type: string
           required: true
       responses:
-        '200':
+        "200":
           description: OK
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/DefaultSuccess'
+                $ref: "#/components/schemas/DefaultSuccess"
 
-  '/api/v1/seller/{seller_id}':            
+  "/api/v1/seller/{seller_id}":
     get:
       summary: Get Seller Detail
       description: >-
@@ -1253,14 +1277,14 @@ paths:
       security:
         - BEARER: []
       responses:
-        '200':
+        "200":
           description: OK
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/GetSellerDetailResponse' 
+                $ref: "#/components/schemas/GetSellerDetailResponse"
 
-  '/api/v1/seller/order':            
+  "/api/v1/seller/order":
     get:
       summary: Get Seller Order
       description: >-
@@ -1270,14 +1294,14 @@ paths:
       security:
         - BEARER: []
       responses:
-        '200':
+        "200":
           description: OK
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/GetSellerOrderResponse'
-                                
-  '/api/v1/seller/order/{order_id}':            
+                $ref: "#/components/schemas/GetSellerOrderResponse"
+
+  "/api/v1/seller/order/{order_id}":
     get:
       summary: Get Seller Orders
       description: >-
@@ -1286,21 +1310,21 @@ paths:
         - Seller
       security:
         - BEARER: []
-      parameters: 
+      parameters:
         - in: path
           name: order_id
           schema:
             type: string
           required: true
       responses:
-        '200':
+        "200":
           description: OK
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/GetOrderDetailResponse'
+                $ref: "#/components/schemas/GetOrderDetailResponse"
 
-  '/api/v1/seller/order-status':
+  "/api/v1/seller/order-status":
     patch:
       summary: Get Seller Orders
       description: >-
@@ -1313,17 +1337,16 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/ChangeOrderStatusRequest'
+              $ref: "#/components/schemas/ChangeOrderStatusRequest"
       responses:
-        '200':
+        "200":
           description: OK
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/DefaultSuccess'
+                $ref: "#/components/schemas/DefaultSuccess"
 components:
   schemas:
-
     LoginRequest:
       title: LoginRequest
       type: object
@@ -1407,7 +1430,6 @@ components:
           type: string
           example: "success"
 
-
     VerifyEmailRequest:
       title: RegisterEmailRequest
       type: object
@@ -1478,7 +1500,6 @@ components:
           type: string
           description: Shop name
           example: "Murakali shop"
-
 
     GetUserProfileResponse:
       title: GetUserProfileResponse
@@ -1551,7 +1572,6 @@ components:
           type: string
       example:
         email: "example@gmail.com"
-
 
     EditProfilePictureRequest:
       title: EditProfilePictureRequest
@@ -1676,7 +1696,6 @@ components:
                   city:
                     type: string
 
-
           example:
             rows:
               - city_id: "39"
@@ -1713,7 +1732,6 @@ components:
                   sub_district:
                     type: string
 
-
           example:
             rows:
               - sub_district: "Pakem"
@@ -1721,7 +1739,6 @@ components:
               - sub_district: "Tempel"
               - sub_district: "Sleman"
               - sub_district: "Mlati"
-
 
     GetUrbanResponse:
       title: GetUrbanResponse
@@ -1744,7 +1761,6 @@ components:
                   postalcode:
                     type: string
 
-
           example:
             rows:
               - urban: "Pakem Binangun"
@@ -1757,7 +1773,6 @@ components:
                 postalcode: "543234"
               - urban: "Harjo Binangun"
                 postalcode: "543234"
-
 
     GetAddressResponse:
       title: GetAddressResponse
@@ -1980,14 +1995,8 @@ components:
                   name: "julius"
                   is_default: false
                   active_date: "2025-12-23T05:00:52.731695Z"
-                  updated_at: {
-                    "Time": "0001-01-01T00:00:00Z",
-                    "Valid": false
-                  }
-                  deleted_at: {
-                    "Time": "0001-01-01T00:00:00Z",
-                    "Valid": false
-                  }
+                  updated_at: { "Time": "0001-01-01T00:00:00Z", "Valid": false }
+                  deleted_at: { "Time": "0001-01-01T00:00:00Z", "Valid": false }
 
     SetupPinWalletRequest:
       title: SetupPinWalletRequest
@@ -2130,7 +2139,7 @@ components:
                   photo_url:
                     type: string
                   child_category:
-                    $ref: '#/components/schemas/GetCategoryChildResponse'
+                    $ref: "#/components/schemas/GetCategoryChildResponse"
               example:
                 - id: "101401ce-4a0f-11ed-9772-acde48001122"
                   parent_id: "00000000-0000-0000-0000-000000000000"
@@ -2166,7 +2175,7 @@ components:
                   photo_url:
                     type: string
                   child_category:
-                    $ref: '#/components/schemas/GetCategoryChildResponse'
+                    $ref: "#/components/schemas/GetCategoryChildResponse"
               example:
                 - id: "086e3235-41dd-45d2-bd41-ebbd9d32e6de"
                   parent_id: "00000000-0000-0000-0000-000000000000"
@@ -2182,7 +2191,7 @@ components:
                           parent_id: "93e975af-3e9c-4dc2-8202-762128985982"
                           name: "sweeter"
                           photo_url: "https://cf.shopee.co.id/file/19b8238c917f3dec99b689809ea43a79_tn"
-                          child_category: [ ]
+                          child_category: []
 
     GetCategoryByNameLvlTwoResponse:
       title: GetCategoryByNameLvlOneResponse
@@ -2209,7 +2218,7 @@ components:
                   photo_url:
                     type: string
                   child_category:
-                    $ref: '#/components/schemas/GetCategoryChildResponse'
+                    $ref: "#/components/schemas/GetCategoryChildResponse"
               example:
                 - id: "93e975af-3e9c-4dc2-8202-762128985982"
                   parent_id: "086e3235-41dd-45d2-bd41-ebbd9d32e6de"
@@ -2220,7 +2229,7 @@ components:
                       parent_id: "93e975af-3e9c-4dc2-8202-762128985982"
                       name: "sweeter"
                       photo_url: "https://cf.shopee.co.id/file/19b8238c917f3dec99b689809ea43a79_tn"
-                      child_category: [ ]
+                      child_category: []
 
     GetCategoryByNameLvlThreeResponse:
       title: GetCategoryByNameLvlOneResponse
@@ -2247,13 +2256,13 @@ components:
                   photo_url:
                     type: string
                   child_category:
-                    $ref: '#/components/schemas/GetCategoryChildResponse'
+                    $ref: "#/components/schemas/GetCategoryChildResponse"
               example:
                 - id: "0b4f0c5c-2d13-45f8-82bb-fc65ee4967c7"
                   parent_id: "93e975af-3e9c-4dc2-8202-762128985982"
                   name: "sweeter"
                   photo_url: "https://cf.shopee.co.id/file/19b8238c917f3dec99b689809ea43a79_tn"
-                  child_category: [ ]
+                  child_category: []
 
     GetCategoryChildResponse:
       title: GetCategoryChildResponse
@@ -2280,7 +2289,7 @@ components:
                   photo_url:
                     type: string
                   child_category:
-                    $ref: '#/components/schemas/GetCategoryChildResponse'
+                    $ref: "#/components/schemas/GetCategoryChildResponse"
               example:
                 - id: "101401ce-4a0f-11ed-9772-acde48001122"
                   parent_id: "00000000-0000-0000-0000-000000000000"
@@ -2333,7 +2342,6 @@ components:
                   page_url: "https://shopee.co.id/m/mall-super-category-day"
                   is_active: true
 
-
     CreateSeaLabPayRequest:
       title: CreateSeaLabPayRequest
       type: object
@@ -2356,7 +2364,6 @@ components:
         name: "julius"
         is_default: true
         active_date: "2025-12-23T05:00:52"
-
 
     NewPasswordRequest:
       title: NewPasswordRequest
@@ -2395,7 +2402,7 @@ components:
         card_number:
           type: string
         voucher_marketplace_id:
-         type: string
+          type: string
         cart_items:
           type: array
           items:
@@ -2420,16 +2427,16 @@ components:
                       type: number
       example:
         wallet_id: "60a54e99-33a7-40d8-8ed0-979413a8c33d"
-        card_number: ''
-        voucher_marketplace_id: ''
+        card_number: ""
+        voucher_marketplace_id: ""
         cart_items:
-        - shop_id: "07315003-5369-465f-9f05-09482d951645"
-          voucher_shop_id: "59bfcd74-e278-4c70-a889-d9c8515bf72c"
-          courier_id: "98c1921e-b80e-40f3-9cba-fe8806097517"
-          product_details:
-          - id: "s"
-            quantity: 3
-            sub_price: 70000
+          - shop_id: "07315003-5369-465f-9f05-09482d951645"
+            voucher_shop_id: "59bfcd74-e278-4c70-a889-d9c8515bf72c"
+            courier_id: "98c1921e-b80e-40f3-9cba-fe8806097517"
+            product_details:
+              - id: "s"
+                quantity: 3
+                sub_price: 70000
 
     CreateSeaLabPayResponse:
       title: CreateSeaLabPayResponse
@@ -2476,82 +2483,112 @@ components:
         data:
           type: object
           properties:
-            product:
+            limit:
+              type: number
+            page:
+              type: number
+            sort:
+              type: string
+            total_rows:
+              type: number
+            total_pages:
+              type: number
+            rows:
               type: array
               items:
                 type: object
                 properties:
-                  id:
-                    type: string
                   title:
                     type: string
-                  view_count:
-                    type: number
-                  favorite_count:
-                    type: number
                   unit_sold:
                     type: number
-                  listed_status:
-                    type: boolean
-                  thumbnail_url:
-                    type: string
                   rating_avg:
                     type: number
+                  thumbnail_url:
+                    type: string
                   min_price:
                     type: number
                   max_price:
                     type: number
-                  shop:
-                    type: object
-                    properties:
-                      name:
-                        type: string
-                  category:
-                    type: object
-                    properties:
-                      name:
-                        type: string
-                      parent_category:
-                        type: object
-
-              example:
-                - id: "8b9e5380-6906-43d6-bc76-a8c4a1943bc0"
-                  title: "baju Pria dewasa"
-                  view_count: 100
-                  favorite_count: 5
-                  unit_sold: 50
-                  listed_status: false
-                  thumbnail_url: "http://google.com/asdwnid.asiqwnea"
-                  rating_avg: 4.5
-                  min_price: 5000
-                  max_price: 29900
-                  shop:
-                    name: "matahari"
-                  category:
-                    name: "baju pria"
-                    parent_category:
-                      name: "baju"
-                      parent_category:
-                        name: "fashion"
-
-                - id: "8b9e5380-6906-43d6-bc76-a8c4a1943bc0"
-                  title: "Kemeja Flanel Pria"
-                  view_count: 1000
-                  favorite_count: 555
-                  unit_sold: 10000
-                  listed_status: false
-                  thumbnail_url: "http://google.com/asdwnid.asiqwnea"
-                  rating_avg: 4.5
-                  min_price: 12500
-                  max_price: 45000
-                  shop:
-                    name: "pasarsentiling"
-                  category:
-                    name: "baju pria"
-                    parent_category:
-                      name: "baju"
-                      parent_category:
-                        name: "fashion"
+                  sub_price:
+                    type: number
+                  promo_discount_percentage:
+                    type: number
+                  promo_discount_fix_price:
+                    type: number
+                  promo_min_product_price:
+                    type: number
+                  promo_max_discount_price:
+                    type: number
+                  result_discount:
+                    type: number
+                  voucher_discount_percentage:
+                    type: number
+                  voucher_discount_fix_price:
+                    type: number
+          example:
+            limit: 18
+            page: 1
+            sort: unit_sold DESC
+            total_rows: 100080
+            total_pages: 5560
+            products:
+              - title: Masker KN95 PM2.5 Earloop kn 95 filter 95% setara n95 4 ply isi 50 Pcs
+                unit_sold: 100000
+                rating_avg: 4.8
+                thumbnail_url: " "
+                min_price: 70000
+                max_price: 170000
+                sub_price: 21700.000000000007
+                promo_discount_percentage: 69
+                promo_discount_fix_price: 0
+                promo_min_product_price: 1000
+                promo_max_discount_price: 70000
+                result_discount: 48299.99999999999
+                voucher_discount_percentage: 0
+                voucher_discount_fix_price: 5000
+              - title: Cereal SIMBA Choco Chips Bag 1 kg
+                unit_sold: 10000
+                rating_avg: 5
+                thumbnail_url: " "
+                min_price: 45648
+                max_price: 55648
+                sub_price: 34692.479999999996
+                promo_discount_percentage: 24
+                promo_discount_fix_price: 0
+                promo_min_product_price: 30000
+                promo_max_discount_price: 50000
+                result_discount: 10955.52
+                voucher_discount_percentage: 0
+                voucher_discount_fix_price: 5000
+              - title: "Triple Pack: Tropicana Slim Hokkaido Cheese Cookies (5 Sch)"
+                unit_sold: 10000
+                rating_avg: 5
+                thumbnail_url: " "
+                min_price: 80400
+                max_price: 90400
+                sub_price: 0
+                promo_discount_percentage: 25
+                promo_discount_fix_price: 0
+                promo_min_product_price: 150000
+                promo_max_discount_price: 150000
+                result_discount:
+                voucher_discount_percentage: 0
+                voucher_discount_fix_price: 5000
+              - title: Nice Facial Tissue Tisue Tisu Wajah Muka Paket isi 5 x 180 sheets
+                unit_sold: 10000
+                rating_avg: 5
+                thumbnail_url: " "
+                min_price: 32000
+                max_price: 42000
+                sub_price: 0
+                promo_discount_percentage:
+                promo_discount_fix_price:
+                promo_min_product_price:
+                promo_max_discount_price:
+                result_discount:
+                voucher_discount_percentage: 0
+                voucher_discount_fix_price: 5000
 
     GetRecommendedProductListResponse:
       title: GetRecommendedProductListResponse
@@ -2642,7 +2679,7 @@ components:
                 result_discount: 10955.52
                 voucher_discount_percentage: 0
                 voucher_discount_fix_price: 5000
-              - title: 'Triple Pack: Tropicana Slim Hokkaido Cheese Cookies (5 Sch)'
+              - title: "Triple Pack: Tropicana Slim Hokkaido Cheese Cookies (5 Sch)"
                 unit_sold: 10000
                 rating_avg: 5
                 thumbnail_url: " "
@@ -2670,7 +2707,7 @@ components:
                 result_discount:
                 voucher_discount_percentage: 0
                 voucher_discount_fix_price: 5000
-     
+
     GetProductDetailResponse:
       title: GetProductDetailResponse
       type: object
@@ -2691,25 +2728,25 @@ components:
                   type: string
                 title:
                   type: string
-                description: 
+                description:
                   type: string
-                view_count: 
+                view_count:
                   type: number
                 favorite_count:
                   type: number
-                unit_sold: 
+                unit_sold:
                   type: number
-                listed_status: 
+                listed_status:
                   type: boolean
-                thumbnail_url: 
+                thumbnail_url:
                   type: string
-                rating_avg: 
+                rating_avg:
                   type: number
-                min_price: 
+                min_price:
                   type: number
-                max_price: 
+                max_price:
                   type: number
-                category_name: 
+                category_name:
                   type: string
                 category_url:
                   type: string
@@ -2722,15 +2759,15 @@ components:
                   type: number
                 promotion_discount_fix_price:
                   type: number
-                promotion_min_product_price: 
+                promotion_min_product_price:
                   type: number
-                promotion_max_discount_price: 
+                promotion_max_discount_price:
                   type: number
-                promotion_quota: 
+                promotion_quota:
                   type: number
-                promotion_max_quantity: 
+                promotion_max_quantity:
                   type: number
-                promotion_active_date: 
+                promotion_active_date:
                   type: string
                 promotion_expiry_date:
                   type: string
@@ -2739,23 +2776,23 @@ components:
               items:
                 type: object
                 properties:
-                  id: 
+                  id:
                     type: string
                   normal_price:
                     type: number
-                  stock: 
+                  stock:
                     type: number
-                  weight: 
+                  weight:
                     type: number
-                  size: 
+                  size:
                     type: number
-                  hazardous: 
+                  hazardous:
                     type: boolean
-                  condition: 
+                  condition:
                     type: string
-                  bulk_price: 
+                  bulk_price:
                     type: boolean
-                  product_url: 
+                  product_url:
                     type: string
                   variant:
                     type: object
@@ -2776,39 +2813,39 @@ components:
               category_name: "laptop"
               category_url: "https://cf.shopee.co.id/file/c139370836a9daa649da70876a326b58"
             promotions_info:
-              promotion_name: '1212'
+              promotion_name: "1212"
               promotion_discount_percentage: 15
               promotion_discount_fix_price:
               promotion_min_product_price: 10000
               promotion_max_discount_price: 20000
               promotion_quota: 100
               promotion_max_quantity: 5
-              promotion_active_date: '2022-12-23T07:15:23.487612Z'
+              promotion_active_date: "2022-12-23T07:15:23.487612Z"
               promotion_expiry_date:
             products_detail:
-            - id: "208a47a9-4890-45db-9243-8dd4144a3896"
-              normal_price: 15000
-              stock: 25
-              weight: 100
-              size: 20
-              hazardous: true
-              condition: "new"
-              bulk_price: false
-              product_url: "google.com"
-              variant:
-                ukuran: "xl"
-                warna: "hitam"
-            - id: "450ba9c5-eafc-409f-99d3-99f931c9fbf2"
-              normal_price: 29000
-              stock: 19
-              weight: 20
-              size: 19
-              hazardous: true
-              condition: "used"
-              bulk_price: true
-              product_url: "yahoo.com"
-              variant:
-                warna: "hitam"
+              - id: "208a47a9-4890-45db-9243-8dd4144a3896"
+                normal_price: 15000
+                stock: 25
+                weight: 100
+                size: 20
+                hazardous: true
+                condition: "new"
+                bulk_price: false
+                product_url: "google.com"
+                variant:
+                  ukuran: "xl"
+                  warna: "hitam"
+              - id: "450ba9c5-eafc-409f-99d3-99f931c9fbf2"
+                normal_price: 29000
+                stock: 19
+                weight: 20
+                size: 19
+                hazardous: true
+                condition: "used"
+                bulk_price: true
+                product_url: "yahoo.com"
+                variant:
+                  warna: "hitam"
 
     CreateProductReviewRequest:
       title: CreateProductReviewRequest
@@ -2865,7 +2902,6 @@ components:
               user:
                 username: "asdasd"
                 photo_url: "http://google.com/asdwnid.asiqwnea"
-
 
     CreateCartResponse:
       title: CreateCartResponse
@@ -2990,7 +3026,6 @@ components:
                       result_discount: 0
                       sub_price: 0
 
-
     GetCartInHomeResponse:
       title: GetCartInHomeResponse
       type: object
@@ -3106,14 +3141,14 @@ components:
       example:
         message: success
         data:
-        - id: e8854443-c2c7-488e-93d5-b9d93708b8a3
-          user_id: f8d8d66a-e8eb-4633-bc2d-4ccd941fed47
-          name: Laptop Shop
-          total_product: 12510
-          total_rating: 0
-          rating_avg: 0
-          photo_url: https://res.cloudinary.com/dhpao1zxi/image/upload/v1671705602/ldtzmxqeyb4nwu5p6y76.jpg
-          created_at: '2023-01-04T04:50:12.665781Z'
+          - id: e8854443-c2c7-488e-93d5-b9d93708b8a3
+            user_id: f8d8d66a-e8eb-4633-bc2d-4ccd941fed47
+            name: Laptop Shop
+            total_product: 12510
+            total_rating: 0
+            rating_avg: 0
+            photo_url: https://res.cloudinary.com/dhpao1zxi/image/upload/v1671705602/ldtzmxqeyb4nwu5p6y76.jpg
+            created_at: "2023-01-04T04:50:12.665781Z"
 
     GetSellerOrderResponse:
       title: GetSellerOrderResponse
@@ -3182,23 +3217,23 @@ components:
             total_rows: 2
             total_pages: 1
             rows:
-            - order_id: "466844d8-e93b-4835-81d4-a75192e74958"
-              order_status: 1
-              total_price: 250000
-              delivery_fee: 30000
-              resi_no: '1'
-              shop_id: "2829d48b-b1db-4445-937c-a5c90cc1c633"
-              shop_name: "test_shop"
-              voucher_code: "voucher_shop_1"
-              created_at: '2022-12-27T05:24:10.434065Z'
-              detail:
-              - product_detail_id: "450ba9c5-eafc-409f99d3-99f931c9fbf2"
-                product_id: "6f16e578-fd85-4aa3-a321-9195ee38e86c"
-                product_title: "baju zara"
-                product_detail_url: "yahoo.com"
-                order_quantity: 4
-                order_item_price: 2000
-                order_total_price: 8000
+              - order_id: "466844d8-e93b-4835-81d4-a75192e74958"
+                order_status: 1
+                total_price: 250000
+                delivery_fee: 30000
+                resi_no: "1"
+                shop_id: "2829d48b-b1db-4445-937c-a5c90cc1c633"
+                shop_name: "test_shop"
+                voucher_code: "voucher_shop_1"
+                created_at: "2022-12-27T05:24:10.434065Z"
+                detail:
+                  - product_detail_id: "450ba9c5-eafc-409f99d3-99f931c9fbf2"
+                    product_id: "6f16e578-fd85-4aa3-a321-9195ee38e86c"
+                    product_title: "baju zara"
+                    product_detail_url: "yahoo.com"
+                    order_quantity: 4
+                    order_item_price: 2000
+                    order_total_price: 8000
 
     GetOrderDetailResponse:
       title: GetOrderDetailResponse
@@ -3253,20 +3288,20 @@ components:
             order_status: 1
             total_price: 250000
             delivery_fee: 30000
-            resi_no: '1'
+            resi_no: "1"
             shop_id: "2829d48b-b1db-4445-937c-a5c90cc1c633"
             shop_name: "test_shop"
             voucher_code: "voucher_shop_1"
-            created_at: '2022-12-27T05:24:10.434065Z'
+            created_at: "2022-12-27T05:24:10.434065Z"
             detail:
-            - product_detail_id: "450ba9c5-eafc-409f99d3-99f931c9fbf2"
-              product_id: "6f16e578-fd85-4aa3-a321-9195ee38e86c"
-              product_title: "baju zara"
-              product_detail_url: "yahoo.com"
-              order_quantity: 4
-              order_item_price: 2000
-              order_total_price: 8000
-      
+              - product_detail_id: "450ba9c5-eafc-409f99d3-99f931c9fbf2"
+                product_id: "6f16e578-fd85-4aa3-a321-9195ee38e86c"
+                product_title: "baju zara"
+                product_detail_url: "yahoo.com"
+                order_quantity: 4
+                order_item_price: 2000
+                order_total_price: 8000
+
     ChangeOrderStatusRequest:
       title: ChangeOrderStatusRequest
       type: object
@@ -3320,11 +3355,9 @@ components:
           #   type: object
           #   properties:
 
-
-
   securitySchemes:
     BEARER:
       type: apiKey
       name: Authorization
       in: header
-      description: 'example: BEARER {token value}'
+      description: "example: BEARER {token value}"
