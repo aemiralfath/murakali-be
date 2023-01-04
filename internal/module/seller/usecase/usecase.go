@@ -90,3 +90,15 @@ func (u *sellerUC) GetSellerBySellerID(ctx context.Context, sellerID string) (*b
 
 	return sellerData, nil
 }
+
+func (u *sellerUC) GetCategoryBySellerID(ctx context.Context, shopID string) ([]*body.CategoryResponse, error) {
+	categories, err := u.sellerRepo.GetCategoryBySellerID(ctx, shopID)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, httperror.New(http.StatusNotFound, body.CategoryNotFoundMessage)
+		}
+		return nil, err
+	}
+
+	return categories, nil
+}

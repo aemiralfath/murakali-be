@@ -29,4 +29,12 @@ const (
 	from "shop" s 
 	join "user" u on u.id = s.user_id
 	where s.id = $1 and s.deleted_at is null`
+
+	GetCategoryBySellerIDQuery = `SELECT c.id, c.name
+	From shop s, product p, category c
+	where s.id = p.shop_id
+	and p.category_id = c.id
+	and s.id = $1
+	and c.deleted_at is null
+	group by c.id`
 )

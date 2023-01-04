@@ -15,4 +15,5 @@ type Repository interface {
 	ChangeOrderStatus(ctx context.Context, requestBody body.ChangeOrderStatusRequest) error
 	GetOrderByOrderID(ctx context.Context, OrderID string) (*model.Order, error)
 	GetSellerBySellerID(ctx context.Context, sellerID string) (*body.SellerResponse, error)
+	GetCategoryBySellerID(ctx context.Context, shopID string) ([]*body.CategoryResponse, error)
 }

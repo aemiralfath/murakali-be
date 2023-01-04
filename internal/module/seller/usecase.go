@@ -12,4 +12,5 @@ type UseCase interface {
 	ChangeOrderStatus(ctx context.Context, userID string, requestBody body.ChangeOrderStatusRequest) error
 	GetOrderByOrderID(ctx context.Context, orderID string) (*model.Order, error)
 	GetSellerBySellerID(ctx context.Context, sellerID string) (*body.SellerResponse, error)
+	GetCategoryBySellerID(ctx context.Context, shopID string) ([]*body.CategoryResponse, error)
 }

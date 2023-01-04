@@ -7,4 +7,5 @@ type Handlers interface {
 	ChangeOrderStatus(c *gin.Context)
 	GetOrderByOrderID(c *gin.Context)
 	GetSellerBySellerID(c *gin.Context)
+	GetCategoryBySellerID(c *gin.Context)
 }
