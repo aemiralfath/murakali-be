@@ -809,7 +809,7 @@ paths:
           name: sort_by
           schema:
             type: string
-            enum: [min_price, unit_sold, created_at, view_count]
+            enum: [min_price, unit_sold, created_at, view_count, recommended]
             description: >-
               query for sort by product
         - in: query

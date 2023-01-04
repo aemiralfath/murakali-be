@@ -245,10 +245,19 @@ func (h *productHandlers) ValidateQueryProduct(c *gin.Context) (*pagination.Pagi
 	if err != nil || pageFilter < 1 {
 		pageFilter = 1
 	}
+	
 	pgn := &pagination.Pagination{
 		Limit: limitFilter,
 		Page:  pageFilter,
 		Sort:  sortBy+" "+sort,
+	}
+
+	if (sortBy== "recommended"){
+		pgn = &pagination.Pagination{
+		Limit: limitFilter,
+		Page:  pageFilter,
+		Sort:  "view_count "+sort+ ", "+ "unit_sold "+sort,
+	}
 	}
 
 
@@ -277,6 +286,8 @@ func (h *productHandlers) ValidateQueryProduct(c *gin.Context) (*pagination.Pagi
 	searchFilter := fmt.Sprintf("%%%s%%", search)
 	categoryFilter := fmt.Sprintf("%%%s%%", category)
 	shopFilter := fmt.Sprintf("%%%s%%", shop)
+
+	
 
 	
 	query := &body.GetProductQueryRequest{
