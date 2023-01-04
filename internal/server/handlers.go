@@ -85,7 +85,7 @@ func (s *Server) MapHandlers() error {
 	mw := middleware.NewMiddlewareManager(s.cfg, []string{"*"}, s.log)
 	authDelivery.MapAuthRoutes(authGroup, authHandlers)
 	userDelivery.MapUserRoutes(userGroup, userHandlers, mw)
-	productDelivery.MapProductRoutes(productGroup, productHandlers)
+	productDelivery.MapProductRoutes(productGroup, productHandlers, mw)
 	cartDelivery.MapCartRoutes(cartGroup, cartHandlers, mw)
 	locationDelivery.MapAuthRoutes(locationGroup, locationHandlers)
 	sellerDelivery.MapSellerRoutes(sellerGroup, sellerHandlers, mw)
