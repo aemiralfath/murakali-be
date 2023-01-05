@@ -705,7 +705,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/SetupPinWalletResponse"
+                $ref: "#/components/schemas/DefaultSuccess"
     get:
       summary: Get user wallet
       description: >-
@@ -1404,7 +1404,7 @@ paths:
       tags:
         - Seller
       security:
-        - BEARER: []
+        - BEARER: [ ]
       responses:
         "200":
           description: OK
@@ -2132,13 +2132,10 @@ components:
       type: object
       description: Setup pin wallet request data model.
       properties:
-        user_id:
-          type: string
         pin:
           type: string
 
       example:
-        user_id: "101401ce-4a0f-11ed-9772-acde48001122"
         pin: "123456"
 
     SetupPinWalletResponse:
@@ -2180,23 +2177,23 @@ components:
         data:
           type: object
           properties:
-            wallet:
-              type: object
-              properties:
-                id:
-                  type: string
-                user_id:
-                  type: string
-                balance:
-                  type: string
-                active_date:
-                  type: string
+          example:
+            data:
+              id: f67a6297-bfd7-42d2-9f85-6441b848c57f
+              user_id: 7950eca2-58d5-44f0-b873-22b23d8107da
+              balance: 0
+              pin: ''
+              attempt_count: 0
+              attempt_at:
+                Time: '0001-01-01T00:00:00Z'
+                Valid: false
+              unlocked_at:
+                Time: '0001-01-01T00:00:00Z'
+                Valid: false
+              active_date:
+                Time: '2023-01-05T10:02:58.493922Z'
+                Valid: true
 
-              example:
-                id: "101401ce-4a0f-11ed-9772-acde48001122"
-                user_id: "101401ce-4a0f-11ed-9772-acde48001122"
-                balance: 100000
-                active_date: "2025-12-23T05:00:52.731695Z"
 
     InputPinWalletRequest:
       title: InputPinWalletRequest
