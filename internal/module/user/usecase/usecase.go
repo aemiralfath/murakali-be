@@ -744,7 +744,7 @@ func (u *userUC) UpdateTransaction(ctx context.Context, transactionID string, re
 		return err
 	}
 
-	if requestBody.Status == constant.SLPStatusPaid {
+	if requestBody.Status == constant.SLPStatusPaid && requestBody.Message == constant.SlPMessagePaid {
 		err := u.txRepo.WithTransaction(func(tx postgre.Transaction) error {
 			transaction.PaidAt.Valid = true
 			transaction.PaidAt.Time = time.Now()
@@ -754,6 +754,29 @@ func (u *userUC) UpdateTransaction(ctx context.Context, transactionID string, re
 
 			for _, order := range orders {
 				order.OrderStatusID = constant.OrderStatusWaitingForSeller
+				if err := u.userRepo.UpdateOrder(ctx, tx, order); err != nil {
+					return err
+				}
+			}
+
+			return nil
+		})
+
+		if err != nil {
+			return err
+		}
+	}
+
+	if requestBody.Status == constant.SLPStatusCanceled && requestBody.Message == constant.SLPMessageCanceled {
+		err := u.txRepo.WithTransaction(func(tx postgre.Transaction) error {
+			transaction.CanceledAt.Valid = true
+			transaction.CanceledAt.Time = time.Now()
+			if err := u.userRepo.UpdateTransaction(ctx, tx, transaction); err != nil {
+				return err
+			}
+
+			for _, order := range orders {
+				order.OrderStatusID = constant.OrderStatusCanceled
 				if err := u.userRepo.UpdateOrder(ctx, tx, order); err != nil {
 					return err
 				}

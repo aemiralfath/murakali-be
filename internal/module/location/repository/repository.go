@@ -71,7 +71,7 @@ func (r *locationRepo) GetCourierByID(ctx context.Context, courierID string) (*m
 	var courier model.Courier
 	if err := r.PSQL.QueryRowContext(ctx, GetCourierByID, courierID).Scan(
 		&courier.ID, &courier.Name, &courier.Code, &courier.Service,
-		&courier.Description, &courier.CreatedAt, &courier.UpdatedAt, &courier.DeletedAt); err != nil {
+		&courier.Description, &courier.CreatedAt, &courier.UpdatedAt); err != nil {
 		return nil, err
 	}
 

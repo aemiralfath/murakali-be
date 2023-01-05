@@ -15,5 +15,4 @@ type Courier struct {
 	Description string       `json:"description" db:"description" binding:"omitempty"`
 	CreatedAt   time.Time    `json:"created_at" db:"created_at" binding:"omitempty"`
 	UpdatedAt   sql.NullTime `json:"updated_at" db:"updated_at" binding:"omitempty"`
-	DeletedAt   sql.NullTime `json:"deleted_at" db:"deleted_at" binding:"omitempty"`
 }
