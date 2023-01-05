@@ -96,7 +96,6 @@ func (r *sellerRepo) GetOrderByOrderID(ctx context.Context, orderID string) (*mo
 }
 
 func (r *sellerRepo) GetOrders(ctx context.Context, shopID, orderStatusID string, pgn *pagination.Pagination) ([]*model.Order, error) {
-
 	orders := make([]*model.Order, 0)
 
 	res, err := r.PSQL.QueryContext(
@@ -172,6 +171,44 @@ func (r *sellerRepo) ChangeOrderStatus(ctx context.Context, requestBody body.Cha
 	return nil
 }
 
+
+
+
+func (r *sellerRepo) GetCourierSeller(ctx context.Context, userID string) ([]*body.CourierSellerInfo, error) {
+	courierSeller := make([]*body.CourierSellerInfo, 0)
+	
+	res, err := r.PSQL.QueryContext(
+		ctx, GetCourierSellerQuery,
+		userID,
+		)
+
+	if err != nil {
+		return  nil, err
+	}
+	defer res.Close()
+
+	for res.Next() {
+		var courierSellerData body.CourierSellerInfo
+
+		if errScan := res.Scan(
+			&courierSellerData.ShopCourierID,
+			&courierSellerData.Name,
+			&courierSellerData.Code,
+			&courierSellerData.Service,
+			&courierSellerData.Description,
+		); errScan != nil {
+			return nil, err
+		}
+
+		courierSeller = append(courierSeller , &courierSellerData)
+	}
+
+	if res.Err() != nil {
+		return  nil, err
+	}
+
+	return courierSeller , err
+}
 func (r *sellerRepo) GetSellerBySellerID(ctx context.Context, sellerID string) (*body.SellerResponse, error) {
 	var sellerData body.SellerResponse
 	if err := r.PSQL.QueryRowContext(ctx, GetShopIDByShopIDQuery, sellerID).Scan(

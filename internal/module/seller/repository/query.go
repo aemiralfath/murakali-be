@@ -25,6 +25,26 @@ const (
 
 	ChangeOrderStatusQuery = `UPDATE "order" SET "order_status_id" = $1 WHERE "id" = $2`
 
+
+
+	GetCourierSellerQuery  = `
+	SELECT "sp"."id" as "shop_courier_id", "c"."name" as "name", "c"."code" as "code", "c"."service" as "service",
+		"c"."description" as "description"
+	FROM "shop_courier" as "sp"
+	INNER JOIN "courier" as "c" ON "c"."id" = "sp"."courier_id"
+	INNER JOIN "shop" as "s" ON "s"."id" = "sp"."shop_id"
+	WHERE "s"."user_id" = $1 AND "sp"."deleted_at" IS NULL
+	ORDER BY "sp"."created_at" DESC ;
+	`
+
+
+	GetShopIDByUserIDQuery = `SELECT shop_id from "shop" where user_id = $1 `
+
+	CreateCourierSellerQuery = `INSERT INTO "shop_courier" 
+    	(shop_id, courier_id)
+    	VALUES ($1, $2)
+		WHERE deleted_at IS NULL`
+
 	GetShopIDByShopIDQuery = `SELECT s.id, s.user_id, s.name, s.total_product, s.total_rating, s.rating_avg, s.created_at, u.photo_url
 	from "shop" s 
 	join "user" u on u.id = s.user_id

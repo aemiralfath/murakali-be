@@ -11,6 +11,7 @@ type UseCase interface {
 	GetOrder(ctx context.Context, userID, orderStatusID string, pgn *pagination.Pagination) (*pagination.Pagination, error)
 	ChangeOrderStatus(ctx context.Context, userID string, requestBody body.ChangeOrderStatusRequest) error
 	GetOrderByOrderID(ctx context.Context, orderID string) (*model.Order, error)
+	GetCourierSeller(ctx context.Context, userID string) (*body.CourierSellerResponse, error) 
 	GetSellerBySellerID(ctx context.Context, sellerID string) (*body.SellerResponse, error)
 	GetCategoryBySellerID(ctx context.Context, shopID string) ([]*body.CategoryResponse, error)
 }

@@ -24,4 +24,9 @@ type Repository interface {
 	GetProducts(ctx context.Context, pgn *pagination.Pagination, query *body.GetProductQueryRequest) ([]*body.Products,
 	[]*model.Promotion, []*model.Voucher, error) 
 	GetAllTotalProduct(ctx context.Context, query *body.GetProductQueryRequest) (int64, error) 
+
+
+	GetFavoriteProducts(ctx context.Context, pgn *pagination.Pagination, query *body.GetProductQueryRequest, userID string) ([]*body.Products,
+	[]*model.Promotion, []*model.Voucher, error) 
+	GetAllFavoriteTotalProduct(ctx context.Context, query *body.GetProductQueryRequest, userID string) (int64, error)
 }

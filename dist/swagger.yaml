@@ -922,6 +922,99 @@ paths:
               schema:
                 $ref: "#/components/schemas/GetProductResponse"
 
+  "/api/v1/product/favorite":
+    get:
+      summary: Get Favorite Product {WIP}
+      description: >-
+        get product
+      tags:
+        - Product
+
+      parameters:
+        - in: query
+          name: search
+          schema:
+            type: string
+            description: >-
+              query for searching product by title
+        - in: query
+          name: category
+          schema:
+            type: string
+            description: >-
+              query for searching product by category
+
+        - in: query
+          name: shop_id
+          schema:
+            type: string
+            description: >-
+              query for searching product by shop
+
+        - in: query
+          name: limit
+          schema:
+            type: number
+            description: >-
+              query for limit show product
+        - in: query
+          name: page
+          schema:
+            type: number
+            description: >-
+              query for page product
+        - in: query
+          name: sort_by
+          schema:
+            type: string
+            enum: [min_price, unit_sold, created_at, view_count, recommended]
+            description: >-
+              query for sort by product
+        - in: query
+          name: sort
+          schema:
+            type: string
+            enum: [asc, desc]
+            description: >-
+              query for sort order product descrending or ascending
+        - in: query
+          name: min_price
+          schema:
+            type: number
+            description: >-
+              query for minimium price show product
+        - in: query
+          name: max_price
+          schema:
+            type: number
+            description: >-
+              query for max price show product
+        - in: query
+          name: min_rating
+          schema:
+            type: number
+            description: >-
+              query for minimum rating show product
+        - in: query
+          name: max_rating
+          schema:
+            type: number
+            description: >-
+              query for max rating show product
+        - in: query
+          name: shop_name
+          schema:
+            type: string
+            description: >-
+              query for shop name show product
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GetFavoriteProductResponse"
+
   "/api/v1/product/recommended":
     get:
       summary: Get Recommended Product List
@@ -2564,6 +2657,110 @@ components:
                 result_discount: 48299.99999999999
                 voucher_discount_percentage: 0
                 voucher_discount_fix_price: 5000
+              - title: Cereal SIMBA Choco Chips Bag 1 kg
+                unit_sold: 10000
+                rating_avg: 5
+                thumbnail_url: " "
+                min_price: 45648
+                max_price: 55648
+                sub_price: 34692.479999999996
+                promo_discount_percentage: 24
+                promo_discount_fix_price: 0
+                promo_min_product_price: 30000
+                promo_max_discount_price: 50000
+                result_discount: 10955.52
+                voucher_discount_percentage: 0
+                voucher_discount_fix_price: 5000
+              - title: "Triple Pack: Tropicana Slim Hokkaido Cheese Cookies (5 Sch)"
+                unit_sold: 10000
+                rating_avg: 5
+                thumbnail_url: " "
+                min_price: 80400
+                max_price: 90400
+                sub_price: 0
+                promo_discount_percentage: 25
+                promo_discount_fix_price: 0
+                promo_min_product_price: 150000
+                promo_max_discount_price: 150000
+                result_discount:
+                voucher_discount_percentage: 0
+                voucher_discount_fix_price: 5000
+              - title: Nice Facial Tissue Tisue Tisu Wajah Muka Paket isi 5 x 180 sheets
+                unit_sold: 10000
+                rating_avg: 5
+                thumbnail_url: " "
+                min_price: 32000
+                max_price: 42000
+                sub_price: 0
+                promo_discount_percentage:
+                promo_discount_fix_price:
+                promo_min_product_price:
+                promo_max_discount_price:
+                result_discount:
+                voucher_discount_percentage: 0
+                voucher_discount_fix_price: 5000
+
+    GetFavoriteProductResponse:
+      title: GetFavoriteProductResponse
+      type: object
+      description: Get Favorite product response data model.
+      properties:
+        message:
+          type: string
+          example: "success"
+        data:
+          type: object
+          properties:
+            limit:
+              type: number
+            page:
+              type: number
+            sort:
+              type: string
+            total_rows:
+              type: number
+            total_pages:
+              type: number
+            rows:
+              type: array
+              items:
+                type: object
+                properties:
+                  title:
+                    type: string
+                  unit_sold:
+                    type: number
+                  rating_avg:
+                    type: number
+                  thumbnail_url:
+                    type: string
+                  min_price:
+                    type: number
+                  max_price:
+                    type: number
+                  sub_price:
+                    type: number
+                  promo_discount_percentage:
+                    type: number
+                  promo_discount_fix_price:
+                    type: number
+                  promo_min_product_price:
+                    type: number
+                  promo_max_discount_price:
+                    type: number
+                  result_discount:
+                    type: number
+                  voucher_discount_percentage:
+                    type: number
+                  voucher_discount_fix_price:
+                    type: number
+          example:
+            limit: 18
+            page: 1
+            sort: unit_sold DESC
+            total_rows: 3
+            total_pages: 1
+            products:
               - title: Cereal SIMBA Choco Chips Bag 1 kg
                 unit_sold: 10000
                 rating_avg: 5

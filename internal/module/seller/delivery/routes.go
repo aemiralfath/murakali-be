@@ -16,4 +16,6 @@ func MapSellerRoutes(sellerGroup *gin.RouterGroup, h seller.Handlers, mw *middle
 	sellerGroup.GET("/order", h.GetOrder)
 	sellerGroup.GET("/order/:order_id", h.GetOrderByOrderID)
 	sellerGroup.PATCH("/order-status", h.ChangeOrderStatus)
+
+	sellerGroup.GET("/courier-list", h.GetCourierSeller)
 }
