@@ -174,9 +174,7 @@ func (h *sellerHandlers) GetSellerBySellerID(c *gin.Context) {
 	response.SuccessResponse(c.Writer, data, http.StatusOK)
 }
 
-
-
-func (h *sellerHandlers)  GetCourierSeller(c *gin.Context) {
+func (h *sellerHandlers) GetCourierSeller(c *gin.Context) {
 	userID, exist := c.Get("userID")
 	if !exist {
 		response.ErrorResponse(c.Writer, response.UnauthorizedMessage, http.StatusUnauthorized)

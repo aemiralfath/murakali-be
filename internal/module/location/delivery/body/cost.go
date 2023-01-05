@@ -54,7 +54,7 @@ func (r *GetShippingCostRequest) Validate() (UnprocessableEntity, error) {
 		entity.Fields["shop_id"] = InvalidIDMessage
 	}
 
-	if len(r.ShopID) <= 0 {
+	if len(r.ProductIDS) == 0 {
 		unprocessableEntity = true
 		entity.Fields["product_ids"] = FieldCannotBeEmptyMessage
 	}

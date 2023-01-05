@@ -165,8 +165,7 @@ func (u *locationUC) GetUrban(ctx context.Context, province, city, subDistrict s
 }
 
 func (u *locationUC) GetShippingCost(ctx context.Context, requestBody body.GetShippingCostRequest) (*body.GetShippingCostResponse, error) {
-	var resp *body.GetShippingCostResponse
-	resp = &body.GetShippingCostResponse{}
+	resp := &body.GetShippingCostResponse{}
 	resp.ShippingOption = make([]*model.Cost, 0)
 
 	shopCourier, err := u.locationRepo.GetShopCourierID(ctx, requestBody.ShopID)
@@ -208,45 +207,37 @@ func (u *locationUC) GetShippingCost(ctx context.Context, requestBody body.GetSh
 		key := fmt.Sprintf("%d:%d:%d:%s", requestBody.Origin, requestBody.Destination, requestBody.Weight, courier.Code)
 		costRedis, err = u.locationRepo.GetCostRedis(ctx, key)
 		if err != nil {
-			regAvail := false
-			costCourier := &model.Cost{}
 			res, err := u.GetCostRajaOngkir(requestBody.Origin, requestBody.Destination, requestBody.Weight, courier.Code)
 			if err != nil {
 				return nil, err
 			}
 
-			for _, cost := range res.Rajaongkir.Results[0].Costs {
-				if cost.Service == courier.Service {
-					regAvail = true
-					costCourier.Courier = *courier
-					costCourier.Fee = cost.Cost[0].Value
-					costCourier.ETD = cost.Cost[0].Etd
-				}
-			}
-
-			if regAvail {
-				redisValue, err := json.Marshal(costCourier)
-				if err != nil {
-					return nil, err
-				}
-
-				if errInsert := u.locationRepo.InsertCostRedis(ctx, key, string(redisValue)); errInsert != nil {
-					return nil, errInsert
-				}
-
-				fmt.Println(redisValue)
-				value := string(redisValue)
-				costRedis = &value
-			}
-		}
-
-		if costRedis != nil {
-			cost := &model.Cost{}
-			if err := json.Unmarshal([]byte(*costRedis), &cost); err != nil {
+			redisValue, err := json.Marshal(res)
+			if err != nil {
 				return nil, err
 			}
 
-			resp.ShippingOption = append(resp.ShippingOption, cost)
+			if errInsert := u.locationRepo.InsertCostRedis(ctx, key, string(redisValue)); errInsert != nil {
+				return nil, errInsert
+			}
+
+			value := string(redisValue)
+			costRedis = &value
+		}
+
+		var costResp body.RajaOngkirCostResponse
+		if err := json.Unmarshal([]byte(*costRedis), &costResp); err != nil {
+			return nil, err
+		}
+
+		for _, cost := range costResp.Rajaongkir.Results[0].Costs {
+			costCourier := &model.Cost{}
+			if cost.Service == courier.Service {
+				costCourier.Courier = *courier
+				costCourier.Fee = cost.Cost[0].Value
+				costCourier.ETD = cost.Cost[0].Etd
+				resp.ShippingOption = append(resp.ShippingOption, costCourier)
+			}
 		}
 	}
 

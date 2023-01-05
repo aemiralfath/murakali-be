@@ -70,7 +70,8 @@ func (r *locationRepo) GetProductCourierWhitelistID(ctx context.Context, product
 func (r *locationRepo) GetCourierByID(ctx context.Context, courierID string) (*model.Courier, error) {
 	var courier model.Courier
 	if err := r.PSQL.QueryRowContext(ctx, GetCourierByID, courierID).Scan(
-		&courier.ID, &courier.Name, &courier.Code, &courier.Service, &courier.Description); err != nil {
+		&courier.ID, &courier.Name, &courier.Code, &courier.Service,
+		&courier.Description, &courier.CreatedAt, &courier.UpdatedAt, &courier.DeletedAt); err != nil {
 		return nil, err
 	}
 
@@ -109,7 +110,7 @@ func (r *locationRepo) InsertUrbanRedis(ctx context.Context, province, city, sub
 	return nil
 }
 
-func (r *locationRepo) InsertCostRedis(ctx context.Context, key string, value string) error {
+func (r *locationRepo) InsertCostRedis(ctx context.Context, key, value string) error {
 	if err := r.RedisClient.Set(ctx, key, value, 0); err.Err() != nil {
 		return err.Err()
 	}
