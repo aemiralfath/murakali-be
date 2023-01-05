@@ -31,4 +31,6 @@ func MapUserRoutes(userGroup *gin.RouterGroup, h user.Handlers, mw *middleware.M
 	userGroup.POST("/transaction", h.CreateTransaction)
 	userGroup.POST("/transaction/slp-payment", h.CreateSLPPayment)
 	userGroup.GET("/order", h.GetOrder)
+	userGroup.POST("/wallet", h.ActivateWallet)
+	userGroup.GET("/wallet", h.GetWallet)
 }

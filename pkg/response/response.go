@@ -41,6 +41,8 @@ const (
 	ShopAddressNotFound            = "Shop address not found."
 	DefaultAddressNotFound         = "Default address not found."
 	ShopCourierNotExist            = "Shop courier not exist."
+	WalletAlreadyActivated         = "Wallet already activated."
+	WalletIsNotActivated           = `Wallet is not activated.`
 )
 
 type JSONResponse struct {

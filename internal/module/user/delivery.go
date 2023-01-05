@@ -25,4 +25,6 @@ type Handlers interface {
 	CreateSLPPayment(c *gin.Context)
 	SLPPaymentCallback(c *gin.Context)
 	GetOrder(c *gin.Context)
+	ActivateWallet(c *gin.Context)
+	GetWallet(c *gin.Context)
 }

@@ -38,11 +38,6 @@ func (h *userHandlers) RegisterMerchant(c *gin.Context) {
 		return
 	}
 
-	if !exist {
-		response.ErrorResponse(c.Writer, response.UnauthorizedMessage, http.StatusUnauthorized)
-		return
-	}
-
 	var requestBody body.RegisterMerchant
 	if err := c.ShouldBind(&requestBody); err != nil {
 		response.ErrorResponse(c.Writer, response.BadRequestMessage, http.StatusBadRequest)
@@ -55,6 +50,64 @@ func (h *userHandlers) RegisterMerchant(c *gin.Context) {
 		return
 	}
 	if err := h.userUC.RegisterMerchant(c, userID.(string), requestBody.ShopName); err != nil {
+		var e *httperror.Error
+		if !errors.As(err, &e) {
+			h.logger.Errorf("HandlerUser, Error: %s", err)
+			response.ErrorResponse(c.Writer, response.InternalServerErrorMessage, http.StatusInternalServerError)
+			return
+		}
+
+		response.ErrorResponse(c.Writer, e.Err.Error(), e.Status)
+		return
+	}
+
+	response.SuccessResponse(c.Writer, nil, http.StatusOK)
+}
+
+func (h *userHandlers) GetWallet(c *gin.Context) {
+	userID, exist := c.Get("userID")
+	if !exist {
+		response.ErrorResponse(c.Writer, response.UnauthorizedMessage, http.StatusUnauthorized)
+		return
+	}
+
+	wallet, err := h.userUC.GetWallet(c, userID.(string))
+	if err != nil {
+		var e *httperror.Error
+		if !errors.As(err, &e) {
+			h.logger.Errorf("HandlerUser, Error: %s", err)
+			response.ErrorResponse(c.Writer, response.InternalServerErrorMessage, http.StatusInternalServerError)
+			return
+		}
+
+		response.ErrorResponse(c.Writer, e.Err.Error(), e.Status)
+		return
+	}
+
+	wallet.PIN = ""
+	response.SuccessResponse(c.Writer, wallet, http.StatusOK)
+}
+
+func (h *userHandlers) ActivateWallet(c *gin.Context) {
+	userID, exist := c.Get("userID")
+	if !exist {
+		response.ErrorResponse(c.Writer, response.UnauthorizedMessage, http.StatusUnauthorized)
+		return
+	}
+
+	var requestBody body.ActivateWalletRequest
+	if err := c.ShouldBind(&requestBody); err != nil {
+		response.ErrorResponse(c.Writer, response.BadRequestMessage, http.StatusBadRequest)
+		return
+	}
+
+	invalidFields, err := requestBody.Validate()
+	if err != nil {
+		response.ErrorResponseData(c.Writer, invalidFields, response.UnprocessableEntityMessage, http.StatusUnprocessableEntity)
+		return
+	}
+
+	if err := h.userUC.ActivateWallet(c, userID.(string), requestBody.Pin); err != nil {
 		var e *httperror.Error
 		if !errors.As(err, &e) {
 			h.logger.Errorf("HandlerUser, Error: %s", err)
