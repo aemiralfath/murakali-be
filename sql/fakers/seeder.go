@@ -41,7 +41,8 @@ func RegisterSeeders() []Seeder {
 		{Seeder: table.NewCourierFaker(
 			[]string{"98c1921e-b80e-40f3-9cba-fe8806097517", "0d389020-f229-461e-9202-5788961fbb81", "4bf503dc-689e-4b66-8401-3f133f1d585a"},
 			[]string{"JNE", "POS Indonesia", "TIKI"},
-			[]string{"jne", "pos", "tiki"})},
+			[]string{"jne", "pos", "tiki"},
+			[]string{"REG", "REG", "Pos Reguler"})},
 		{Seeder: table.NewShopFaker(
 			[]string{"e8854443-c2c7-488e-93d5-b9d93708b8a3", "07315003-5369-465f-9f05-09482d951645", "b61ef5a7-548c-4c81-a192-eadeb2af915f", "20d1015e-d03a-4326-bc23-427a861bbc4e", "ecd86fa9-c2a0-4adb-93e8-347b9fac3b56", "a050cfb3-957c-4b35-83cb-ff65095c6eb5", "1a21363c-bc64-4295-8ad2-cb5d6517c797", "735e9978-97cc-4427-9c24-2f8230429a7f"},
 			[]string{"f8d8d66a-e8eb-4633-bc2d-4ccd941fed47", "87cb732a-4e09-461b-a6cc-be818353cae7", "942c718e-0ea9-4b8e-bbb8-ad5138ba9f6f", "9e3a2d9d-0479-4819-a40b-068453bcaf04", "fe52cf85-608a-4d83-b086-83da62dcccc5", "33998525-b174-4cd6-bb57-9778da7fe45b", "88012133-581a-4c0b-9048-7d61d969514f", "61daa36f-2bae-41ca-91fe-d4b6f92f6e76"},

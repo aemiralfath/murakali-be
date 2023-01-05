@@ -236,6 +236,26 @@ paths:
               schema:
                 $ref: "#/components/schemas/CheckUniqueTrueSuccess"
 
+  "/api/v1/location/cost":
+    post:
+      summary: Get Shipping Cost
+      description: >-
+        Get Shipping Cost
+      tags:
+        - Location
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CostShippingRequest"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CostShippingSuccess"
+
   "/api/v1/location/province":
     get:
       summary: Get Province
@@ -1375,6 +1395,23 @@ paths:
               schema:
                 $ref: "#/components/schemas/GetSellerDetailResponse"
 
+  "/api/v1/seller/{seller_id}/category":
+    get:
+      summary: Get Seller Category
+      description: >-
+        Get Seller Category
+      tags:
+        - Seller
+      security:
+        - BEARER: []
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GetSellerCategoryResponse"
+
   "/api/v1/seller/order":
     get:
       summary: Get Seller Order
@@ -2448,13 +2485,38 @@ components:
           type: boolean
         active_date:
           type: string
-
       example:
         card_number: "123456"
         user_id: "101401ce-4a0f-11ed-9772-acde48001122"
         name: "julius"
         is_default: true
         active_date: "2025-12-23T05:00:52"
+
+    CostShippingRequest:
+      title: CostShippingRequest
+      type: object
+      description: Cost shipping Request data model.
+      properties:
+        origin:
+          type: int
+        destination:
+          type: int
+        weight:
+          type: int
+        shop_id:
+          type: string
+        product_ids:
+          type: array
+          items:
+            properties:
+              type: string
+      example:
+        origin: 501
+        destination: 114
+        weight: 1500
+        shop_id: e8854443-c2c7-488e-93d5-b9d93708b8a3
+        product_ids:
+          - d21d410c-0f25-46ea-8c06-8d1573a2a0f7
 
     NewPasswordRequest:
       title: NewPasswordRequest
@@ -2504,6 +2566,8 @@ components:
               voucher_shop_id:
                 type: string
               courier_id:
+                type: string
+              courier_fee:
                 type: string
               product_details:
                 type: array
@@ -2562,6 +2626,43 @@ components:
               example:
                 card_number: "123456"
                 is_default: true
+
+    CostShippingSuccess:
+      properties:
+      example:
+        message: success
+        data:
+          shipping_option:
+            - courier:
+                id: 0d389020-f229-461e-9202-5788961fbb81
+                name: POS Indonesia
+                code: pos
+                service: Pos Reguler
+                description: Layanan Reguler
+                created_at: "2023-01-05T04:27:04.580086Z"
+                updated_at:
+                  Time: "0001-01-01T00:00:00Z"
+                  Valid: false
+                deleted_at:
+                  Time: "0001-01-01T00:00:00Z"
+                  Valid: false
+              fee: 17000
+              etd: 2 HARI
+            - courier:
+                id: 4bf503dc-689e-4b66-8401-3f133f1d585a
+                name: TIKI
+                code: tiki
+                service: REG
+                description: Layanan Reguler
+                created_at: "2023-01-05T04:27:04.580086Z"
+                updated_at:
+                  Time: "0001-01-01T00:00:00Z"
+                  Valid: false
+                deleted_at:
+                  Time: "0001-01-01T00:00:00Z"
+                  Valid: false
+              fee: 24000
+              etd: "2"
 
     GetProductResponse:
       title: GetProductResponse
@@ -3344,6 +3445,28 @@ components:
             rating_avg: 0
             photo_url: https://res.cloudinary.com/dhpao1zxi/image/upload/v1671705602/ldtzmxqeyb4nwu5p6y76.jpg
             created_at: "2023-01-04T04:50:12.665781Z"
+
+    GetSellerCategoryResponse:
+      title: GetSellerCategoryResponse
+      type: object
+      description: Get Category By Seller ID response data model.
+      properties:
+        message:
+          type: string
+        data:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+              name:
+                type: string
+      example:
+        message: success
+        data:
+          - id: d92a0995-78cd-4eba-a855-dfc096ffec5b
+            name: laptop
 
     GetSellerOrderResponse:
       title: GetSellerOrderResponse

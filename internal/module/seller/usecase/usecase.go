@@ -79,29 +79,28 @@ func (u *sellerUC) GetOrderByOrderID(ctx context.Context, orderID string) (*mode
 	return order, nil
 }
 
-
-func (u *sellerUC)  GetCourierSeller(ctx context.Context, userID string) (*body.CourierSellerResponse, error) {
-	courierSeller, err := u.sellerRepo.GetCourierSeller(ctx,  userID)
+func (u *sellerUC) GetCourierSeller(ctx context.Context, userID string) (*body.CourierSellerResponse, error) {
+	courierSeller, err := u.sellerRepo.GetCourierSeller(ctx, userID)
 	if err != nil {
-			return nil, err
+		return nil, err
 	}
 
 	resultCourierSeller := make([]*body.CourierSellerInfo, 0)
 	totalData := len(courierSeller)
 	for i := 0; i < totalData; i++ {
 		p := &body.CourierSellerInfo{
-			ShopCourierID:             courierSeller[i].ShopCourierID,
-			Name:                  courierSeller[i].Name,
-			Code:                 courierSeller[i].Code,
-			Service:              courierSeller[i].Service,
-			Description:                 courierSeller[i].Description,
-			
+			ShopCourierID: courierSeller[i].ShopCourierID,
+			Name:          courierSeller[i].Name,
+			Code:          courierSeller[i].Code,
+			Service:       courierSeller[i].Service,
+			Description:   courierSeller[i].Description,
 		}
-		
+
 		resultCourierSeller = append(resultCourierSeller, p)
 	}
 
-	csr:= &body.CourierSellerResponse{}
+	csr := &body.CourierSellerResponse{}
+
 	csr.Rows = resultCourierSeller
 
 	return csr, nil
@@ -118,9 +117,7 @@ func (u *sellerUC) GetSellerBySellerID(ctx context.Context, sellerID string) (*b
 	return sellerData, nil
 }
 
-
-
-func (u *sellerUC) CreateCourierSeller(ctx context.Context, userID string,  courierId string) error{
+func (u *sellerUC) CreateCourierSeller(ctx context.Context, userID string, courierId string) error {
 	shopID, err := u.sellerRepo.GetShopIDByUserID(ctx, userID)
 	if err != nil {
 		if err == sql.ErrNoRows {
@@ -131,7 +128,7 @@ func (u *sellerUC) CreateCourierSeller(ctx context.Context, userID string,  cour
 
 	sellerCourierID, _ := u.sellerRepo.GetCourierSellerByID(ctx, shopID, courierId)
 	if sellerCourierID != "" {
-		return httperror.New(http.StatusBadRequest, body.CourierSellerAlreadyExistMessage )
+		return httperror.New(http.StatusBadRequest, body.CourierSellerAlreadyExistMessage)
 	}
 
 	err = u.sellerRepo.CreateCourierSeller(ctx, shopID, courierId)
@@ -141,13 +138,23 @@ func (u *sellerUC) CreateCourierSeller(ctx context.Context, userID string,  cour
 	return nil
 }
 
-
 func (u *sellerUC) DeleteCourierSellerByID(ctx context.Context, shopCourierID string) error {
 	if err := u.sellerRepo.DeleteCourierSellerByID(ctx, shopCourierID); err != nil {
 		if err == sql.ErrNoRows {
-			return  httperror.New(http.StatusNotFound, body.CourierSellerNotFoundMessage )
+			return httperror.New(http.StatusNotFound, body.CourierSellerNotFoundMessage)
 		}
-		return  err
+		return err
 	}
 	return nil
+}
+func (u *sellerUC) GetCategoryBySellerID(ctx context.Context, shopID string) ([]*body.CategoryResponse, error) {
+	categories, err := u.sellerRepo.GetCategoryBySellerID(ctx, shopID)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, httperror.New(http.StatusNotFound, body.CategoryNotFoundMessage)
+		}
+		return nil, err
+	}
+
+	return categories, nil
 }

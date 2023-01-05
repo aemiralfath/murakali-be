@@ -40,6 +40,7 @@ const (
 	CartItemNotExist               = "Cart Item not exist."
 	ShopAddressNotFound            = "Shop address not found."
 	DefaultAddressNotFound         = "Default address not found."
+	ShopCourierNotExist            = "Shop courier not exist."
 )
 
 type JSONResponse struct {

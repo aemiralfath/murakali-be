@@ -230,9 +230,6 @@ func (u *productUC) GetProductDetail(ctx context.Context, productID string) (*bo
 	return &result, nil
 }
 
-
-
-
 func (u *productUC) GetProducts(ctx context.Context, pgn *pagination.Pagination, query *body.GetProductQueryRequest) (*pagination.Pagination, error) {
 	totalRows, err := u.productRepo.GetAllTotalProduct(ctx, query)
 	if err != nil {

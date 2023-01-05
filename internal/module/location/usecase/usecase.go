@@ -2,13 +2,16 @@ package usecase
 
 import (
 	"context"
+	"database/sql"
 	"encoding/json"
 	"fmt"
 	"murakali/config"
 	"murakali/internal/model"
 	"murakali/internal/module/location"
 	"murakali/internal/module/location/delivery/body"
+	"murakali/pkg/httperror"
 	"murakali/pkg/postgre"
+	"murakali/pkg/response"
 	"net/http"
 	"strings"
 )
@@ -161,6 +164,86 @@ func (u *locationUC) GetUrban(ctx context.Context, province, city, subDistrict s
 	return &urban, nil
 }
 
+func (u *locationUC) GetShippingCost(ctx context.Context, requestBody body.GetShippingCostRequest) (*body.GetShippingCostResponse, error) {
+	resp := &body.GetShippingCostResponse{}
+	resp.ShippingOption = make([]*model.Cost, 0)
+
+	shopCourier, err := u.locationRepo.GetShopCourierID(ctx, requestBody.ShopID)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, httperror.New(http.StatusBadRequest, response.ShopCourierNotExist)
+		}
+		return nil, err
+	}
+
+	courierWhitelist := make(map[string]bool, 0)
+	for _, productID := range requestBody.ProductIDS {
+		productCourierWhitelist, err := u.locationRepo.GetProductCourierWhitelistID(ctx, productID)
+		if err != nil {
+			if err != sql.ErrNoRows {
+				return nil, err
+			}
+		}
+
+		for _, p := range productCourierWhitelist {
+			courierWhitelist[p] = true
+		}
+	}
+
+	couriers := make([]string, 0)
+	for _, s := range shopCourier {
+		if _, ok := courierWhitelist[s]; !ok {
+			couriers = append(couriers, s)
+		}
+	}
+
+	for _, courierID := range couriers {
+		courier, err := u.locationRepo.GetCourierByID(ctx, courierID)
+		if err != nil {
+			return nil, err
+		}
+
+		var costRedis *string
+		key := fmt.Sprintf("%d:%d:%d:%s", requestBody.Origin, requestBody.Destination, requestBody.Weight, courier.Code)
+		costRedis, err = u.locationRepo.GetCostRedis(ctx, key)
+		if err != nil {
+			res, err := u.GetCostRajaOngkir(requestBody.Origin, requestBody.Destination, requestBody.Weight, courier.Code)
+			if err != nil {
+				return nil, err
+			}
+
+			redisValue, err := json.Marshal(res)
+			if err != nil {
+				return nil, err
+			}
+
+			if errInsert := u.locationRepo.InsertCostRedis(ctx, key, string(redisValue)); errInsert != nil {
+				return nil, errInsert
+			}
+
+			value := string(redisValue)
+			costRedis = &value
+		}
+
+		var costResp body.RajaOngkirCostResponse
+		if err := json.Unmarshal([]byte(*costRedis), &costResp); err != nil {
+			return nil, err
+		}
+
+		for _, cost := range costResp.Rajaongkir.Results[0].Costs {
+			costCourier := &model.Cost{}
+			if cost.Service == courier.Service {
+				costCourier.Courier = *courier
+				costCourier.Fee = cost.Cost[0].Value
+				costCourier.ETD = cost.Cost[0].Etd
+				resp.ShippingOption = append(resp.ShippingOption, costCourier)
+			}
+		}
+	}
+
+	return resp, nil
+}
+
 func (u *locationUC) GetProvinceRajaOngkir() (*body.RajaOngkirProvinceResponse, error) {
 	var responseOngkir body.RajaOngkirProvinceResponse
 	url := fmt.Sprintf("%s/province", u.cfg.External.OngkirAPIURL)
@@ -206,6 +289,33 @@ func (u *locationUC) GetCityRajaOngkir(provinceID int) (*body.RajaOngkirCityResp
 	}
 
 	return &responseOngkir, nil
+}
+
+func (u *locationUC) GetCostRajaOngkir(origin, destination, weight int, code string) (*body.RajaOngkirCostResponse, error) {
+	var responseCost body.RajaOngkirCostResponse
+	url := fmt.Sprintf("%s/cost", u.cfg.External.OngkirAPIURL)
+	payload := fmt.Sprintf(
+		"origin=%d&destination=%d&weight=%d&courier=%s", origin, destination, weight, code)
+
+	req, err := http.NewRequest("POST", url, strings.NewReader(payload))
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("key", u.cfg.External.OngkirAPIKey)
+	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
+	res, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer res.Body.Close()
+
+	readErr := json.NewDecoder(res.Body).Decode(&responseCost)
+	if readErr != nil {
+		return nil, err
+	}
+
+	return &responseCost, nil
 }
 
 func (u *locationUC) GetDataFromKodePos(province, city, subdistrict string) (*body.KodePosResponse, error) {

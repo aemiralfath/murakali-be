@@ -10,7 +10,7 @@ import (
 	"murakali/pkg/pagination"
 
 	"github.com/go-redis/redis/v8"
-)	
+)
 
 type sellerRepo struct {
 	PSQL        *sql.DB
@@ -171,19 +171,16 @@ func (r *sellerRepo) ChangeOrderStatus(ctx context.Context, requestBody body.Cha
 	return nil
 }
 
-
-
-
 func (r *sellerRepo) GetCourierSeller(ctx context.Context, userID string) ([]*body.CourierSellerInfo, error) {
 	courierSeller := make([]*body.CourierSellerInfo, 0)
-	
+
 	res, err := r.PSQL.QueryContext(
 		ctx, GetCourierSellerQuery,
 		userID,
-		)
+	)
 
 	if err != nil {
-		return  nil, err
+		return nil, err
 	}
 	defer res.Close()
 
@@ -200,14 +197,14 @@ func (r *sellerRepo) GetCourierSeller(ctx context.Context, userID string) ([]*bo
 			return nil, err
 		}
 
-		courierSeller = append(courierSeller , &courierSellerData)
+		courierSeller = append(courierSeller, &courierSellerData)
 	}
 
 	if res.Err() != nil {
-		return  nil, err
+		return nil, err
 	}
 
-	return courierSeller , err
+	return courierSeller, err
 }
 func (r *sellerRepo) GetSellerBySellerID(ctx context.Context, sellerID string) (*body.SellerResponse, error) {
 	var sellerData body.SellerResponse
@@ -227,10 +224,37 @@ func (r *sellerRepo) GetSellerBySellerID(ctx context.Context, sellerID string) (
 	return &sellerData, nil
 }
 
+func (r *sellerRepo) GetCategoryBySellerID(ctx context.Context, shopID string) ([]*body.CategoryResponse, error) {
+	categories := make([]*body.CategoryResponse, 0)
+
+	res, err := r.PSQL.QueryContext(
+		ctx, GetCategoryBySellerIDQuery, shopID)
+
+	if err != nil {
+		return nil, err
+	}
+	defer res.Close()
+
+	for res.Next() {
+		var category body.CategoryResponse
+		if errScan := res.Scan(
+			&category.ID,
+			&category.Name,
+		); errScan != nil {
+			return nil, err
+		}
+
+		categories = append(categories, &category)
+	}
+	if res.Err() != nil {
+		return nil, err
+	}
+	return categories, nil
+}
 
 func (r *sellerRepo) GetShopIDByUserID(ctx context.Context, userID string) (string, error) {
 	var ID string
-	if err := r.PSQL.QueryRowContext(ctx, GetShopIDByUserIDQuery , userID).Scan(&ID); err != nil {
+	if err := r.PSQL.QueryRowContext(ctx, GetShopIDByUserIDQuery, userID).Scan(&ID); err != nil {
 		return "", err
 	}
 	return ID, nil
@@ -238,19 +262,19 @@ func (r *sellerRepo) GetShopIDByUserID(ctx context.Context, userID string) (stri
 
 func (r *sellerRepo) GetCourierSellerByID(ctx context.Context, shopID, courierID string) (string, error) {
 	var ID string
-	if err := r.PSQL.QueryRowContext(ctx, GetCourierSellerIDByUserIDQuery , shopID, courierID).Scan(&ID); err != nil {
+	if err := r.PSQL.QueryRowContext(ctx, GetCourierSellerIDByUserIDQuery, shopID, courierID).Scan(&ID); err != nil {
 		return "", err
 	}
 	return ID, nil
 }
 
-func (r *sellerRepo) CreateCourierSeller(ctx context.Context, shopId string, courierId string)  error {
-	if _,err := r.PSQL.ExecContext(ctx, CreateCourierSellerQuery,
+func (r *sellerRepo) CreateCourierSeller(ctx context.Context, shopId string, courierId string) error {
+	if _, err := r.PSQL.ExecContext(ctx, CreateCourierSellerQuery,
 		shopId,
 		courierId); err != nil {
 		return err
 	}
-	return  nil
+	return nil
 }
 
 func (r *sellerRepo) DeleteCourierSellerByID(ctx context.Context, shopCourierID string) error {
