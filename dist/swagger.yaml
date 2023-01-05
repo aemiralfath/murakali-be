@@ -921,17 +921,18 @@ paths:
             description: >-
               query for max rating show product
         - in: query
-          name: shop_name
+          name: shop_id
           schema:
             type: string
             description: >-
-              query for shop name show product
+              query for shop id show product
         - in: query
-          name: province_name
+          name: province_ids
           schema:
             type: string
             description: >-
-              query for searching product by province name
+              input province id, (no spaces between id) example: 32,33,34,35
+
       responses:
         "200":
           description: OK

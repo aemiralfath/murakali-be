@@ -242,7 +242,7 @@ func (h *productHandlers) ValidateQueryProduct(c *gin.Context) (*pagination.Pagi
 	category := strings.TrimSpace(c.Query("category"))
 	shop := strings.TrimSpace(c.Query("shop_id"))
 
-	province := strings.TrimSpace(c.Query("province"))
+	province := strings.TrimSpace(c.Query("province_ids"))
 
 	var limitFilter, pageFilter int
 	var minPriceFilter, maxPriceFilter, minRatingFilter, maxRatingFilter float64
