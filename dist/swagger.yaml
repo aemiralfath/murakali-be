@@ -1398,6 +1398,23 @@ paths:
               schema:
                 $ref: "#/components/schemas/GetSellerDetailResponse"
 
+  "/api/v1/seller/{seller_id}/category":
+    get:
+      summary: Get Seller Category
+      description: >-
+        Get Seller Category
+      tags:
+        - Seller
+      security:
+        - BEARER: []
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GetSellerCategoryResponse"
+
   "/api/v1/seller/order":
     get:
       summary: Get Seller Order
@@ -3432,6 +3449,28 @@ components:
             rating_avg: 0
             photo_url: https://res.cloudinary.com/dhpao1zxi/image/upload/v1671705602/ldtzmxqeyb4nwu5p6y76.jpg
             created_at: "2023-01-04T04:50:12.665781Z"
+
+    GetSellerCategoryResponse:
+      title: GetSellerCategoryResponse
+      type: object
+      description: Get Category By Seller ID response data model.
+      properties:
+        message:
+          type: string
+        data:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+              name:
+                type: string
+      example:
+        message: success
+        data:
+        - id: d92a0995-78cd-4eba-a855-dfc096ffec5b
+          name: laptop
 
     GetSellerOrderResponse:
       title: GetSellerOrderResponse

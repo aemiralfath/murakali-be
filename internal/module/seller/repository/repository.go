@@ -223,3 +223,31 @@ func (r *sellerRepo) GetSellerBySellerID(ctx context.Context, sellerID string) (
 
 	return &sellerData, nil
 }
+
+func (r *sellerRepo) GetCategoryBySellerID(ctx context.Context, shopID string) ([]*body.CategoryResponse, error) {
+	categories := make([]*body.CategoryResponse, 0)
+
+	res, err := r.PSQL.QueryContext(
+		ctx, GetCategoryBySellerIDQuery, shopID)
+
+	if err != nil {
+		return nil, err
+	}
+	defer res.Close()
+
+	for res.Next() {
+		var category body.CategoryResponse
+		if errScan := res.Scan(
+			&category.ID,
+			&category.Name,
+		); errScan != nil {
+			return nil, err
+		}
+
+		categories = append(categories, &category)
+	}
+	if res.Err() != nil {
+		return nil, err
+	}
+	return categories, nil
+}
