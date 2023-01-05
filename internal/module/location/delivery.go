@@ -7,4 +7,5 @@ type Handlers interface {
 	GetCity(c *gin.Context)
 	GetSubDistrict(c *gin.Context)
 	GetUrban(c *gin.Context)
+	GetShippingCost(c *gin.Context)
 }

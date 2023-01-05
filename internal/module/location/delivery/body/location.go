@@ -2,8 +2,13 @@ package body
 
 import "murakali/internal/model"
 
+const (
+	InvalidIDMessage          = "Invalid id."
+	FieldCannotBeEmptyMessage = "Field cannot be empty."
+)
+
 type UnprocessableEntity struct {
-	Fields map[string]string `json:"fields"`
+	Fields map[string]interface{} `json:"fields"`
 }
 
 type ProvinceResponse struct {
@@ -63,4 +68,48 @@ type RajaOngkirCityResponse struct {
 			PostalCode string `json:"postal_code"`
 		} `json:"results"`
 	} `json:"rajaongkir"`
+}
+
+type RajaOngkirCostResponse struct {
+	Rajaongkir struct {
+		Query struct {
+			Origin      string `json:"origin,omitempty"`
+			Destination string `json:"destination,omitempty"`
+			Weight      int    `json:"weight,omitempty"`
+			Courier     string `json:"courier,omitempty"`
+		} `json:"query,omitempty"`
+		Status struct {
+			Code        int    `json:"code,omitempty"`
+			Description string `json:"description,omitempty"`
+		} `json:"status,omitempty"`
+		OriginDetails struct {
+			CityID     string `json:"city_id,omitempty"`
+			ProvinceID string `json:"province_id,omitempty"`
+			Province   string `json:"province,omitempty"`
+			Type       string `json:"type,omitempty"`
+			CityName   string `json:"city_name,omitempty"`
+			PostalCode string `json:"postal_code,omitempty"`
+		} `json:"origin_details,omitempty"`
+		DestinationDetails struct {
+			CityID     string `json:"city_id,omitempty"`
+			ProvinceID string `json:"province_id,omitempty"`
+			Province   string `json:"province,omitempty"`
+			Type       string `json:"type,omitempty"`
+			CityName   string `json:"city_name,omitempty"`
+			PostalCode string `json:"postal_code,omitempty"`
+		} `json:"destination_details,omitempty"`
+		Results []struct {
+			Code  string `json:"code,omitempty"`
+			Name  string `json:"name,omitempty"`
+			Costs []struct {
+				Service     string `json:"service,omitempty"`
+				Description string `json:"description,omitempty"`
+				Cost        []struct {
+					Value int    `json:"value,omitempty"`
+					Etd   string `json:"etd,omitempty"`
+					Note  string `json:"note,omitempty"`
+				} `json:"cost,omitempty"`
+			} `json:"costs,omitempty"`
+		} `json:"results,omitempty"`
+	} `json:"rajaongkir,omitempty"`
 }

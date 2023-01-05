@@ -1,9 +1,9 @@
 package repository
 
 import (
-	"fmt"
 	"context"
 	"database/sql"
+	"fmt"
 	"murakali/internal/model"
 	"murakali/internal/module/product"
 	"murakali/internal/module/product/delivery/body"
@@ -197,9 +197,6 @@ func (r *productRepo) GetRecommendedProducts(ctx context.Context, pgn *paginatio
 	return products, promotions, vouchers, err
 }
 
-
-
-
 func (r *productRepo) GetProductInfo(ctx context.Context, productID string) (*body.ProductInfo, error) {
 	var productInfo body.ProductInfo
 
@@ -329,11 +326,6 @@ func (r *productRepo) GetTotalProduct(ctx context.Context) (int64, error) {
 	return total, nil
 }
 
-
-
-
-
-
 func (r *productRepo) GetProducts(ctx context.Context, pgn *pagination.Pagination, query *body.GetProductQueryRequest) ([]*body.Products,
 	[]*model.Promotion, []*model.Voucher, error) {
 	products := make([]*body.Products, 0)
@@ -395,25 +387,23 @@ func (r *productRepo) GetProducts(ctx context.Context, pgn *pagination.Paginatio
 	return products, promotions, vouchers, err
 }
 
-
 func (r *productRepo) GetAllTotalProduct(ctx context.Context, query *body.GetProductQueryRequest) (int64, error) {
 	var total int64
-	if err := r.PSQL.QueryRowContext(ctx, 
-		GetAllTotalProductQuery, 
-		query.Search, 
-		query.Category, 
+	if err := r.PSQL.QueryRowContext(ctx,
+		GetAllTotalProductQuery,
+		query.Search,
+		query.Category,
 		query.Shop,
 		query.MinRating,
 		query.MaxRating,
 		query.MinPrice,
 		query.MaxPrice,
-		).Scan(&total); err != nil {
+	).Scan(&total); err != nil {
 		return 0, err
 	}
 
 	return total, nil
 }
-
 
 func (r *productRepo) GetFavoriteProducts(
 	ctx context.Context, pgn *pagination.Pagination, query *body.GetProductQueryRequest, userID string) ([]*body.Products,
@@ -432,7 +422,7 @@ func (r *productRepo) GetFavoriteProducts(
 		query.MaxRating,
 		query.MinPrice,
 		query.MaxPrice,
-			userID,
+		userID,
 		pgn.GetLimit(),
 		pgn.GetOffset())
 
@@ -478,20 +468,19 @@ func (r *productRepo) GetFavoriteProducts(
 	return products, promotions, vouchers, err
 }
 
-
 func (r *productRepo) GetAllFavoriteTotalProduct(ctx context.Context, query *body.GetProductQueryRequest, userID string) (int64, error) {
 	var total int64
-	if err := r.PSQL.QueryRowContext(ctx, 
-		GetAllTotalFavoriteProductQuery , 
-		query.Search, 
-		query.Category, 
+	if err := r.PSQL.QueryRowContext(ctx,
+		GetAllTotalFavoriteProductQuery,
+		query.Search,
+		query.Category,
 		query.Shop,
 		query.MinRating,
 		query.MaxRating,
 		query.MinPrice,
 		query.MaxPrice,
 		userID,
-		).Scan(&total); err != nil {
+	).Scan(&total); err != nil {
 		return 0, err
 	}
 

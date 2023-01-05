@@ -171,19 +171,16 @@ func (r *sellerRepo) ChangeOrderStatus(ctx context.Context, requestBody body.Cha
 	return nil
 }
 
-
-
-
 func (r *sellerRepo) GetCourierSeller(ctx context.Context, userID string) ([]*body.CourierSellerInfo, error) {
 	courierSeller := make([]*body.CourierSellerInfo, 0)
-	
+
 	res, err := r.PSQL.QueryContext(
 		ctx, GetCourierSellerQuery,
 		userID,
-		)
+	)
 
 	if err != nil {
-		return  nil, err
+		return nil, err
 	}
 	defer res.Close()
 
@@ -200,14 +197,14 @@ func (r *sellerRepo) GetCourierSeller(ctx context.Context, userID string) ([]*bo
 			return nil, err
 		}
 
-		courierSeller = append(courierSeller , &courierSellerData)
+		courierSeller = append(courierSeller, &courierSellerData)
 	}
 
 	if res.Err() != nil {
-		return  nil, err
+		return nil, err
 	}
 
-	return courierSeller , err
+	return courierSeller, err
 }
 func (r *sellerRepo) GetSellerBySellerID(ctx context.Context, sellerID string) (*body.SellerResponse, error) {
 	var sellerData body.SellerResponse

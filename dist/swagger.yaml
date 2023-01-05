@@ -236,6 +236,27 @@ paths:
               schema:
                 $ref: "#/components/schemas/CheckUniqueTrueSuccess"
 
+  "/api/v1/location/cost":
+    post:
+      summary: Get Shipping Cost
+      description: >-
+        Get Shipping Cost
+      tags:
+        - Location
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CostShippingRequest"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CostShippingSuccess"
+
+
   "/api/v1/location/province":
     get:
       summary: Get Province
@@ -342,7 +363,7 @@ paths:
       tags:
         - User
       security:
-        - BEARER: []
+        - BEARER: [ ]
 
       responses:
         "200":
@@ -359,7 +380,7 @@ paths:
       tags:
         - User
       security:
-        - BEARER: []
+        - BEARER: [ ]
 
       requestBody:
         content:
@@ -382,7 +403,7 @@ paths:
       tags:
         - User
       security:
-        - BEARER: []
+        - BEARER: [ ]
 
       requestBody:
         content:
@@ -403,7 +424,7 @@ paths:
       tags:
         - User
       security:
-        - BEARER: []
+        - BEARER: [ ]
 
       requestBody:
         content:
@@ -425,7 +446,7 @@ paths:
       tags:
         - User
       security:
-        - BEARER: []
+        - BEARER: [ ]
 
       requestBody:
         content:
@@ -448,18 +469,18 @@ paths:
       tags:
         - User
       security:
-        - BEARER: []
+        - BEARER: [ ]
       parameters:
         - in: query
           name: is_default
           schema:
             type: string
-            enum: ["true", "false"]
+            enum: [ "true", "false" ]
         - in: query
           name: shop_default
           schema:
             type: string
-            enum: ["true", "false"]
+            enum: [ "true", "false" ]
       responses:
         "200":
           description: OK
@@ -475,7 +496,7 @@ paths:
       tags:
         - User
       security:
-        - BEARER: []
+        - BEARER: [ ]
 
       requestBody:
         content:
@@ -497,7 +518,7 @@ paths:
       tags:
         - User
       security:
-        - BEARER: []
+        - BEARER: [ ]
       parameters:
         - in: path
           name: address_id
@@ -518,7 +539,7 @@ paths:
       tags:
         - User
       security:
-        - BEARER: []
+        - BEARER: [ ]
       parameters:
         - in: path
           name: address_id
@@ -544,7 +565,7 @@ paths:
       tags:
         - User
       security:
-        - BEARER: []
+        - BEARER: [ ]
       parameters:
         - in: path
           name: address_id
@@ -567,7 +588,7 @@ paths:
       tags:
         - User
       security:
-        - BEARER: []
+        - BEARER: [ ]
       requestBody:
         content:
           application/json:
@@ -589,7 +610,7 @@ paths:
       tags:
         - User
       security:
-        - BEARER: []
+        - BEARER: [ ]
 
       responses:
         "200":
@@ -605,7 +626,7 @@ paths:
       tags:
         - User
       security:
-        - BEARER: []
+        - BEARER: [ ]
 
       requestBody:
         content:
@@ -628,7 +649,7 @@ paths:
       tags:
         - User
       security:
-        - BEARER: []
+        - BEARER: [ ]
       parameters:
         - in: path
           name: card_number
@@ -649,7 +670,7 @@ paths:
       tags:
         - User
       security:
-        - BEARER: []
+        - BEARER: [ ]
       parameters:
         - in: path
           name: card_number
@@ -672,7 +693,7 @@ paths:
       tags:
         - User
       security:
-        - BEARER: []
+        - BEARER: [ ]
 
       requestBody:
         content:
@@ -693,7 +714,7 @@ paths:
       tags:
         - User
       security:
-        - BEARER: []
+        - BEARER: [ ]
 
       responses:
         "200":
@@ -709,7 +730,7 @@ paths:
       tags:
         - User
       security:
-        - BEARER: []
+        - BEARER: [ ]
 
       requestBody:
         content:
@@ -732,7 +753,7 @@ paths:
       tags:
         - User
       security:
-        - BEARER: []
+        - BEARER: [ ]
 
       requestBody:
         content:
@@ -753,7 +774,7 @@ paths:
       tags:
         - User
       security:
-        - BEARER: []
+        - BEARER: [ ]
 
       requestBody:
         content:
@@ -776,7 +797,7 @@ paths:
       tags:
         - User
       security:
-        - BEARER: []
+        - BEARER: [ ]
       responses:
         "200":
           description: OK
@@ -793,7 +814,7 @@ paths:
       tags:
         - User
       security:
-        - BEARER: []
+        - BEARER: [ ]
       requestBody:
         content:
           application/json:
@@ -828,7 +849,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/CreateSlpPaymentResponse'
-                
+
   '/api/v1/product/':
     get:
       summary: Get Product {WIP}
@@ -874,14 +895,14 @@ paths:
           name: sort_by
           schema:
             type: string
-            enum: [min_price, unit_sold, created_at, view_count, recommended]
+            enum: [ min_price, unit_sold, created_at, view_count, recommended ]
             description: >-
               query for sort by product
         - in: query
           name: sort
           schema:
             type: string
-            enum: [asc, desc]
+            enum: [ asc, desc ]
             description: >-
               query for sort order product descrending or ascending
         - in: query
@@ -967,14 +988,14 @@ paths:
           name: sort_by
           schema:
             type: string
-            enum: [min_price, unit_sold, created_at, view_count, recommended]
+            enum: [ min_price, unit_sold, created_at, view_count, recommended ]
             description: >-
               query for sort by product
         - in: query
           name: sort
           schema:
             type: string
-            enum: [asc, desc]
+            enum: [ asc, desc ]
             description: >-
               query for sort order product descrending or ascending
         - in: query
@@ -1109,7 +1130,7 @@ paths:
         - Product
 
       security:
-        - BEARER: []
+        - BEARER: [ ]
       parameters:
         - in: path
           name: product_id
@@ -1262,7 +1283,7 @@ paths:
       tags:
         - Cart
       security:
-        - BEARER: []
+        - BEARER: [ ]
       parameters:
         - in: query
           name: limit
@@ -1286,7 +1307,7 @@ paths:
       tags:
         - Cart
       security:
-        - BEARER: []
+        - BEARER: [ ]
       responses:
         "200":
           description: OK
@@ -1301,7 +1322,7 @@ paths:
       tags:
         - Cart
       security:
-        - BEARER: []
+        - BEARER: [ ]
 
       requestBody:
         content:
@@ -1322,7 +1343,7 @@ paths:
       tags:
         - Cart
       security:
-        - BEARER: []
+        - BEARER: [ ]
 
       requestBody:
         content:
@@ -1345,7 +1366,7 @@ paths:
       tags:
         - Cart
       security:
-        - BEARER: []
+        - BEARER: [ ]
       parameters:
         - in: path
           name: id
@@ -1368,7 +1389,7 @@ paths:
       tags:
         - Seller
       security:
-        - BEARER: []
+        - BEARER: [ ]
       responses:
         "200":
           description: OK
@@ -1402,7 +1423,7 @@ paths:
       tags:
         - Seller
       security:
-        - BEARER: []
+        - BEARER: [ ]
       responses:
         "200":
           description: OK
@@ -1419,7 +1440,7 @@ paths:
       tags:
         - Seller
       security:
-        - BEARER: []
+        - BEARER: [ ]
       parameters:
         - in: path
           name: order_id
@@ -1442,7 +1463,7 @@ paths:
       tags:
         - Seller
       security:
-        - BEARER: []
+        - BEARER: [ ]
       requestBody:
         content:
           application/json:
@@ -2301,7 +2322,7 @@ components:
                           parent_id: "93e975af-3e9c-4dc2-8202-762128985982"
                           name: "sweeter"
                           photo_url: "https://cf.shopee.co.id/file/19b8238c917f3dec99b689809ea43a79_tn"
-                          child_category: []
+                          child_category: [ ]
 
     GetCategoryByNameLvlTwoResponse:
       title: GetCategoryByNameLvlOneResponse
@@ -2339,7 +2360,7 @@ components:
                       parent_id: "93e975af-3e9c-4dc2-8202-762128985982"
                       name: "sweeter"
                       photo_url: "https://cf.shopee.co.id/file/19b8238c917f3dec99b689809ea43a79_tn"
-                      child_category: []
+                      child_category: [ ]
 
     GetCategoryByNameLvlThreeResponse:
       title: GetCategoryByNameLvlOneResponse
@@ -2372,7 +2393,7 @@ components:
                   parent_id: "93e975af-3e9c-4dc2-8202-762128985982"
                   name: "sweeter"
                   photo_url: "https://cf.shopee.co.id/file/19b8238c917f3dec99b689809ea43a79_tn"
-                  child_category: []
+                  child_category: [ ]
 
     GetCategoryChildResponse:
       title: GetCategoryChildResponse
@@ -2467,13 +2488,38 @@ components:
           type: boolean
         active_date:
           type: string
-
       example:
         card_number: "123456"
         user_id: "101401ce-4a0f-11ed-9772-acde48001122"
         name: "julius"
         is_default: true
         active_date: "2025-12-23T05:00:52"
+
+    CostShippingRequest:
+      title: CostShippingRequest
+      type: object
+      description: Cost shipping Request data model.
+      properties:
+        origin:
+          type: int
+        destination:
+          type: int
+        weight:
+          type: int
+        shop_id:
+          type: string
+        product_ids:
+          type: array
+          items:
+            properties:
+              type: string
+      example:
+        origin: 501
+        destination: 114
+        weight: 1500
+        shop_id: e8854443-c2c7-488e-93d5-b9d93708b8a3
+        product_ids:
+          - d21d410c-0f25-46ea-8c06-8d1573a2a0f7
 
     NewPasswordRequest:
       title: NewPasswordRequest
@@ -2523,6 +2569,8 @@ components:
               voucher_shop_id:
                 type: string
               courier_id:
+                type: string
+              courier_fee:
                 type: string
               product_details:
                 type: array
@@ -2581,6 +2629,44 @@ components:
               example:
                 card_number: "123456"
                 is_default: true
+
+    CostShippingSuccess:
+      properties:
+      example:
+        message: success
+        data:
+          shipping_option:
+            - courier:
+                id: 0d389020-f229-461e-9202-5788961fbb81
+                name: POS Indonesia
+                code: pos
+                service: Pos Reguler
+                description: Layanan Reguler
+                created_at: '2023-01-05T04:27:04.580086Z'
+                updated_at:
+                  Time: '0001-01-01T00:00:00Z'
+                  Valid: false
+                deleted_at:
+                  Time: '0001-01-01T00:00:00Z'
+                  Valid: false
+              fee: 17000
+              etd: 2 HARI
+            - courier:
+                id: 4bf503dc-689e-4b66-8401-3f133f1d585a
+                name: TIKI
+                code: tiki
+                service: REG
+                description: Layanan Reguler
+                created_at: '2023-01-05T04:27:04.580086Z'
+                updated_at:
+                  Time: '0001-01-01T00:00:00Z'
+                  Valid: false
+                deleted_at:
+                  Time: '0001-01-01T00:00:00Z'
+                  Valid: false
+              fee: 24000
+              etd: '2'
+
 
     GetProductResponse:
       title: GetProductResponse
