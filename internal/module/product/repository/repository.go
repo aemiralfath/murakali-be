@@ -352,7 +352,6 @@ func (r *productRepo) GetProducts(ctx context.Context, pgn *pagination.Paginatio
 			query.MaxPrice,
 			query.Province,
 		)
-
 	} else {
 		res, err = r.PSQL.QueryContext(
 			ctx, GetProductsQuery+queryWhereShopIds+queryWhereProvinceIds+queryOrderBySomething,
