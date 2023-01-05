@@ -26,4 +26,5 @@ type Products struct {
 	VoucherDiscountFixPrice   *float64 `json:"voucher_discount_fix_price" db:"voucher_discount_fix_price"`
 	ShopName                  string   `json:"shop_name" db:"shop_name"`
 	CategoryName              string   `json:"category_name" db:"category_name"`
+	ShopProvince              string   `json:"shop_province_name" db:"shop_province_name"`
 }

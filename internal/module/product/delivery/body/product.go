@@ -9,13 +9,14 @@ type UnprocessableEntity struct {
 }
 
 type GetProductQueryRequest struct {
-	Search            string
-	Sort     string
-	SortBy  string
-	Shop string
-	Category string
-	MinPrice float64
-	MaxPrice float64
+	Search    string
+	Sort      string
+	SortBy    string
+	Shop      string
+	Category  string
+	MinPrice  float64
+	MaxPrice  float64
 	MinRating float64
 	MaxRating float64
+	Province  string
 }

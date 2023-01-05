@@ -350,6 +350,7 @@ func (r *productRepo) GetProducts(ctx context.Context, pgn *pagination.Paginatio
 		query.MaxRating,
 		query.MinPrice,
 		query.MaxPrice,
+		query.Province,
 		pgn.GetLimit(),
 		pgn.GetOffset())
 
@@ -379,6 +380,7 @@ func (r *productRepo) GetProducts(ctx context.Context, pgn *pagination.Paginatio
 			&voucher.DiscountFixPrice,
 			&productData.ShopName,
 			&productData.CategoryName,
+			&productData.ShopProvince,
 		); errScan != nil {
 			return nil, nil, nil, err
 		}
@@ -398,6 +400,7 @@ func (r *productRepo) GetProducts(ctx context.Context, pgn *pagination.Paginatio
 
 func (r *productRepo) GetAllTotalProduct(ctx context.Context, query *body.GetProductQueryRequest) (int64, error) {
 	var total int64
+	
 	if err := r.PSQL.QueryRowContext(ctx, 
 		GetAllTotalProductQuery, 
 		query.Search, 
@@ -407,6 +410,7 @@ func (r *productRepo) GetAllTotalProduct(ctx context.Context, query *body.GetPro
 		query.MaxRating,
 		query.MinPrice,
 		query.MaxPrice,
+		query.Province,
 		).Scan(&total); err != nil {
 		return 0, err
 	}

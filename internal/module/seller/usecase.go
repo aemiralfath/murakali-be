@@ -14,4 +14,5 @@ type UseCase interface {
 	GetCourierSeller(ctx context.Context, userID string) (*body.CourierSellerResponse, error) 
 	GetSellerBySellerID(ctx context.Context, sellerID string) (*body.SellerResponse, error)
 	CreateCourierSeller(ctx context.Context, userID string,  courierId string) error
+	DeleteCourierSellerByID(ctx context.Context, shopCourierID string) error 
 }

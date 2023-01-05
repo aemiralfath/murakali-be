@@ -17,6 +17,8 @@ type Repository interface {
 	GetOrderByOrderID(ctx context.Context, OrderID string) (*model.Order, error)
 	 GetCourierSeller(ctx context.Context, userID string) ([]*body.CourierSellerInfo, error) 
 	GetSellerBySellerID(ctx context.Context, sellerID string) (*body.SellerResponse, error)
+	GetCourierSellerByID(ctx context.Context, shopID, courierID string) (string, error)
 	GetShopIDByUserID(ctx context.Context, userID string) (string, error)
 	CreateCourierSeller(ctx context.Context, shopId string, courierId string)  error 
+	DeleteCourierSellerByID(ctx context.Context, shopCourierID string) error
 }

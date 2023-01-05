@@ -805,9 +805,9 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/CreateTransactionResponse'
+                $ref: "#/components/schemas/CreateTransactionResponse"
 
-  '/api/v1/user/transaction/slp-payment':
+  "/api/v1/user/transaction/slp-payment":
     post:
       summary: user create slp payment
       description: >-
@@ -815,21 +815,21 @@ paths:
       tags:
         - User
       security:
-        - BEARER: [ ]
+        - BEARER: []
       requestBody:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/CreateSlpPaymentRequest'
+              $ref: "#/components/schemas/CreateSlpPaymentRequest"
       responses:
-        '200':
+        "200":
           description: OK
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/CreateSlpPaymentResponse'
-                
-  '/api/v1/product/':
+                $ref: "#/components/schemas/CreateSlpPaymentResponse"
+
+  "/api/v1/product/":
     get:
       summary: Get Product {WIP}
       description: >-
@@ -850,14 +850,6 @@ paths:
             type: string
             description: >-
               query for searching product by category
-
-        - in: query
-          name: shop_id
-          schema:
-            type: string
-            description: >-
-              query for searching product by shop
-
         - in: query
           name: limit
           schema:
@@ -914,6 +906,12 @@ paths:
             type: string
             description: >-
               query for shop name show product
+        - in: query
+          name: province_name
+          schema:
+            type: string
+            description: >-
+              query for searching product by province name
       responses:
         "200":
           description: OK

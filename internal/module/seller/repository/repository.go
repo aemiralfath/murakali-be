@@ -233,17 +233,30 @@ func (r *sellerRepo) GetShopIDByUserID(ctx context.Context, userID string) (stri
 	if err := r.PSQL.QueryRowContext(ctx, GetShopIDByUserIDQuery , userID).Scan(&ID); err != nil {
 		return "", err
 	}
+	return ID, nil
+}
 
+func (r *sellerRepo) GetCourierSellerByID(ctx context.Context, shopID, courierID string) (string, error) {
+	var ID string
+	if err := r.PSQL.QueryRowContext(ctx, GetCourierSellerIDByUserIDQuery , shopID, courierID).Scan(&ID); err != nil {
+		return "", err
+	}
 	return ID, nil
 }
 
 func (r *sellerRepo) CreateCourierSeller(ctx context.Context, shopId string, courierId string)  error {
-	
 	if _,err := r.PSQL.ExecContext(ctx, CreateCourierSellerQuery,
 		shopId,
 		courierId); err != nil {
 		return err
 	}
-
 	return  nil
+}
+
+func (r *sellerRepo) DeleteCourierSellerByID(ctx context.Context, shopCourierID string) error {
+	_, err := r.PSQL.ExecContext(ctx, DeleteCourierSellerQuery, shopCourierID)
+	if err != nil {
+		return err
+	}
+	return nil
 }
