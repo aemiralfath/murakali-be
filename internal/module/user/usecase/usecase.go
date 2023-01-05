@@ -500,7 +500,7 @@ func (u *userUC) DeleteSealabsPay(ctx context.Context, cardNumber string) error 
 }
 
 func (u *userUC) ActivateWallet(ctx context.Context, userID, pin string) error {
-	user, err := u.userRepo.GetUserByID(ctx, userID)
+	userModel, err := u.userRepo.GetUserByID(ctx, userID)
 	if err != nil {
 		return err
 	}
@@ -522,7 +522,7 @@ func (u *userUC) ActivateWallet(ctx context.Context, userID, pin string) error {
 	}
 
 	walletData := &model.Wallet{}
-	walletData.UserID = user.ID
+	walletData.UserID = userModel.ID
 	walletData.Balance = 0
 	walletData.PIN = string(hashedPin)
 	walletData.AttemptCount = 0

@@ -429,7 +429,8 @@ func (r *userRepo) GetUserByUsername(ctx context.Context, username string) (*mod
 func (r *userRepo) GetWalletByUserID(ctx context.Context, userID string) (*model.Wallet, error) {
 	var walletModel model.Wallet
 	if err := r.PSQL.QueryRowContext(ctx, GetWalletByUserIDQuery, userID).Scan(&walletModel.ID, &walletModel.UserID,
-		&walletModel.Balance, &walletModel.PIN, &walletModel.AttemptCount, &walletModel.AttemptAt, &walletModel.UnlockedAt, &walletModel.ActiveDate); err != nil {
+		&walletModel.Balance, &walletModel.PIN, &walletModel.AttemptCount,
+		&walletModel.AttemptAt, &walletModel.UnlockedAt, &walletModel.ActiveDate); err != nil {
 		return nil, err
 	}
 
