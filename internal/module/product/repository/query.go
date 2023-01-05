@@ -50,11 +50,7 @@ const (
 	promotion pro
 	where pro.product_id = $1`
 
-
-
-
-
-	GetProductsQuery  = `
+	GetProductsQuery = `
 	SELECT "p"."title" as "title", "p"."unit_sold" as "unit_sold", "p"."rating_avg" as "rating_avg", "p"."thumbnail_url" as "thumbnail_url",
 		"p"."min_price" as "min_price", "p"."max_price" as "max_price", "p"."view_count" as "view_count", "promo"."discount_percentage" as "promo_discount_percentage",  "promo"."discount_fix_price" as "promo_discount_fix_price",
 		"promo"."min_product_price" as "promo_min_product_price",  "promo"."max_discount_price" as "promo_max_discount_price",
@@ -79,8 +75,7 @@ const (
 	ORDER BY %s LIMIT $8 OFFSET $9;
 	`
 
-
-	GetAllTotalProductQuery         = `
+	GetAllTotalProductQuery = `
 	SELECT count("p"."id") FROM "product" as "p" 
 	INNER JOIN "category" as "c" ON "c"."id" = "p"."category_id" 
 	INNER JOIN "shop" as "s" ON "s"."id" = "p"."shop_id"
@@ -91,11 +86,7 @@ const (
 	AND ("p".min_price BETWEEN $6 AND $7)
 	 AND "p"."deleted_at" IS NULL `
 
-
-
-
-
-GetFavoriteProductsQuery  = `
+	GetFavoriteProductsQuery = `
 	SELECT "p"."title" as "title", "p"."unit_sold" as "unit_sold", "p"."rating_avg" as "rating_avg", "p"."thumbnail_url" as "thumbnail_url",
 		"p"."min_price" as "min_price", "p"."max_price" as "max_price", "p"."view_count" as "view_count", "promo"."discount_percentage" as "promo_discount_percentage",  "promo"."discount_fix_price" as "promo_discount_fix_price",
 		"promo"."min_product_price" as "promo_min_product_price",  "promo"."max_discount_price" as "promo_max_discount_price",
@@ -123,8 +114,7 @@ GetFavoriteProductsQuery  = `
 	ORDER BY %s LIMIT $9 OFFSET $10;
 	`
 
-
-	GetAllTotalFavoriteProductQuery         = `
+	GetAllTotalFavoriteProductQuery = `
 	SELECT count("p"."id") 
 	FROM  "favorite" as "f"
 	INNER JOIN "product" as "p" ON "p"."id" = "f"."product_id"
@@ -137,9 +127,21 @@ GetFavoriteProductsQuery  = `
 	AND ("p".min_price BETWEEN $6 AND $7)
 	AND "f"."user_id" = $8
 	 AND "p"."deleted_at" IS NULL `
+
+	GetCountReviewProductQuery = `
+	SELECT count(r.id)
+	FROM review r
+	WHERE r.product_id = $1
+	and r.deleted_at IS NULL
+	order by r.created_at desc`
+
+	GetReviewProductQuery = `
+	SELECT r.id, r.user_id, r.product_id, r.comment, r.rating, r.image_url, r.created_at, u.photo_url, u.username
+	FROM review r
+	INNER JOIN "user" u
+	ON r.user_id = u.id
+	WHERE r.product_id = '1f394fe9-1c19-4270-a776-8c301662496d'
+	AND r.deleted_at IS NULL
+	ORDER BY r.created_at desc
+	LIMIT 5 OFFSET 0`
 )
-
-
-
-
-
