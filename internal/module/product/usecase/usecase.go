@@ -265,6 +265,7 @@ func (u *productUC) GetProducts(ctx context.Context, pgn *pagination.Pagination,
 			VoucherDiscountFixPrice:   vouchers[i].DiscountFixPrice,
 			ShopName:                  products[i].ShopName,
 			CategoryName:              products[i].CategoryName,
+			ShopProvince:              products[i].ShopProvince,
 		}
 		p = u.CalculateDiscountProduct(p)
 		resultProduct = append(resultProduct, p)

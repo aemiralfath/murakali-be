@@ -25,9 +25,7 @@ const (
 
 	ChangeOrderStatusQuery = `UPDATE "order" SET "order_status_id" = $1 WHERE "id" = $2`
 
-
-
-	GetCourierSellerQuery  = `
+	GetCourierSellerQuery = `
 	SELECT "sp"."id" as "shop_courier_id", "c"."name" as "name", "c"."code" as "code", "c"."service" as "service",
 		"c"."description" as "description"
 	FROM "shop_courier" as "sp"
@@ -37,18 +35,18 @@ const (
 	ORDER BY "sp"."created_at" DESC ;
 	`
 
+	GetShopIDByShopIDQuery = `SELECT s.id, s.user_id, s.name, s.total_product,
+	 s.total_rating, s.rating_avg, s.created_at, u.photo_url 
+	FROM "shop" s 
+	JOIN "user" u ON u.id = s.user_id
+	WHERE s.id = $1 AND s.deleted_at is null`
 
-	GetShopIDByUserIDQuery = `SELECT shop_id from "shop" where user_id = $1 `
-
-	CreateCourierSellerQuery = `INSERT INTO "shop_courier" 
+	GetShopIDByUserIDQuery          = `SELECT id from "shop" WHERE user_id = $1 AND deleted_at IS NULL `
+	GetCourierSellerIDByUserIDQuery = `SELECT id from "shop_courier" WHERE shop_id = $1 AND courier_id = $2 AND deleted_at IS NULL `
+	CreateCourierSellerQuery        = `INSERT INTO "shop_courier" 
     	(shop_id, courier_id)
-    	VALUES ($1, $2)
-		WHERE deleted_at IS NULL`
-
-	GetShopIDByShopIDQuery = `SELECT s.id, s.user_id, s.name, s.total_product, s.total_rating, s.rating_avg, s.created_at, u.photo_url
-	from "shop" s 
-	join "user" u on u.id = s.user_id
-	where s.id = $1 and s.deleted_at is null`
+    	VALUES ($1, $2)`
+	DeleteCourierSellerQuery = `UPDATE "shop_courier" set deleted_at = now() WHERE id = $1 AND deleted_at IS NULL`
 
 	GetCategoryBySellerIDQuery = `SELECT c.id, c.name
 	From shop s, product p, category c

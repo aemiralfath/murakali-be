@@ -3,7 +3,6 @@ package delivery
 import (
 	"errors"
 	"fmt"
-	"github.com/gin-gonic/gin"
 	"murakali/config"
 	"murakali/internal/module/product"
 	"murakali/internal/module/product/delivery/body"
@@ -14,6 +13,8 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+
+	"github.com/gin-gonic/gin"
 )
 
 type productHandlers struct {
@@ -239,7 +240,9 @@ func (h *productHandlers) ValidateQueryProduct(c *gin.Context) (*pagination.Pagi
 	maxRating := strings.TrimSpace(c.Query("max_rating"))
 
 	category := strings.TrimSpace(c.Query("category"))
-	shop := strings.TrimSpace(c.Query("shop_name"))
+	shop := strings.TrimSpace(c.Query("shop_id"))
+
+	province := strings.TrimSpace(c.Query("province_ids"))
 
 	var limitFilter, pageFilter int
 	var minPriceFilter, maxPriceFilter, minRatingFilter, maxRatingFilter float64
@@ -250,7 +253,7 @@ func (h *productHandlers) ValidateQueryProduct(c *gin.Context) (*pagination.Pagi
 	}
 
 	if sortBy == "" {
-		sortBy = "p.unit_sold"
+		sortBy = `unit_sold`
 	}
 	if sort == "" {
 		sort = "desc"
@@ -276,7 +279,7 @@ func (h *productHandlers) ValidateQueryProduct(c *gin.Context) (*pagination.Pagi
 	}
 
 	minPriceFilter, err = strconv.ParseFloat(minPrice, 64)
-	if err != nil || minPriceFilter < 0 {
+	if err != nil || minPriceFilter <= 0 {
 		minPriceFilter = 0
 	}
 
@@ -286,29 +289,31 @@ func (h *productHandlers) ValidateQueryProduct(c *gin.Context) (*pagination.Pagi
 	}
 
 	minRatingFilter, err = strconv.ParseFloat(minRating, 64)
-	if err != nil || minRatingFilter < 1 {
+	if err != nil || minRatingFilter <= 0 {
 		minRatingFilter = 0
 	}
 
 	maxRatingFilter, err = strconv.ParseFloat(maxRating, 64)
-	if err != nil || maxRatingFilter > 5 {
+	if err != nil || maxRatingFilter > 5 || maxRatingFilter <= 0 {
 		maxRatingFilter = 5
 	}
 
 	searchFilter := fmt.Sprintf("%%%s%%", search)
 	categoryFilter := fmt.Sprintf("%%%s%%", category)
-	shopFilter := fmt.Sprintf("%%%s%%", shop)
 
+	var provinceFilter []string
+	if province != "" {
+		provinceFilter = strings.Split(province, ",")
+	}
 	query := &body.GetProductQueryRequest{
-		Search: searchFilter,
-
-		Shop:      shopFilter,
+		Search:    searchFilter,
+		Shop:      shop,
 		Category:  categoryFilter,
 		MinPrice:  minPriceFilter,
 		MaxPrice:  maxPriceFilter,
 		MinRating: minRatingFilter,
 		MaxRating: maxRatingFilter,
+		Province:  provinceFilter,
 	}
-
 	return pgn, query
 }

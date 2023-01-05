@@ -117,6 +117,36 @@ func (u *sellerUC) GetSellerBySellerID(ctx context.Context, sellerID string) (*b
 	return sellerData, nil
 }
 
+func (u *sellerUC) CreateCourierSeller(ctx context.Context, userID, courierID string) error {
+	shopID, err := u.sellerRepo.GetShopIDByUserID(ctx, userID)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return httperror.New(http.StatusBadRequest, response.UserNotExistMessage)
+		}
+		return err
+	}
+
+	sellerCourierID, _ := u.sellerRepo.GetCourierSellerByID(ctx, shopID, courierID)
+	if sellerCourierID != "" {
+		return httperror.New(http.StatusBadRequest, body.CourierSellerAlreadyExistMessage)
+	}
+
+	err = u.sellerRepo.CreateCourierSeller(ctx, shopID, courierID)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (u *sellerUC) DeleteCourierSellerByID(ctx context.Context, shopCourierID string) error {
+	if err := u.sellerRepo.DeleteCourierSellerByID(ctx, shopCourierID); err != nil {
+		if err == sql.ErrNoRows {
+			return httperror.New(http.StatusNotFound, body.CourierSellerNotFoundMessage)
+		}
+		return err
+	}
+	return nil
+}
 func (u *sellerUC) GetCategoryBySellerID(ctx context.Context, shopID string) ([]*body.CategoryResponse, error) {
 	categories, err := u.sellerRepo.GetCategoryBySellerID(ctx, shopID)
 	if err != nil {
