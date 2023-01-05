@@ -18,7 +18,7 @@ type Repository interface {
 	GetSellerBySellerID(ctx context.Context, sellerID string) (*body.SellerResponse, error)
 	GetCourierSellerByID(ctx context.Context, shopID, courierID string) (string, error)
 	GetShopIDByUserID(ctx context.Context, userID string) (string, error)
-	CreateCourierSeller(ctx context.Context, shopId string, courierId string) error
+	CreateCourierSeller(ctx context.Context, shopID string, courierID string) error
 	DeleteCourierSellerByID(ctx context.Context, shopCourierID string) error
 	GetCategoryBySellerID(ctx context.Context, shopID string) ([]*body.CategoryResponse, error)
 }

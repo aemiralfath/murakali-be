@@ -240,7 +240,7 @@ func (h *productHandlers) ValidateQueryProduct(c *gin.Context) (*pagination.Pagi
 	maxRating := strings.TrimSpace(c.Query("max_rating"))
 
 	category := strings.TrimSpace(c.Query("category"))
-	shop := strings.TrimSpace(c.Query("shop_name"))
+	shop := strings.TrimSpace(c.Query("shop_id"))
 
 	province := strings.TrimSpace(c.Query("province"))
 
@@ -253,7 +253,7 @@ func (h *productHandlers) ValidateQueryProduct(c *gin.Context) (*pagination.Pagi
 	}
 
 	if sortBy == "" {
-		sortBy = "p.unit_sold"
+		sortBy = `unit_sold`
 	}
 	if sort == "" {
 		sort = "desc"
@@ -300,30 +300,20 @@ func (h *productHandlers) ValidateQueryProduct(c *gin.Context) (*pagination.Pagi
 
 	searchFilter := fmt.Sprintf("%%%s%%", search)
 	categoryFilter := fmt.Sprintf("%%%s%%", category)
-	shopFilter := fmt.Sprintf("%%%s%%", shop)
 
-	// provinceFilter := strings.SplitAfter(province, ",")
-	// provinceIntFilter := make([]int, 0)
-	// for _, i := range provinceFilter {
-	// 	 temp := strings.TrimRight(i, ",")
-	//     j, err := strconv.Atoi(temp)
-	//     if err != nil {
-	//         fmt.Println(err)
-	//     }
-	//     provinceIntFilter = append(provinceIntFilter, j)
-	// }
-
+	var provinceFilter []string
+	if province != "" {
+		provinceFilter = strings.Split(province, ",")
+	}
 	query := &body.GetProductQueryRequest{
-		Search: searchFilter,
-
-		Shop:      shopFilter,
+		Search:    searchFilter,
+		Shop:      shop,
 		Category:  categoryFilter,
 		MinPrice:  minPriceFilter,
 		MaxPrice:  maxPriceFilter,
 		MinRating: minRatingFilter,
 		MaxRating: maxRatingFilter,
-		Province:  province,
+		Province:  provinceFilter,
 	}
-
 	return pgn, query
 }

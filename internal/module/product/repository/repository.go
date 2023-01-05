@@ -332,20 +332,42 @@ func (r *productRepo) GetProducts(ctx context.Context, pgn *pagination.Paginatio
 	promotions := make([]*model.Promotion, 0)
 	vouchers := make([]*model.Voucher, 0)
 
-	q := fmt.Sprintf(GetProductsQuery, pgn.GetSort())
-	res, err := r.PSQL.QueryContext(
-		ctx, q,
-		query.Search,
-		query.Category,
-		query.Shop,
-		query.MinRating,
-		query.MaxRating,
-		query.MinPrice,
-		query.MaxPrice,
-		query.Province,
-		pgn.GetLimit(),
+	queryOrderBySomething := fmt.Sprintf(OrderBySomething, pgn.GetSort(), pgn.GetLimit(),
 		pgn.GetOffset())
+	var queryWhereProvinceIds, queryWhereShopIds string
 
+	if query.Shop != "" {
+		queryWhereShopIds = fmt.Sprintf(WhereShopIds, query.Shop)
+	}
+	var res *sql.Rows
+	var err error
+	if len(query.Province) > 0 {
+		res, err = r.PSQL.QueryContext(
+			ctx, GetProductsWithProvinceQuery+queryWhereShopIds+queryWhereProvinceIds+queryOrderBySomething,
+			query.Search,
+			query.Category,
+			query.MinRating,
+			query.MaxRating,
+			query.MinPrice,
+			query.MaxPrice,
+			query.Province,
+		)
+
+	} else {
+		res, err = r.PSQL.QueryContext(
+			ctx, GetProductsQuery+queryWhereShopIds+queryWhereProvinceIds+queryOrderBySomething,
+			query.Search,
+			query.Category,
+			query.MinRating,
+			query.MaxRating,
+			query.MinPrice,
+			query.MaxPrice,
+		)
+		if err != nil {
+			return nil, nil, nil, err
+		}
+		defer res.Close()
+	}
 	if err != nil {
 		return nil, nil, nil, err
 	}
@@ -392,18 +414,37 @@ func (r *productRepo) GetProducts(ctx context.Context, pgn *pagination.Paginatio
 func (r *productRepo) GetAllTotalProduct(ctx context.Context, query *body.GetProductQueryRequest) (int64, error) {
 	var total int64
 
-	if err := r.PSQL.QueryRowContext(ctx,
-		GetAllTotalProductQuery,
-		query.Search,
-		query.Category,
-		query.Shop,
-		query.MinRating,
-		query.MaxRating,
-		query.MinPrice,
-		query.MaxPrice,
-		query.Province,
-	).Scan(&total); err != nil {
-		return 0, err
+	var queryWhereProvinceIds, queryWhereShopIds string
+
+	if query.Shop != "" {
+		queryWhereShopIds = fmt.Sprintf(WhereShopIds, query.Shop)
+	}
+
+	if len(query.Province) > 0 {
+		if err := r.PSQL.QueryRowContext(ctx,
+			GetAllTotalProductWithProvinceQuery+queryWhereShopIds+queryWhereProvinceIds,
+			query.Search,
+			query.Category,
+			query.MinRating,
+			query.MaxRating,
+			query.MinPrice,
+			query.MaxPrice,
+			query.Province,
+		).Scan(&total); err != nil {
+			return 0, err
+		}
+	} else {
+		if err := r.PSQL.QueryRowContext(ctx,
+			GetAllTotalProductQuery+queryWhereShopIds+queryWhereProvinceIds,
+			query.Search,
+			query.Category,
+			query.MinRating,
+			query.MaxRating,
+			query.MinPrice,
+			query.MaxPrice,
+		).Scan(&total); err != nil {
+			return 0, err
+		}
 	}
 
 	return total, nil

@@ -268,10 +268,10 @@ func (r *sellerRepo) GetCourierSellerByID(ctx context.Context, shopID, courierID
 	return ID, nil
 }
 
-func (r *sellerRepo) CreateCourierSeller(ctx context.Context, shopId string, courierId string) error {
+func (r *sellerRepo) CreateCourierSeller(ctx context.Context, shopID, courierID string) error {
 	if _, err := r.PSQL.ExecContext(ctx, CreateCourierSellerQuery,
-		shopId,
-		courierId); err != nil {
+		shopID,
+		courierID); err != nil {
 		return err
 	}
 	return nil

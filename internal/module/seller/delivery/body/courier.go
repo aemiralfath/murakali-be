@@ -1,14 +1,13 @@
 package body
 
 import (
-	"github.com/google/uuid"
 	"murakali/pkg/httperror"
 	"murakali/pkg/response"
 	"net/http"
 	"strings"
+
+	"github.com/google/uuid"
 )
-
-
 
 type CourierSellerResponse struct {
 	Rows []*CourierSellerInfo `json:"rows"`
@@ -22,11 +21,9 @@ type CourierSellerInfo struct {
 	Description   string    `json:"description" db:"description" `
 }
 
-
 type CourierSellerRequest struct {
-	CourierID          string `json:"courier_id"`
+	CourierID string `json:"courier_id"`
 }
-
 
 func (r *CourierSellerRequest) Validate() (UnprocessableEntity, error) {
 	unprocessableEntity := false
@@ -36,8 +33,8 @@ func (r *CourierSellerRequest) Validate() (UnprocessableEntity, error) {
 		},
 	}
 
-	r.CourierID  = strings.TrimSpace(r.CourierID )
-	if r.CourierID  == "" {
+	r.CourierID = strings.TrimSpace(r.CourierID)
+	if r.CourierID == "" {
 		unprocessableEntity = true
 		entity.Fields["courier_id"] = FieldCannotBeEmptyMessage
 	}
