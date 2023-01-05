@@ -174,9 +174,31 @@ func (h *sellerHandlers) GetSellerBySellerID(c *gin.Context) {
 	response.SuccessResponse(c.Writer, data, http.StatusOK)
 }
 
+func (h *sellerHandlers) GetCategoryBySellerID(c *gin.Context) {
+	id := c.Param("seller_id")
+	sellerID, err := uuid.Parse(id)
+	if err != nil {
+		response.ErrorResponse(c.Writer, response.BadRequestMessage, http.StatusBadRequest)
+		return
+	}
 
+	data, err := h.sellerUC.GetCategoryBySellerID(c, sellerID.String())
+	if err != nil {
+		var e *httperror.Error
+		if !errors.As(err, &e) {
+			h.logger.Errorf("HandlerSeller, Error: %s", err)
+			response.ErrorResponse(c.Writer, response.InternalServerErrorMessage, http.StatusInternalServerError)
+			return
+		}
 
-func (h *sellerHandlers)  GetCourierSeller(c *gin.Context) {
+		response.ErrorResponse(c.Writer, e.Err.Error(), e.Status)
+		return
+	}
+
+	response.SuccessResponse(c.Writer, data, http.StatusOK)
+}
+
+func (h *sellerHandlers) GetCourierSeller(c *gin.Context) {
 	userID, exist := c.Get("userID")
 	if !exist {
 		response.ErrorResponse(c.Writer, response.UnauthorizedMessage, http.StatusUnauthorized)
