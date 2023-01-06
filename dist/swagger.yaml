@@ -2910,6 +2910,8 @@ components:
               items:
                 type: object
                 properties:
+                  id:
+                    type: string
                   title:
                     type: string
                   unit_sold:
@@ -2945,7 +2947,8 @@ components:
             total_rows: 100080
             total_pages: 5560
             products:
-              - title: Masker KN95 PM2.5 Earloop kn 95 filter 95% setara n95 4 ply isi 50 Pcs
+              - id: e6fb2764-076f-4b3b-bc05-8aa125d537ed
+                title: Masker KN95 PM2.5 Earloop kn 95 filter 95% setara n95 4 ply isi 50 Pcs
                 unit_sold: 100000
                 rating_avg: 4.8
                 thumbnail_url: " "
@@ -2959,7 +2962,8 @@ components:
                 result_discount: 48299.99999999999
                 voucher_discount_percentage: 0
                 voucher_discount_fix_price: 5000
-              - title: Cereal SIMBA Choco Chips Bag 1 kg
+              - id: 910dbb9b-53d5-4a23-b8ca-cf3f0caab169
+                title: Cereal SIMBA Choco Chips Bag 1 kg
                 unit_sold: 10000
                 rating_avg: 5
                 thumbnail_url: " "
@@ -2973,7 +2977,8 @@ components:
                 result_discount: 10955.52
                 voucher_discount_percentage: 0
                 voucher_discount_fix_price: 5000
-              - title: "Triple Pack: Tropicana Slim Hokkaido Cheese Cookies (5 Sch)"
+              - id: 855f81a1-c7aa-4428-9f26-74fd664de377
+                title: "Triple Pack: Tropicana Slim Hokkaido Cheese Cookies (5 Sch)"
                 unit_sold: 10000
                 rating_avg: 5
                 thumbnail_url: " "
@@ -2987,7 +2992,8 @@ components:
                 result_discount:
                 voucher_discount_percentage: 0
                 voucher_discount_fix_price: 5000
-              - title: Nice Facial Tissue Tisue Tisu Wajah Muka Paket isi 5 x 180 sheets
+              - id: 3bc05e37-f9df-45ee-969f-b56c733259e6
+                title: Nice Facial Tissue Tisue Tisu Wajah Muka Paket isi 5 x 180 sheets
                 unit_sold: 10000
                 rating_avg: 5
                 thumbnail_url: " "

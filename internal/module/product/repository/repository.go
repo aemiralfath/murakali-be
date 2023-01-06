@@ -167,6 +167,7 @@ func (r *productRepo) GetRecommendedProducts(ctx context.Context, pgn *paginatio
 		var voucher model.Voucher
 
 		if errScan := res.Scan(
+			&productData.ID,
 			&productData.Title,
 			&productData.UnitSold,
 			&productData.RatingAVG,
