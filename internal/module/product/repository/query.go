@@ -128,20 +128,27 @@ const (
 	AND "f"."user_id" = $8
 	 AND "p"."deleted_at" IS NULL `
 
-	GetCountReviewProductQuery = `
+	GetAllTotalReviewProductQuery = `
 	SELECT count(r.id)
 	FROM review r
 	WHERE r.product_id = $1
-	and r.deleted_at IS NULL
-	order by r.created_at desc`
+	%s
+	and r.deleted_at IS NULL;`
 
 	GetReviewProductQuery = `
 	SELECT r.id, r.user_id, r.product_id, r.comment, r.rating, r.image_url, r.created_at, u.photo_url, u.username
 	FROM review r
 	INNER JOIN "user" u
 	ON r.user_id = u.id
-	WHERE r.product_id = '1f394fe9-1c19-4270-a776-8c301662496d'
+	WHERE r.product_id = $1
+	%s
 	AND r.deleted_at IS NULL
-	ORDER BY r.created_at desc
-	LIMIT 5 OFFSET 0`
+	ORDER BY %s LIMIT $2 OFFSET $3;`
+
+	GetTotalReviewRatingByProductIDQuery = `
+	SELECT r.rating, count(r.id) as count 
+	FROM review r
+	WHERE r.product_id = $1
+	and r.deleted_at IS NULL
+	group by r.rating;`
 )

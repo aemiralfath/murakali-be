@@ -3,7 +3,6 @@ package delivery
 import (
 	"errors"
 	"fmt"
-	"github.com/gin-gonic/gin"
 	"murakali/config"
 	"murakali/internal/module/product"
 	"murakali/internal/module/product/delivery/body"
@@ -14,6 +13,8 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+
+	"github.com/gin-gonic/gin"
 )
 
 type productHandlers struct {
@@ -311,4 +312,109 @@ func (h *productHandlers) ValidateQueryProduct(c *gin.Context) (*pagination.Pagi
 	}
 
 	return pgn, query
+}
+
+// get product review by product id
+func (h *productHandlers) GetProductReviews(c *gin.Context) {
+	productID := c.Param("product_id")
+	pgn, query := h.ValidateQueryReview(c)
+
+	reviews, err := h.productUC.GetProductReviews(c, pgn, productID, query)
+	if err != nil {
+		var e *httperror.Error
+		if !errors.As(err, &e) {
+			h.logger.Errorf("HandlerProduct, Error: %s", err)
+			response.ErrorResponse(c.Writer, response.InternalServerErrorMessage, http.StatusInternalServerError)
+			return
+		}
+
+		response.ErrorResponse(c.Writer, e.Err.Error(), e.Status)
+		return
+	}
+
+	response.SuccessResponse(c.Writer, reviews, http.StatusOK)
+}
+
+func (h *productHandlers) ValidateQueryReview(c *gin.Context) (*pagination.Pagination, *body.GetReviewQueryRequest) {
+	limit := strings.TrimSpace(c.Query("limit"))
+	page := strings.TrimSpace(c.Query("page"))
+	sort := strings.TrimSpace(c.Query("sort"))
+
+	var limitFilter int
+	var pageFilter int
+	sortFilter := "desc"
+
+	limitFilter, err := strconv.Atoi(limit)
+	if err != nil || limitFilter < 1 {
+		limitFilter = 5
+	}
+
+	pageFilter, err = strconv.Atoi(page)
+	if err != nil || pageFilter < 1 {
+		pageFilter = 1
+	}
+
+	if sort == "asc" {
+		sortFilter = "asc"
+	}
+
+	pgn := &pagination.Pagination{
+		Limit: limitFilter,
+		Page:  pageFilter,
+		Sort:  "r.created_at " + sortFilter,
+	}
+
+	rating := strings.TrimSpace(c.Query("rating"))
+	showComment := strings.TrimSpace(c.Query("show_comment"))
+	showImage := strings.TrimSpace(c.Query("show_image"))
+
+	var ratingFilter int
+	ratingFilterInput := "0"
+	var showCommentFilter bool
+	var showImageFilter bool
+
+	ratingFilter, err = strconv.Atoi(rating)
+
+	if err == nil && ratingFilter > 1 && ratingFilter < 5 {
+		ratingFilterInput = strconv.Itoa(ratingFilter)
+	}
+
+	if showComment == "false" {
+		showCommentFilter = false
+	} else {
+		showCommentFilter = true
+	}
+
+	if showImage == "false" {
+		showImageFilter = false
+	} else {
+		showImageFilter = true
+	}
+
+	query := &body.GetReviewQueryRequest{
+		Rating:      ratingFilterInput,
+		ShowComment: showCommentFilter,
+		ShowImage:   showImageFilter,
+	}
+
+	return pgn, query
+}
+
+func (h *productHandlers) GetTotalReviewRatingByProductID(c *gin.Context) {
+	productID := c.Param("product_id")
+
+	reviewRating, err := h.productUC.GetTotalReviewRatingByProductID(c, productID)
+	if err != nil {
+		var e *httperror.Error
+		if !errors.As(err, &e) {
+			h.logger.Errorf("HandlerProduct, Error: %s", err)
+			response.ErrorResponse(c.Writer, response.InternalServerErrorMessage, http.StatusInternalServerError)
+			return
+		}
+
+		response.ErrorResponse(c.Writer, e.Err.Error(), e.Status)
+		return
+	}
+
+	response.SuccessResponse(c.Writer, reviewRating, http.StatusOK)
 }

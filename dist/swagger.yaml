@@ -1074,11 +1074,11 @@ paths:
               schema:
                 $ref: "#/components/schemas/GetProductDetailResponse"
 
-  "/api/v1/product/review/{product_id}":
+  "/api/v1/product/{product_id}/review":
     get:
-      summary: Get Product review
+      summary: Get Product Review
       description: >-
-        get product review
+        get product
       tags:
         - Product
       parameters:
@@ -1092,19 +1092,15 @@ paths:
           schema:
             type: number
         - in: query
-          name: comment
+          name: show_comment
           schema:
             type: boolean
         - in: query
-          name: photo
+          name: show_image
           schema:
             type: boolean
         - in: query
-          name: sort_by
-          schema:
-            type: string
-        - in: query
-          name: sort_order
+          name: sort
           schema:
             type: string
         - in: query
@@ -1121,7 +1117,30 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/GetProductReviewResponse"
+                $ref: "#/components/schemas/GetReviewProductResponse"
+
+  "/api/v1/product/{product_id}/review/rating":
+    get:
+      summary: Get Review Rating Product
+      description: >-
+        get product
+      tags:
+        - Product
+      parameters:
+        - in: path
+          name: product_id
+          schema:
+            type: string
+          required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GetTotalRatingReviewProductResponse"
+
+  "/api/v1/product/review/{product_id}":
     post:
       summary: create review product
       description: >-
@@ -3146,6 +3165,123 @@ components:
                 product_url: "yahoo.com"
                 variant:
                   warna: "hitam"
+
+    GetReviewProductResponse:
+      title: GetReviewProductResponse
+      type: object
+      description: Get review product response data model.
+      properties:
+        message:
+          type: string
+        data:
+          type: object
+          properties:
+            limit:
+              type: integer
+            page:
+              type: integer
+            sort:
+              type: string
+            total_rows:
+              type: integer
+            total_pages:
+              type: integer
+            rows:
+              type: array
+              items:
+                - type: object
+                  properties:
+                    id:
+                      type: string
+                    user_id:
+                      type: string
+                    product_id:
+                      type: string
+                    comment:
+                      type: string
+                    rating:
+                      type: integer
+                    image_url:
+                      type: string
+                    created_at:
+                      type: string
+                    photo_url:
+                      type: string
+                    username:
+                      type: string
+      example:
+        message: success
+        data:
+          limit: 5
+          page: 1
+          sort: r.created_at asc
+          total_rows: 2
+          total_pages: 1
+          rows:
+            - id: 18c5f333-8a9e-4044-9e70-e266bb2b033d
+              user_id: 4c1d6464-3cc6-44d6-92d1-91aee337e025
+              product_id: 1f394fe9-1c19-4270-a776-8c301662496d
+              comment: test
+              rating: 5
+              image_url: null
+              created_at: '2023-01-05T06:24:51.808605Z'
+              photo_url: >-
+                https://res.cloudinary.com/dhpao1zxi/image/upload/v1671705602/ldtzmxqeyb4nwu5p6y76.jpg
+              username: mLVacZT
+            - id: 4ba23810-69fa-40ba-942a-11874db05048
+              user_id: 4c1d6464-3cc6-44d6-92d1-91aee337e025
+              product_id: 1f394fe9-1c19-4270-a776-8c301662496d
+              comment: null
+              rating: 2
+              image_url: null
+              created_at: '2023-01-06T06:45:13.411051Z'
+              photo_url: >-
+                https://res.cloudinary.com/dhpao1zxi/image/upload/v1671705602/ldtzmxqeyb4nwu5p6y76.jpg
+              username: mLVacZT
+          
+    GetTotalRatingReviewProductResponse:
+      title: GetTotalRatingReviewProductResponse
+      type: object
+      description: Get total rating review product response data model.
+      properties:
+        message:
+          type: string
+        data:
+          type: object
+          properties:
+            total_rating:
+              type: integer
+            avg_rating:
+              type: number
+            rating_product:
+              type: array
+              items:
+                - type: object
+                  properties:
+                    rating:
+                      type: integer
+                    count:
+                      type: integer
+                  required:
+                    - rating
+                    - count
+                - type: object
+                  properties:
+                    rating:
+                      type: integer
+                    count:
+                      type: integer
+      example:
+        message: success
+        data:
+          total_rating: 2
+          avg_rating: 3.5
+          rating_product:
+            - rating: 2
+              count: 1
+            - rating: 5
+              count: 1
+
 
     CreateProductReviewRequest:
       title: CreateProductReviewRequest

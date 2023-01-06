@@ -486,3 +486,100 @@ func (r *productRepo) GetAllFavoriteTotalProduct(ctx context.Context, query *bod
 
 	return total, nil
 }
+
+func (r *productRepo) GetProductReviews(ctx context.Context, pgn *pagination.Pagination, productID string, query *body.GetReviewQueryRequest) ([]*body.ReviewProduct, error) {
+	reviews := make([]*body.ReviewProduct, 0)
+
+	q := fmt.Sprintf(GetReviewProductQuery, query.GetValidate(), pgn.GetSort())
+	res, err := r.PSQL.QueryContext(
+		ctx, q,
+		productID,
+		pgn.GetLimit(),
+		pgn.GetOffset())
+
+	if err != nil {
+		return nil, err
+	}
+	defer res.Close()
+
+	for res.Next() {
+		var reviewData body.ReviewProduct
+
+		if errScan := res.Scan(
+			&reviewData.ID,
+			&reviewData.UserID,
+			&reviewData.ProductID,
+			&reviewData.Comment,
+			&reviewData.Rating,
+			&reviewData.ImageURL,
+			&reviewData.CreatedAt,
+			&reviewData.PhotoURL,
+			&reviewData.Username,
+		); errScan != nil {
+			return nil, err
+		}
+
+		reviews = append(reviews, &reviewData)
+	}
+
+	if res.Err() != nil {
+		return nil, err
+	}
+
+	return reviews, err
+}
+
+func (r *productRepo) GetTotalAllReviewProduct(ctx context.Context, productID string, query *body.GetReviewQueryRequest) (int64, error) {
+	var total int64
+	q := fmt.Sprintf(GetAllTotalReviewProductQuery, query.GetValidate())
+	res, err := r.PSQL.QueryContext(
+		ctx, q,
+		productID)
+
+	if err != nil {
+		return 0, err
+	}
+	defer res.Close()
+
+	for res.Next() {
+		if errScan := res.Scan(
+			&total,
+		); errScan != nil {
+			return 0, err
+		}
+	}
+
+	return total, nil
+}
+
+func (r *productRepo) GetTotalReviewRatingByProductID(ctx context.Context, productID string) ([]*body.RatingProduct, error) {
+	reviewRating := make([]*body.RatingProduct, 0)
+
+	res, err := r.PSQL.QueryContext(
+		ctx, GetTotalReviewRatingByProductIDQuery,
+		productID)
+
+	if err != nil {
+		return nil, err
+	}
+	defer res.Close()
+
+	for res.Next() {
+		var reviewRatingData body.RatingProduct
+
+		if errScan := res.Scan(
+			&reviewRatingData.Rating,
+			&reviewRatingData.Count,
+		); errScan != nil {
+			return nil, err
+		}
+
+		reviewRating = append(reviewRating, &reviewRatingData)
+	}
+
+	if res.Err() != nil {
+		return nil, err
+	}
+
+	return reviewRating, nil
+}
