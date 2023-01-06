@@ -553,11 +553,11 @@ func (u *userUC) RegisterMerchant(ctx context.Context, userID, shopName string) 
 		return httperror.New(http.StatusBadRequest, response.ShopAlreadyExists)
 	}
 
-	if _, err := u.userRepo.GetWalletByUserID(ctx, userID); err != nil {
-		if err == sql.ErrNoRows {
+	if _, errWallet := u.userRepo.GetWalletByUserID(ctx, userID); errWallet != nil {
+		if errWallet == sql.ErrNoRows {
 			return httperror.New(http.StatusBadRequest, response.WalletIsNotActivated)
 		}
-		return err
+		return errWallet
 	}
 
 	err = u.userRepo.AddShop(ctx, userID, shopName)

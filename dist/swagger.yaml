@@ -685,6 +685,27 @@ paths:
                 $ref: "#/components/schemas/DefaultSuccess"
 
   "/api/v1/user/wallet":
+    patch:
+      summary: Top Up wallet
+      description: >-
+        top up wallet
+      tags:
+        - User
+      security:
+        - BEARER: [ ]
+
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TopUpWalletRequest"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CreateTransactionResponse"
     post:
       summary: Setup pin wallet
       description: >-
@@ -3064,6 +3085,12 @@ components:
                 result_discount:
                 voucher_discount_percentage: 0
                 voucher_discount_fix_price: 5000
+
+    TopUpWalletRequest:
+      properties:
+      example:
+        card_number: '2787884621261326'
+        amount: 100000
 
     GetProductDetailResponse:
       title: GetProductDetailResponse
