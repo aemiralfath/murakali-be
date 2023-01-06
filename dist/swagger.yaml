@@ -3248,6 +3248,8 @@ components:
                         type: string
                       name:
                         type: string
+                  weight:
+                    type: number
                   product_details:
                     type: array
                     items:
@@ -3264,6 +3266,8 @@ components:
                         product_stock:
                           type: number
                         quantity:
+                          type: number
+                        weight:
                           type: number
                         variant:
                           type: object
@@ -3293,6 +3297,7 @@ components:
                 shop:
                   id: "e8854443-c2c7-488e-93d5-b9d93708b8a3"
                   name: "jualan"
+                weight: 3
                 product_details:
                   - id: "0c53ef3d-3682-4359-90e1-814eb6ab5231"
                     title: "Masker KN95 PM2.5 Earloop kn 95 filter 95% setara n95 4 ply isi 50 Pcs"
@@ -3300,6 +3305,7 @@ components:
                     product_price: 70000
                     product_stock: 111
                     quantity: 4
+                    weight: 2
                     variant:
                       ukuran: "l"
                     promo:
@@ -3315,6 +3321,7 @@ components:
                     product_price: 10000
                     product_stock: 4
                     quantity: 1
+                    weight: 1
                     variant:
                       ukuran: "xl"
                       warna: "hitam"

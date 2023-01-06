@@ -117,6 +117,8 @@ func (u *cartUC) GetCartItems(ctx context.Context, userID string, pgn *paginatio
 
 		p.Promo = promo
 		p = u.CalculateDiscountProduct(p)
+		p.Weight = (p.Weight * products[i].Quantity)
+		CartResults[idx].Weight += p.Weight
 		CartResults[idx].ProductDetails = append(CartResults[idx].ProductDetails, p)
 	}
 	pgn.Rows = CartResults
