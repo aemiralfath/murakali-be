@@ -1379,6 +1379,66 @@ paths:
               schema:
                 $ref: "#/components/schemas/DefaultSuccess"
 
+  "/api/v1/seller/courier":
+    get:
+      summary: Get Seller Courier Information
+      description: >-
+        Get Seller Courier Information
+      tags:
+        - Seller
+      security:
+        - BEARER: []
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GetSellerCourierResponse"
+    post:
+      summary: Post Seller Courier
+      description: >-
+        Post Seller Courier
+      tags:
+        - Seller
+      security:
+        - BEARER: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SellerCourierRequest"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DefaultSuccess"
+
+  "/api/v1/seller/courier/{id}":
+    delete:
+      summary: delete Seller Courier
+      description: >-
+        Delete Seller Courier
+      tags:
+        - Seller
+      security:
+        - BEARER: []
+      parameters:
+        - in: path
+          name: id
+          schema:
+            type: string
+          required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DefaultSuccess"
+
   "/api/v1/seller/{seller_id}":
     get:
       summary: Get Seller Detail
@@ -3409,6 +3469,43 @@ components:
           type: number
           example: 5
 
+    GetSellerCourierResponse:
+      title: GetSellerCourierResponse
+      type: object
+      description: Get Seller Courier response data model.
+      properties:
+        message:
+          type: string
+        data:
+          type: object
+          rows:
+            type: array
+            properties:
+              id:
+                type: string
+              name:
+                type: string
+              code:
+                type: string
+              service:
+                type: string
+              description:
+                type: string
+      example:
+        message: success
+        data:
+          rows:
+            - id: ad592837-da23-43ad-a66c-0d150a59db45
+              name: TIKI
+              code: tiki
+              service: REG
+              description: Layanan Reguler
+            - id: 578ade71-f9f9-4651-b234-7d04cde29b69
+              name: JNE
+              code: jne
+              service: REG
+              description: Layanan Reguler
+
     GetSellerDetailResponse:
       title: GetSellerDetailResponse
       type: object
@@ -3620,6 +3717,15 @@ components:
                 order_quantity: 4
                 order_item_price: 2000
                 order_total_price: 8000
+
+    SellerCourierRequest:
+      title: SellerCourierRequest
+      type: object
+      description: SellerCourier Request data model.
+      properties:
+        courier_id:
+          type: string
+          example: "4bf503dc-689e-4b66-8401-3f133f1d585a"
 
     ChangeOrderStatusRequest:
       title: ChangeOrderStatusRequest

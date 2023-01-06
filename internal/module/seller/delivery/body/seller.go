@@ -13,6 +13,7 @@ const (
 	InvalidPasswordSameOldPasswordMessage = "Your new password cannot be the same as your old password."
 	SellerNotFoundMessage                 = "Seller not found."
 	CourierSellerAlreadyExistMessage      = "Courier Seller Already Exist"
+	CourierNotFoundMessage                = "Courier not exist"
 	CourierSellerNotFoundMessage          = "Courier Seller Not Found"
 	CategoryNotFoundMessage               = "Category not found."
 )

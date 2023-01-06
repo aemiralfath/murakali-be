@@ -41,12 +41,15 @@ const (
 	JOIN "user" u ON u.id = s.user_id
 	WHERE s.id = $1 AND s.deleted_at is null`
 
-	GetShopIDByUserIDQuery          = `SELECT id from "shop" WHERE user_id = $1 AND deleted_at IS NULL `
-	GetCourierSellerIDByUserIDQuery = `SELECT id from "shop_courier" WHERE shop_id = $1 AND courier_id = $2 AND deleted_at IS NULL `
-	CreateCourierSellerQuery        = `INSERT INTO "shop_courier" 
+	GetCourierByIDQuery                       = `SELECT id FROM "courier" WHERE id = $1 AND deleted_at IS NULL`
+	GetShopIDByUserIDQuery                    = `SELECT id from "shop" WHERE user_id = $1 AND deleted_at IS NULL `
+	GetCourierSellerIDByShopAndCourierIDQuery = `SELECT id from "shop_courier" WHERE shop_id = $1 AND courier_id = $2 AND deleted_at IS NULL `
+	CreateCourierSellerQuery                  = `INSERT INTO "shop_courier" 
     	(shop_id, courier_id)
     	VALUES ($1, $2)`
-	DeleteCourierSellerQuery = `UPDATE "shop_courier" set deleted_at = now() WHERE id = $1 AND deleted_at IS NULL`
+
+	GetCourierSellerByIDQuery = `SELECT id FROM "shop_courier" WHERE id = $1 AND deleted_at IS NULL`
+	DeleteCourierSellerQuery  = `UPDATE "shop_courier" set deleted_at = now() WHERE id = $1 AND deleted_at IS NULL`
 
 	GetCategoryBySellerIDQuery = `SELECT c.id, c.name
 	From shop s, product p, category c

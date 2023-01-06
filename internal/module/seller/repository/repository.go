@@ -260,9 +260,17 @@ func (r *sellerRepo) GetShopIDByUserID(ctx context.Context, userID string) (stri
 	return ID, nil
 }
 
-func (r *sellerRepo) GetCourierSellerByID(ctx context.Context, shopID, courierID string) (string, error) {
+func (r *sellerRepo) GetCourierSellerByShopAndCourierID(ctx context.Context, shopID, courierID string) (string, error) {
 	var ID string
-	if err := r.PSQL.QueryRowContext(ctx, GetCourierSellerIDByUserIDQuery, shopID, courierID).Scan(&ID); err != nil {
+	if err := r.PSQL.QueryRowContext(ctx, GetCourierSellerIDByShopAndCourierIDQuery, shopID, courierID).Scan(&ID); err != nil {
+		return "", err
+	}
+	return ID, nil
+}
+
+func (r *sellerRepo) GetCourierByID(ctx context.Context, courierID string) (string, error) {
+	var ID string
+	if err := r.PSQL.QueryRowContext(ctx, GetCourierByIDQuery, courierID).Scan(&ID); err != nil {
 		return "", err
 	}
 	return ID, nil
@@ -275,6 +283,14 @@ func (r *sellerRepo) CreateCourierSeller(ctx context.Context, shopID, courierID 
 		return err
 	}
 	return nil
+}
+
+func (r *sellerRepo) GetCourierSellerByID(ctx context.Context, shopCourierID string) (string, error) {
+	var ID string
+	if err := r.PSQL.QueryRowContext(ctx, GetCourierSellerByIDQuery, shopCourierID).Scan(&ID); err != nil {
+		return "", err
+	}
+	return ID, nil
 }
 
 func (r *sellerRepo) DeleteCourierSellerByID(ctx context.Context, shopCourierID string) error {
