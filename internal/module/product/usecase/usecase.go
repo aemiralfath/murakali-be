@@ -139,6 +139,7 @@ func (u *productUC) GetRecommendedProducts(ctx context.Context, pgn *pagination.
 	totalData := len(products)
 	for i := 0; i < totalData; i++ {
 		p := &body.Products{
+			ID:                        products[i].ID,
 			Title:                     products[i].Title,
 			UnitSold:                  products[i].UnitSold,
 			RatingAVG:                 products[i].RatingAVG,

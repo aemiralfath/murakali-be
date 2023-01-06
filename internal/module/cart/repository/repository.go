@@ -174,6 +174,7 @@ func (r *cartRepo) GetCartItems(ctx context.Context, userID string, pgn *paginat
 			&productData.ThumbnailURL,
 			&productData.ProductPrice,
 			&productData.ProductStock,
+			&productData.Weight,
 			&promo.DiscountPercentage,
 			&promo.DiscountFixPrice,
 			&promo.MinProductPrice,

@@ -12,6 +12,7 @@ import (
 type CartItemsResponse struct {
 	ID             uuid.UUID                `json:"id" db:"id"`
 	Shop           *ShopResponse            `json:"shop"`
+	Weight         float64                  `json:"weight"`
 	ProductDetails []*ProductDetailResponse `json:"product_details"`
 }
 
@@ -27,6 +28,7 @@ type ProductDetailResponse struct {
 	ProductPrice float64           `json:"product_price"`
 	ProductStock float64           `json:"product_stock"`
 	Quantity     float64           `json:"quantity"`
+	Weight       float64           `json:"weight"`
 	Variant      map[string]string `json:"variant"`
 	Promo        *PromoResponse    `json:"promo"`
 }
