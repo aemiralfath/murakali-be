@@ -12,7 +12,7 @@ type Order struct {
 	OrderStatus int            `json:"order_status"`
 	TotalPrice  *float64       `json:"total_price"`
 	DeliveryFee *float64       `json:"delivery_fee"`
-	ResiNumber  string         `json:"resi_no"`
+	ResiNumber  *string        `json:"resi_no"`
 	ShopID      string         `json:"shop_id"`
 	ShopName    string         `json:"shop_name"`
 	VoucherCode *string        `json:"voucher_code"`

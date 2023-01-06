@@ -2495,8 +2495,6 @@ components:
       type: object
       description: Cost shipping Request data model.
       properties:
-        origin:
-          type: int
         destination:
           type: int
         weight:
@@ -2509,7 +2507,6 @@ components:
             properties:
               type: string
       example:
-        origin: 501
         destination: 114
         weight: 1500
         shop_id: e8854443-c2c7-488e-93d5-b9d93708b8a3

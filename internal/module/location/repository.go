@@ -19,4 +19,6 @@ type Repository interface {
 	GetCourierByID(ctx context.Context, courierID string) (*model.Courier, error)
 	GetCostRedis(ctx context.Context, key string) (*string, error)
 	InsertCostRedis(ctx context.Context, key string, value string) error
+	GetShopByID(ctx context.Context, shopID string) (*model.Shop, error)
+	GetShopAddress(ctx context.Context, userID string) (*model.Address, error)
 }
