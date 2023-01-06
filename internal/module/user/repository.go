@@ -50,7 +50,7 @@ type Repository interface {
 	GetPasswordByID(ctx context.Context, id string) (string, error)
 	GetTotalOrder(ctx context.Context, userID string) (int64, error)
 	GetOrders(ctx context.Context, userID string, pgn *pagination.Pagination) ([]*model.Order, error)
-	GetWalletUser(ctx context.Context, userID, walletID string) (*model.Wallet, error)
+	GetWalletUser(ctx context.Context, walletID string) (*model.Wallet, error)
 	GetSealabsPayUser(ctx context.Context, userID, CardNumber string) (*model.SealabsPay, error)
 	GetVoucherMarketplaceByID(ctx context.Context, voucherMarketplaceID string) (*model.Voucher, error)
 	GetShopByID(ctx context.Context, shopID string) (*model.Shop, error)
@@ -68,4 +68,6 @@ type Repository interface {
 	UpdateOrder(ctx context.Context, tx postgre.Transaction, orderData *model.OrderModel) error
 	CreateWallet(ctx context.Context, walletData *model.Wallet) error
 	GetWalletByUserID(ctx context.Context, userID string) (*model.Wallet, error)
+	InsertWalletHistory(ctx context.Context, tx postgre.Transaction, walletHistory *model.WalletHistory) error
+	UpdateWalletBalance(ctx context.Context, tx postgre.Transaction, wallet *model.Wallet) error
 }

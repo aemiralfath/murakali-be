@@ -553,6 +553,13 @@ func (u *userUC) RegisterMerchant(ctx context.Context, userID, shopName string) 
 		return httperror.New(http.StatusBadRequest, response.ShopAlreadyExists)
 	}
 
+	if _, err := u.userRepo.GetWalletByUserID(ctx, userID); err != nil {
+		if err == sql.ErrNoRows {
+			return httperror.New(http.StatusBadRequest, response.WalletIsNotActivated)
+		}
+		return err
+	}
+
 	err = u.userRepo.AddShop(ctx, userID, shopName)
 	if err != nil {
 		return err
@@ -688,6 +695,46 @@ func (u *userUC) ChangePassword(ctx context.Context, userID, newPassword string)
 	return nil
 }
 
+func (u *userUC) TopUpWallet(ctx context.Context, userID string, requestBody body.TopUpWalletRequest) (string, error) {
+	wallet, err := u.userRepo.GetWalletByUserID(ctx, userID)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return "", httperror.New(http.StatusBadRequest, response.WalletIsNotActivated)
+		}
+		return "", err
+	}
+
+	card, err := u.userRepo.GetSealabsPayUser(ctx, userID, requestBody.CardNumber)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return "", httperror.New(http.StatusBadRequest, response.SealabsCardNotFound)
+		}
+		return "", err
+	}
+
+	transactionID, err := u.txRepo.WithTransactionReturnData(func(tx postgre.Transaction) (interface{}, error) {
+		transaction := &model.Transaction{}
+		transaction.WalletID = &wallet.ID
+		transaction.CardNumber = &card.CardNumber
+		transaction.TotalPrice = float64(requestBody.Amount)
+		transaction.ExpiredAt.Valid = true
+		transaction.ExpiredAt.Time = time.Now().Add(time.Hour * 24)
+
+		transactionID, errTrans := u.userRepo.CreateTransaction(ctx, tx, transaction)
+		if errTrans != nil {
+			return nil, errTrans
+		}
+
+		return transactionID.String(), nil
+	})
+
+	if err != nil {
+		return "", err
+	}
+
+	return transactionID.(string), nil
+}
+
 func (u *userUC) CreateSLPPayment(ctx context.Context, transactionID string) (string, error) {
 	transaction, err := u.userRepo.GetTransactionByID(ctx, transactionID)
 	if err != nil {
@@ -723,13 +770,18 @@ func (u *userUC) GetRedirectURL(transaction *model.Transaction, sign string) (st
 	var responseSLP body.SLPPaymentResponse
 
 	url := fmt.Sprintf("%s/v1/transaction/pay", u.cfg.External.SlpURL)
+	callbackURL := fmt.Sprintf("https://%s/api/v1/user/transaction/slp-payment/%s", u.cfg.Server.Domain, transaction.ID.String())
+	if transaction.WalletID != nil {
+		callbackURL = fmt.Sprintf("https://%s/api/v1/user/transaction/wallet-payment/%s", u.cfg.Server.Domain, transaction.ID.String())
+	}
+
 	payload := fmt.Sprintf(
 		"card_number=%s&amount=%d&merchant_code=%s&redirect_url=%s&callback_url=%s&signature=%s",
 		*transaction.CardNumber,
 		int(transaction.TotalPrice),
 		u.cfg.External.SlpMerchantCode,
 		"https://www.google.com",
-		fmt.Sprintf("https://%s/api/v1/user/transaction/slp-payment/%s", u.cfg.Server.Domain, transaction.ID.String()),
+		callbackURL,
 		sign)
 
 	req, err := http.NewRequest("POST", url, strings.NewReader(payload))
@@ -830,6 +882,83 @@ func (u *userUC) UpdateTransaction(ctx context.Context, transactionID string, re
 	return nil
 }
 
+func (u *userUC) UpdateWalletTransaction(ctx context.Context, transactionID string, requestBody body.SLPCallbackRequest) error {
+	transaction, err := u.userRepo.GetTransactionByID(ctx, transactionID)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return httperror.New(http.StatusBadRequest, response.TransactionIDNotExist)
+		}
+
+		return err
+	}
+
+	wallet, err := u.userRepo.GetWalletUser(ctx, transaction.WalletID.String())
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return httperror.New(http.StatusBadRequest, response.WalletIsNotActivated)
+		}
+
+		return err
+	}
+
+	if transaction.PaidAt.Valid || transaction.CanceledAt.Valid {
+		return httperror.New(http.StatusBadRequest, response.TransactionAlreadyFinished)
+	}
+
+	if requestBody.Status == constant.SLPStatusCanceled && requestBody.Message == constant.SLPMessageCanceled {
+		err := u.txRepo.WithTransaction(func(tx postgre.Transaction) error {
+			transaction.CanceledAt.Valid = true
+			transaction.CanceledAt.Time = time.Now()
+			if err := u.userRepo.UpdateTransaction(ctx, tx, transaction); err != nil {
+				return err
+			}
+
+			return nil
+		})
+
+		if err != nil {
+			return err
+		}
+	}
+
+	if requestBody.Status == constant.SLPStatusPaid && requestBody.Message == constant.SlPMessagePaid {
+		err := u.txRepo.WithTransaction(func(tx postgre.Transaction) error {
+			transaction.PaidAt.Valid = true
+			transaction.PaidAt.Time = time.Now()
+			if err := u.userRepo.UpdateTransaction(ctx, tx, transaction); err != nil {
+				return err
+			}
+
+			walletHistory := &model.WalletHistory{}
+			walletHistory.TransactionID = transaction.ID
+			walletHistory.WalletID = wallet.ID
+			walletHistory.From = *transaction.CardNumber
+			walletHistory.To = transaction.WalletID.String()
+			walletHistory.Description = "Top up from " + *transaction.CardNumber
+			walletHistory.Amount = transaction.TotalPrice
+			walletHistory.CreatedAt = time.Now()
+			if err := u.userRepo.InsertWalletHistory(ctx, tx, walletHistory); err != nil {
+				return err
+			}
+
+			wallet.Balance += transaction.TotalPrice
+			wallet.UpdatedAt.Valid = true
+			wallet.UpdatedAt.Time = time.Now()
+
+			if err := u.userRepo.UpdateWalletBalance(ctx, tx, wallet); err != nil {
+				return err
+			}
+			return nil
+		})
+
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
 func (u *userUC) GetWallet(ctx context.Context, userID string) (*model.Wallet, error) {
 	wallet, err := u.userRepo.GetWalletByUserID(ctx, userID)
 	if err != nil {
@@ -856,10 +985,18 @@ func (u *userUC) CreateTransaction(ctx context.Context, userID string, requestBo
 	}
 
 	if requestBody.WalletID != "" {
-		walletUser, errWallet := u.userRepo.GetWalletUser(ctx, userModel.ID.String(), requestBody.WalletID)
+		walletUser, errWallet := u.userRepo.GetWalletUser(ctx, requestBody.WalletID)
 		if errWallet != nil {
+			if errWallet == sql.ErrNoRows {
+				return "", httperror.New(http.StatusBadRequest, response.WalletIsNotActivated)
+			}
 			return "", errWallet
 		}
+
+		if walletUser.UserID != userModel.ID {
+			return "", httperror.New(http.StatusBadRequest, response.WalletIsNotActivated)
+		}
+
 		transactionData.WalletID = &walletUser.ID
 	}
 

@@ -17,6 +17,8 @@ const InsertUserQuery = `INSERT INTO "user"
 const InsertUserAddressQuery = `INSERT INTO "address" 
     (user_id, name, province_id, city_id, province, city, district, sub_district, address_detail, zip_code, is_default, is_shop_default)
 VALUES ($1, 'Home', 33, 327, 'Sumatera Selatan', 'Palembang', 'Ilir Timur II', '2 Ilir', 'no 91', '30118', $2, $3)`
+const CreateUserWallet = `INSERT INTO "wallet" (user_id, balance, pin, attempt_count, active_date)
+	VALUES ($1, 0, '$2a$10$haIhdlIHObH0yGMyCx5Zl.s5b7sV/x3GWact0Yd2xREXof3UAzUl6', 0, CURRENT_TIMESTAMP);`
 
 type UserFaker struct {
 	Size   int
@@ -57,6 +59,10 @@ func (u *UserFaker) GenerateDataUser(tx postgre.Transaction, id uuid.UUID, email
 		data.ID, data.RoleID, data.Username, data.Email, data.PhoneNo, data.FullName, data.Password, data.Gender,
 		data.PhotoURL, data.BirthDate, data.IsSSO, data.IsVerify)
 	if err != nil {
+		return err
+	}
+
+	if _, err := tx.Exec(CreateUserWallet, id); err != nil {
 		return err
 	}
 
