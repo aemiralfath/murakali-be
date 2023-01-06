@@ -13,7 +13,7 @@ type CourierFaker struct {
 }
 
 func NewCourierFaker(id, name, code, service []string) ISeeder {
-	return &CourierFaker{ID: id, Name: name, Code: code}
+	return &CourierFaker{ID: id, Name: name, Code: code, Service: service}
 }
 
 func (f *CourierFaker) GenerateData(tx postgre.Transaction) error {

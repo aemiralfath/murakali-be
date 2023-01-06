@@ -152,7 +152,6 @@ func (r *sellerRepo) GetOrders(ctx context.Context, shopID, orderStatusID string
 		}
 
 		order.Detail = orderDetail
-
 		orders = append(orders, &order)
 	}
 	if res.Err() != nil {
