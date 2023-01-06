@@ -89,6 +89,8 @@ const (
 	CreateTransactionQuery        = `INSERT INTO "transaction" (voucher_marketplace_id, wallet_id, card_number, total_price, expired_at) VALUES ($1, $2, $3, $4, $5) RETURNING "id";`
 	CreateOrderQuery              = `INSERT INTO "order" (transaction_id, shop_id, user_id, courier_id, voucher_shop_id, order_status_id, total_price, delivery_fee) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING "id";`
 	CreateOrderItemQuery          = `INSERT INTO "order_item" (order_id, product_detail_id, quantity, item_price, total_price) VALUES ($1, $2, $3, $4, $5) RETURNING "id";`
+	CreateWalletQuery             = `INSERT INTO "wallet" (user_id, balance, pin, attempt_count, active_date) VALUES ($1, $2, $3, $4, $5)`
+	GetWalletByUserIDQuery        = `SELECT "id", "user_id", "balance", "pin", "attempt_count", "attempt_at", "unlocked_at", "active_date" FROM "wallet" WHERE "user_id" = $1 AND "deleted_at" IS NULL`
 	GetCartItemUserQuery          = `SELECT "id", "user_id", "product_detail_id", "quantity" FROM "cart_item" WHERE "user_id" = $1 AND "product_detail_id" = $2 AND "deleted_at" IS NULL;`
 	UpdateProductDetailStockQuery = `UPDATE "product_detail" SET "stock" = $1, "updated_at" = now() WHERE "id" = $2;`
 	DeleteCartItemByIDQuery       = `DELETE FROM "cart_item" WHERE "id" = $1`

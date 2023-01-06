@@ -32,4 +32,6 @@ type UseCase interface {
 	UpdateTransaction(ctx context.Context, transactionID string, requestBody body.SLPCallbackRequest) error
 	CreateSLPPayment(ctx context.Context, string2 string) (string, error)
 	GetOrder(ctx context.Context, userID string, pgn *pagination.Pagination) (*pagination.Pagination, error)
+	ActivateWallet(ctx context.Context, userID, pin string) error
+	GetWallet(ctx context.Context, userID string) (*model.Wallet, error)
 }

@@ -499,6 +499,43 @@ func (u *userUC) DeleteSealabsPay(ctx context.Context, cardNumber string) error 
 	return nil
 }
 
+func (u *userUC) ActivateWallet(ctx context.Context, userID, pin string) error {
+	userModel, err := u.userRepo.GetUserByID(ctx, userID)
+	if err != nil {
+		return err
+	}
+
+	wallet, err := u.userRepo.GetWalletByUserID(ctx, userID)
+	if err != nil {
+		if err != sql.ErrNoRows {
+			return err
+		}
+	}
+
+	if wallet != nil {
+		return httperror.New(http.StatusBadRequest, response.WalletAlreadyActivated)
+	}
+
+	hashedPin, err := bcrypt.GenerateFromPassword([]byte(pin), bcrypt.DefaultCost)
+	if err != nil {
+		return err
+	}
+
+	walletData := &model.Wallet{}
+	walletData.UserID = userModel.ID
+	walletData.Balance = 0
+	walletData.PIN = string(hashedPin)
+	walletData.AttemptCount = 0
+	walletData.ActiveDate.Valid = true
+	walletData.ActiveDate.Time = time.Now()
+
+	if err := u.userRepo.CreateWallet(ctx, walletData); err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func (u *userUC) RegisterMerchant(ctx context.Context, userID, shopName string) error {
 	count, err := u.userRepo.CheckShopByID(ctx, userID)
 	if err != nil {
@@ -744,7 +781,7 @@ func (u *userUC) UpdateTransaction(ctx context.Context, transactionID string, re
 		return err
 	}
 
-	if requestBody.Status == constant.SLPStatusPaid {
+	if requestBody.Status == constant.SLPStatusPaid && requestBody.Message == constant.SlPMessagePaid {
 		err := u.txRepo.WithTransaction(func(tx postgre.Transaction) error {
 			transaction.PaidAt.Valid = true
 			transaction.PaidAt.Time = time.Now()
@@ -767,7 +804,43 @@ func (u *userUC) UpdateTransaction(ctx context.Context, transactionID string, re
 		}
 	}
 
+	if requestBody.Status == constant.SLPStatusCanceled && requestBody.Message == constant.SLPMessageCanceled {
+		err := u.txRepo.WithTransaction(func(tx postgre.Transaction) error {
+			transaction.CanceledAt.Valid = true
+			transaction.CanceledAt.Time = time.Now()
+			if err := u.userRepo.UpdateTransaction(ctx, tx, transaction); err != nil {
+				return err
+			}
+
+			for _, order := range orders {
+				order.OrderStatusID = constant.OrderStatusCanceled
+				if err := u.userRepo.UpdateOrder(ctx, tx, order); err != nil {
+					return err
+				}
+			}
+
+			return nil
+		})
+
+		if err != nil {
+			return err
+		}
+	}
+
 	return nil
+}
+
+func (u *userUC) GetWallet(ctx context.Context, userID string) (*model.Wallet, error) {
+	wallet, err := u.userRepo.GetWalletByUserID(ctx, userID)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, httperror.New(http.StatusBadRequest, response.WalletIsNotActivated)
+		}
+
+		return nil, err
+	}
+
+	return wallet, nil
 }
 
 func (u *userUC) CreateTransaction(ctx context.Context, userID string, requestBody body.CreateTransactionRequest) (string, error) {

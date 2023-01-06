@@ -19,7 +19,10 @@ const (
 
 	ImgMaxSize = 500000
 
-	SLPStatusPaid = "TXN_PAID"
+	SLPStatusPaid      = "TXN_PAID"
+	SlPMessagePaid     = "Payment successful"
+	SLPStatusCanceled  = "TXN_FAILED"
+	SLPMessageCanceled = "Transaction Canceled by user"
 
 	OrderStatusWaitingToPay      = 1
 	OrderStatusWaitingForSeller  = 2
