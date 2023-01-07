@@ -43,6 +43,7 @@ const (
 	ShopCourierNotExist            = "Shop courier not exist."
 	WalletAlreadyActivated         = "Wallet already activated."
 	WalletIsNotActivated           = `Wallet is not activated.`
+	SealabsCardNotFound            = "Sealabs pay card not valid."
 )
 
 type JSONResponse struct {
