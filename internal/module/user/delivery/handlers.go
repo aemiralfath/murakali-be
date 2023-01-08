@@ -913,7 +913,7 @@ func (h *userHandlers) CreateWalletPayment(c *gin.Context) {
 	}
 
 	var requestBody body.CreatePaymentRequest
-	if err := c.ShouldBind(&requestBody); err != nil {
+	if errBind := c.ShouldBind(&requestBody); errBind != nil {
 		response.ErrorResponse(c.Writer, response.BadRequestMessage, http.StatusBadRequest)
 		return
 	}

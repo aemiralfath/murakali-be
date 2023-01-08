@@ -812,14 +812,14 @@ func (u *userUC) CreateWalletPayment(ctx context.Context, transactionID string) 
 	errTx := u.txRepo.WithTransaction(func(tx postgre.Transaction) error {
 		transaction.PaidAt.Valid = true
 		transaction.PaidAt.Time = time.Now()
-		if err := u.userRepo.UpdateTransaction(ctx, tx, transaction); err != nil {
-			return err
+		if errTransaction := u.userRepo.UpdateTransaction(ctx, tx, transaction); errTransaction != nil {
+			return errTransaction
 		}
 
 		for _, order := range orders {
 			order.OrderStatusID = constant.OrderStatusWaitingForSeller
-			if err := u.userRepo.UpdateOrder(ctx, tx, order); err != nil {
-				return err
+			if errOrder := u.userRepo.UpdateOrder(ctx, tx, order); errOrder != nil {
+				return errOrder
 			}
 		}
 
@@ -831,20 +831,20 @@ func (u *userUC) CreateWalletPayment(ctx context.Context, transactionID string) 
 		walletHistory.Description = "Payment transaction " + transaction.ID.String()
 		walletHistory.Amount = transaction.TotalPrice
 		walletHistory.CreatedAt = time.Now()
-		if err := u.userRepo.InsertWalletHistory(ctx, tx, walletHistory); err != nil {
-			return err
+		if errWallet := u.userRepo.InsertWalletHistory(ctx, tx, walletHistory); errWallet != nil {
+			return errWallet
 		}
 
 		wallet.Balance -= transaction.TotalPrice
 		wallet.UpdatedAt.Valid = true
 		wallet.UpdatedAt.Time = time.Now()
 
-		if err := u.userRepo.UpdateWalletBalance(ctx, tx, wallet); err != nil {
-			return err
+		if errBalance := u.userRepo.UpdateWalletBalance(ctx, tx, wallet); errBalance != nil {
+			return errBalance
 		}
 
-		if err := u.CreditToMarketplaceAccount(ctx, tx, transaction); err != nil {
-			return err
+		if errCredit := u.CreditToMarketplaceAccount(ctx, tx, transaction); errCredit != nil {
+			return errCredit
 		}
 
 		return nil
@@ -1116,7 +1116,7 @@ func (u *userUC) WalletStepUp(ctx context.Context, userID string, requestBody bo
 		return "", httperror.New(http.StatusBadRequest, response.WalletBalanceNotEnough)
 	}
 
-	if wallet.UnlockedAt.Valid && wallet.UnlockedAt.Time.Sub(time.Now()) >= 0 {
+	if wallet.UnlockedAt.Valid && time.Until(wallet.UnlockedAt.Time) >= 0 {
 		return "", httperror.New(http.StatusBadRequest, response.WalletIsBlocked)
 	}
 
@@ -1124,7 +1124,7 @@ func (u *userUC) WalletStepUp(ctx context.Context, userID string, requestBody bo
 	invalidPin := false
 	if bcrypt.CompareHashAndPassword([]byte(wallet.PIN), []byte(requestBody.Pin)) != nil {
 		invalidPin = true
-		wallet.AttemptCount += 1
+		wallet.AttemptCount++
 		wallet.AttemptAt.Valid = true
 		wallet.AttemptAt.Time = time.Now()
 
@@ -1142,8 +1142,8 @@ func (u *userUC) WalletStepUp(ctx context.Context, userID string, requestBody bo
 		wallet.AttemptAt.Time = time.Now()
 	}
 
-	if err := u.userRepo.UpdateWallet(ctx, wallet); err != nil {
-		return "", err
+	if errWallet := u.userRepo.UpdateWallet(ctx, wallet); errWallet != nil {
+		return "", errWallet
 	}
 
 	if blocked {
