@@ -463,6 +463,9 @@ func (u *userUC) AddSealabsPay(ctx context.Context, request body.AddSealabsPayRe
 	if err != nil && err != sql.ErrNoRows {
 		return err
 	}
+	if *cardNumber == request.CardNumber {
+		return httperror.New(http.StatusBadRequest, response.SealabsCardAlreadyExist)
+	}
 
 	err = u.txRepo.WithTransaction(func(tx postgre.Transaction) error {
 		if u.userRepo.SetDefaultSealabsPayTrans(ctx, tx, cardNumber) != nil {

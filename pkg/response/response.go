@@ -44,6 +44,7 @@ const (
 	WalletAlreadyActivated         = "Wallet already activated."
 	WalletIsNotActivated           = `Wallet is not activated.`
 	SealabsCardNotFound            = "Sealabs pay card not valid."
+	SealabsCardAlreadyExist        = "Sealabs card already exist."
 )
 
 type JSONResponse struct {
