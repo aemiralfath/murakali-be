@@ -828,8 +828,45 @@ func (h *userHandlers) ChangePassword(c *gin.Context) {
 	response.SuccessResponse(c.Writer, nil, http.StatusOK)
 }
 
+func (h *userHandlers) WalletStepUp(c *gin.Context) {
+	userID, exist := c.Get("userID")
+	if !exist {
+		response.ErrorResponse(c.Writer, response.UnauthorizedMessage, http.StatusUnauthorized)
+		return
+	}
+
+	var requestBody body.WalletStepUpRequest
+	if err := c.ShouldBind(&requestBody); err != nil {
+		response.ErrorResponse(c.Writer, response.BadRequestMessage, http.StatusBadRequest)
+		return
+	}
+
+	invalidFields, err := requestBody.Validate()
+	if err != nil {
+		response.ErrorResponseData(c.Writer, invalidFields, response.UnprocessableEntityMessage, http.StatusUnprocessableEntity)
+		return
+	}
+
+	token, err := h.userUC.WalletStepUp(c, userID.(string), requestBody)
+	if err != nil {
+		var e *httperror.Error
+		if !errors.As(err, &e) {
+			h.logger.Errorf("HandlerUser, Error: %s", err)
+			response.ErrorResponse(c.Writer, response.InternalServerErrorMessage, http.StatusInternalServerError)
+			return
+		}
+
+		response.ErrorResponse(c.Writer, e.Err.Error(), e.Status)
+		return
+	}
+
+	c.SetSameSite(http.SameSiteNoneMode)
+	c.SetCookie(constant.WalletTokenCookie, token, h.cfg.JWT.RefreshExpMin*60, "/", h.cfg.Server.Domain, true, true)
+	response.SuccessResponse(c.Writer, nil, http.StatusOK)
+}
+
 func (h *userHandlers) CreateSLPPayment(c *gin.Context) {
-	var requestBody body.CreateSLPPaymentRequest
+	var requestBody body.CreatePaymentRequest
 	if err := c.ShouldBind(&requestBody); err != nil {
 		response.ErrorResponse(c.Writer, response.BadRequestMessage, http.StatusBadRequest)
 		return
@@ -855,6 +892,53 @@ func (h *userHandlers) CreateSLPPayment(c *gin.Context) {
 	}
 
 	response.SuccessResponse(c.Writer, body.CreateSLPPaymentResponse{RedirectURL: url}, http.StatusOK)
+}
+
+func (h *userHandlers) CreateWalletPayment(c *gin.Context) {
+	walletToken, err := c.Cookie(constant.WalletTokenCookie)
+	if err != nil {
+		response.ErrorResponse(c.Writer, response.ForbiddenMessage, http.StatusForbidden)
+		return
+	}
+
+	claims, err := jwt.ExtractJWT(walletToken, h.cfg.JWT.JwtSecretKey)
+	if err != nil {
+		response.ErrorResponse(c.Writer, response.ForbiddenMessage, http.StatusForbidden)
+		return
+	}
+
+	if claims["scope"].(string) != "level1" {
+		response.ErrorResponse(c.Writer, response.ForbiddenMessage, http.StatusForbidden)
+		return
+	}
+
+	var requestBody body.CreatePaymentRequest
+	if errBind := c.ShouldBind(&requestBody); errBind != nil {
+		response.ErrorResponse(c.Writer, response.BadRequestMessage, http.StatusBadRequest)
+		return
+	}
+
+	invalidFields, err := requestBody.Validate()
+	if err != nil {
+		response.ErrorResponseData(c.Writer, invalidFields, response.UnprocessableEntityMessage, http.StatusUnprocessableEntity)
+		return
+	}
+
+	if err := h.userUC.CreateWalletPayment(c, requestBody.TransactionID); err != nil {
+		var e *httperror.Error
+		if !errors.As(err, &e) {
+			h.logger.Errorf("HandlerUser, Error: %s", err)
+			response.ErrorResponse(c.Writer, response.InternalServerErrorMessage, http.StatusInternalServerError)
+			return
+		}
+
+		response.ErrorResponse(c.Writer, e.Err.Error(), e.Status)
+		return
+	}
+
+	c.SetSameSite(http.SameSiteNoneMode)
+	c.SetCookie(constant.WalletTokenCookie, "", -1, "/", h.cfg.Server.Domain, true, true)
+	response.SuccessResponse(c.Writer, nil, http.StatusOK)
 }
 
 func (h *userHandlers) SLPPaymentCallback(c *gin.Context) {

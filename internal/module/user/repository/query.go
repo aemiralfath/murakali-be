@@ -92,6 +92,7 @@ const (
 	CreateWalletQuery             = `INSERT INTO "wallet" (user_id, balance, pin, attempt_count, active_date) VALUES ($1, $2, $3, $4, $5)`
 	CreateWalletHistoryQuery      = `INSERT INTO "wallet_history" (transaction_id, wallet_id, "from", "to", description, amount, created_at) VALUES ($1, $2, $3, $4, $5, $6, $7)`
 	UpdateWalletBalanceQuery      = `UPDATE "wallet" SET "balance" = $1, "updated_at" = $2 WHERE "id" = $3`
+	UpdateWalletQuery             = `UPDATE "wallet" SET "attempt_count" = $1, "attempt_at" = $2, "unlocked_at" = $3, "updated_at" = CURRENT_TIMESTAMP WHERE "id" = $4`
 	GetWalletByUserIDQuery        = `SELECT "id", "user_id", "balance", "pin", "attempt_count", "attempt_at", "unlocked_at", "active_date" FROM "wallet" WHERE "user_id" = $1 AND "deleted_at" IS NULL`
 	GetCartItemUserQuery          = `SELECT "id", "user_id", "product_detail_id", "quantity" FROM "cart_item" WHERE "user_id" = $1 AND "product_detail_id" = $2 AND "deleted_at" IS NULL;`
 	UpdateProductDetailStockQuery = `UPDATE "product_detail" SET "stock" = $1, "updated_at" = now() WHERE "id" = $2;`

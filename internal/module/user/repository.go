@@ -70,4 +70,5 @@ type Repository interface {
 	GetWalletByUserID(ctx context.Context, userID string) (*model.Wallet, error)
 	InsertWalletHistory(ctx context.Context, tx postgre.Transaction, walletHistory *model.WalletHistory) error
 	UpdateWalletBalance(ctx context.Context, tx postgre.Transaction, wallet *model.Wallet) error
+	UpdateWallet(ctx context.Context, wallet *model.Wallet) error
 }

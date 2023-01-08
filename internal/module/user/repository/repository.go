@@ -843,6 +843,15 @@ func (r *userRepo) UpdateWalletBalance(ctx context.Context, tx postgre.Transacti
 	return nil
 }
 
+func (r *userRepo) UpdateWallet(ctx context.Context, wallet *model.Wallet) error {
+	_, err := r.PSQL.ExecContext(ctx, UpdateWalletQuery, wallet.AttemptCount, wallet.AttemptAt, wallet.UnlockedAt, wallet.ID)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func (r *userRepo) InsertWalletHistory(ctx context.Context, tx postgre.Transaction, walletHistory *model.WalletHistory) error {
 	_, err := tx.ExecContext(ctx, CreateWalletHistoryQuery, walletHistory.TransactionID, walletHistory.WalletID,
 		walletHistory.From, walletHistory.To, walletHistory.Description, walletHistory.Amount, walletHistory.CreatedAt)

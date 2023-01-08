@@ -13,9 +13,10 @@ VALUES ('waiting to pay'),
        ('waiting for seller confirmation'),
        ('waiting for packing'),
        ('on delivery'),
-       ('completed'),
        ('received'),
-       ('cancelled');
+       ('completed'),
+       ('cancelled'),
+       ('refund');
 
 INSERT INTO "sealabs_pay" (card_number, user_id, name, is_default, active_date)
 VALUES ('2787884621261326', '7950eca2-58d5-44f0-b873-22b23d8107da', 'Emir SLP', true, '2024-12-31 23:59:59');
@@ -48,7 +49,8 @@ VALUES ('2abaad66-0eae-46bf-8ec7-b6b1d8d6472e', 'ukuran', 's'),
 -- Update the id with generated id seeder (wait the seeder service in docker finish)
 -- or you can insert the id manually first
 INSERT INTO "product_detail" (id, product_id, price, stock, weight, size, hazardous, condition, bulk_price)
-VALUES ('02d8b878-7124-471a-8f15-0d338ddcfa81', '910dbb9b-53d5-4a23-b8ca-cf3f0caab169', 50000, 5, 1000, 1, false, 'wwww',
+VALUES ('02d8b878-7124-471a-8f15-0d338ddcfa81', '910dbb9b-53d5-4a23-b8ca-cf3f0caab169', 50000, 5, 1000, 1, false,
+        'wwww',
         false),
        ('0c53ef3d-3682-4359-90e1-814eb6ab5231', 'e6fb2764-076f-4b3b-bc05-8aa125d537ed', 70000, 111, 500, 0.1, false,
         'perfect', false),
