@@ -47,6 +47,8 @@ const (
 	SealabsCardAlreadyExist        = "Sealabs card already exist."
 	WalletIsBlocked                = "Wallet is temporarily blocked, please wait."
 	WalletPinIsInvalid             = "Wallet pin is invalid."
+	WalletBalanceNotEnough         = "Insufficient wallet balance, please top up!"
+	InvalidPaymentMethod           = "Invalid payment method."
 )
 
 type JSONResponse struct {

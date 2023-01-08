@@ -1,6 +1,8 @@
 package constant
 
 const (
+	AdminMarketplaceID = "4df967a8-5b05-4d2a-bb72-da3921dce8fb"
+
 	RegisterTokenCookie       = "register_token"
 	RefreshTokenCookie        = "refresh_token"
 	WalletTokenCookie         = "wallet_token"

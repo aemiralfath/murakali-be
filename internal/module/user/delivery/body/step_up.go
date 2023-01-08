@@ -9,14 +9,16 @@ import (
 )
 
 type WalletStepUpRequest struct {
-	Pin string `json:"pin"`
+	Pin    string `json:"pin"`
+	Amount int    `json:"amount"`
 }
 
 func (r *WalletStepUpRequest) Validate() (UnprocessableEntity, error) {
 	unprocessableEntity := false
 	entity := UnprocessableEntity{
 		Fields: map[string]string{
-			"pin": "",
+			"pin":    "",
+			"amount": "",
 		},
 	}
 
@@ -34,6 +36,11 @@ func (r *WalletStepUpRequest) Validate() (UnprocessableEntity, error) {
 	if _, err := strconv.Atoi(r.Pin); err != nil {
 		unprocessableEntity = true
 		entity.Fields["pin"] = InvalidPinFormatMessage
+	}
+
+	if r.Amount <= 0 {
+		unprocessableEntity = true
+		entity.Fields["amount"] = FieldCannotBeEmptyMessage
 	}
 
 	if unprocessableEntity {

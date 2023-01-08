@@ -756,6 +756,10 @@ func (u *userUC) CreateSLPPayment(ctx context.Context, transactionID string) (st
 		return "", httperror.New(http.StatusBadRequest, response.TransactionAlreadyFinished)
 	}
 
+	if transaction.CardNumber == nil {
+		return "", httperror.New(http.StatusBadRequest, response.InvalidPaymentMethod)
+	}
+
 	signFormat := fmt.Sprintf("%s:%d:%s", *transaction.CardNumber, int(transaction.TotalPrice), u.cfg.External.SlpMerchantCode)
 	h := hmac.New(sha256.New, []byte(u.cfg.External.SlpAPIKey))
 	h.Write([]byte(signFormat))
@@ -767,6 +771,89 @@ func (u *userUC) CreateSLPPayment(ctx context.Context, transactionID string) (st
 	}
 
 	return redirectURL, nil
+}
+
+func (u *userUC) CreateWalletPayment(ctx context.Context, transactionID string) error {
+	transaction, err := u.userRepo.GetTransactionByID(ctx, transactionID)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return httperror.New(http.StatusBadRequest, response.TransactionIDNotExist)
+		}
+
+		return err
+	}
+
+	if time.Until(transaction.ExpiredAt.Time) < 0 {
+		return httperror.New(http.StatusBadRequest, response.TransactionAlreadyExpired)
+	}
+
+	if transaction.PaidAt.Valid || transaction.CanceledAt.Valid {
+		return httperror.New(http.StatusBadRequest, response.TransactionAlreadyFinished)
+	}
+
+	if transaction.WalletID == nil {
+		return httperror.New(http.StatusBadRequest, response.InvalidPaymentMethod)
+	}
+
+	wallet, err := u.userRepo.GetWalletUser(ctx, transaction.WalletID.String())
+	if err != nil {
+		return err
+	}
+
+	if wallet.Balance-transaction.TotalPrice < 0 {
+		return httperror.New(http.StatusBadRequest, response.WalletBalanceNotEnough)
+	}
+
+	orders, err := u.userRepo.GetOrderByTransactionID(ctx, transactionID)
+	if err != nil {
+		return err
+	}
+
+	errTx := u.txRepo.WithTransaction(func(tx postgre.Transaction) error {
+		transaction.PaidAt.Valid = true
+		transaction.PaidAt.Time = time.Now()
+		if err := u.userRepo.UpdateTransaction(ctx, tx, transaction); err != nil {
+			return err
+		}
+
+		for _, order := range orders {
+			order.OrderStatusID = constant.OrderStatusWaitingForSeller
+			if err := u.userRepo.UpdateOrder(ctx, tx, order); err != nil {
+				return err
+			}
+		}
+
+		walletHistory := &model.WalletHistory{}
+		walletHistory.TransactionID = transaction.ID
+		walletHistory.WalletID = wallet.ID
+		walletHistory.From = wallet.ID.String()
+		walletHistory.To = transaction.ID.String()
+		walletHistory.Description = "Payment transaction " + transaction.ID.String()
+		walletHistory.Amount = transaction.TotalPrice
+		walletHistory.CreatedAt = time.Now()
+		if err := u.userRepo.InsertWalletHistory(ctx, tx, walletHistory); err != nil {
+			return err
+		}
+
+		wallet.Balance -= transaction.TotalPrice
+		wallet.UpdatedAt.Valid = true
+		wallet.UpdatedAt.Time = time.Now()
+
+		if err := u.userRepo.UpdateWalletBalance(ctx, tx, wallet); err != nil {
+			return err
+		}
+
+		if err := u.CreditToMarketplaceAccount(ctx, tx, transaction); err != nil {
+			return err
+		}
+
+		return nil
+	})
+	if errTx != nil {
+		return err
+	}
+
+	return nil
 }
 
 func (u *userUC) GetRedirectURL(transaction *model.Transaction, sign string) (string, error) {
@@ -849,6 +936,10 @@ func (u *userUC) UpdateTransaction(ctx context.Context, transactionID string, re
 				if err := u.userRepo.UpdateOrder(ctx, tx, order); err != nil {
 					return err
 				}
+			}
+
+			if err := u.CreditToMarketplaceAccount(ctx, tx, transaction); err != nil {
+				return err
 			}
 
 			return nil
@@ -962,6 +1053,43 @@ func (u *userUC) UpdateWalletTransaction(ctx context.Context, transactionID stri
 	return nil
 }
 
+func (u *userUC) CreditToMarketplaceAccount(ctx context.Context, tx postgre.Transaction, transaction *model.Transaction) error {
+	walletMarketplace, err := u.userRepo.GetWalletByUserID(ctx, constant.AdminMarketplaceID)
+	if err != nil {
+		return err
+	}
+
+	walletHistory := &model.WalletHistory{}
+	if transaction.WalletID == nil {
+		walletHistory.From = *transaction.CardNumber
+	}
+
+	if transaction.CardNumber == nil {
+		walletHistory.From = transaction.WalletID.String()
+	}
+
+	walletHistory.TransactionID = transaction.ID
+	walletHistory.WalletID = walletMarketplace.ID
+	walletHistory.To = walletMarketplace.ID.String()
+	walletHistory.Description = "Payment transaction " + transaction.ID.String()
+	walletHistory.Amount = transaction.TotalPrice
+	walletHistory.CreatedAt = time.Now()
+
+	if err := u.userRepo.InsertWalletHistory(ctx, tx, walletHistory); err != nil {
+		return err
+	}
+
+	walletMarketplace.Balance += transaction.TotalPrice
+	walletMarketplace.UpdatedAt.Valid = true
+	walletMarketplace.UpdatedAt.Time = time.Now()
+
+	if err := u.userRepo.UpdateWalletBalance(ctx, tx, walletMarketplace); err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func (u *userUC) GetWallet(ctx context.Context, userID string) (*model.Wallet, error) {
 	wallet, err := u.userRepo.GetWalletByUserID(ctx, userID)
 	if err != nil {
@@ -982,6 +1110,10 @@ func (u *userUC) WalletStepUp(ctx context.Context, userID string, requestBody bo
 			return "", httperror.New(http.StatusBadRequest, response.WalletIsNotActivated)
 		}
 		return "", err
+	}
+
+	if wallet.Balance-float64(requestBody.Amount) < 0 {
+		return "", httperror.New(http.StatusBadRequest, response.WalletBalanceNotEnough)
 	}
 
 	if wallet.UnlockedAt.Valid && wallet.UnlockedAt.Time.Sub(time.Now()) >= 0 {
@@ -1010,7 +1142,6 @@ func (u *userUC) WalletStepUp(ctx context.Context, userID string, requestBody bo
 		wallet.AttemptAt.Time = time.Now()
 	}
 
-	// update wallet
 	if err := u.userRepo.UpdateWallet(ctx, wallet); err != nil {
 		return "", err
 	}
