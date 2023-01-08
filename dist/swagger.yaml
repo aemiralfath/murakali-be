@@ -1464,7 +1464,7 @@ paths:
       tags:
         - Seller
       security:
-        - BEARER: [ ]
+        - BEARER: []
       responses:
         "200":
           description: OK
@@ -2242,18 +2242,17 @@ components:
               id: f67a6297-bfd7-42d2-9f85-6441b848c57f
               user_id: 7950eca2-58d5-44f0-b873-22b23d8107da
               balance: 0
-              pin: ''
+              pin: ""
               attempt_count: 0
               attempt_at:
-                Time: '0001-01-01T00:00:00Z'
+                Time: "0001-01-01T00:00:00Z"
                 Valid: false
               unlocked_at:
-                Time: '0001-01-01T00:00:00Z'
+                Time: "0001-01-01T00:00:00Z"
                 Valid: false
               active_date:
-                Time: '2023-01-05T10:02:58.493922Z'
+                Time: "2023-01-05T10:02:58.493922Z"
                 Valid: true
-
 
     InputPinWalletRequest:
       title: InputPinWalletRequest
@@ -3478,7 +3477,9 @@ components:
           rows:
             type: array
             properties:
-              id:
+              shop_courier_id:
+                type: string
+              courier_id:
                 type: string
               name:
                 type: string
@@ -3488,20 +3489,26 @@ components:
                 type: string
               description:
                 type: string
+              deleted_at:
+                type: string
       example:
         message: success
         data:
           rows:
-            - id: ad592837-da23-43ad-a66c-0d150a59db45
+            - shop_courier_id: 69cf4c26-693c-4aaa-8c2d-1d7db0ce75e4
+              courier_id: 98c1921e-b80e-40f3-9cba-fe8806097517
               name: TIKI
               code: tiki
               service: REG
               description: Layanan Reguler
-            - id: 578ade71-f9f9-4651-b234-7d04cde29b69
+              deleted_at:
+            - shop_courier_id: 578ade71-f9f9-4651-b234-7d04cde29b69
+              courier_id: 0d389020-f229-461e-9202-5788961fbb81
               name: JNE
               code: jne
               service: REG
               description: Layanan Reguler
+              deleted_at: 2023-01-08 07:23:17.795294 +0000 UTC
 
     GetSellerDetailResponse:
       title: GetSellerDetailResponse

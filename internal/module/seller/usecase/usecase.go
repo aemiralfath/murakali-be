@@ -101,11 +101,9 @@ func (u *sellerUC) GetCourierSeller(ctx context.Context, userID string) (*body.C
 		for j := 0; j < totalDataCourierSeller; j++ {
 			if courier[i].CourierID == courierSeller[j].CourierID {
 				shopCourierIDTemp = courierSeller[j].ShopCourierID.String()
-
 				if !courierSeller[j].DeletedAt.Time.IsZero() {
 					deletedAtTemp = courierSeller[j].DeletedAt.Time.String()
 				}
-
 			}
 		}
 		p := &body.CourierSellerInfo{
