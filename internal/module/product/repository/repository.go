@@ -8,6 +8,7 @@ import (
 	"murakali/internal/module/product"
 	"murakali/internal/module/product/delivery/body"
 	"murakali/pkg/pagination"
+	"murakali/pkg/postgre"
 
 	"github.com/go-redis/redis/v8"
 	"github.com/google/uuid"
@@ -529,4 +530,84 @@ func (r *productRepo) GetAllFavoriteTotalProduct(ctx context.Context, query *bod
 	}
 
 	return total, nil
+}
+
+func (r *productRepo) GetShopIDByUserID(ctx context.Context, userID string) (string, error) {
+	var shopID string
+	if err := r.PSQL.QueryRowContext(ctx, GetShopIDByUserIDQuery, userID).Scan(&shopID); err != nil {
+		return "", err
+	}
+
+	return shopID, nil
+}
+
+func (r *productRepo) CreateProduct(ctx context.Context, tx postgre.Transaction, requestBody body.CreateProductRequest, ShopID string, SKU string) (string, error) {
+	var productID *uuid.UUID
+	err := tx.QueryRowContext(
+		ctx,
+		CreateProductQuery,
+		requestBody.CategoryID,
+		ShopID,
+		SKU,
+		requestBody.Title,
+		requestBody.Description,
+		0,
+		0,
+		0,
+		true,
+		requestBody.Thumbnail,
+		0,
+		0,
+		0).Scan(&productID)
+	if err != nil {
+		return "", err
+	}
+
+	return productID.String(), nil
+}
+
+func (r *productRepo) CreateProductDetail(ctx context.Context, tx postgre.Transaction, requestBody body.CreateProductDetailRequest, ProductID string) (string, error) {
+	var productDetailID *uuid.UUID
+	err := tx.QueryRowContext(
+		ctx,
+		CreateProductDetailQuery,
+		ProductID,
+		requestBody.Price,
+		requestBody.Stock,
+		requestBody.Weight,
+		requestBody.Size,
+		requestBody.Hazardous,
+		requestBody.Codition,
+		requestBody.BulkPrice,
+	).Scan(&productDetailID)
+	if err != nil {
+		return "", err
+	}
+	return productDetailID.String(), nil
+}
+
+func (r *productRepo) CreatePhoto(ctx context.Context, tx postgre.Transaction, productDetailID string, URL string) error {
+	_, err := tx.ExecContext(
+		ctx,
+		CreatePhotoQuery,
+		productDetailID,
+		URL,
+	)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (r *productRepo) CreateVideo(ctx context.Context, tx postgre.Transaction, productDetailID string, URL string) error {
+	_, err := tx.ExecContext(
+		ctx,
+		CreateVideoQuery,
+		productDetailID,
+		URL,
+	)
+	if err != nil {
+		return err
+	}
+	return nil
 }

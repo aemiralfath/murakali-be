@@ -3,13 +3,17 @@ package usecase
 import (
 	"context"
 	"database/sql"
+	"fmt"
 	"math"
 	"murakali/config"
 	"murakali/internal/model"
 	"murakali/internal/module/product"
 	"murakali/internal/module/product/delivery/body"
+	"murakali/pkg/httperror"
 	"murakali/pkg/pagination"
 	"murakali/pkg/postgre"
+	"murakali/pkg/response"
+	"net/http"
 
 	"github.com/google/uuid"
 )
@@ -318,4 +322,65 @@ func (u *productUC) GetFavoriteProducts(
 	pgn.Rows = resultProduct
 
 	return pgn, nil
+}
+
+func (u *productUC) CreateProduct(ctx context.Context, requestBody body.CreateProductRequest, userID string) error {
+	shopID, errGet := u.productRepo.GetShopIDByUserID(ctx, userID)
+	if errGet != nil {
+		if errGet == sql.ErrNoRows {
+			return httperror.New(http.StatusBadRequest, response.UserNotExistMessage)
+		}
+		return errGet
+	}
+
+	// TODO : CREATE MIN MAX PRICE
+
+	err := u.txRepo.WithTransaction(func(tx postgre.Transaction) error {
+		totalData := len(requestBody.ProductDetail)
+		// TODO :
+		// var minPriceTemp, maxPriceTemp float64=  requestBody.ProductDetail[0].Price, requestBody.ProductDetail[0].Price,
+		// for i := 0; i < totalData; i++ {
+
+		// }
+		productID, err := u.productRepo.CreateProduct(ctx, tx, requestBody, shopID, "")
+		if err != nil {
+			return err
+		}
+
+		for i := 0; i < totalData; i++ {
+			fmt.Println("index ke", i)
+			productDetilID, err := u.productRepo.CreateProductDetail(ctx, tx, requestBody.ProductDetail[i], productID)
+			if err != nil {
+				return err
+			}
+
+			totalDataPhoto := len(requestBody.ProductDetail[i].Photo)
+			if totalDataPhoto > 0 {
+				for j := 0; j < totalDataPhoto; j++ {
+					err := u.productRepo.CreatePhoto(ctx, tx, productDetilID, requestBody.ProductDetail[i].Photo[j])
+					if err != nil {
+						return err
+					}
+				}
+			}
+
+			totalDataVideo := len(requestBody.ProductDetail[i].Video)
+			if totalDataVideo > 0 {
+				for k := 0; k < totalDataVideo; k++ {
+					err := u.productRepo.CreateVideo(ctx, tx, productDetilID, requestBody.ProductDetail[i].Video[k])
+					if err != nil {
+						return err
+					}
+				}
+			}
+
+		}
+		return nil
+	})
+
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

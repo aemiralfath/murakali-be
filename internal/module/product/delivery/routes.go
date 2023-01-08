@@ -1,9 +1,10 @@
 package delivery
 
 import (
-	"github.com/gin-gonic/gin"
 	"murakali/internal/middleware"
 	"murakali/internal/module/product"
+
+	"github.com/gin-gonic/gin"
 )
 
 func MapProductRoutes(productGroup *gin.RouterGroup, h product.Handlers, mw *middleware.MWManager) {
@@ -15,7 +16,8 @@ func MapProductRoutes(productGroup *gin.RouterGroup, h product.Handlers, mw *mid
 	productGroup.GET("/recommended", h.GetRecommendedProducts)
 	productGroup.GET("/:product_id", h.GetProductDetail)
 	productGroup.GET("/", h.GetProducts)
-	productUserGroup := productGroup.Group("/favorite")
+	productUserGroup := productGroup.Group("/")
 	productUserGroup.Use(mw.AuthJWTMiddleware())
-	productUserGroup.GET("/", h.GetFavoriteProducts)
+	productUserGroup.GET("/favorite", h.GetFavoriteProducts)
+	productUserGroup.POST("/", h.CreateProduct)
 }
