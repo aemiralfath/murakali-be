@@ -182,4 +182,26 @@ const (
 	AND ("p".min_price BETWEEN $6 AND $7)
 	AND "f"."user_id" = $8
 	 AND "p"."deleted_at" IS NULL `
+
+	///////////////////////
+
+	CreateProductQuery = `INSERT INTO "product" 
+	(category_id, shop_id, sku, title, description, view_count, favorite_count, unit_sold, listed_status, thumbnail_url, rating_avg, min_price, max_price)
+	 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13) RETURNING "id";`
+
+	CreateProductDetailQuery = `INSERT INTO "product_detail" 
+	(price, stock, weight, size, hazardous, codition, bulk_price)
+	 VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING "id";`
+
+	CreatePhotoQuery = `INSERT INTO "photo" 
+	(product_detail_id, url)
+	 VALUES ($1, $2) RETURNING "id";`
+
+	CreateVideoQuery = `INSERT INTO "video" 
+	(product_detail_id, url)
+	 VALUES ($1, $2) RETURNING "id";`
+
+	CreateVariantQuery = `INSERT INTO "variant" 
+	(product_detail_id, variant_detail_id)
+	 VALUES ($1, $2) RETURNING "id";`
 )

@@ -3,6 +3,7 @@ package usecase
 import (
 	"context"
 	"database/sql"
+	"fmt"
 	"math"
 	"murakali/config"
 	"murakali/internal/model"
@@ -80,29 +81,48 @@ func (u *sellerUC) GetOrderByOrderID(ctx context.Context, orderID string) (*mode
 }
 
 func (u *sellerUC) GetCourierSeller(ctx context.Context, userID string) (*body.CourierSellerResponse, error) {
+	courier, err := u.sellerRepo.GetAllCourier(ctx)
+	if err != nil {
+		return nil, err
+	}
+
 	courierSeller, err := u.sellerRepo.GetCourierSeller(ctx, userID)
 	if err != nil {
 		return nil, err
 	}
 
 	resultCourierSeller := make([]*body.CourierSellerInfo, 0)
-	totalData := len(courierSeller)
+	totalData := len(courier)
+	totalDataCourierSeller := len(courierSeller)
+	fmt.Println("ini courier seller", courierSeller)
 	for i := 0; i < totalData; i++ {
+		var shopCourierIDTemp string
+		var deletedAtTemp string
+		for j := 0; j < totalDataCourierSeller; j++ {
+			if courier[i].CourierID == courierSeller[j].CourierID {
+				shopCourierIDTemp = courierSeller[j].ShopCourierID.String()
+
+				if !courierSeller[j].DeletedAt.Time.IsZero() {
+					deletedAtTemp = courierSeller[j].DeletedAt.Time.String()
+				}
+
+			}
+		}
 		p := &body.CourierSellerInfo{
-			ShopCourierID: courierSeller[i].ShopCourierID,
-			Name:          courierSeller[i].Name,
-			Code:          courierSeller[i].Code,
-			Service:       courierSeller[i].Service,
-			Description:   courierSeller[i].Description,
+			ShopCourierID: shopCourierIDTemp,
+			CourierID:     courier[i].CourierID,
+			Name:          courier[i].Name,
+			Code:          courier[i].Code,
+			Service:       courier[i].Service,
+			Description:   courier[i].Description,
+			DeletedAt:     deletedAtTemp,
 		}
 
 		resultCourierSeller = append(resultCourierSeller, p)
 	}
 
 	csr := &body.CourierSellerResponse{}
-
 	csr.Rows = resultCourierSeller
-
 	return csr, nil
 }
 func (u *sellerUC) GetSellerBySellerID(ctx context.Context, sellerID string) (*body.SellerResponse, error) {
@@ -136,7 +156,11 @@ func (u *sellerUC) CreateCourierSeller(ctx context.Context, userID, courierID st
 
 	sellerCourierID, _ := u.sellerRepo.GetCourierSellerByShopAndCourierID(ctx, shopID, courierID)
 	if sellerCourierID != "" {
-		return httperror.New(http.StatusBadRequest, body.CourierSellerAlreadyExistMessage)
+		err = u.sellerRepo.UpdateCourierSellerByID(ctx, shopID, courierID)
+		if err == sql.ErrNoRows {
+			return httperror.New(http.StatusBadRequest, response.UserNotExistMessage)
+		}
+		return nil
 	}
 
 	err = u.sellerRepo.CreateCourierSeller(ctx, shopID, courierID)
