@@ -29,4 +29,5 @@ type Handlers interface {
 	ActivateWallet(c *gin.Context)
 	GetWallet(c *gin.Context)
 	TopUpWallet(c *gin.Context)
+	WalletStepUp(c *gin.Context)
 }

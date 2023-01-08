@@ -36,4 +36,5 @@ type UseCase interface {
 	ActivateWallet(ctx context.Context, userID, pin string) error
 	GetWallet(ctx context.Context, userID string) (*model.Wallet, error)
 	TopUpWallet(ctx context.Context, userID string, requestBody body.TopUpWalletRequest) (string, error)
+	WalletStepUp(ctx context.Context, userID string, requestBody body.WalletStepUpRequest) (string, error)
 }

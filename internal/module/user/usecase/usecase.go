@@ -975,6 +975,62 @@ func (u *userUC) GetWallet(ctx context.Context, userID string) (*model.Wallet, e
 	return wallet, nil
 }
 
+func (u *userUC) WalletStepUp(ctx context.Context, userID string, requestBody body.WalletStepUpRequest) (string, error) {
+	wallet, err := u.userRepo.GetWalletByUserID(ctx, userID)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return "", httperror.New(http.StatusBadRequest, response.WalletIsNotActivated)
+		}
+		return "", err
+	}
+
+	if wallet.UnlockedAt.Valid && wallet.UnlockedAt.Time.Sub(time.Now()) >= 0 {
+		return "", httperror.New(http.StatusBadRequest, response.WalletIsBlocked)
+	}
+
+	blocked := false
+	invalidPin := false
+	if bcrypt.CompareHashAndPassword([]byte(wallet.PIN), []byte(requestBody.Pin)) != nil {
+		invalidPin = true
+		wallet.AttemptCount += 1
+		wallet.AttemptAt.Valid = true
+		wallet.AttemptAt.Time = time.Now()
+
+		if wallet.AttemptCount >= 3 {
+			blocked = true
+			wallet.AttemptCount = 0
+			wallet.UnlockedAt.Valid = true
+			wallet.UnlockedAt.Time = time.Now().Add(time.Minute * 15)
+		}
+	}
+
+	if !invalidPin {
+		wallet.AttemptCount = 0
+		wallet.AttemptAt.Valid = true
+		wallet.AttemptAt.Time = time.Now()
+	}
+
+	// update wallet
+	if err := u.userRepo.UpdateWallet(ctx, wallet); err != nil {
+		return "", err
+	}
+
+	if blocked {
+		return "", httperror.New(http.StatusBadRequest, response.WalletIsBlocked)
+	}
+
+	if invalidPin {
+		return "", httperror.New(http.StatusBadRequest, response.WalletPinIsInvalid)
+	}
+
+	walletToken, err := jwt.GenerateJWTWalletToken(userID, u.cfg)
+	if err != nil {
+		return "", err
+	}
+
+	return walletToken, nil
+}
+
 func (u *userUC) CreateTransaction(ctx context.Context, userID string, requestBody body.CreateTransactionRequest) (string, error) {
 	transactionData := &model.Transaction{}
 	orderResponses := make([]*body.OrderResponse, 0)

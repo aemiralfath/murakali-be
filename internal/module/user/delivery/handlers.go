@@ -828,6 +828,43 @@ func (h *userHandlers) ChangePassword(c *gin.Context) {
 	response.SuccessResponse(c.Writer, nil, http.StatusOK)
 }
 
+func (h *userHandlers) WalletStepUp(c *gin.Context) {
+	userID, exist := c.Get("userID")
+	if !exist {
+		response.ErrorResponse(c.Writer, response.UnauthorizedMessage, http.StatusUnauthorized)
+		return
+	}
+
+	var requestBody body.WalletStepUpRequest
+	if err := c.ShouldBind(&requestBody); err != nil {
+		response.ErrorResponse(c.Writer, response.BadRequestMessage, http.StatusBadRequest)
+		return
+	}
+
+	invalidFields, err := requestBody.Validate()
+	if err != nil {
+		response.ErrorResponseData(c.Writer, invalidFields, response.UnprocessableEntityMessage, http.StatusUnprocessableEntity)
+		return
+	}
+
+	token, err := h.userUC.WalletStepUp(c, userID.(string), requestBody)
+	if err != nil {
+		var e *httperror.Error
+		if !errors.As(err, &e) {
+			h.logger.Errorf("HandlerUser, Error: %s", err)
+			response.ErrorResponse(c.Writer, response.InternalServerErrorMessage, http.StatusInternalServerError)
+			return
+		}
+
+		response.ErrorResponse(c.Writer, e.Err.Error(), e.Status)
+		return
+	}
+
+	c.SetSameSite(http.SameSiteNoneMode)
+	c.SetCookie(constant.WalletTokenCookie, token, h.cfg.JWT.RefreshExpMin*60, "/", h.cfg.Server.Domain, true, true)
+	response.SuccessResponse(c.Writer, nil, http.StatusOK)
+}
+
 func (h *userHandlers) CreateSLPPayment(c *gin.Context) {
 	var requestBody body.CreateSLPPaymentRequest
 	if err := c.ShouldBind(&requestBody); err != nil {

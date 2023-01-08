@@ -3,6 +3,7 @@ package constant
 const (
 	RegisterTokenCookie       = "register_token"
 	RefreshTokenCookie        = "refresh_token"
+	WalletTokenCookie         = "wallet_token"
 	ResetPasswordTokenCookie  = "reset_password_token"
 	ChangePasswordTokenCookie = "change_password_token"
 

@@ -39,6 +39,12 @@ type ChangePasswordClaims struct {
 	jwt.RegisteredClaims
 }
 
+type WalletClaims struct {
+	ID    string `json:"id"`
+	Scope string `json:"scope"`
+	jwt.RegisteredClaims
+}
+
 func GenerateJWTAccessToken(userID string, userRole int, cfg *config.Config) (*model.AccessToken, error) {
 	claims := &AccessClaims{
 		ID:     userID,
@@ -86,6 +92,26 @@ func GenerateJWTRefreshToken(userID string, cfg *config.Config) (*model.RefreshT
 		ExpiredAt: claims.ExpiresAt.Time,
 	}
 	return refreshToken, nil
+}
+
+func GenerateJWTWalletToken(userID string, cfg *config.Config) (string, error) {
+	claims := &WalletClaims{
+		ID:    userID,
+		Scope: "level1",
+		RegisteredClaims: jwt.RegisteredClaims{
+			ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Duration(cfg.JWT.RefreshExpMin) * time.Minute)),
+			Issuer:    cfg.JWT.JwtIssuer,
+			IssuedAt:  jwt.NewNumericDate(time.Now()),
+		},
+	}
+
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	tokenString, err := token.SignedString([]byte(cfg.JWT.JwtSecretKey))
+	if err != nil {
+		return "", err
+	}
+
+	return tokenString, nil
 }
 
 func GenerateJWTRegisterToken(email string, cfg *config.Config) (string, error) {
