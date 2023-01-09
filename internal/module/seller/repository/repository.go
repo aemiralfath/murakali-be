@@ -289,9 +289,9 @@ func (r *sellerRepo) GetShopIDByUserID(ctx context.Context, userID string) (stri
 	return ID, nil
 }
 
-func (r *sellerRepo) GetCourierSellerByShopAndCourierID(ctx context.Context, shopID, courierID string) (string, error) {
+func (r *sellerRepo) GetCourierSellerNotNullByShopAndCourierID(ctx context.Context, shopID, courierID string) (string, error) {
 	var ID string
-	if err := r.PSQL.QueryRowContext(ctx, GetCourierSellerIDByShopAndCourierIDQuery, shopID, courierID).Scan(&ID); err != nil {
+	if err := r.PSQL.QueryRowContext(ctx, GetCourierSellerNotNullByShopAndCourierIDQuery, shopID, courierID).Scan(&ID); err != nil {
 		return "", err
 	}
 	return ID, nil

@@ -45,10 +45,10 @@ const (
 	JOIN "user" u ON u.id = s.user_id
 	WHERE s.id = $1 AND s.deleted_at is null`
 
-	GetCourierByIDQuery                       = `SELECT id FROM "courier" WHERE id = $1 AND deleted_at IS NULL`
-	GetShopIDByUserIDQuery                    = `SELECT id from "shop" WHERE user_id = $1 AND deleted_at IS NULL `
-	GetCourierSellerIDByShopAndCourierIDQuery = `SELECT id from "shop_courier" WHERE shop_id = $1 AND courier_id = $2 `
-	CreateCourierSellerQuery                  = `INSERT INTO "shop_courier" 
+	GetCourierByIDQuery                            = `SELECT id FROM "courier" WHERE id = $1 AND deleted_at IS NULL`
+	GetShopIDByUserIDQuery                         = `SELECT id from "shop" WHERE user_id = $1 AND deleted_at IS NULL `
+	GetCourierSellerNotNullByShopAndCourierIDQuery = `SELECT id from "shop_courier" WHERE shop_id = $1 AND courier_id = $2 `
+	CreateCourierSellerQuery                       = `INSERT INTO "shop_courier" 
     	(shop_id, courier_id)
     	VALUES ($1, $2)`
 

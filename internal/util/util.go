@@ -4,6 +4,7 @@ import (
 	"crypto/rand"
 	"mime/multipart"
 	"murakali/config"
+
 	"unicode"
 
 	"github.com/cloudinary/cloudinary-go/v2"
@@ -58,4 +59,14 @@ func UploadImageToCloudinary(c *gin.Context, cfg *config.Config, file multipart.
 	cldService, _ := cloudinary.NewFromURL(cfg.External.CloudinaryURL)
 	response, _ := cldService.Upload.Upload(c, file, uploader.UploadParams{})
 	return response.SecureURL
+}
+
+func SKUGenerator(productName string) string {
+	var alpha = "abcdefghijkmnpqrstuvwxyz123456789"
+	buf := make([]byte, 8)
+
+	for i := 0; i < 8; i++ {
+		buf[i] = alpha[int(buf[i])%8]
+	}
+	return productName + "-" + string(buf)
 }

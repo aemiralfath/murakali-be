@@ -8,6 +8,7 @@ import (
 	"murakali/internal/module/product"
 	"murakali/internal/module/product/delivery/body"
 	"murakali/pkg/pagination"
+	"murakali/pkg/postgre"
 
 	"github.com/go-redis/redis/v8"
 	"github.com/google/uuid"
@@ -378,6 +379,7 @@ func (r *productRepo) GetProducts(ctx context.Context, pgn *pagination.Paginatio
 		var voucher model.Voucher
 
 		if errScan := res.Scan(
+			&productData.ProductID,
 			&productData.Title,
 			&productData.UnitSold,
 			&productData.RatingAVG,
@@ -461,7 +463,6 @@ func (r *productRepo) GetFavoriteProducts(
 		ctx, q,
 		query.Search,
 		query.Category,
-		query.Shop,
 		query.MinRating,
 		query.MaxRating,
 		query.MinPrice,
@@ -481,6 +482,7 @@ func (r *productRepo) GetFavoriteProducts(
 		var voucher model.Voucher
 
 		if errScan := res.Scan(
+			&productData.ProductID,
 			&productData.Title,
 			&productData.UnitSold,
 			&productData.RatingAVG,
@@ -518,7 +520,6 @@ func (r *productRepo) GetAllFavoriteTotalProduct(ctx context.Context, query *bod
 		GetAllTotalFavoriteProductQuery,
 		query.Search,
 		query.Category,
-		query.Shop,
 		query.MinRating,
 		query.MaxRating,
 		query.MinPrice,
@@ -529,4 +530,128 @@ func (r *productRepo) GetAllFavoriteTotalProduct(ctx context.Context, query *bod
 	}
 
 	return total, nil
+}
+
+func (r *productRepo) GetShopIDByUserID(ctx context.Context, userID string) (string, error) {
+	var shopID string
+	if err := r.PSQL.QueryRowContext(ctx, GetShopIDByUserIDQuery, userID).Scan(&shopID); err != nil {
+		return "", err
+	}
+
+	return shopID, nil
+}
+
+func (r *productRepo) CreateProduct(ctx context.Context, tx postgre.Transaction, requestBody body.CreateProductInfoForQuery) (string, error) {
+	var productID *uuid.UUID
+	err := tx.QueryRowContext(
+		ctx,
+		CreateProductQuery,
+		requestBody.CategoryID,
+		requestBody.ShopID,
+		requestBody.SKU,
+		requestBody.Title,
+		requestBody.Description,
+		0,
+		0,
+		0,
+		true,
+		requestBody.Thumbnail,
+		0,
+		requestBody.MinPrice,
+		requestBody.MaxPrice).Scan(&productID)
+	if err != nil {
+		return "", err
+	}
+
+	return productID.String(), nil
+}
+
+func (r *productRepo) CreateProductDetail(ctx context.Context, tx postgre.Transaction,
+	requestBody body.CreateProductDetailRequest, productID string) (string, error) {
+	var productDetailID *uuid.UUID
+	err := tx.QueryRowContext(
+		ctx,
+		CreateProductDetailQuery,
+		productID,
+		requestBody.Price,
+		requestBody.Stock,
+		requestBody.Weight,
+		requestBody.Size,
+		requestBody.Hazardous,
+		requestBody.Codition,
+		requestBody.BulkPrice,
+	).Scan(&productDetailID)
+	if err != nil {
+		return "", err
+	}
+	return productDetailID.String(), nil
+}
+
+func (r *productRepo) CreatePhoto(ctx context.Context, tx postgre.Transaction, productDetailID, url string) error {
+	_, err := tx.ExecContext(
+		ctx,
+		CreatePhotoQuery,
+		productDetailID,
+		url,
+	)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (r *productRepo) CreateVideo(ctx context.Context, tx postgre.Transaction, productDetailID, url string) error {
+	_, err := tx.ExecContext(
+		ctx,
+		CreateVideoQuery,
+		productDetailID,
+		url,
+	)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (r *productRepo) CreateVariant(ctx context.Context, tx postgre.Transaction, productDetailID, variantDetailID string) error {
+	_, err := tx.ExecContext(
+		ctx,
+		CreateVariantQuery,
+		productDetailID,
+		variantDetailID,
+	)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (r *productRepo) CreateProductCourier(ctx context.Context, tx postgre.Transaction, productID, courierID string) error {
+	_, err := tx.ExecContext(
+		ctx,
+		CreateProductCourierQuery,
+		productID,
+		courierID,
+	)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (r *productRepo) GetListedStatus(ctx context.Context, productID string) (bool, error) {
+	var listedStatus bool
+	if err := r.PSQL.QueryRowContext(ctx, GetListedStatusQuery, productID).Scan(&listedStatus); err != nil {
+		return false, err
+	}
+
+	return listedStatus, nil
+}
+
+func (r *productRepo) UpdateListedStatus(ctx context.Context, listedStatus bool, productID string) error {
+	_, err := r.PSQL.ExecContext(ctx, UpdateListedStatusQuery, listedStatus, productID)
+	if err != nil {
+		return err
+	}
+	return nil
 }

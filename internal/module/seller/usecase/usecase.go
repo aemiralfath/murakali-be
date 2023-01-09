@@ -147,16 +147,24 @@ func (u *sellerUC) CreateCourierSeller(ctx context.Context, userID, courierID st
 	shopID, err := u.sellerRepo.GetShopIDByUserID(ctx, userID)
 	if err != nil {
 		if err == sql.ErrNoRows {
-			return httperror.New(http.StatusBadRequest, response.UserNotExistMessage)
+			return httperror.New(http.StatusBadRequest, response.ShopAddressNotFound)
 		}
 		return err
 	}
 
-	sellerCourierID, _ := u.sellerRepo.GetCourierSellerByShopAndCourierID(ctx, shopID, courierID)
+	sellerCourierID, _ := u.sellerRepo.GetCourierSellerNotNullByShopAndCourierID(ctx, shopID, courierID)
+
 	if sellerCourierID != "" {
+		if err != nil {
+			if err == sql.ErrNoRows {
+				return httperror.New(http.StatusBadRequest, body.CourierSellerNotFoundMessage)
+			}
+			return err
+		}
+
 		err = u.sellerRepo.UpdateCourierSellerByID(ctx, shopID, courierID)
 		if err == sql.ErrNoRows {
-			return httperror.New(http.StatusBadRequest, response.UserNotExistMessage)
+			return httperror.New(http.StatusBadRequest, body.CourierSellerAlreadyExistMessage)
 		}
 		return nil
 	}

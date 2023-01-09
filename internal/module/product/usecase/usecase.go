@@ -8,8 +8,12 @@ import (
 	"murakali/internal/model"
 	"murakali/internal/module/product"
 	"murakali/internal/module/product/delivery/body"
+	"murakali/internal/util"
+	"murakali/pkg/httperror"
 	"murakali/pkg/pagination"
 	"murakali/pkg/postgre"
+	"murakali/pkg/response"
+	"net/http"
 
 	"github.com/google/uuid"
 )
@@ -250,6 +254,7 @@ func (u *productUC) GetProducts(ctx context.Context, pgn *pagination.Pagination,
 	totalData := len(products)
 	for i := 0; i < totalData; i++ {
 		p := &body.Products{
+			ProductID:                 products[i].ProductID,
 			Title:                     products[i].Title,
 			UnitSold:                  products[i].UnitSold,
 			RatingAVG:                 products[i].RatingAVG,
@@ -296,6 +301,7 @@ func (u *productUC) GetFavoriteProducts(
 	totalData := len(products)
 	for i := 0; i < totalData; i++ {
 		p := &body.Products{
+			ProductID:                 products[i].ProductID,
 			Title:                     products[i].Title,
 			UnitSold:                  products[i].UnitSold,
 			RatingAVG:                 products[i].RatingAVG,
@@ -318,4 +324,110 @@ func (u *productUC) GetFavoriteProducts(
 	pgn.Rows = resultProduct
 
 	return pgn, nil
+}
+
+func (u *productUC) CreateProduct(ctx context.Context, requestBody body.CreateProductRequest, userID string) error {
+	shopID, errGet := u.productRepo.GetShopIDByUserID(ctx, userID)
+	if errGet != nil {
+		if errGet == sql.ErrNoRows {
+			return httperror.New(http.StatusBadRequest, response.UserNotExistMessage)
+		}
+		return errGet
+	}
+
+	err := u.txRepo.WithTransaction(func(tx postgre.Transaction) error {
+		totalData := len(requestBody.ProductDetail)
+		minPriceTemp, maxPriceTemp := requestBody.ProductDetail[0].Price, requestBody.ProductDetail[0].Price
+		for i := 0; i < totalData; i++ {
+			if requestBody.ProductDetail[i].Price < minPriceTemp {
+				minPriceTemp = requestBody.ProductDetail[i].Price
+			}
+			if requestBody.ProductDetail[i].Price > maxPriceTemp {
+				maxPriceTemp = requestBody.ProductDetail[i].Price
+			}
+		}
+
+		var tempBodyProduct = body.CreateProductInfoForQuery{
+			Title:       requestBody.ProductInfo.Title,
+			Description: requestBody.ProductInfo.Description,
+			Thumbnail:   requestBody.ProductInfo.Thumbnail,
+			CategoryID:  requestBody.ProductInfo.CategoryID,
+			MinPrice:    minPriceTemp,
+			MaxPrice:    maxPriceTemp,
+			ShopID:      shopID,
+			SKU:         util.SKUGenerator(requestBody.ProductInfo.Title),
+		}
+
+		productID, err := u.productRepo.CreateProduct(ctx, tx, tempBodyProduct)
+		if err != nil {
+			return err
+		}
+
+		for i := 0; i < totalData; i++ {
+			productDetilID, err := u.productRepo.CreateProductDetail(ctx, tx, requestBody.ProductDetail[i], productID)
+			if err != nil {
+				return err
+			}
+
+			totalDataPhoto := len(requestBody.ProductDetail[i].Photo)
+			if totalDataPhoto > 0 {
+				for k := 0; k < totalDataPhoto; k++ {
+					err = u.productRepo.CreatePhoto(ctx, tx, productDetilID, requestBody.ProductDetail[i].Photo[k])
+					if err != nil {
+						return err
+					}
+				}
+			}
+
+			totalDataVariant := len(requestBody.ProductDetail[i].VariantDetailID)
+			if totalDataVariant > 0 {
+				for j := 0; j < totalDataVariant; j++ {
+					err := u.productRepo.CreateVariant(ctx, tx, productDetilID, requestBody.ProductDetail[i].VariantDetailID[j])
+					if err != nil {
+						return err
+					}
+				}
+			}
+		}
+
+		totalDataCourier := len(requestBody.Courier.CourierID)
+		if totalDataCourier > 0 {
+			for k := 0; k < totalDataCourier; k++ {
+				err := u.productRepo.CreateProductCourier(ctx, tx, productID, requestBody.Courier.CourierID[k])
+				if err != nil {
+					return err
+				}
+			}
+		}
+		return nil
+	})
+
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (u *productUC) UpdateListedStatus(ctx context.Context, productID string) error {
+	listedStatus, err := u.productRepo.GetListedStatus(ctx, productID)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return httperror.New(http.StatusBadRequest, body.ProductNotFound)
+		}
+		return err
+	}
+	tempListedStatus := false
+	if listedStatus {
+		tempListedStatus = false
+	} else {
+		tempListedStatus = true
+	}
+
+	if err := u.productRepo.UpdateListedStatus(ctx, tempListedStatus, productID); err != nil {
+		if err == sql.ErrNoRows {
+			return httperror.New(http.StatusNotFound, body.UpdateProductFailed)
+		}
+		return err
+	}
+	return nil
 }

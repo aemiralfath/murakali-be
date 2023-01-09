@@ -16,6 +16,7 @@ const (
 	CourierNotFoundMessage                = "Courier not exist"
 	CourierSellerNotFoundMessage          = "Courier Seller Not Found"
 	CategoryNotFoundMessage               = "Category not found."
+	ShopNotFoundMessage                   = "Shop not found."
 )
 
 type UnprocessableEntity struct {

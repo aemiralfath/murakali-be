@@ -5,6 +5,7 @@ import (
 	"murakali/internal/model"
 	"murakali/internal/module/product/delivery/body"
 	"murakali/pkg/pagination"
+	"murakali/pkg/postgre"
 
 	"github.com/google/uuid"
 )
@@ -25,4 +26,15 @@ type Repository interface {
 	GetFavoriteProducts(ctx context.Context, pgn *pagination.Pagination, query *body.GetProductQueryRequest, userID string) ([]*body.Products,
 		[]*model.Promotion, []*model.Voucher, error)
 	GetAllFavoriteTotalProduct(ctx context.Context, query *body.GetProductQueryRequest, userID string) (int64, error)
+
+	GetShopIDByUserID(ctx context.Context, userID string) (string, error)
+	CreateProduct(ctx context.Context, tx postgre.Transaction, requestBody body.CreateProductInfoForQuery) (string, error)
+	CreateProductDetail(ctx context.Context, tx postgre.Transaction, requestBody body.CreateProductDetailRequest, ProductID string) (string, error)
+	CreatePhoto(ctx context.Context, tx postgre.Transaction, productDetailID, url string) error
+	CreateVideo(ctx context.Context, tx postgre.Transaction, productDetailID, url string) error
+	CreateVariant(ctx context.Context, tx postgre.Transaction, productDetailID string, variantDetailID string) error
+	CreateProductCourier(ctx context.Context, tx postgre.Transaction, productDetailID, courierID string) error
+
+	GetListedStatus(ctx context.Context, productID string) (bool, error)
+	UpdateListedStatus(ctx context.Context, listedStatus bool, productID string) error
 }

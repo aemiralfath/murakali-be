@@ -1416,7 +1416,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/DefaultSuccess"
 
-  "/api/v1/seller/courier/{id}":
+  "/api/v1/seller/courier/{seller_courier_id}":
     delete:
       summary: delete Seller Courier
       description: >-
@@ -1427,7 +1427,7 @@ paths:
         - BEARER: []
       parameters:
         - in: path
-          name: id
+          name: seller_courier_id
           schema:
             type: string
           required: true
