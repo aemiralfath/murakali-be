@@ -182,4 +182,28 @@ const (
 	AND ("p".min_price BETWEEN $6 AND $7)
 	AND "f"."user_id" = $8
 	 AND "p"."deleted_at" IS NULL `
+
+	GetAllTotalReviewProductQuery = `
+	SELECT count(r.id)
+	FROM review r
+	WHERE r.product_id = $1
+	%s
+	and r.deleted_at IS NULL;`
+
+	GetReviewProductQuery = `
+	SELECT r.id, r.user_id, r.product_id, r.comment, r.rating, r.image_url, r.created_at, u.photo_url, u.username
+	FROM review r
+	INNER JOIN "user" u
+	ON r.user_id = u.id
+	WHERE r.product_id = $1
+	%s
+	AND r.deleted_at IS NULL
+	ORDER BY %s LIMIT $2 OFFSET $3;`
+
+	GetTotalReviewRatingByProductIDQuery = `
+	SELECT r.rating, count(r.id) as count 
+	FROM review r
+	WHERE r.product_id = $1
+	and r.deleted_at IS NULL
+	group by r.rating;`
 )

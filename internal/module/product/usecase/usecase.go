@@ -3,6 +3,7 @@ package usecase
 import (
 	"context"
 	"database/sql"
+	"fmt"
 	"math"
 	"murakali/config"
 	"murakali/internal/model"
@@ -319,4 +320,53 @@ func (u *productUC) GetFavoriteProducts(
 	pgn.Rows = resultProduct
 
 	return pgn, nil
+}
+
+func (u *productUC) GetProductReviews(ctx context.Context, pgn *pagination.Pagination, productID string, query *body.GetReviewQueryRequest) (*pagination.Pagination, error) {
+	totalRows, err := u.productRepo.GetTotalAllReviewProduct(ctx, productID, query)
+	if err != nil {
+		return nil, err
+	}
+	totalPages := int(math.Ceil(float64(totalRows) / float64(pgn.Limit)))
+	pgn.TotalRows = totalRows
+	pgn.TotalPages = totalPages
+
+	reviews, err := u.productRepo.GetProductReviews(ctx, pgn, productID, query)
+	fmt.Print("get review")
+	fmt.Println(reviews)
+	if err != nil {
+		if err != sql.ErrNoRows {
+			return nil, err
+		}
+	}
+
+	pgn.Rows = reviews
+
+	return pgn, nil
+}
+
+func (u *productUC) GetTotalReviewRatingByProductID(ctx context.Context, productID string) (*body.AllRatingProduct, error) {
+
+	ratings, err := u.productRepo.GetTotalReviewRatingByProductID(ctx, productID)
+
+	valueRating := 0
+	totalRating := 0
+
+	// get avg rating from total rating
+	for i := 0; i < len(ratings); i++ {
+		valueRating += ratings[i].Rating * ratings[i].Count
+		totalRating += ratings[i].Count
+	}
+
+	allTotalRating := &body.AllRatingProduct{
+		AvgRating:     float64(valueRating) / float64(totalRating),
+		TotalRating:   float64(totalRating),
+		RatingProduct: ratings,
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	return allTotalRating, nil
 }
