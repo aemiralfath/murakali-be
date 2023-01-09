@@ -18,4 +18,5 @@ type GetProductQueryRequest struct {
 	MaxPrice  float64
 	MinRating float64
 	MaxRating float64
+	Province  []string
 }

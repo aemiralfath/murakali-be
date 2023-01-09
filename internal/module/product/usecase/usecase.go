@@ -140,6 +140,7 @@ func (u *productUC) GetRecommendedProducts(ctx context.Context, pgn *pagination.
 	totalData := len(products)
 	for i := 0; i < totalData; i++ {
 		p := &body.Products{
+			ID:                        products[i].ID,
 			Title:                     products[i].Title,
 			UnitSold:                  products[i].UnitSold,
 			RatingAVG:                 products[i].RatingAVG,
@@ -266,6 +267,7 @@ func (u *productUC) GetProducts(ctx context.Context, pgn *pagination.Pagination,
 			VoucherDiscountFixPrice:   vouchers[i].DiscountFixPrice,
 			ShopName:                  products[i].ShopName,
 			CategoryName:              products[i].CategoryName,
+			ShopProvince:              products[i].ShopProvince,
 		}
 		p = u.CalculateDiscountProduct(p)
 		resultProduct = append(resultProduct, p)

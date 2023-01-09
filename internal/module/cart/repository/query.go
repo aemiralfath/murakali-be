@@ -26,7 +26,7 @@ const (
 	`
 	GetCartItemsQuery = `
 	SELECT "ci"."id" as "id", "ci"."quantity" as "quantity", "pd"."id" as "product_detail_id", "p"."title" as "product_title", "s"."id" as "shop_id", "s"."name" as "shop_name", "p"."thumbnail_url" as "thumbnail_url", 
-		"pd"."price" as "product_price", "pd"."stock" as "product_stock",
+		"pd"."price" as "product_price", "pd"."stock" as "product_stock", "pd"."weight" as "product_weight",
 		"promo"."discount_percentage" as "promo_discount_percentage", "promo"."discount_fix_price" as "promo_discount_fix_price",
 		"promo"."min_product_price" as "promo_min_product_price", "promo"."max_discount_price" as "promo_max_discount_price", 
 		array_agg("vd"."name") as "variant_name", array_agg("vd"."type") as "variant_type"

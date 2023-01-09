@@ -463,6 +463,9 @@ func (u *userUC) AddSealabsPay(ctx context.Context, request body.AddSealabsPayRe
 	if err != nil && err != sql.ErrNoRows {
 		return err
 	}
+	if *cardNumber == request.CardNumber {
+		return httperror.New(http.StatusBadRequest, response.SealabsCardAlreadyExist)
+	}
 
 	err = u.txRepo.WithTransaction(func(tx postgre.Transaction) error {
 		if u.userRepo.SetDefaultSealabsPayTrans(ctx, tx, cardNumber) != nil {
@@ -499,6 +502,43 @@ func (u *userUC) DeleteSealabsPay(ctx context.Context, cardNumber string) error 
 	return nil
 }
 
+func (u *userUC) ActivateWallet(ctx context.Context, userID, pin string) error {
+	userModel, err := u.userRepo.GetUserByID(ctx, userID)
+	if err != nil {
+		return err
+	}
+
+	wallet, err := u.userRepo.GetWalletByUserID(ctx, userID)
+	if err != nil {
+		if err != sql.ErrNoRows {
+			return err
+		}
+	}
+
+	if wallet != nil {
+		return httperror.New(http.StatusBadRequest, response.WalletAlreadyActivated)
+	}
+
+	hashedPin, err := bcrypt.GenerateFromPassword([]byte(pin), bcrypt.DefaultCost)
+	if err != nil {
+		return err
+	}
+
+	walletData := &model.Wallet{}
+	walletData.UserID = userModel.ID
+	walletData.Balance = 0
+	walletData.PIN = string(hashedPin)
+	walletData.AttemptCount = 0
+	walletData.ActiveDate.Valid = true
+	walletData.ActiveDate.Time = time.Now()
+
+	if err := u.userRepo.CreateWallet(ctx, walletData); err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func (u *userUC) RegisterMerchant(ctx context.Context, userID, shopName string) error {
 	count, err := u.userRepo.CheckShopByID(ctx, userID)
 	if err != nil {
@@ -514,6 +554,13 @@ func (u *userUC) RegisterMerchant(ctx context.Context, userID, shopName string) 
 	}
 	if count != 0 {
 		return httperror.New(http.StatusBadRequest, response.ShopAlreadyExists)
+	}
+
+	if _, errWallet := u.userRepo.GetWalletByUserID(ctx, userID); errWallet != nil {
+		if errWallet == sql.ErrNoRows {
+			return httperror.New(http.StatusBadRequest, response.WalletIsNotActivated)
+		}
+		return errWallet
 	}
 
 	err = u.userRepo.AddShop(ctx, userID, shopName)
@@ -651,6 +698,46 @@ func (u *userUC) ChangePassword(ctx context.Context, userID, newPassword string)
 	return nil
 }
 
+func (u *userUC) TopUpWallet(ctx context.Context, userID string, requestBody body.TopUpWalletRequest) (string, error) {
+	wallet, err := u.userRepo.GetWalletByUserID(ctx, userID)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return "", httperror.New(http.StatusBadRequest, response.WalletIsNotActivated)
+		}
+		return "", err
+	}
+
+	card, err := u.userRepo.GetSealabsPayUser(ctx, userID, requestBody.CardNumber)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return "", httperror.New(http.StatusBadRequest, response.SealabsCardNotFound)
+		}
+		return "", err
+	}
+
+	transactionID, err := u.txRepo.WithTransactionReturnData(func(tx postgre.Transaction) (interface{}, error) {
+		transaction := &model.Transaction{}
+		transaction.WalletID = &wallet.ID
+		transaction.CardNumber = &card.CardNumber
+		transaction.TotalPrice = float64(requestBody.Amount)
+		transaction.ExpiredAt.Valid = true
+		transaction.ExpiredAt.Time = time.Now().Add(time.Hour * 24)
+
+		transactionID, errTrans := u.userRepo.CreateTransaction(ctx, tx, transaction)
+		if errTrans != nil {
+			return nil, errTrans
+		}
+
+		return transactionID.String(), nil
+	})
+
+	if err != nil {
+		return "", err
+	}
+
+	return transactionID.(string), nil
+}
+
 func (u *userUC) CreateSLPPayment(ctx context.Context, transactionID string) (string, error) {
 	transaction, err := u.userRepo.GetTransactionByID(ctx, transactionID)
 	if err != nil {
@@ -669,6 +756,10 @@ func (u *userUC) CreateSLPPayment(ctx context.Context, transactionID string) (st
 		return "", httperror.New(http.StatusBadRequest, response.TransactionAlreadyFinished)
 	}
 
+	if transaction.CardNumber == nil {
+		return "", httperror.New(http.StatusBadRequest, response.InvalidPaymentMethod)
+	}
+
 	signFormat := fmt.Sprintf("%s:%d:%s", *transaction.CardNumber, int(transaction.TotalPrice), u.cfg.External.SlpMerchantCode)
 	h := hmac.New(sha256.New, []byte(u.cfg.External.SlpAPIKey))
 	h.Write([]byte(signFormat))
@@ -682,17 +773,105 @@ func (u *userUC) CreateSLPPayment(ctx context.Context, transactionID string) (st
 	return redirectURL, nil
 }
 
+func (u *userUC) CreateWalletPayment(ctx context.Context, transactionID string) error {
+	transaction, err := u.userRepo.GetTransactionByID(ctx, transactionID)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return httperror.New(http.StatusBadRequest, response.TransactionIDNotExist)
+		}
+
+		return err
+	}
+
+	if time.Until(transaction.ExpiredAt.Time) < 0 {
+		return httperror.New(http.StatusBadRequest, response.TransactionAlreadyExpired)
+	}
+
+	if transaction.PaidAt.Valid || transaction.CanceledAt.Valid {
+		return httperror.New(http.StatusBadRequest, response.TransactionAlreadyFinished)
+	}
+
+	if transaction.WalletID == nil {
+		return httperror.New(http.StatusBadRequest, response.InvalidPaymentMethod)
+	}
+
+	wallet, err := u.userRepo.GetWalletUser(ctx, transaction.WalletID.String())
+	if err != nil {
+		return err
+	}
+
+	if wallet.Balance-transaction.TotalPrice < 0 {
+		return httperror.New(http.StatusBadRequest, response.WalletBalanceNotEnough)
+	}
+
+	orders, err := u.userRepo.GetOrderByTransactionID(ctx, transactionID)
+	if err != nil {
+		return err
+	}
+
+	errTx := u.txRepo.WithTransaction(func(tx postgre.Transaction) error {
+		transaction.PaidAt.Valid = true
+		transaction.PaidAt.Time = time.Now()
+		if errTransaction := u.userRepo.UpdateTransaction(ctx, tx, transaction); errTransaction != nil {
+			return errTransaction
+		}
+
+		for _, order := range orders {
+			order.OrderStatusID = constant.OrderStatusWaitingForSeller
+			if errOrder := u.userRepo.UpdateOrder(ctx, tx, order); errOrder != nil {
+				return errOrder
+			}
+		}
+
+		walletHistory := &model.WalletHistory{}
+		walletHistory.TransactionID = transaction.ID
+		walletHistory.WalletID = wallet.ID
+		walletHistory.From = wallet.ID.String()
+		walletHistory.To = transaction.ID.String()
+		walletHistory.Description = "Payment transaction " + transaction.ID.String()
+		walletHistory.Amount = transaction.TotalPrice
+		walletHistory.CreatedAt = time.Now()
+		if errWallet := u.userRepo.InsertWalletHistory(ctx, tx, walletHistory); errWallet != nil {
+			return errWallet
+		}
+
+		wallet.Balance -= transaction.TotalPrice
+		wallet.UpdatedAt.Valid = true
+		wallet.UpdatedAt.Time = time.Now()
+
+		if errBalance := u.userRepo.UpdateWalletBalance(ctx, tx, wallet); errBalance != nil {
+			return errBalance
+		}
+
+		if errCredit := u.CreditToMarketplaceAccount(ctx, tx, transaction); errCredit != nil {
+			return errCredit
+		}
+
+		return nil
+	})
+	if errTx != nil {
+		return err
+	}
+
+	return nil
+}
+
 func (u *userUC) GetRedirectURL(transaction *model.Transaction, sign string) (string, error) {
 	var responseSLP body.SLPPaymentResponse
 
 	url := fmt.Sprintf("%s/v1/transaction/pay", u.cfg.External.SlpURL)
+	callbackURL := fmt.Sprintf("https://%s/api/v1/user/transaction/slp-payment/%s", u.cfg.Server.Domain, transaction.ID.String())
+	if transaction.WalletID != nil {
+		callbackURL = fmt.Sprintf("https://%s/api/v1/user/transaction/wallet-payment/%s", u.cfg.Server.Domain, transaction.ID.String())
+	}
+
 	payload := fmt.Sprintf(
 		"card_number=%s&amount=%d&merchant_code=%s&redirect_url=%s&callback_url=%s&signature=%s",
 		*transaction.CardNumber,
 		int(transaction.TotalPrice),
 		u.cfg.External.SlpMerchantCode,
 		"https://www.google.com",
-		fmt.Sprintf("https://%s/api/v1/user/transaction/slp-payment/%s", u.cfg.Server.Domain, transaction.ID.String()),
+		callbackURL,
 		sign)
 
 	req, err := http.NewRequest("POST", url, strings.NewReader(payload))
@@ -744,7 +923,7 @@ func (u *userUC) UpdateTransaction(ctx context.Context, transactionID string, re
 		return err
 	}
 
-	if requestBody.Status == constant.SLPStatusPaid {
+	if requestBody.Status == constant.SLPStatusPaid && requestBody.Message == constant.SlPMessagePaid {
 		err := u.txRepo.WithTransaction(func(tx postgre.Transaction) error {
 			transaction.PaidAt.Valid = true
 			transaction.PaidAt.Time = time.Now()
@@ -754,6 +933,33 @@ func (u *userUC) UpdateTransaction(ctx context.Context, transactionID string, re
 
 			for _, order := range orders {
 				order.OrderStatusID = constant.OrderStatusWaitingForSeller
+				if err := u.userRepo.UpdateOrder(ctx, tx, order); err != nil {
+					return err
+				}
+			}
+
+			if err := u.CreditToMarketplaceAccount(ctx, tx, transaction); err != nil {
+				return err
+			}
+
+			return nil
+		})
+
+		if err != nil {
+			return err
+		}
+	}
+
+	if requestBody.Status == constant.SLPStatusCanceled && requestBody.Message == constant.SLPMessageCanceled {
+		err := u.txRepo.WithTransaction(func(tx postgre.Transaction) error {
+			transaction.CanceledAt.Valid = true
+			transaction.CanceledAt.Time = time.Now()
+			if err := u.userRepo.UpdateTransaction(ctx, tx, transaction); err != nil {
+				return err
+			}
+
+			for _, order := range orders {
+				order.OrderStatusID = constant.OrderStatusCanceled
 				if err := u.userRepo.UpdateOrder(ctx, tx, order); err != nil {
 					return err
 				}
@@ -770,6 +976,192 @@ func (u *userUC) UpdateTransaction(ctx context.Context, transactionID string, re
 	return nil
 }
 
+func (u *userUC) UpdateWalletTransaction(ctx context.Context, transactionID string, requestBody body.SLPCallbackRequest) error {
+	transaction, err := u.userRepo.GetTransactionByID(ctx, transactionID)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return httperror.New(http.StatusBadRequest, response.TransactionIDNotExist)
+		}
+
+		return err
+	}
+
+	wallet, err := u.userRepo.GetWalletUser(ctx, transaction.WalletID.String())
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return httperror.New(http.StatusBadRequest, response.WalletIsNotActivated)
+		}
+
+		return err
+	}
+
+	if transaction.PaidAt.Valid || transaction.CanceledAt.Valid {
+		return httperror.New(http.StatusBadRequest, response.TransactionAlreadyFinished)
+	}
+
+	if requestBody.Status == constant.SLPStatusCanceled && requestBody.Message == constant.SLPMessageCanceled {
+		err := u.txRepo.WithTransaction(func(tx postgre.Transaction) error {
+			transaction.CanceledAt.Valid = true
+			transaction.CanceledAt.Time = time.Now()
+			if err := u.userRepo.UpdateTransaction(ctx, tx, transaction); err != nil {
+				return err
+			}
+
+			return nil
+		})
+
+		if err != nil {
+			return err
+		}
+	}
+
+	if requestBody.Status == constant.SLPStatusPaid && requestBody.Message == constant.SlPMessagePaid {
+		err := u.txRepo.WithTransaction(func(tx postgre.Transaction) error {
+			transaction.PaidAt.Valid = true
+			transaction.PaidAt.Time = time.Now()
+			if err := u.userRepo.UpdateTransaction(ctx, tx, transaction); err != nil {
+				return err
+			}
+
+			walletHistory := &model.WalletHistory{}
+			walletHistory.TransactionID = transaction.ID
+			walletHistory.WalletID = wallet.ID
+			walletHistory.From = *transaction.CardNumber
+			walletHistory.To = transaction.WalletID.String()
+			walletHistory.Description = "Top up from " + *transaction.CardNumber
+			walletHistory.Amount = transaction.TotalPrice
+			walletHistory.CreatedAt = time.Now()
+			if err := u.userRepo.InsertWalletHistory(ctx, tx, walletHistory); err != nil {
+				return err
+			}
+
+			wallet.Balance += transaction.TotalPrice
+			wallet.UpdatedAt.Valid = true
+			wallet.UpdatedAt.Time = time.Now()
+
+			if err := u.userRepo.UpdateWalletBalance(ctx, tx, wallet); err != nil {
+				return err
+			}
+			return nil
+		})
+
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (u *userUC) CreditToMarketplaceAccount(ctx context.Context, tx postgre.Transaction, transaction *model.Transaction) error {
+	walletMarketplace, err := u.userRepo.GetWalletByUserID(ctx, constant.AdminMarketplaceID)
+	if err != nil {
+		return err
+	}
+
+	walletHistory := &model.WalletHistory{}
+	if transaction.WalletID == nil {
+		walletHistory.From = *transaction.CardNumber
+	}
+
+	if transaction.CardNumber == nil {
+		walletHistory.From = transaction.WalletID.String()
+	}
+
+	walletHistory.TransactionID = transaction.ID
+	walletHistory.WalletID = walletMarketplace.ID
+	walletHistory.To = walletMarketplace.ID.String()
+	walletHistory.Description = "Payment transaction " + transaction.ID.String()
+	walletHistory.Amount = transaction.TotalPrice
+	walletHistory.CreatedAt = time.Now()
+
+	if err := u.userRepo.InsertWalletHistory(ctx, tx, walletHistory); err != nil {
+		return err
+	}
+
+	walletMarketplace.Balance += transaction.TotalPrice
+	walletMarketplace.UpdatedAt.Valid = true
+	walletMarketplace.UpdatedAt.Time = time.Now()
+
+	if err := u.userRepo.UpdateWalletBalance(ctx, tx, walletMarketplace); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (u *userUC) GetWallet(ctx context.Context, userID string) (*model.Wallet, error) {
+	wallet, err := u.userRepo.GetWalletByUserID(ctx, userID)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, httperror.New(http.StatusBadRequest, response.WalletIsNotActivated)
+		}
+
+		return nil, err
+	}
+
+	return wallet, nil
+}
+
+func (u *userUC) WalletStepUp(ctx context.Context, userID string, requestBody body.WalletStepUpRequest) (string, error) {
+	wallet, err := u.userRepo.GetWalletByUserID(ctx, userID)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return "", httperror.New(http.StatusBadRequest, response.WalletIsNotActivated)
+		}
+		return "", err
+	}
+
+	if wallet.Balance-float64(requestBody.Amount) < 0 {
+		return "", httperror.New(http.StatusBadRequest, response.WalletBalanceNotEnough)
+	}
+
+	if wallet.UnlockedAt.Valid && time.Until(wallet.UnlockedAt.Time) >= 0 {
+		return "", httperror.New(http.StatusBadRequest, response.WalletIsBlocked)
+	}
+
+	blocked := false
+	invalidPin := false
+	if bcrypt.CompareHashAndPassword([]byte(wallet.PIN), []byte(requestBody.Pin)) != nil {
+		invalidPin = true
+		wallet.AttemptCount++
+		wallet.AttemptAt.Valid = true
+		wallet.AttemptAt.Time = time.Now()
+
+		if wallet.AttemptCount >= 3 {
+			blocked = true
+			wallet.AttemptCount = 0
+			wallet.UnlockedAt.Valid = true
+			wallet.UnlockedAt.Time = time.Now().Add(time.Minute * 15)
+		}
+	}
+
+	if !invalidPin {
+		wallet.AttemptCount = 0
+		wallet.AttemptAt.Valid = true
+		wallet.AttemptAt.Time = time.Now()
+	}
+
+	if errWallet := u.userRepo.UpdateWallet(ctx, wallet); errWallet != nil {
+		return "", errWallet
+	}
+
+	if blocked {
+		return "", httperror.New(http.StatusBadRequest, response.WalletIsBlocked)
+	}
+
+	if invalidPin {
+		return "", httperror.New(http.StatusBadRequest, response.WalletPinIsInvalid)
+	}
+
+	walletToken, err := jwt.GenerateJWTWalletToken(userID, u.cfg)
+	if err != nil {
+		return "", err
+	}
+
+	return walletToken, nil
+}
+
 func (u *userUC) CreateTransaction(ctx context.Context, userID string, requestBody body.CreateTransactionRequest) (string, error) {
 	transactionData := &model.Transaction{}
 	orderResponses := make([]*body.OrderResponse, 0)
@@ -783,10 +1175,18 @@ func (u *userUC) CreateTransaction(ctx context.Context, userID string, requestBo
 	}
 
 	if requestBody.WalletID != "" {
-		walletUser, errWallet := u.userRepo.GetWalletUser(ctx, userModel.ID.String(), requestBody.WalletID)
+		walletUser, errWallet := u.userRepo.GetWalletUser(ctx, requestBody.WalletID)
 		if errWallet != nil {
+			if errWallet == sql.ErrNoRows {
+				return "", httperror.New(http.StatusBadRequest, response.WalletIsNotActivated)
+			}
 			return "", errWallet
 		}
+
+		if walletUser.UserID != userModel.ID {
+			return "", httperror.New(http.StatusBadRequest, response.WalletIsNotActivated)
+		}
+
 		transactionData.WalletID = &walletUser.ID
 	}
 

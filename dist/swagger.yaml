@@ -256,7 +256,6 @@ paths:
               schema:
                 $ref: "#/components/schemas/CostShippingSuccess"
 
-
   "/api/v1/location/province":
     get:
       summary: Get Province
@@ -363,7 +362,7 @@ paths:
       tags:
         - User
       security:
-        - BEARER: [ ]
+        - BEARER: []
 
       responses:
         "200":
@@ -380,7 +379,7 @@ paths:
       tags:
         - User
       security:
-        - BEARER: [ ]
+        - BEARER: []
 
       requestBody:
         content:
@@ -403,7 +402,7 @@ paths:
       tags:
         - User
       security:
-        - BEARER: [ ]
+        - BEARER: []
 
       requestBody:
         content:
@@ -424,7 +423,7 @@ paths:
       tags:
         - User
       security:
-        - BEARER: [ ]
+        - BEARER: []
 
       requestBody:
         content:
@@ -446,7 +445,7 @@ paths:
       tags:
         - User
       security:
-        - BEARER: [ ]
+        - BEARER: []
 
       requestBody:
         content:
@@ -469,18 +468,18 @@ paths:
       tags:
         - User
       security:
-        - BEARER: [ ]
+        - BEARER: []
       parameters:
         - in: query
           name: is_default
           schema:
             type: string
-            enum: [ "true", "false" ]
+            enum: ["true", "false"]
         - in: query
           name: shop_default
           schema:
             type: string
-            enum: [ "true", "false" ]
+            enum: ["true", "false"]
       responses:
         "200":
           description: OK
@@ -496,7 +495,7 @@ paths:
       tags:
         - User
       security:
-        - BEARER: [ ]
+        - BEARER: []
 
       requestBody:
         content:
@@ -518,7 +517,7 @@ paths:
       tags:
         - User
       security:
-        - BEARER: [ ]
+        - BEARER: []
       parameters:
         - in: path
           name: address_id
@@ -539,7 +538,7 @@ paths:
       tags:
         - User
       security:
-        - BEARER: [ ]
+        - BEARER: []
       parameters:
         - in: path
           name: address_id
@@ -565,7 +564,7 @@ paths:
       tags:
         - User
       security:
-        - BEARER: [ ]
+        - BEARER: []
       parameters:
         - in: path
           name: address_id
@@ -588,7 +587,7 @@ paths:
       tags:
         - User
       security:
-        - BEARER: [ ]
+        - BEARER: []
       requestBody:
         content:
           application/json:
@@ -610,7 +609,7 @@ paths:
       tags:
         - User
       security:
-        - BEARER: [ ]
+        - BEARER: []
 
       responses:
         "200":
@@ -626,7 +625,7 @@ paths:
       tags:
         - User
       security:
-        - BEARER: [ ]
+        - BEARER: []
 
       requestBody:
         content:
@@ -649,7 +648,7 @@ paths:
       tags:
         - User
       security:
-        - BEARER: [ ]
+        - BEARER: []
       parameters:
         - in: path
           name: card_number
@@ -670,7 +669,7 @@ paths:
       tags:
         - User
       security:
-        - BEARER: [ ]
+        - BEARER: []
       parameters:
         - in: path
           name: card_number
@@ -686,6 +685,27 @@ paths:
                 $ref: "#/components/schemas/DefaultSuccess"
 
   "/api/v1/user/wallet":
+    patch:
+      summary: Top Up wallet
+      description: >-
+        top up wallet
+      tags:
+        - User
+      security:
+        - BEARER: [ ]
+
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TopUpWalletRequest"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CreateTransactionResponse"
     post:
       summary: Setup pin wallet
       description: >-
@@ -693,7 +713,7 @@ paths:
       tags:
         - User
       security:
-        - BEARER: [ ]
+        - BEARER: []
 
       requestBody:
         content:
@@ -706,7 +726,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/SetupPinWalletResponse"
+                $ref: "#/components/schemas/DefaultSuccess"
     get:
       summary: Get user wallet
       description: >-
@@ -714,7 +734,7 @@ paths:
       tags:
         - User
       security:
-        - BEARER: [ ]
+        - BEARER: []
 
       responses:
         "200":
@@ -730,7 +750,7 @@ paths:
       tags:
         - User
       security:
-        - BEARER: [ ]
+        - BEARER: []
 
       requestBody:
         content:
@@ -753,7 +773,7 @@ paths:
       tags:
         - User
       security:
-        - BEARER: [ ]
+        - BEARER: []
 
       requestBody:
         content:
@@ -774,7 +794,7 @@ paths:
       tags:
         - User
       security:
-        - BEARER: [ ]
+        - BEARER: []
 
       requestBody:
         content:
@@ -797,7 +817,7 @@ paths:
       tags:
         - User
       security:
-        - BEARER: [ ]
+        - BEARER: []
       responses:
         "200":
           description: OK
@@ -814,7 +834,7 @@ paths:
       tags:
         - User
       security:
-        - BEARER: [ ]
+        - BEARER: []
       requestBody:
         content:
           application/json:
@@ -826,9 +846,9 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/CreateTransactionResponse'
+                $ref: "#/components/schemas/CreateTransactionResponse"
 
-  '/api/v1/user/transaction/slp-payment':
+  "/api/v1/user/transaction/slp-payment":
     post:
       summary: user create slp payment
       description: >-
@@ -836,21 +856,21 @@ paths:
       tags:
         - User
       security:
-        - BEARER: [ ]
+        - BEARER: []
       requestBody:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/CreateSlpPaymentRequest'
+              $ref: "#/components/schemas/CreateSlpPaymentRequest"
       responses:
-        '200':
+        "200":
           description: OK
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/CreateSlpPaymentResponse'
+                $ref: "#/components/schemas/CreateSlpPaymentResponse"
 
-  '/api/v1/product/':
+  "/api/v1/product/":
     get:
       summary: Get Product {WIP}
       description: >-
@@ -871,14 +891,6 @@ paths:
             type: string
             description: >-
               query for searching product by category
-
-        - in: query
-          name: shop_id
-          schema:
-            type: string
-            description: >-
-              query for searching product by shop
-
         - in: query
           name: limit
           schema:
@@ -895,14 +907,14 @@ paths:
           name: sort_by
           schema:
             type: string
-            enum: [ min_price, unit_sold, created_at, view_count, recommended ]
+            enum: [min_price, unit_sold, created_at, view_count, recommended]
             description: >-
               query for sort by product
         - in: query
           name: sort
           schema:
             type: string
-            enum: [ asc, desc ]
+            enum: [asc, desc]
             description: >-
               query for sort order product descrending or ascending
         - in: query
@@ -930,11 +942,18 @@ paths:
             description: >-
               query for max rating show product
         - in: query
-          name: shop_name
+          name: shop_id
           schema:
             type: string
             description: >-
-              query for shop name show product
+              query for shop id show product
+        - in: query
+          name: province_ids
+          schema:
+            type: string
+            description: >-
+              input province id, (no spaces between id) example: 32,33,34,35
+
       responses:
         "200":
           description: OK
@@ -988,14 +1007,14 @@ paths:
           name: sort_by
           schema:
             type: string
-            enum: [ min_price, unit_sold, created_at, view_count, recommended ]
+            enum: [min_price, unit_sold, created_at, view_count, recommended]
             description: >-
               query for sort by product
         - in: query
           name: sort
           schema:
             type: string
-            enum: [ asc, desc ]
+            enum: [asc, desc]
             description: >-
               query for sort order product descrending or ascending
         - in: query
@@ -1149,7 +1168,7 @@ paths:
         - Product
 
       security:
-        - BEARER: [ ]
+        - BEARER: []
       parameters:
         - in: path
           name: product_id
@@ -1302,7 +1321,7 @@ paths:
       tags:
         - Cart
       security:
-        - BEARER: [ ]
+        - BEARER: []
       parameters:
         - in: query
           name: limit
@@ -1326,7 +1345,7 @@ paths:
       tags:
         - Cart
       security:
-        - BEARER: [ ]
+        - BEARER: []
       responses:
         "200":
           description: OK
@@ -1341,7 +1360,7 @@ paths:
       tags:
         - Cart
       security:
-        - BEARER: [ ]
+        - BEARER: []
 
       requestBody:
         content:
@@ -1362,7 +1381,7 @@ paths:
       tags:
         - Cart
       security:
-        - BEARER: [ ]
+        - BEARER: []
 
       requestBody:
         content:
@@ -1385,7 +1404,67 @@ paths:
       tags:
         - Cart
       security:
-        - BEARER: [ ]
+        - BEARER: []
+      parameters:
+        - in: path
+          name: id
+          schema:
+            type: string
+          required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DefaultSuccess"
+
+  "/api/v1/seller/courier":
+    get:
+      summary: Get Seller Courier Information
+      description: >-
+        Get Seller Courier Information
+      tags:
+        - Seller
+      security:
+        - BEARER: []
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GetSellerCourierResponse"
+    post:
+      summary: Post Seller Courier
+      description: >-
+        Post Seller Courier
+      tags:
+        - Seller
+      security:
+        - BEARER: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SellerCourierRequest"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DefaultSuccess"
+
+  "/api/v1/seller/courier/{id}":
+    delete:
+      summary: delete Seller Courier
+      description: >-
+        Delete Seller Courier
+      tags:
+        - Seller
+      security:
+        - BEARER: []
       parameters:
         - in: path
           name: id
@@ -1408,7 +1487,7 @@ paths:
       tags:
         - Seller
       security:
-        - BEARER: [ ]
+        - BEARER: []
       responses:
         "200":
           description: OK
@@ -1425,7 +1504,7 @@ paths:
       tags:
         - Seller
       security:
-        - BEARER: []
+        - BEARER: [ ]
       responses:
         "200":
           description: OK
@@ -1442,7 +1521,7 @@ paths:
       tags:
         - Seller
       security:
-        - BEARER: [ ]
+        - BEARER: []
       responses:
         "200":
           description: OK
@@ -1459,7 +1538,7 @@ paths:
       tags:
         - Seller
       security:
-        - BEARER: [ ]
+        - BEARER: []
       parameters:
         - in: path
           name: order_id
@@ -1482,7 +1561,7 @@ paths:
       tags:
         - Seller
       security:
-        - BEARER: [ ]
+        - BEARER: []
       requestBody:
         content:
           application/json:
@@ -2153,13 +2232,10 @@ components:
       type: object
       description: Setup pin wallet request data model.
       properties:
-        user_id:
-          type: string
         pin:
           type: string
 
       example:
-        user_id: "101401ce-4a0f-11ed-9772-acde48001122"
         pin: "123456"
 
     SetupPinWalletResponse:
@@ -2201,23 +2277,23 @@ components:
         data:
           type: object
           properties:
-            wallet:
-              type: object
-              properties:
-                id:
-                  type: string
-                user_id:
-                  type: string
-                balance:
-                  type: string
-                active_date:
-                  type: string
+          example:
+            data:
+              id: f67a6297-bfd7-42d2-9f85-6441b848c57f
+              user_id: 7950eca2-58d5-44f0-b873-22b23d8107da
+              balance: 0
+              pin: ''
+              attempt_count: 0
+              attempt_at:
+                Time: '0001-01-01T00:00:00Z'
+                Valid: false
+              unlocked_at:
+                Time: '0001-01-01T00:00:00Z'
+                Valid: false
+              active_date:
+                Time: '2023-01-05T10:02:58.493922Z'
+                Valid: true
 
-              example:
-                id: "101401ce-4a0f-11ed-9772-acde48001122"
-                user_id: "101401ce-4a0f-11ed-9772-acde48001122"
-                balance: 100000
-                active_date: "2025-12-23T05:00:52.731695Z"
 
     InputPinWalletRequest:
       title: InputPinWalletRequest
@@ -2341,7 +2417,7 @@ components:
                           parent_id: "93e975af-3e9c-4dc2-8202-762128985982"
                           name: "sweeter"
                           photo_url: "https://cf.shopee.co.id/file/19b8238c917f3dec99b689809ea43a79_tn"
-                          child_category: [ ]
+                          child_category: []
 
     GetCategoryByNameLvlTwoResponse:
       title: GetCategoryByNameLvlOneResponse
@@ -2379,7 +2455,7 @@ components:
                       parent_id: "93e975af-3e9c-4dc2-8202-762128985982"
                       name: "sweeter"
                       photo_url: "https://cf.shopee.co.id/file/19b8238c917f3dec99b689809ea43a79_tn"
-                      child_category: [ ]
+                      child_category: []
 
     GetCategoryByNameLvlThreeResponse:
       title: GetCategoryByNameLvlOneResponse
@@ -2412,7 +2488,7 @@ components:
                   parent_id: "93e975af-3e9c-4dc2-8202-762128985982"
                   name: "sweeter"
                   photo_url: "https://cf.shopee.co.id/file/19b8238c917f3dec99b689809ea43a79_tn"
-                  child_category: [ ]
+                  child_category: []
 
     GetCategoryChildResponse:
       title: GetCategoryChildResponse
@@ -2519,8 +2595,6 @@ components:
       type: object
       description: Cost shipping Request data model.
       properties:
-        origin:
-          type: int
         destination:
           type: int
         weight:
@@ -2533,7 +2607,6 @@ components:
             properties:
               type: string
       example:
-        origin: 501
         destination: 114
         weight: 1500
         shop_id: e8854443-c2c7-488e-93d5-b9d93708b8a3
@@ -2661,12 +2734,12 @@ components:
                 code: pos
                 service: Pos Reguler
                 description: Layanan Reguler
-                created_at: '2023-01-05T04:27:04.580086Z'
+                created_at: "2023-01-05T04:27:04.580086Z"
                 updated_at:
-                  Time: '0001-01-01T00:00:00Z'
+                  Time: "0001-01-01T00:00:00Z"
                   Valid: false
                 deleted_at:
-                  Time: '0001-01-01T00:00:00Z'
+                  Time: "0001-01-01T00:00:00Z"
                   Valid: false
               fee: 17000
               etd: 2 HARI
@@ -2676,16 +2749,15 @@ components:
                 code: tiki
                 service: REG
                 description: Layanan Reguler
-                created_at: '2023-01-05T04:27:04.580086Z'
+                created_at: "2023-01-05T04:27:04.580086Z"
                 updated_at:
-                  Time: '0001-01-01T00:00:00Z'
+                  Time: "0001-01-01T00:00:00Z"
                   Valid: false
                 deleted_at:
-                  Time: '0001-01-01T00:00:00Z'
+                  Time: "0001-01-01T00:00:00Z"
                   Valid: false
               fee: 24000
-              etd: '2'
-
+              etd: "2"
 
     GetProductResponse:
       title: GetProductResponse
@@ -2935,6 +3007,8 @@ components:
               items:
                 type: object
                 properties:
+                  id:
+                    type: string
                   title:
                     type: string
                   unit_sold:
@@ -2970,7 +3044,8 @@ components:
             total_rows: 100080
             total_pages: 5560
             products:
-              - title: Masker KN95 PM2.5 Earloop kn 95 filter 95% setara n95 4 ply isi 50 Pcs
+              - id: e6fb2764-076f-4b3b-bc05-8aa125d537ed
+                title: Masker KN95 PM2.5 Earloop kn 95 filter 95% setara n95 4 ply isi 50 Pcs
                 unit_sold: 100000
                 rating_avg: 4.8
                 thumbnail_url: " "
@@ -2984,7 +3059,8 @@ components:
                 result_discount: 48299.99999999999
                 voucher_discount_percentage: 0
                 voucher_discount_fix_price: 5000
-              - title: Cereal SIMBA Choco Chips Bag 1 kg
+              - id: 910dbb9b-53d5-4a23-b8ca-cf3f0caab169
+                title: Cereal SIMBA Choco Chips Bag 1 kg
                 unit_sold: 10000
                 rating_avg: 5
                 thumbnail_url: " "
@@ -2998,7 +3074,8 @@ components:
                 result_discount: 10955.52
                 voucher_discount_percentage: 0
                 voucher_discount_fix_price: 5000
-              - title: "Triple Pack: Tropicana Slim Hokkaido Cheese Cookies (5 Sch)"
+              - id: 855f81a1-c7aa-4428-9f26-74fd664de377
+                title: "Triple Pack: Tropicana Slim Hokkaido Cheese Cookies (5 Sch)"
                 unit_sold: 10000
                 rating_avg: 5
                 thumbnail_url: " "
@@ -3012,7 +3089,8 @@ components:
                 result_discount:
                 voucher_discount_percentage: 0
                 voucher_discount_fix_price: 5000
-              - title: Nice Facial Tissue Tisue Tisu Wajah Muka Paket isi 5 x 180 sheets
+              - id: 3bc05e37-f9df-45ee-969f-b56c733259e6
+                title: Nice Facial Tissue Tisue Tisu Wajah Muka Paket isi 5 x 180 sheets
                 unit_sold: 10000
                 rating_avg: 5
                 thumbnail_url: " "
@@ -3026,6 +3104,12 @@ components:
                 result_discount:
                 voucher_discount_percentage: 0
                 voucher_discount_fix_price: 5000
+
+    TopUpWalletRequest:
+      properties:
+      example:
+        card_number: '2787884621261326'
+        amount: 100000
 
     GetProductDetailResponse:
       title: GetProductDetailResponse
@@ -3384,6 +3468,8 @@ components:
                         type: string
                       name:
                         type: string
+                  weight:
+                    type: number
                   product_details:
                     type: array
                     items:
@@ -3400,6 +3486,8 @@ components:
                         product_stock:
                           type: number
                         quantity:
+                          type: number
+                        weight:
                           type: number
                         variant:
                           type: object
@@ -3429,6 +3517,7 @@ components:
                 shop:
                   id: "e8854443-c2c7-488e-93d5-b9d93708b8a3"
                   name: "jualan"
+                weight: 3
                 product_details:
                   - id: "0c53ef3d-3682-4359-90e1-814eb6ab5231"
                     title: "Masker KN95 PM2.5 Earloop kn 95 filter 95% setara n95 4 ply isi 50 Pcs"
@@ -3436,6 +3525,7 @@ components:
                     product_price: 70000
                     product_stock: 111
                     quantity: 4
+                    weight: 2
                     variant:
                       ukuran: "l"
                     promo:
@@ -3451,6 +3541,7 @@ components:
                     product_price: 10000
                     product_stock: 4
                     quantity: 1
+                    weight: 1
                     variant:
                       ukuran: "xl"
                       warna: "hitam"
@@ -3548,6 +3639,43 @@ components:
           type: number
           example: 5
 
+    GetSellerCourierResponse:
+      title: GetSellerCourierResponse
+      type: object
+      description: Get Seller Courier response data model.
+      properties:
+        message:
+          type: string
+        data:
+          type: object
+          rows:
+            type: array
+            properties:
+              id:
+                type: string
+              name:
+                type: string
+              code:
+                type: string
+              service:
+                type: string
+              description:
+                type: string
+      example:
+        message: success
+        data:
+          rows:
+            - id: ad592837-da23-43ad-a66c-0d150a59db45
+              name: TIKI
+              code: tiki
+              service: REG
+              description: Layanan Reguler
+            - id: 578ade71-f9f9-4651-b234-7d04cde29b69
+              name: JNE
+              code: jne
+              service: REG
+              description: Layanan Reguler
+
     GetSellerDetailResponse:
       title: GetSellerDetailResponse
       type: object
@@ -3605,8 +3733,8 @@ components:
       example:
         message: success
         data:
-        - id: d92a0995-78cd-4eba-a855-dfc096ffec5b
-          name: laptop
+          - id: d92a0995-78cd-4eba-a855-dfc096ffec5b
+            name: laptop
 
     GetSellerOrderResponse:
       title: GetSellerOrderResponse
@@ -3759,6 +3887,15 @@ components:
                 order_quantity: 4
                 order_item_price: 2000
                 order_total_price: 8000
+
+    SellerCourierRequest:
+      title: SellerCourierRequest
+      type: object
+      description: SellerCourier Request data model.
+      properties:
+        courier_id:
+          type: string
+          example: "4bf503dc-689e-4b66-8401-3f133f1d585a"
 
     ChangeOrderStatusRequest:
       title: ChangeOrderStatusRequest
