@@ -270,12 +270,42 @@ func (h *productHandlers) ValidateQueryProduct(c *gin.Context) (*pagination.Pagi
 		Page:  pageFilter,
 		Sort:  sortBy + " " + sort,
 	}
-
-	if sortBy == "recommended" {
+	switch sortBy {
+	case "created_at":
+		pgn = &pagination.Pagination{
+			Limit: limitFilter,
+			Page:  pageFilter,
+			Sort:  "p." + sortBy + " " + sort,
+		}
+	case "recommended":
 		pgn = &pagination.Pagination{
 			Limit: limitFilter,
 			Page:  pageFilter,
 			Sort:  "view_count " + sort + ", " + "unit_sold " + sort,
+		}
+	case "min_price":
+		pgn = &pagination.Pagination{
+			Limit: limitFilter,
+			Page:  pageFilter,
+			Sort:  sortBy + " " + sort,
+		}
+	case "unit_sold":
+		pgn = &pagination.Pagination{
+			Limit: limitFilter,
+			Page:  pageFilter,
+			Sort:  sortBy + " " + sort,
+		}
+	case "view_count":
+		pgn = &pagination.Pagination{
+			Limit: limitFilter,
+			Page:  pageFilter,
+			Sort:  sortBy + " " + sort,
+		}
+	default:
+		pgn = &pagination.Pagination{
+			Limit: limitFilter,
+			Page:  pageFilter,
+			Sort:  sortBy + " " + sort,
 		}
 	}
 
