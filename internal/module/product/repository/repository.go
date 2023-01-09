@@ -276,7 +276,7 @@ func (r *productRepo) GetProductDetail(ctx context.Context, productID string, pr
 			return nil, err3
 		}
 
-		var productURLs []body.URL
+		var productURLs []string
 		for res3.Next() {
 			var url body.URL
 			if errScan := res3.Scan(
@@ -284,7 +284,7 @@ func (r *productRepo) GetProductDetail(ctx context.Context, productID string, pr
 			); errScan != nil {
 				return nil, err
 			}
-			productURLs = append(productURLs, url)
+			productURLs = append(productURLs, url.URL)
 		}
 		detail.ProductURL = productURLs
 

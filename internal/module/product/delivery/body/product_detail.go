@@ -50,7 +50,7 @@ type ProductDetail struct {
 	Hazardous       bool              `json:"hazardous"`
 	Condition       *string           `json:"condition"`
 	BulkPrice       bool              `json:"bulk_price"`
-	ProductURL      []URL             `json:"product_url"`
+	ProductURL      []string          `json:"product_url"`
 	Variant         map[string]string `json:"variant"`
 	VariantInfos    []VariantInfo     `json:"variant_info"`
 }

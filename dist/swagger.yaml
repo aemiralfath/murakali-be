@@ -692,7 +692,7 @@ paths:
       tags:
         - User
       security:
-        - BEARER: [ ]
+        - BEARER: []
 
       requestBody:
         content:
@@ -1485,7 +1485,7 @@ paths:
       tags:
         - Seller
       security:
-        - BEARER: [ ]
+        - BEARER: []
       responses:
         "200":
           description: OK
@@ -2263,18 +2263,17 @@ components:
               id: f67a6297-bfd7-42d2-9f85-6441b848c57f
               user_id: 7950eca2-58d5-44f0-b873-22b23d8107da
               balance: 0
-              pin: ''
+              pin: ""
               attempt_count: 0
               attempt_at:
-                Time: '0001-01-01T00:00:00Z'
+                Time: "0001-01-01T00:00:00Z"
                 Valid: false
               unlocked_at:
-                Time: '0001-01-01T00:00:00Z'
+                Time: "0001-01-01T00:00:00Z"
                 Valid: false
               active_date:
-                Time: '2023-01-05T10:02:58.493922Z'
+                Time: "2023-01-05T10:02:58.493922Z"
                 Valid: true
-
 
     InputPinWalletRequest:
       title: InputPinWalletRequest
@@ -3089,7 +3088,7 @@ components:
     TopUpWalletRequest:
       properties:
       example:
-        card_number: '2787884621261326'
+        card_number: "2787884621261326"
         amount: 100000
 
     GetProductDetailResponse:
@@ -3177,9 +3176,23 @@ components:
                   bulk_price:
                     type: boolean
                   product_url:
-                    type: string
+                    type: array
+                    items:
+                      type: string
                   variant:
                     type: object
+                  variant_info:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        variant_id:
+                          type: string
+                        variant_detail_id:
+                          type: string
+                        variant_name:
+                          type: string
+
           example:
             products_info:
               id: "6f16e578-fd85-4aa3-a321-9195ee38e86c"
@@ -3215,10 +3228,16 @@ components:
                 hazardous: true
                 condition: "new"
                 bulk_price: false
-                product_url: "google.com"
+                product_url:
+                  - "google.com"
+                  - "yahoo.com"
                 variant:
                   ukuran: "xl"
                   warna: "hitam"
+                variant_info:
+                  variant_id: "f5b6e875-ab71-4a79-b040-35904692dbe3"
+                  variant_detail_id: "407c7e34-1e3d-4888-b0cb-f541fca56058"
+                  variant_name: "warna"
               - id: "450ba9c5-eafc-409f-99d3-99f931c9fbf2"
                 normal_price: 29000
                 stock: 19
@@ -3227,9 +3246,11 @@ components:
                 hazardous: true
                 condition: "used"
                 bulk_price: true
-                product_url: "yahoo.com"
+                product_url:
+                  url: "yahoo.com"
                 variant:
                   warna: "hitam"
+                variant_info: null
 
     CreateProductReviewRequest:
       title: CreateProductReviewRequest
