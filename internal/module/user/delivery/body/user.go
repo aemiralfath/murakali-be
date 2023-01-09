@@ -10,9 +10,10 @@ const (
 	InvalidOTPFormatMessage           = "Invalid OTP."
 	InvalidPasswordFormatMessage      = "Password must contain at least 8-40 characters," +
 		"at least 1 number, 1 Upper case, 1 special character, and not contains username"
-	InvalidPaymentMethod    = "Invalid payment Method."
-	InvalidSignatureMessage = "Invalid Signature."
-	InvalidPinFormatMessage = "Invalid pin format."
+	InvalidPaymentMethod       = "Invalid payment Method."
+	InvalidSignatureMessage    = "Invalid Signature."
+	InvalidPinFormatMessage    = "Invalid pin format."
+	TopUpAmountNotValidMessage = "Top up at least 10000"
 )
 
 type UnprocessableEntity struct {

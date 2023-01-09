@@ -7,7 +7,7 @@ const (
 	GetBannersQuery              = `SELECT "id", "title", "content", "image_url", "page_url", "is_active" FROM "banner" WHERE "is_active" = TRUE`
 	GetTotalProductQuery         = `SELECT count(id) FROM "product" WHERE "deleted_at" IS NULL`
 	GetRecommendedProductsQuery  = `
-	SELECT "p"."title" as "title", "p"."unit_sold" as "unit_sold", "p"."rating_avg" as "rating_avg", "p"."thumbnail_url" as "thumbnail_url",
+	SELECT "p"."id" as "id", "p"."title" as "title", "p"."unit_sold" as "unit_sold", "p"."rating_avg" as "rating_avg", "p"."thumbnail_url" as "thumbnail_url",
 		"p"."min_price" as "min_price", "p"."max_price" as "max_price", "promo"."discount_percentage" as "promo_discount_percentage",  "promo"."discount_fix_price" as "promo_discount_fix_price",
 		"promo"."min_product_price" as "promo_min_product_price",  "promo"."max_discount_price" as "promo_max_discount_price",
 		"v"."discount_percentage" as "voucher_discount_percentage",  "v"."discount_fix_price" as "voucher_discount_fix_price", "s"."name" as "shop_name", "c"."name" as "category_name"
@@ -181,6 +181,30 @@ const (
 	AND ("p".min_price BETWEEN $5 AND $6)
 	AND "f"."user_id" = $7
 	 AND "p"."deleted_at" IS NULL `
+
+	GetAllTotalReviewProductQuery = `
+	SELECT count(r.id)
+	FROM review r
+	WHERE r.product_id = $1
+	%s
+	and r.deleted_at IS NULL;`
+
+	GetReviewProductQuery = `
+	SELECT r.id, r.user_id, r.product_id, r.comment, r.rating, r.image_url, r.created_at, u.photo_url, u.username
+	FROM review r
+	INNER JOIN "user" u
+	ON r.user_id = u.id
+	WHERE r.product_id = $1
+	%s
+	AND r.deleted_at IS NULL
+	ORDER BY %s LIMIT $2 OFFSET $3;`
+
+	GetTotalReviewRatingByProductIDQuery = `
+	SELECT r.rating, count(r.id) as count 
+	FROM review r
+	WHERE r.product_id = $1
+	and r.deleted_at IS NULL
+	group by r.rating;`
 
 	GetShopIDByUserIDQuery = `SELECT id from "shop" WHERE user_id = $1 AND deleted_at IS NULL `
 

@@ -14,4 +14,5 @@ type Wallet struct {
 	AttemptAt    sql.NullTime `json:"attempt_at" db:"attempt_at" binding:"omitempty"`
 	UnlockedAt   sql.NullTime `json:"unlocked_at" db:"unlocked_at" binding:"omitempty"`
 	ActiveDate   sql.NullTime `json:"active_date" db:"active_date" binding:"omitempty"`
+	UpdatedAt    sql.NullTime `json:"updated_at" db:"updated_at" binding:"omitempty"`
 }

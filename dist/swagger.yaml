@@ -685,6 +685,27 @@ paths:
                 $ref: "#/components/schemas/DefaultSuccess"
 
   "/api/v1/user/wallet":
+    patch:
+      summary: Top Up wallet
+      description: >-
+        top up wallet
+      tags:
+        - User
+      security:
+        - BEARER: [ ]
+
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TopUpWalletRequest"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CreateTransactionResponse"
     post:
       summary: Setup pin wallet
       description: >-
@@ -1072,11 +1093,11 @@ paths:
               schema:
                 $ref: "#/components/schemas/GetProductDetailResponse"
 
-  "/api/v1/product/review/{product_id}":
+  "/api/v1/product/{product_id}/review":
     get:
-      summary: Get Product review
+      summary: Get Product Review
       description: >-
-        get product review
+        get product
       tags:
         - Product
       parameters:
@@ -1090,19 +1111,15 @@ paths:
           schema:
             type: number
         - in: query
-          name: comment
+          name: show_comment
           schema:
             type: boolean
         - in: query
-          name: photo
+          name: show_image
           schema:
             type: boolean
         - in: query
-          name: sort_by
-          schema:
-            type: string
-        - in: query
-          name: sort_order
+          name: sort
           schema:
             type: string
         - in: query
@@ -1119,7 +1136,30 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/GetProductReviewResponse"
+                $ref: "#/components/schemas/GetReviewProductResponse"
+
+  "/api/v1/product/{product_id}/review/rating":
+    get:
+      summary: Get Review Rating Product
+      description: >-
+        get product
+      tags:
+        - Product
+      parameters:
+        - in: path
+          name: product_id
+          schema:
+            type: string
+          required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GetTotalRatingReviewProductResponse"
+
+  "/api/v1/product/review/{product_id}":
     post:
       summary: create review product
       description: >-
@@ -2554,8 +2594,6 @@ components:
       type: object
       description: Cost shipping Request data model.
       properties:
-        origin:
-          type: int
         destination:
           type: int
         weight:
@@ -2568,7 +2606,6 @@ components:
             properties:
               type: string
       example:
-        origin: 501
         destination: 114
         weight: 1500
         shop_id: e8854443-c2c7-488e-93d5-b9d93708b8a3
@@ -2969,6 +3006,8 @@ components:
               items:
                 type: object
                 properties:
+                  id:
+                    type: string
                   title:
                     type: string
                   unit_sold:
@@ -3004,7 +3043,8 @@ components:
             total_rows: 100080
             total_pages: 5560
             products:
-              - title: Masker KN95 PM2.5 Earloop kn 95 filter 95% setara n95 4 ply isi 50 Pcs
+              - id: e6fb2764-076f-4b3b-bc05-8aa125d537ed
+                title: Masker KN95 PM2.5 Earloop kn 95 filter 95% setara n95 4 ply isi 50 Pcs
                 unit_sold: 100000
                 rating_avg: 4.8
                 thumbnail_url: " "
@@ -3018,7 +3058,8 @@ components:
                 result_discount: 48299.99999999999
                 voucher_discount_percentage: 0
                 voucher_discount_fix_price: 5000
-              - title: Cereal SIMBA Choco Chips Bag 1 kg
+              - id: 910dbb9b-53d5-4a23-b8ca-cf3f0caab169
+                title: Cereal SIMBA Choco Chips Bag 1 kg
                 unit_sold: 10000
                 rating_avg: 5
                 thumbnail_url: " "
@@ -3032,7 +3073,8 @@ components:
                 result_discount: 10955.52
                 voucher_discount_percentage: 0
                 voucher_discount_fix_price: 5000
-              - title: "Triple Pack: Tropicana Slim Hokkaido Cheese Cookies (5 Sch)"
+              - id: 855f81a1-c7aa-4428-9f26-74fd664de377
+                title: "Triple Pack: Tropicana Slim Hokkaido Cheese Cookies (5 Sch)"
                 unit_sold: 10000
                 rating_avg: 5
                 thumbnail_url: " "
@@ -3046,7 +3088,8 @@ components:
                 result_discount:
                 voucher_discount_percentage: 0
                 voucher_discount_fix_price: 5000
-              - title: Nice Facial Tissue Tisue Tisu Wajah Muka Paket isi 5 x 180 sheets
+              - id: 3bc05e37-f9df-45ee-969f-b56c733259e6
+                title: Nice Facial Tissue Tisue Tisu Wajah Muka Paket isi 5 x 180 sheets
                 unit_sold: 10000
                 rating_avg: 5
                 thumbnail_url: " "
@@ -3060,6 +3103,12 @@ components:
                 result_discount:
                 voucher_discount_percentage: 0
                 voucher_discount_fix_price: 5000
+
+    TopUpWalletRequest:
+      properties:
+      example:
+        card_number: '2787884621261326'
+        amount: 100000
 
     GetProductDetailResponse:
       title: GetProductDetailResponse
@@ -3200,6 +3249,123 @@ components:
                 variant:
                   warna: "hitam"
 
+    GetReviewProductResponse:
+      title: GetReviewProductResponse
+      type: object
+      description: Get review product response data model.
+      properties:
+        message:
+          type: string
+        data:
+          type: object
+          properties:
+            limit:
+              type: integer
+            page:
+              type: integer
+            sort:
+              type: string
+            total_rows:
+              type: integer
+            total_pages:
+              type: integer
+            rows:
+              type: array
+              items:
+                - type: object
+                  properties:
+                    id:
+                      type: string
+                    user_id:
+                      type: string
+                    product_id:
+                      type: string
+                    comment:
+                      type: string
+                    rating:
+                      type: integer
+                    image_url:
+                      type: string
+                    created_at:
+                      type: string
+                    photo_url:
+                      type: string
+                    username:
+                      type: string
+      example:
+        message: success
+        data:
+          limit: 5
+          page: 1
+          sort: r.created_at asc
+          total_rows: 2
+          total_pages: 1
+          rows:
+            - id: 18c5f333-8a9e-4044-9e70-e266bb2b033d
+              user_id: 4c1d6464-3cc6-44d6-92d1-91aee337e025
+              product_id: 1f394fe9-1c19-4270-a776-8c301662496d
+              comment: test
+              rating: 5
+              image_url: null
+              created_at: '2023-01-05T06:24:51.808605Z'
+              photo_url: >-
+                https://res.cloudinary.com/dhpao1zxi/image/upload/v1671705602/ldtzmxqeyb4nwu5p6y76.jpg
+              username: mLVacZT
+            - id: 4ba23810-69fa-40ba-942a-11874db05048
+              user_id: 4c1d6464-3cc6-44d6-92d1-91aee337e025
+              product_id: 1f394fe9-1c19-4270-a776-8c301662496d
+              comment: null
+              rating: 2
+              image_url: null
+              created_at: '2023-01-06T06:45:13.411051Z'
+              photo_url: >-
+                https://res.cloudinary.com/dhpao1zxi/image/upload/v1671705602/ldtzmxqeyb4nwu5p6y76.jpg
+              username: mLVacZT
+          
+    GetTotalRatingReviewProductResponse:
+      title: GetTotalRatingReviewProductResponse
+      type: object
+      description: Get total rating review product response data model.
+      properties:
+        message:
+          type: string
+        data:
+          type: object
+          properties:
+            total_rating:
+              type: integer
+            avg_rating:
+              type: number
+            rating_product:
+              type: array
+              items:
+                - type: object
+                  properties:
+                    rating:
+                      type: integer
+                    count:
+                      type: integer
+                  required:
+                    - rating
+                    - count
+                - type: object
+                  properties:
+                    rating:
+                      type: integer
+                    count:
+                      type: integer
+      example:
+        message: success
+        data:
+          total_rating: 2
+          avg_rating: 3.5
+          rating_product:
+            - rating: 2
+              count: 1
+            - rating: 5
+              count: 1
+
+
     CreateProductReviewRequest:
       title: CreateProductReviewRequest
       type: object
@@ -3301,6 +3467,8 @@ components:
                         type: string
                       name:
                         type: string
+                  weight:
+                    type: number
                   product_details:
                     type: array
                     items:
@@ -3317,6 +3485,8 @@ components:
                         product_stock:
                           type: number
                         quantity:
+                          type: number
+                        weight:
                           type: number
                         variant:
                           type: object
@@ -3346,6 +3516,7 @@ components:
                 shop:
                   id: "e8854443-c2c7-488e-93d5-b9d93708b8a3"
                   name: "jualan"
+                weight: 3
                 product_details:
                   - id: "0c53ef3d-3682-4359-90e1-814eb6ab5231"
                     title: "Masker KN95 PM2.5 Earloop kn 95 filter 95% setara n95 4 ply isi 50 Pcs"
@@ -3353,6 +3524,7 @@ components:
                     product_price: 70000
                     product_stock: 111
                     quantity: 4
+                    weight: 2
                     variant:
                       ukuran: "l"
                     promo:
@@ -3368,6 +3540,7 @@ components:
                     product_price: 10000
                     product_stock: 4
                     quantity: 1
+                    weight: 1
                     variant:
                       ukuran: "xl"
                       warna: "hitam"
