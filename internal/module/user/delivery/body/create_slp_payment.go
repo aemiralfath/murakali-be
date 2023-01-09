@@ -8,7 +8,7 @@ import (
 	"strings"
 )
 
-type CreateSLPPaymentRequest struct {
+type CreatePaymentRequest struct {
 	TransactionID string `json:"transaction_id"`
 }
 
@@ -22,7 +22,7 @@ type SLPPaymentResponse struct {
 	Data    struct{} `json:"data"`
 }
 
-func (r *CreateSLPPaymentRequest) Validate() (UnprocessableEntity, error) {
+func (r *CreatePaymentRequest) Validate() (UnprocessableEntity, error) {
 	unprocessableEntity := false
 	entity := UnprocessableEntity{
 		Fields: map[string]string{

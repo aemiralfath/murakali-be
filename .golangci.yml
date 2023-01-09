@@ -37,7 +37,7 @@ linters-settings:
       - ifElseChain
       - octalLiteral
   funlen:
-    lines: 150
+    lines: 155
     statements: 75
 
 linters: # don't use --enable-all

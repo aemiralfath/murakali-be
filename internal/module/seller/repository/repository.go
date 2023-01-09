@@ -152,7 +152,6 @@ func (r *sellerRepo) GetOrders(ctx context.Context, shopID, orderStatusID string
 		}
 
 		order.Detail = orderDetail
-
 		orders = append(orders, &order)
 	}
 	if res.Err() != nil {
@@ -250,4 +249,53 @@ func (r *sellerRepo) GetCategoryBySellerID(ctx context.Context, shopID string) (
 		return nil, err
 	}
 	return categories, nil
+}
+
+func (r *sellerRepo) GetShopIDByUserID(ctx context.Context, userID string) (string, error) {
+	var ID string
+	if err := r.PSQL.QueryRowContext(ctx, GetShopIDByUserIDQuery, userID).Scan(&ID); err != nil {
+		return "", err
+	}
+	return ID, nil
+}
+
+func (r *sellerRepo) GetCourierSellerByShopAndCourierID(ctx context.Context, shopID, courierID string) (string, error) {
+	var ID string
+	if err := r.PSQL.QueryRowContext(ctx, GetCourierSellerIDByShopAndCourierIDQuery, shopID, courierID).Scan(&ID); err != nil {
+		return "", err
+	}
+	return ID, nil
+}
+
+func (r *sellerRepo) GetCourierByID(ctx context.Context, courierID string) (string, error) {
+	var ID string
+	if err := r.PSQL.QueryRowContext(ctx, GetCourierByIDQuery, courierID).Scan(&ID); err != nil {
+		return "", err
+	}
+	return ID, nil
+}
+
+func (r *sellerRepo) CreateCourierSeller(ctx context.Context, shopID, courierID string) error {
+	if _, err := r.PSQL.ExecContext(ctx, CreateCourierSellerQuery,
+		shopID,
+		courierID); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (r *sellerRepo) GetCourierSellerByID(ctx context.Context, shopCourierID string) (string, error) {
+	var ID string
+	if err := r.PSQL.QueryRowContext(ctx, GetCourierSellerByIDQuery, shopCourierID).Scan(&ID); err != nil {
+		return "", err
+	}
+	return ID, nil
+}
+
+func (r *sellerRepo) DeleteCourierSellerByID(ctx context.Context, shopCourierID string) error {
+	_, err := r.PSQL.ExecContext(ctx, DeleteCourierSellerQuery, shopCourierID)
+	if err != nil {
+		return err
+	}
+	return nil
 }

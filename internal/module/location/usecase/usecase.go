@@ -168,7 +168,23 @@ func (u *locationUC) GetShippingCost(ctx context.Context, requestBody body.GetSh
 	resp := &body.GetShippingCostResponse{}
 	resp.ShippingOption = make([]*model.Cost, 0)
 
-	shopCourier, err := u.locationRepo.GetShopCourierID(ctx, requestBody.ShopID)
+	shop, err := u.locationRepo.GetShopByID(ctx, requestBody.ShopID)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, httperror.New(http.StatusBadRequest, response.UnknownShop)
+		}
+		return nil, err
+	}
+
+	shopAddress, err := u.locationRepo.GetShopAddress(ctx, shop.UserID.String())
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, httperror.New(http.StatusBadRequest, response.ShopAddressNotFound)
+		}
+		return nil, err
+	}
+
+	shopCourier, err := u.locationRepo.GetShopCourierID(ctx, shop.ID.String())
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return nil, httperror.New(http.StatusBadRequest, response.ShopCourierNotExist)
@@ -204,10 +220,10 @@ func (u *locationUC) GetShippingCost(ctx context.Context, requestBody body.GetSh
 		}
 
 		var costRedis *string
-		key := fmt.Sprintf("%d:%d:%d:%s", requestBody.Origin, requestBody.Destination, requestBody.Weight, courier.Code)
+		key := fmt.Sprintf("%d:%d:%d:%s", shopAddress.CityID, requestBody.Destination, requestBody.Weight, courier.Code)
 		costRedis, err = u.locationRepo.GetCostRedis(ctx, key)
 		if err != nil {
-			res, err := u.GetCostRajaOngkir(requestBody.Origin, requestBody.Destination, requestBody.Weight, courier.Code)
+			res, err := u.GetCostRajaOngkir(shopAddress.CityID, requestBody.Destination, requestBody.Weight, courier.Code)
 			if err != nil {
 				return nil, err
 			}

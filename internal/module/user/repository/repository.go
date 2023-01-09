@@ -426,6 +426,17 @@ func (r *userRepo) GetUserByUsername(ctx context.Context, username string) (*mod
 	return &userModel, nil
 }
 
+func (r *userRepo) GetWalletByUserID(ctx context.Context, userID string) (*model.Wallet, error) {
+	var walletModel model.Wallet
+	if err := r.PSQL.QueryRowContext(ctx, GetWalletByUserIDQuery, userID).Scan(&walletModel.ID, &walletModel.UserID,
+		&walletModel.Balance, &walletModel.PIN, &walletModel.AttemptCount,
+		&walletModel.AttemptAt, &walletModel.UnlockedAt, &walletModel.ActiveDate); err != nil {
+		return nil, err
+	}
+
+	return &walletModel, nil
+}
+
 func (r *userRepo) GetUserByPhoneNo(ctx context.Context, phoneNo string) (*model.User, error) {
 	var userModel model.User
 	if err := r.PSQL.QueryRowContext(ctx, GetUserByPhoneNoQuery, phoneNo).
@@ -449,6 +460,15 @@ func (r *userRepo) UpdateUserField(ctx context.Context, userModel *model.User) e
 func (r *userRepo) UpdateUserEmail(ctx context.Context, tx postgre.Transaction, userModel *model.User) error {
 	_, err := tx.ExecContext(
 		ctx, UpdateUserEmailQuery, userModel.Email, userModel.UpdatedAt, userModel.ID)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (r *userRepo) CreateWallet(ctx context.Context, wallet *model.Wallet) error {
+	_, err := r.PSQL.ExecContext(ctx, CreateWalletQuery, wallet.UserID, wallet.Balance, wallet.PIN, wallet.AttemptCount, wallet.ActiveDate)
 	if err != nil {
 		return err
 	}
@@ -634,9 +654,9 @@ func (r *userRepo) UpdatePasswordByID(ctx context.Context, userID, newPassword s
 	return nil
 }
 
-func (r *userRepo) GetWalletUser(ctx context.Context, userID, walletID string) (*model.Wallet, error) {
+func (r *userRepo) GetWalletUser(ctx context.Context, walletID string) (*model.Wallet, error) {
 	var walletUser model.Wallet
-	if err := r.PSQL.QueryRowContext(ctx, GetWalletUserQuery, userID, walletID).Scan(
+	if err := r.PSQL.QueryRowContext(ctx, GetWalletUserQuery, walletID).Scan(
 		&walletUser.ID,
 		&walletUser.UserID,
 		&walletUser.Balance,
@@ -811,6 +831,33 @@ func (r *userRepo) UpdateProductDetailStock(ctx context.Context, tx postgre.Tran
 		return err
 	}
 
+	return nil
+}
+
+func (r *userRepo) UpdateWalletBalance(ctx context.Context, tx postgre.Transaction, wallet *model.Wallet) error {
+	_, err := tx.ExecContext(ctx, UpdateWalletBalanceQuery, wallet.Balance, wallet.UpdatedAt, wallet.ID)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (r *userRepo) UpdateWallet(ctx context.Context, wallet *model.Wallet) error {
+	_, err := r.PSQL.ExecContext(ctx, UpdateWalletQuery, wallet.AttemptCount, wallet.AttemptAt, wallet.UnlockedAt, wallet.ID)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (r *userRepo) InsertWalletHistory(ctx context.Context, tx postgre.Transaction, walletHistory *model.WalletHistory) error {
+	_, err := tx.ExecContext(ctx, CreateWalletHistoryQuery, walletHistory.TransactionID, walletHistory.WalletID,
+		walletHistory.From, walletHistory.To, walletHistory.Description, walletHistory.Amount, walletHistory.CreatedAt)
+	if err != nil {
+		return err
+	}
 	return nil
 }
 

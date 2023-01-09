@@ -71,11 +71,27 @@ func (r *locationRepo) GetCourierByID(ctx context.Context, courierID string) (*m
 	var courier model.Courier
 	if err := r.PSQL.QueryRowContext(ctx, GetCourierByID, courierID).Scan(
 		&courier.ID, &courier.Name, &courier.Code, &courier.Service,
-		&courier.Description, &courier.CreatedAt, &courier.UpdatedAt, &courier.DeletedAt); err != nil {
+		&courier.Description, &courier.CreatedAt, &courier.UpdatedAt); err != nil {
 		return nil, err
 	}
 
 	return &courier, nil
+}
+
+func (r *locationRepo) GetShopByID(ctx context.Context, shopID string) (*model.Shop, error) {
+	var shop model.Shop
+	if err := r.PSQL.QueryRowContext(ctx, GetShopByID, shopID).Scan(&shop.ID, &shop.UserID); err != nil {
+		return nil, err
+	}
+	return &shop, nil
+}
+
+func (r *locationRepo) GetShopAddress(ctx context.Context, userID string) (*model.Address, error) {
+	var shopAddress model.Address
+	if err := r.PSQL.QueryRowContext(ctx, GetShopAddress, userID).Scan(&shopAddress.ID, &shopAddress.UserID, &shopAddress.CityID); err != nil {
+		return nil, err
+	}
+	return &shopAddress, nil
 }
 
 func (r *locationRepo) InsertProvinceRedis(ctx context.Context, value string) error {

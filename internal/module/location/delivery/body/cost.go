@@ -10,7 +10,6 @@ import (
 )
 
 type GetShippingCostRequest struct {
-	Origin      int      `json:"origin"`
 	Destination int      `json:"destination"`
 	Weight      int      `json:"weight"`
 	ShopID      string   `json:"shop_id"`
@@ -25,17 +24,11 @@ func (r *GetShippingCostRequest) Validate() (UnprocessableEntity, error) {
 	unprocessableEntity := false
 	entity := UnprocessableEntity{
 		Fields: map[string]interface{}{
-			"origin":      "",
 			"destination": "",
 			"weight":      "",
 			"shop_id":     "",
 			"product_ids": "",
 		},
-	}
-
-	if r.Origin == 0 {
-		unprocessableEntity = true
-		entity.Fields["origin"] = FieldCannotBeEmptyMessage
 	}
 
 	if r.Destination == 0 {

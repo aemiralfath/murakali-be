@@ -9,6 +9,7 @@ import (
 
 func MapUserRoutes(userGroup *gin.RouterGroup, h user.Handlers, mw *middleware.MWManager) {
 	userGroup.POST("/transaction/slp-payment/:id", h.SLPPaymentCallback)
+	userGroup.POST("/transaction/wallet-payment/:id", h.WalletPaymentCallback)
 	userGroup.Use(mw.AuthJWTMiddleware())
 	userGroup.GET("/address", h.GetAddress)
 	userGroup.POST("/address", h.CreateAddress)
@@ -30,5 +31,10 @@ func MapUserRoutes(userGroup *gin.RouterGroup, h user.Handlers, mw *middleware.M
 	userGroup.PATCH("/password", h.ChangePassword)
 	userGroup.POST("/transaction", h.CreateTransaction)
 	userGroup.POST("/transaction/slp-payment", h.CreateSLPPayment)
+	userGroup.POST("/transaction/wallet-payment", h.CreateWalletPayment)
 	userGroup.GET("/order", h.GetOrder)
+	userGroup.POST("/wallet", h.ActivateWallet)
+	userGroup.GET("/wallet", h.GetWallet)
+	userGroup.PATCH("/wallet", h.TopUpWallet)
+	userGroup.POST("/wallet/step-up/pin", h.WalletStepUp)
 }
