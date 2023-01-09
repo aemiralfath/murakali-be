@@ -337,7 +337,7 @@ func (u *productUC) CreateProduct(ctx context.Context, requestBody body.CreatePr
 
 	err := u.txRepo.WithTransaction(func(tx postgre.Transaction) error {
 		totalData := len(requestBody.ProductDetail)
-		var minPriceTemp, maxPriceTemp float64 = requestBody.ProductDetail[0].Price, requestBody.ProductDetail[0].Price
+		minPriceTemp, maxPriceTemp := requestBody.ProductDetail[0].Price, requestBody.ProductDetail[0].Price
 		for i := 0; i < totalData; i++ {
 			if requestBody.ProductDetail[i].Price < minPriceTemp {
 				minPriceTemp = requestBody.ProductDetail[i].Price
@@ -376,7 +376,6 @@ func (u *productUC) CreateProduct(ctx context.Context, requestBody body.CreatePr
 					if err != nil {
 						return err
 					}
-
 				}
 			}
 
@@ -389,7 +388,6 @@ func (u *productUC) CreateProduct(ctx context.Context, requestBody body.CreatePr
 					}
 				}
 			}
-
 		}
 
 		totalDataCourier := len(requestBody.Courier.CourierID)
@@ -418,7 +416,7 @@ func (u *productUC) UpdateListedStatus(ctx context.Context, productID string) er
 		}
 		return err
 	}
-	var tempListedStatus bool = false
+	tempListedStatus := false
 	if listedStatus {
 		tempListedStatus = false
 	} else {

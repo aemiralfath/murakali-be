@@ -118,7 +118,6 @@ func (r *CreateProductRequest) ValidateCreateProduct() (UnprocessableEntity, err
 			unprocessableEntity = true
 			entity.Fields["variant_detail_id"] = FieldCannotBeEmptyMessage
 		}
-
 	}
 
 	if unprocessableEntity {

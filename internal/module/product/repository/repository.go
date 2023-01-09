@@ -566,12 +566,13 @@ func (r *productRepo) CreateProduct(ctx context.Context, tx postgre.Transaction,
 	return productID.String(), nil
 }
 
-func (r *productRepo) CreateProductDetail(ctx context.Context, tx postgre.Transaction, requestBody body.CreateProductDetailRequest, ProductID string) (string, error) {
+func (r *productRepo) CreateProductDetail(ctx context.Context, tx postgre.Transaction,
+	requestBody body.CreateProductDetailRequest, productID string) (string, error) {
 	var productDetailID *uuid.UUID
 	err := tx.QueryRowContext(
 		ctx,
 		CreateProductDetailQuery,
-		ProductID,
+		productID,
 		requestBody.Price,
 		requestBody.Stock,
 		requestBody.Weight,
@@ -586,12 +587,12 @@ func (r *productRepo) CreateProductDetail(ctx context.Context, tx postgre.Transa
 	return productDetailID.String(), nil
 }
 
-func (r *productRepo) CreatePhoto(ctx context.Context, tx postgre.Transaction, productDetailID string, URL string) error {
+func (r *productRepo) CreatePhoto(ctx context.Context, tx postgre.Transaction, productDetailID, url string) error {
 	_, err := tx.ExecContext(
 		ctx,
 		CreatePhotoQuery,
 		productDetailID,
-		URL,
+		url,
 	)
 	if err != nil {
 		return err
@@ -599,12 +600,12 @@ func (r *productRepo) CreatePhoto(ctx context.Context, tx postgre.Transaction, p
 	return nil
 }
 
-func (r *productRepo) CreateVideo(ctx context.Context, tx postgre.Transaction, productDetailID string, URL string) error {
+func (r *productRepo) CreateVideo(ctx context.Context, tx postgre.Transaction, productDetailID, url string) error {
 	_, err := tx.ExecContext(
 		ctx,
 		CreateVideoQuery,
 		productDetailID,
-		URL,
+		url,
 	)
 	if err != nil {
 		return err
@@ -612,7 +613,7 @@ func (r *productRepo) CreateVideo(ctx context.Context, tx postgre.Transaction, p
 	return nil
 }
 
-func (r *productRepo) CreateVariant(ctx context.Context, tx postgre.Transaction, productDetailID string, variantDetailID string) error {
+func (r *productRepo) CreateVariant(ctx context.Context, tx postgre.Transaction, productDetailID, variantDetailID string) error {
 	_, err := tx.ExecContext(
 		ctx,
 		CreateVariantQuery,
@@ -625,7 +626,7 @@ func (r *productRepo) CreateVariant(ctx context.Context, tx postgre.Transaction,
 	return nil
 }
 
-func (r *productRepo) CreateProductCourier(ctx context.Context, tx postgre.Transaction, productID string, courierID string) error {
+func (r *productRepo) CreateProductCourier(ctx context.Context, tx postgre.Transaction, productID, courierID string) error {
 	_, err := tx.ExecContext(
 		ctx,
 		CreateProductCourierQuery,

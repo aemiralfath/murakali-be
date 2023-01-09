@@ -105,7 +105,6 @@ func (u *sellerUC) GetCourierSeller(ctx context.Context, userID string) (*body.C
 				if !courierSeller[j].DeletedAt.Time.IsZero() {
 					deletedAtTemp = courierSeller[j].DeletedAt.Time.String()
 				}
-
 			}
 		}
 		p := &body.CourierSellerInfo{

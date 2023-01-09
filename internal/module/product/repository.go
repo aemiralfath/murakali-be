@@ -30,10 +30,10 @@ type Repository interface {
 	GetShopIDByUserID(ctx context.Context, userID string) (string, error)
 	CreateProduct(ctx context.Context, tx postgre.Transaction, requestBody body.CreateProductInfoForQuery) (string, error)
 	CreateProductDetail(ctx context.Context, tx postgre.Transaction, requestBody body.CreateProductDetailRequest, ProductID string) (string, error)
-	CreatePhoto(ctx context.Context, tx postgre.Transaction, productDetailID string, URL string) error
-	CreateVideo(ctx context.Context, tx postgre.Transaction, productDetailID string, URL string) error
+	CreatePhoto(ctx context.Context, tx postgre.Transaction, productDetailID, url string) error
+	CreateVideo(ctx context.Context, tx postgre.Transaction, productDetailID, url string) error
 	CreateVariant(ctx context.Context, tx postgre.Transaction, productDetailID string, variantDetailID string) error
-	CreateProductCourier(ctx context.Context, tx postgre.Transaction, productDetailID string, courierID string) error
+	CreateProductCourier(ctx context.Context, tx postgre.Transaction, productDetailID, courierID string) error
 
 	GetListedStatus(ctx context.Context, productID string) (bool, error)
 	UpdateListedStatus(ctx context.Context, listedStatus bool, productID string) error
