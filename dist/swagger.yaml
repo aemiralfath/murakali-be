@@ -1416,7 +1416,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/DefaultSuccess"
 
-  "/api/v1/seller/courier/{id}":
+  "/api/v1/seller/courier/{seller_courier_id}":
     delete:
       summary: delete Seller Courier
       description: >-
@@ -1427,7 +1427,7 @@ paths:
         - BEARER: []
       parameters:
         - in: path
-          name: id
+          name: seller_courier_id
           schema:
             type: string
           required: true
@@ -1464,7 +1464,7 @@ paths:
       tags:
         - Seller
       security:
-        - BEARER: [ ]
+        - BEARER: []
       responses:
         "200":
           description: OK
@@ -2242,18 +2242,17 @@ components:
               id: f67a6297-bfd7-42d2-9f85-6441b848c57f
               user_id: 7950eca2-58d5-44f0-b873-22b23d8107da
               balance: 0
-              pin: ''
+              pin: ""
               attempt_count: 0
               attempt_at:
-                Time: '0001-01-01T00:00:00Z'
+                Time: "0001-01-01T00:00:00Z"
                 Valid: false
               unlocked_at:
-                Time: '0001-01-01T00:00:00Z'
+                Time: "0001-01-01T00:00:00Z"
                 Valid: false
               active_date:
-                Time: '2023-01-05T10:02:58.493922Z'
+                Time: "2023-01-05T10:02:58.493922Z"
                 Valid: true
-
 
     InputPinWalletRequest:
       title: InputPinWalletRequest

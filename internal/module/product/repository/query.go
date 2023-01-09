@@ -51,7 +51,7 @@ const (
 	where pro.product_id = $1`
 
 	GetProductsQuery = `
-	SELECT "p"."title" as "title", "p"."unit_sold" as "unit_sold", "p"."rating_avg" as "rating_avg", "p"."thumbnail_url" as "thumbnail_url",
+	SELECT "p"."id" as "product_id","p"."title" as "title", "p"."unit_sold" as "unit_sold", "p"."rating_avg" as "rating_avg", "p"."thumbnail_url" as "thumbnail_url",
 		"p"."min_price" as "min_price", "p"."max_price" as "max_price", "p"."view_count" as "view_count", 
 		"promo"."discount_percentage" as "promo_discount_percentage",  "promo"."discount_fix_price" as "promo_discount_fix_price",
 		"promo"."min_product_price" as "promo_min_product_price",  "promo"."max_discount_price" as "promo_max_discount_price",
@@ -80,7 +80,8 @@ const (
 	`
 
 	GetProductsWithProvinceQuery = `
-	SELECT "p"."title" as "title", "p"."unit_sold" as "unit_sold", "p"."rating_avg" as "rating_avg", "p"."thumbnail_url" as "thumbnail_url",
+	SELECT "p"."id" as "product_id",
+	"p"."title" as "title", "p"."unit_sold" as "unit_sold", "p"."rating_avg" as "rating_avg", "p"."thumbnail_url" as "thumbnail_url",
 		"p"."min_price" as "min_price", "p"."max_price" as "max_price", "p"."view_count" as "view_count", 
 		"promo"."discount_percentage" as "promo_discount_percentage",  "promo"."discount_fix_price" as "promo_discount_fix_price",
 		"promo"."min_product_price" as "promo_min_product_price",  "promo"."max_discount_price" as "promo_max_discount_price",
@@ -142,7 +143,7 @@ const (
 	AND ("a"."province_id"::text =any($7))`
 
 	GetFavoriteProductsQuery = `
-	SELECT "p"."title" as "title", "p"."unit_sold" as "unit_sold", "p"."rating_avg" as "rating_avg", "p"."thumbnail_url" as "thumbnail_url",
+	SELECT "p"."id" as "product_id","p"."title" as "title", "p"."unit_sold" as "unit_sold", "p"."rating_avg" as "rating_avg", "p"."thumbnail_url" as "thumbnail_url",
 		"p"."min_price" as "min_price", "p"."max_price" as "max_price", "p"."view_count" as "view_count", "promo"."discount_percentage" as "promo_discount_percentage",  "promo"."discount_fix_price" as "promo_discount_fix_price",
 		"promo"."min_product_price" as "promo_min_product_price",  "promo"."max_discount_price" as "promo_max_discount_price",
 		"v"."discount_percentage" as "voucher_discount_percentage",  "v"."discount_fix_price" as "voucher_discount_fix_price", "s"."name" as "shop_name", "c"."name" as "category_name"
@@ -161,12 +162,11 @@ const (
 	WHERE 
 	"p".title ILIKE $1 
 	AND  "c".name ILIKE $2
-	AND "s".name  ILIKE $3
-	AND ("p".rating_avg BETWEEN $4 AND $5)
-	AND ("p".min_price BETWEEN $6 AND $7)
-	AND "f"."user_id" = $8
+	AND ("p".rating_avg BETWEEN $3 AND $4)
+	AND ("p".min_price BETWEEN $5 AND $6)
+	AND "f"."user_id" = $7
 	AND "p"."deleted_at" IS NULL
-	ORDER BY %s LIMIT $9 OFFSET $10;
+	ORDER BY %s LIMIT $8 OFFSET $9;
 	`
 
 	GetAllTotalFavoriteProductQuery = `
@@ -177,13 +177,11 @@ const (
 	INNER JOIN "shop" as "s" ON "s"."id" = "p"."shop_id"
 	WHERE "p".title ILIKE $1 
 	AND  "c".name ILIKE $2
-	AND "s".name  ILIKE $3
-	AND ("p".rating_avg BETWEEN $4 AND $5)
-	AND ("p".min_price BETWEEN $6 AND $7)
-	AND "f"."user_id" = $8
+	AND ("p".rating_avg BETWEEN $3 AND $4)
+	AND ("p".min_price BETWEEN $5 AND $6)
+	AND "f"."user_id" = $7
 	 AND "p"."deleted_at" IS NULL `
 
-	///////////////////////
 	GetShopIDByUserIDQuery = `SELECT id from "shop" WHERE user_id = $1 AND deleted_at IS NULL `
 
 	CreateProductQuery = `INSERT INTO "product" 
@@ -209,4 +207,13 @@ const (
 	CreateVariantQuery = `INSERT INTO "variant" 
 	(product_detail_id, variant_detail_id)
 	 VALUES ($1, $2) RETURNING "id";`
+
+	CreateProductCourierQuery = `INSERT 
+	INTO "product_courier_whitelist" 
+	(product_id, courier_id)
+	 VALUES ($1, $2) RETURNING "id";`
+
+	GetListedStatusQuery = `SELECT listed_status from "product" WHERE id = $1 AND deleted_at IS NULL `
+
+	UpdateListedStatusQuery = `UPDATE "product" SET "listed_status" = $1 WHERE "id" = $2`
 )

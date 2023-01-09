@@ -9,6 +9,7 @@ type RecommendedProductResponse struct {
 }
 
 type Products struct {
+	ProductID                 string   `json:"product_id"`
 	Title                     string   `json:"title" db:"title"`
 	UnitSold                  int64    `json:"unit_sold" db:"unit_sold"`
 	RatingAVG                 float64  `json:"rating_avg" db:"rating_avg"`

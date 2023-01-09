@@ -2,6 +2,8 @@ package body
 
 const (
 	FieldCannotBeEmptyMessage = "Field cannot be empty."
+	ProductNotFound           = "Product not found"
+	UpdateProductFailed       = "Update product failed"
 )
 
 type UnprocessableEntity struct {

@@ -10,11 +10,30 @@ import (
 )
 
 type CreateProductRequest struct {
-	Title         string                       `json:"title"`
-	Description   string                       `json:"description"`
-	Thumbnail     string                       `json:"thumbnail"`
-	CategoryID    string                       `json:"category_id"`
-	ProductDetail []CreateProductDetailRequest `json:"product_detail"`
+	ProductInfo   CreateProductInfo            `json:"products_info"`
+	ProductDetail []CreateProductDetailRequest `json:"products_detail"`
+	Courier       CourierInfo                  `json:"courier"`
+}
+
+type CourierInfo struct {
+	CourierID []string `json:"courier_ids"`
+}
+type CreateProductInfo struct {
+	Title       string `json:"title"`
+	Description string `json:"description"`
+	Thumbnail   string `json:"thumbnail"`
+	CategoryID  string `json:"category_id"`
+}
+
+type CreateProductInfoForQuery struct {
+	Title       string
+	Description string
+	Thumbnail   string
+	CategoryID  string
+	MinPrice    float64
+	MaxPrice    float64
+	ShopID      string
+	SKU         string
 }
 
 type CreateProductDetailRequest struct {
@@ -26,7 +45,6 @@ type CreateProductDetailRequest struct {
 	Codition        string   `json:"condition"`
 	BulkPrice       bool     `json:"bulk_price"`
 	Photo           []string `json:"photo"`
-	Video           []string `json:"video"`
 	VariantDetailID []string `json:"variant_detail_id"`
 }
 
@@ -34,35 +52,73 @@ func (r *CreateProductRequest) ValidateCreateProduct() (UnprocessableEntity, err
 	unprocessableEntity := false
 	entity := UnprocessableEntity{
 		Fields: map[string]string{
-			"title":       "",
-			"description": "",
-			"thumbnail":   "",
-			"category_id": "",
+			"products_info.title":       "",
+			"products_info.description": "",
+			"products_info.thumbnail":   "",
+			"products_info.category_id": "",
 		},
 	}
 
-	r.Title = strings.TrimSpace(r.Title)
-	if r.Title == "" {
+	r.ProductInfo.Title = strings.TrimSpace(r.ProductInfo.Title)
+	if r.ProductInfo.Title == "" {
 		unprocessableEntity = true
-		entity.Fields["title"] = FieldCannotBeEmptyMessage
+		entity.Fields["products_info.title"] = FieldCannotBeEmptyMessage
 	}
 
-	r.Description = strings.TrimSpace(r.Description)
-	if r.Description == "" {
+	r.ProductInfo.Description = strings.TrimSpace(r.ProductInfo.Description)
+	if r.ProductInfo.Description == "" {
 		unprocessableEntity = true
-		entity.Fields["description"] = FieldCannotBeEmptyMessage
+		entity.Fields["products_info.description"] = FieldCannotBeEmptyMessage
 	}
 
-	r.Thumbnail = strings.TrimSpace(r.Thumbnail)
-	if r.Thumbnail == "" {
+	r.ProductInfo.Thumbnail = strings.TrimSpace(r.ProductInfo.Thumbnail)
+	if r.ProductInfo.Thumbnail == "" {
 		unprocessableEntity = true
-		entity.Fields["thumbnail"] = FieldCannotBeEmptyMessage
+		entity.Fields["products_info.thumbnail"] = FieldCannotBeEmptyMessage
 	}
 
-	r.CategoryID = strings.TrimSpace(r.CategoryID)
-	if _, err := uuid.Parse(r.CategoryID); err != nil {
+	r.ProductInfo.CategoryID = strings.TrimSpace(r.ProductInfo.CategoryID)
+	if _, err := uuid.Parse(r.ProductInfo.CategoryID); err != nil {
 		unprocessableEntity = true
-		entity.Fields["category_id"] = FieldCannotBeEmptyMessage
+		entity.Fields["products_info.category_id"] = FieldCannotBeEmptyMessage
+	}
+	if len(r.Courier.CourierID) == 0 {
+		unprocessableEntity = true
+		entity.Fields["courier.courier_ids"] = FieldCannotBeEmptyMessage
+	}
+
+	totalData := len(r.ProductDetail)
+	for i := 0; i < totalData; i++ {
+		if r.ProductDetail[i].Price == 0 {
+			unprocessableEntity = true
+			entity.Fields["price"] = FieldCannotBeEmptyMessage
+		}
+		if r.ProductDetail[i].Stock == 0 {
+			unprocessableEntity = true
+			entity.Fields["stock"] = FieldCannotBeEmptyMessage
+		}
+		if r.ProductDetail[i].Weight == 0 {
+			unprocessableEntity = true
+			entity.Fields["weight"] = FieldCannotBeEmptyMessage
+		}
+		if r.ProductDetail[i].Size == 0 {
+			unprocessableEntity = true
+			entity.Fields["size"] = FieldCannotBeEmptyMessage
+		}
+		r.ProductDetail[i].Codition = strings.TrimSpace(r.ProductDetail[i].Codition)
+		if r.ProductDetail[i].Codition == "" {
+			unprocessableEntity = true
+			entity.Fields["condition"] = FieldCannotBeEmptyMessage
+		}
+		if len(r.ProductDetail[i].Photo) == 0 {
+			unprocessableEntity = true
+			entity.Fields["photo"] = FieldCannotBeEmptyMessage
+		}
+		if len(r.ProductDetail[i].VariantDetailID) == 0 {
+			unprocessableEntity = true
+			entity.Fields["variant_detail_id"] = FieldCannotBeEmptyMessage
+		}
+
 	}
 
 	if unprocessableEntity {

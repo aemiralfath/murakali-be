@@ -1,9 +1,10 @@
 package util
 
 import (
-	"crypto/rand"
+	"math/rand"
 	"mime/multipart"
 	"murakali/config"
+	"time"
 	"unicode"
 
 	"github.com/cloudinary/cloudinary-go/v2"
@@ -58,4 +59,15 @@ func UploadImageToCloudinary(c *gin.Context, cfg *config.Config, file multipart.
 	cldService, _ := cloudinary.NewFromURL(cfg.External.CloudinaryURL)
 	response, _ := cldService.Upload.Upload(c, file, uploader.UploadParams{})
 	return response.SecureURL
+}
+
+func SKUGenerator(ProductName string) string {
+	rand.Seed(time.Now().UTC().UnixNano())
+	var alpha = "abcdefghijkmnpqrstuvwxyz123456789"
+	buf := make([]byte, 8)
+
+	for i := 0; i < 8; i++ {
+		buf[i] = alpha[rand.Intn(len(alpha))]
+	}
+	return ProductName + "-" + string(buf)
 }

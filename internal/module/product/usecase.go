@@ -17,4 +17,5 @@ type UseCase interface {
 	GetFavoriteProducts(
 		ctx context.Context, pgn *pagination.Pagination, query *body.GetProductQueryRequest, userID string) (*pagination.Pagination, error)
 	CreateProduct(ctx context.Context, requestBody body.CreateProductRequest, userID string) error
+	UpdateListedStatus(ctx context.Context, productID string) error
 }
