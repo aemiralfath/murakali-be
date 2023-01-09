@@ -26,13 +26,17 @@ const (
 	ChangeOrderStatusQuery = `UPDATE "order" SET "order_status_id" = $1 WHERE "id" = $2`
 
 	GetCourierSellerQuery = `
-	SELECT "sp"."id" as "shop_courier_id", "c"."name" as "name", "c"."code" as "code", "c"."service" as "service",
-		"c"."description" as "description"
+	SELECT "sp"."id" as "shop_courier_id",	"sp"."courier_id" as "courier_id", "sp"."deleted_at" as "deleted_at"
 	FROM "shop_courier" as "sp"
-	INNER JOIN "courier" as "c" ON "c"."id" = "sp"."courier_id"
 	INNER JOIN "shop" as "s" ON "s"."id" = "sp"."shop_id"
-	WHERE "s"."user_id" = $1 AND "sp"."deleted_at" IS NULL
-	ORDER BY "sp"."created_at" DESC ;
+	WHERE "s"."user_id" = $1;
+	`
+
+	GetAllCourierQuery = `
+	SELECT  "c"."id" as "courier_id","c"."name" as "name", "c"."code" as "code", "c"."service" as "service",
+		"c"."description" as "description"
+	FROM "courier" as "c"
+	WHERE "c".deleted_at IS NULL;
 	`
 
 	GetShopIDByShopIDQuery = `SELECT s.id, s.user_id, s.name, s.total_product,
@@ -41,15 +45,17 @@ const (
 	JOIN "user" u ON u.id = s.user_id
 	WHERE s.id = $1 AND s.deleted_at is null`
 
-	GetCourierByIDQuery                       = `SELECT id FROM "courier" WHERE id = $1 AND deleted_at IS NULL`
-	GetShopIDByUserIDQuery                    = `SELECT id from "shop" WHERE user_id = $1 AND deleted_at IS NULL `
-	GetCourierSellerIDByShopAndCourierIDQuery = `SELECT id from "shop_courier" WHERE shop_id = $1 AND courier_id = $2 AND deleted_at IS NULL `
-	CreateCourierSellerQuery                  = `INSERT INTO "shop_courier" 
+	GetCourierByIDQuery                            = `SELECT id FROM "courier" WHERE id = $1 AND deleted_at IS NULL`
+	GetShopIDByUserIDQuery                         = `SELECT id from "shop" WHERE user_id = $1 AND deleted_at IS NULL `
+	GetCourierSellerNotNullByShopAndCourierIDQuery = `SELECT id from "shop_courier" WHERE shop_id = $1 AND courier_id = $2 `
+	CreateCourierSellerQuery                       = `INSERT INTO "shop_courier" 
     	(shop_id, courier_id)
     	VALUES ($1, $2)`
 
 	GetCourierSellerByIDQuery = `SELECT id FROM "shop_courier" WHERE id = $1 AND deleted_at IS NULL`
 	DeleteCourierSellerQuery  = `UPDATE "shop_courier" set deleted_at = now() WHERE id = $1 AND deleted_at IS NULL`
+
+	UpdateCourierSellerQuery = `UPDATE "shop_courier" set deleted_at = NULL WHERE courier_id = $1 AND shop_id = $2 AND deleted_at IS NOT NULL`
 
 	GetCategoryBySellerIDQuery = `SELECT c.id, c.name
 	From shop s, product p, category c

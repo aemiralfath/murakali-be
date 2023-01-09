@@ -1,6 +1,7 @@
 package body
 
 import (
+	"database/sql"
 	"murakali/pkg/httperror"
 	"murakali/pkg/response"
 	"net/http"
@@ -14,11 +15,27 @@ type CourierSellerResponse struct {
 }
 
 type CourierSellerInfo struct {
-	ShopCourierID uuid.UUID `json:"id" db:"shop_courier_id" `
+	ShopCourierID string    `json:"shop_courier_id" db:"shop_courier_id" `
+	CourierID     uuid.UUID `json:"courier_id" db:"courier_id" `
 	Name          string    `json:"name" db:"name" `
 	Code          string    `json:"code" db:"code" `
 	Service       string    `json:"service" db:"service" `
 	Description   string    `json:"description" db:"description" `
+	DeletedAt     string    `json:"deleted_at" db:"deleted_at" `
+}
+
+type CourierSellerRelationInfo struct {
+	ShopCourierID uuid.UUID    `json:"shop_courier_id" db:"shop_courier_id" `
+	CourierID     uuid.UUID    `json:"courier_id" db:"courier_id" `
+	DeletedAt     sql.NullTime `json:"deleted_at" db:"deleted_at" `
+}
+
+type CourierInfo struct {
+	CourierID   uuid.UUID `json:"courier_id" db:"courier_id" `
+	Name        string    `json:"name" db:"name" `
+	Code        string    `json:"code" db:"code" `
+	Service     string    `json:"service" db:"service" `
+	Description string    `json:"description" db:"description" `
 }
 
 type CourierSellerRequest struct {

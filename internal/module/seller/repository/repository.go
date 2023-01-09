@@ -170,8 +170,8 @@ func (r *sellerRepo) ChangeOrderStatus(ctx context.Context, requestBody body.Cha
 	return nil
 }
 
-func (r *sellerRepo) GetCourierSeller(ctx context.Context, userID string) ([]*body.CourierSellerInfo, error) {
-	courierSeller := make([]*body.CourierSellerInfo, 0)
+func (r *sellerRepo) GetCourierSeller(ctx context.Context, userID string) ([]*body.CourierSellerRelationInfo, error) {
+	courierSeller := make([]*body.CourierSellerRelationInfo, 0)
 
 	res, err := r.PSQL.QueryContext(
 		ctx, GetCourierSellerQuery,
@@ -184,27 +184,56 @@ func (r *sellerRepo) GetCourierSeller(ctx context.Context, userID string) ([]*bo
 	defer res.Close()
 
 	for res.Next() {
-		var courierSellerData body.CourierSellerInfo
-
+		var courierSellerData body.CourierSellerRelationInfo
 		if errScan := res.Scan(
 			&courierSellerData.ShopCourierID,
-			&courierSellerData.Name,
-			&courierSellerData.Code,
-			&courierSellerData.Service,
-			&courierSellerData.Description,
+			&courierSellerData.CourierID,
+			&courierSellerData.DeletedAt,
+		); errScan != nil {
+			return nil, err
+		}
+		courierSeller = append(courierSeller, &courierSellerData)
+	}
+	if res.Err() != nil {
+		return nil, err
+	}
+	return courierSeller, err
+}
+
+func (r *sellerRepo) GetAllCourier(ctx context.Context) ([]*body.CourierInfo, error) {
+	courier := make([]*body.CourierInfo, 0)
+
+	res, err := r.PSQL.QueryContext(
+		ctx, GetAllCourierQuery,
+	)
+
+	if err != nil {
+		return nil, err
+	}
+	defer res.Close()
+
+	for res.Next() {
+		var courierData body.CourierInfo
+		if errScan := res.Scan(
+			&courierData.CourierID,
+			&courierData.Name,
+			&courierData.Code,
+			&courierData.Service,
+			&courierData.Description,
 		); errScan != nil {
 			return nil, err
 		}
 
-		courierSeller = append(courierSeller, &courierSellerData)
+		courier = append(courier, &courierData)
 	}
 
 	if res.Err() != nil {
 		return nil, err
 	}
 
-	return courierSeller, err
+	return courier, err
 }
+
 func (r *sellerRepo) GetSellerBySellerID(ctx context.Context, sellerID string) (*body.SellerResponse, error) {
 	var sellerData body.SellerResponse
 	if err := r.PSQL.QueryRowContext(ctx, GetShopIDByShopIDQuery, sellerID).Scan(
@@ -259,9 +288,9 @@ func (r *sellerRepo) GetShopIDByUserID(ctx context.Context, userID string) (stri
 	return ID, nil
 }
 
-func (r *sellerRepo) GetCourierSellerByShopAndCourierID(ctx context.Context, shopID, courierID string) (string, error) {
+func (r *sellerRepo) GetCourierSellerNotNullByShopAndCourierID(ctx context.Context, shopID, courierID string) (string, error) {
 	var ID string
-	if err := r.PSQL.QueryRowContext(ctx, GetCourierSellerIDByShopAndCourierIDQuery, shopID, courierID).Scan(&ID); err != nil {
+	if err := r.PSQL.QueryRowContext(ctx, GetCourierSellerNotNullByShopAndCourierIDQuery, shopID, courierID).Scan(&ID); err != nil {
 		return "", err
 	}
 	return ID, nil
@@ -290,6 +319,14 @@ func (r *sellerRepo) GetCourierSellerByID(ctx context.Context, shopCourierID str
 		return "", err
 	}
 	return ID, nil
+}
+
+func (r *sellerRepo) UpdateCourierSellerByID(ctx context.Context, shopID, courierID string) error {
+	_, err := r.PSQL.ExecContext(ctx, UpdateCourierSellerQuery, courierID, shopID)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 func (r *sellerRepo) DeleteCourierSellerByID(ctx context.Context, shopCourierID string) error {
