@@ -32,13 +32,13 @@ const (
 	product pr 
 	join product_detail b on pr.id = b.product_id 
 	join category c on c.id = pr.category_id
-	where pr.id = $1`
+	where pr.id = $1 and b.deleted_at is null`
 
 	GetProductDetailQuery = `select
 	pd.id,pd.price,pd.stock,pd.weight,pd.size,pd.hazardous,pd.condition,pd.bulk_price
 	from 
 	product_detail pd
-	where pd.product_id = $1`
+	where pd.product_id = $1 and pd.deleted_at is null`
 
 	GetProductDetailPhotosQuery = `select
 	g.url
