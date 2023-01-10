@@ -23,7 +23,7 @@ func MapProductRoutes(productGroup *gin.RouterGroup, h product.Handlers, mw *mid
 	productUserGroup.GET("/favorite", h.GetFavoriteProducts)
 	productUserGroup.Use(mw.SellerJWTMiddleware())
 	productUserGroup.POST("/", h.CreateProduct)
-	productUserGroup.POST("/photo", h.UploadProductPicture)
+	productUserGroup.POST("/picture", h.UploadProductPicture)
 	productUserGroup.PUT("/status/:id", h.UpdateListedStatus)
 	productUserGroup.PUT("/:id", h.UpdateProduct)
 }

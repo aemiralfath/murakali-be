@@ -32,16 +32,23 @@ const (
 	product pr 
 	join product_detail b on pr.id = b.product_id 
 	join category c on c.id = pr.category_id
-	where pr.id = $1`
+	where pr.id = $1 and b.deleted_at is null`
 
 	GetProductDetailQuery = `select
-	pd.id,pd.price,pd.stock,pd.weight,pd.size,pd.hazardous,pd.condition,pd.bulk_price,g.url
+	pd.id,pd.price,pd.stock,pd.weight,pd.size,pd.hazardous,pd.condition,pd.bulk_price
 	from 
 	product_detail pd
-	join photo g on pd.id = g.product_detail_id
-	where pd.product_id = $1`
+	where pd.product_id = $1 and pd.deleted_at is null`
+
+	GetProductDetailPhotosQuery = `select
+	g.url
+	from photo g 
+	where product_detail_id = $1`
 
 	GetVariantDetailQuery = `select b.type,b.name from variant a join variant_detail b on a.variant_detail_id = b.id
+	where a.product_detail_id = $1`
+
+	GetVariantInfoQuery = `select a.id,b.id,b.name from variant a join variant_detail b on a.variant_detail_id = b.id
 	where a.product_detail_id = $1`
 
 	GetPromotionDetailQuery = `select

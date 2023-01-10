@@ -266,10 +266,28 @@ func (r *productRepo) GetProductDetail(ctx context.Context, productID string, pr
 			&detail.Hazardous,
 			&detail.Condition,
 			&detail.BulkPrice,
-			&detail.ProductURL,
 		); errScan != nil {
 			return nil, err
 		}
+
+		res3, err3 := r.PSQL.QueryContext(
+			ctx, GetProductDetailPhotosQuery, detail.ProductDetailID)
+
+		if err3 != nil {
+			return nil, err3
+		}
+
+		var productURLs []string
+		for res3.Next() {
+			var url body.URL
+			if errScan := res3.Scan(
+				&url.URL,
+			); errScan != nil {
+				return nil, err
+			}
+			productURLs = append(productURLs, url.URL)
+		}
+		detail.ProductURL = productURLs
 
 		if promo != nil {
 			discountedPrice := 0.0
@@ -309,6 +327,27 @@ func (r *productRepo) GetProductDetail(ctx context.Context, productID string, pr
 			mapVariant[variant.Type] = variant.Name
 		}
 		detail.Variant = mapVariant
+
+		res4, err4 := r.PSQL.QueryContext(
+			ctx, GetVariantInfoQuery, detail.ProductDetailID)
+
+		if err4 != nil {
+			return nil, err4
+		}
+
+		var variantInfos []body.VariantInfo
+		for res4.Next() {
+			var info body.VariantInfo
+			if errScan := res4.Scan(
+				&info.VariantID,
+				&info.VariantDetailID,
+				&info.Name,
+			); errScan != nil {
+				return nil, err
+			}
+			variantInfos = append(variantInfos, info)
+		}
+		detail.VariantInfos = variantInfos
 
 		productDetail = append(productDetail, &detail)
 	}
