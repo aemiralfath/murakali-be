@@ -950,29 +950,6 @@ func (u *userUC) UpdateTransaction(ctx context.Context, transactionID string, re
 		}
 	}
 
-	if requestBody.Status == constant.SLPStatusCanceled && requestBody.Message == constant.SLPMessageCanceled {
-		err := u.txRepo.WithTransaction(func(tx postgre.Transaction) error {
-			transaction.CanceledAt.Valid = true
-			transaction.CanceledAt.Time = time.Now()
-			if err := u.userRepo.UpdateTransaction(ctx, tx, transaction); err != nil {
-				return err
-			}
-
-			for _, order := range orders {
-				order.OrderStatusID = constant.OrderStatusCanceled
-				if err := u.userRepo.UpdateOrder(ctx, tx, order); err != nil {
-					return err
-				}
-			}
-
-			return nil
-		})
-
-		if err != nil {
-			return err
-		}
-	}
-
 	return nil
 }
 
@@ -1252,7 +1229,7 @@ func (u *userUC) CreateTransaction(ctx context.Context, userID string, requestBo
 				ProductDetailID: productDetailData.ID,
 				Quantity:        bodyProductDetail.Quantity,
 				ItemPrice:       bodyProductDetail.SubPrice,
-				TotalPrice:      bodyProductDetail.SubPrice * float64(bodyProductDetail.Quantity),
+				TotalPrice:      bodyProductDetail.SubPrice,
 			}
 			item := &body.OrderItemResponse{
 				Item:              orderItem,
