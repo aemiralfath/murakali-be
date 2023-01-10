@@ -1,7 +1,6 @@
 package body
 
 import (
-	"mime/multipart"
 	"murakali/pkg/httperror"
 	"murakali/pkg/response"
 	"net/http"
@@ -10,50 +9,52 @@ import (
 	"github.com/google/uuid"
 )
 
-type ImageRequest struct {
-	Img multipart.File `form:"file"`
+type UpdateProductRequest struct {
+	ProductInfo         UpdateProductInfo            `json:"products_info_update"`
+	ProductDetail       []UpdateProductDetailRequest `json:"products_detail_update"`
+	ProductDetailRemove []string                     `json:"products_detail_remove"`
 }
 
-type CreateProductRequest struct {
-	ProductInfo   CreateProductInfo            `json:"products_info"`
-	ProductDetail []CreateProductDetailRequest `json:"products_detail"`
-}
-
-type CreateProductInfo struct {
+type UpdateProductInfo struct {
 	Title       string `json:"title"`
 	Description string `json:"description"`
 	Thumbnail   string `json:"thumbnail"`
 	CategoryID  string `json:"category_id"`
 }
 
-type CreateProductInfoForQuery struct {
+type UpdateProductInfoForQuery struct {
 	Title       string
 	Description string
 	Thumbnail   string
 	CategoryID  string
 	MinPrice    float64
 	MaxPrice    float64
-	ShopID      string
-	SKU         string
 }
 
-type CreateProductDetailRequest struct {
-	Price           float64  `json:"price"`
-	Stock           float64  `json:"stock"`
-	Weight          float64  `json:"weight"`
-	Size            float64  `json:"size"`
-	Hazardous       bool     `json:"hazardous"`
-	Codition        string   `json:"condition"`
-	BulkPrice       bool     `json:"bulk_price"`
-	Photo           []string `json:"photo"`
-	VariantDetailID []string `json:"variant_detail_id"`
+type UpdateProductDetailRequest struct {
+	ProductDetailID string          `json:"product_detail_id"`
+	Price           float64         `json:"price"`
+	Stock           float64         `json:"stock"`
+	Weight          float64         `json:"weight"`
+	Size            float64         `json:"size"`
+	Hazardous       bool            `json:"hazardous"`
+	Codition        string          `json:"condition"`
+	BulkPrice       bool            `json:"bulk_price"`
+	Photo           []string        `json:"photo"`
+	VariantDetailID []UpdateVariant `json:"variant_info_update"`
+	VariantIDRemove []string        `json:"variant_id_remove"`
 }
 
-func (r *CreateProductRequest) ValidateCreateProduct() (UnprocessableEntity, error) {
+type UpdateVariant struct {
+	VariantID       string `json:"variant_id"`
+	VariantDetailID string `json:"variant_detail_id"`
+}
+
+func (r *UpdateProductRequest) ValidateUpdateProduct() (UnprocessableEntity, error) {
 	unprocessableEntity := false
 	entity := UnprocessableEntity{
 		Fields: map[string]string{
-			"products_info.title":       "",
+			"title":                     "",
 			"products_info.description": "",
 			"products_info.thumbnail":   "",
 			"products_info.category_id": "",
@@ -63,33 +64,35 @@ func (r *CreateProductRequest) ValidateCreateProduct() (UnprocessableEntity, err
 	r.ProductInfo.Title = strings.TrimSpace(r.ProductInfo.Title)
 	if r.ProductInfo.Title == "" {
 		unprocessableEntity = true
-		entity.Fields["products_info.title"] = FieldCannotBeEmptyMessage
+		entity.Fields["title"] = FieldCannotBeEmptyMessage
 	}
 
 	r.ProductInfo.Description = strings.TrimSpace(r.ProductInfo.Description)
 	if r.ProductInfo.Description == "" {
 		unprocessableEntity = true
-		entity.Fields["products_info.description"] = FieldCannotBeEmptyMessage
+		entity.Fields["description"] = FieldCannotBeEmptyMessage
 	}
 
 	r.ProductInfo.Thumbnail = strings.TrimSpace(r.ProductInfo.Thumbnail)
 	if r.ProductInfo.Thumbnail == "" {
 		unprocessableEntity = true
-		entity.Fields["products_info.thumbnail"] = FieldCannotBeEmptyMessage
+		entity.Fields["thumbnail"] = FieldCannotBeEmptyMessage
 	}
 
 	r.ProductInfo.CategoryID = strings.TrimSpace(r.ProductInfo.CategoryID)
 	if _, err := uuid.Parse(r.ProductInfo.CategoryID); err != nil {
 		unprocessableEntity = true
-		entity.Fields["products_info.category_id"] = FieldCannotBeEmptyMessage
+		entity.Fields["category_id"] = FieldCannotBeEmptyMessage
 	}
 
 	totalData := len(r.ProductDetail)
-	if totalData == 0 {
-		unprocessableEntity = true
-		entity.Fields["products_detail"] = FieldCannotBeEmptyMessage
-	}
+
 	for i := 0; i < totalData; i++ {
+		r.ProductDetail[i].ProductDetailID = strings.TrimSpace(r.ProductDetail[i].ProductDetailID)
+		if r.ProductDetail[i].ProductDetailID == "" {
+			unprocessableEntity = true
+			entity.Fields["product_detail_id"] = FieldCannotBeEmptyMessage
+		}
 		if r.ProductDetail[i].Price == 0 {
 			unprocessableEntity = true
 			entity.Fields["price"] = FieldCannotBeEmptyMessage
@@ -115,16 +118,17 @@ func (r *CreateProductRequest) ValidateCreateProduct() (UnprocessableEntity, err
 			unprocessableEntity = true
 			entity.Fields["photo"] = FieldCannotBeEmptyMessage
 		}
-
 		totalDataVariant := len(r.ProductDetail[i].VariantDetailID)
-		if totalDataVariant == 0 {
-			unprocessableEntity = true
-			entity.Fields["variant_detail_id"] = FieldCannotBeEmptyMessage
-		}
 		if totalDataVariant > 0 {
 			for j := 0; j < totalDataVariant; j++ {
-				r.ProductDetail[i].VariantDetailID[j] = strings.TrimSpace(r.ProductDetail[i].VariantDetailID[j])
-				if _, err := uuid.Parse(r.ProductDetail[i].VariantDetailID[j]); err != nil {
+				r.ProductDetail[i].VariantDetailID[j].VariantID = strings.TrimSpace(r.ProductDetail[i].VariantDetailID[j].VariantID)
+				if _, err := uuid.Parse(r.ProductDetail[i].VariantDetailID[j].VariantID); err != nil {
+					unprocessableEntity = true
+					entity.Fields["variant_id"] = FieldCannotBeEmptyMessage
+				}
+
+				r.ProductDetail[i].VariantDetailID[j].VariantDetailID = strings.TrimSpace(r.ProductDetail[i].VariantDetailID[j].VariantDetailID)
+				if _, err := uuid.Parse(r.ProductDetail[i].VariantDetailID[j].VariantDetailID); err != nil {
 					unprocessableEntity = true
 					entity.Fields["variant_detail_id"] = FieldCannotBeEmptyMessage
 				}

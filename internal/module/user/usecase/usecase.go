@@ -153,6 +153,9 @@ func (u *userUC) UpdateAddressByID(ctx context.Context, userID, addressID string
 
 		return nil
 	})
+	if err != nil {
+		return err
+	}
 
 	return nil
 }
@@ -478,6 +481,9 @@ func (u *userUC) AddSealabsPay(ctx context.Context, request body.AddSealabsPayRe
 		}
 		return nil
 	})
+	if err != nil {
+		return err
+	}
 	return nil
 }
 

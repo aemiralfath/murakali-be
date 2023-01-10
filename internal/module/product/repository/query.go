@@ -247,4 +247,41 @@ const (
 	GetListedStatusQuery = `SELECT listed_status from "product" WHERE id = $1 AND deleted_at IS NULL `
 
 	UpdateListedStatusQuery = `UPDATE "product" SET "listed_status" = $1 WHERE "id" = $2`
+
+	UpdateProductQuery = `UPDATE 
+	"product" SET "category_id" = $1,
+	"title" =$2,"description"=$3,
+	"thumbnail_url"= $4,
+	"min_price"=$5,
+	"max_price"=$6
+	WHERE "id" = $7`
+
+	UpdateProductDetailQuery = `UPDATE 
+	"product_detail" SET 
+	"price" = $1,
+	"stock" =$2,
+	"weight"=$3,
+	"size"= $4,
+	"hazardous"=$5,
+	"condition"=$6,
+	"bulk_price"=$7
+	WHERE "id" = $8 AND
+	"product_id" = $9`
+
+	DeleteProductDetailByIDQuery = `UPDATE "product_detail" set deleted_at = now() WHERE id = $1`
+
+	DeleteVariantByIDQuery = `UPDATE "variant" set deleted_at = now() WHERE id = $1`
+
+	DeletePhotoByIDQuery = `
+	DELETE FROM "photo" WHERE "product_detail_id" = $1`
+
+	GetMaxMinPriceQuery = `
+	SELECT max(price), min(price) 
+	FROM product_detail
+	WHERE product_id = $1
+	and deleted_at IS NULL;`
+
+	UpdateVariantQuery = `UPDATE 
+	"variant" SET  "variant_detail_id" = $1
+	WHERE "id" = $2`
 )

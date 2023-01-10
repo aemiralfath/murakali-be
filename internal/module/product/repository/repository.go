@@ -763,19 +763,6 @@ func (r *productRepo) CreateVariant(ctx context.Context, tx postgre.Transaction,
 	return nil
 }
 
-func (r *productRepo) CreateProductCourier(ctx context.Context, tx postgre.Transaction, productID, courierID string) error {
-	_, err := tx.ExecContext(
-		ctx,
-		CreateProductCourierQuery,
-		productID,
-		courierID,
-	)
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
 func (r *productRepo) GetListedStatus(ctx context.Context, productID string) (bool, error) {
 	var listedStatus bool
 	if err := r.PSQL.QueryRowContext(ctx, GetListedStatusQuery, productID).Scan(&listedStatus); err != nil {
@@ -787,6 +774,81 @@ func (r *productRepo) GetListedStatus(ctx context.Context, productID string) (bo
 
 func (r *productRepo) UpdateListedStatus(ctx context.Context, listedStatus bool, productID string) error {
 	_, err := r.PSQL.ExecContext(ctx, UpdateListedStatusQuery, listedStatus, productID)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (r *productRepo) UpdateProduct(ctx context.Context, tx postgre.Transaction, requestBody body.UpdateProductInfoForQuery, productID string) error {
+	_, err := tx.ExecContext(ctx, UpdateProductQuery,
+		requestBody.CategoryID,
+		requestBody.Title,
+		requestBody.Description,
+		requestBody.Thumbnail,
+		requestBody.MinPrice,
+		requestBody.MaxPrice,
+		productID)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+func (r *productRepo) UpdateProductDetail(ctx context.Context, tx postgre.Transaction, requestBody body.UpdateProductDetailRequest, productID string) error {
+	_, err := tx.ExecContext(ctx,
+		UpdateProductDetailQuery,
+		requestBody.Price,
+		requestBody.Stock,
+		requestBody.Weight,
+		requestBody.Size,
+		requestBody.Hazardous,
+		requestBody.Codition,
+		requestBody.BulkPrice,
+		requestBody.ProductDetailID,
+		productID)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (r *productRepo) DeletePhoto(ctx context.Context, tx postgre.Transaction, productDetailID string) error {
+	_, err := r.PSQL.ExecContext(ctx, DeletePhotoByIDQuery, productDetailID)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (r *productRepo) DeleteProductDetail(ctx context.Context, tx postgre.Transaction, productDetailID string) error {
+	_, err := r.PSQL.ExecContext(ctx, DeleteProductDetailByIDQuery, productDetailID)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (r *productRepo) DeleteVariant(ctx context.Context, tx postgre.Transaction, productID string) error {
+	_, err := r.PSQL.ExecContext(ctx, DeleteVariantByIDQuery, productID)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (r *productRepo) GetMaxMinPriceByID(ctx context.Context, productID string) (float64, float64, error) {
+	var max, min float64
+	if err := r.PSQL.QueryRowContext(ctx, GetMaxMinPriceQuery, productID).Scan(&max, &min); err != nil {
+		return 0, 0, err
+	}
+	return max, min, nil
+}
+
+func (r *productRepo) UpdateVariant(ctx context.Context, tx postgre.Transaction, variantID, variantDetailID string) error {
+	_, err := tx.ExecContext(ctx,
+		UpdateVariantQuery,
+		variantDetailID,
+		variantID)
 	if err != nil {
 		return err
 	}

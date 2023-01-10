@@ -869,8 +869,50 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/CreateSlpPaymentResponse"
+  "/api/v1/product/picture":
+    post:
+      summary: Upload image to cloudinary only
+      description: >-
+        Upload Image to cloudinary only, this endpoint will not save url in database
+      tags:
+        - Product
+      security:
+        - BEARER: []
+
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              $ref: "#/components/schemas/EditProfilePictureRequest"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UploadProductPictureResponse"
 
   "/api/v1/product/":
+    post:
+      summary: create  product
+      description: >-
+        user create for product
+      tags:
+        - Product
+      security:
+        - BEARER: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateProductRequest"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DefaultSuccess"
     get:
       summary: Get Product {WIP}
       description: >-
@@ -961,6 +1003,79 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/GetProductResponse"
+  "/api/v1/product/{product_id}":
+    put:
+      summary: update product
+      description: >-
+        user update for product
+      tags:
+        - Product
+      parameters:
+        - in: path
+          name: product_id
+          schema:
+            type: string
+          required: true
+      security:
+        - BEARER: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateProductRequest"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DefaultSuccess"
+    get:
+      summary: Get Product
+      description: >-
+        get product
+      tags:
+        - Product
+
+      parameters:
+        - in: path
+          name: product_id
+          schema:
+            type: string
+          required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GetProductDetailResponse"
+  "/api/v1/product/status/{product_id}":
+    put:
+      summary: update product listed list status
+      description: >-
+        update for product  listed list status
+      tags:
+        - Product
+      parameters:
+        - in: path
+          name: product_id
+          schema:
+            type: string
+          required: true
+      security:
+        - BEARER: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DefaultSuccess"
 
   "/api/v1/product/favorite":
     get:
@@ -969,7 +1084,6 @@ paths:
         get product
       tags:
         - Product
-
       parameters:
         - in: query
           name: search
@@ -1070,28 +1184,6 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/GetRecommendedProductListResponse"
-
-  "/api/v1/product/{product_id}":
-    get:
-      summary: Get Product
-      description: >-
-        get product
-      tags:
-        - Product
-
-      parameters:
-        - in: path
-          name: product_id
-          schema:
-            type: string
-          required: true
-      responses:
-        "200":
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/GetProductDetailResponse"
 
   "/api/v1/product/{product_id}/review":
     get:
@@ -2875,6 +2967,97 @@ components:
                 result_discount:
                 voucher_discount_percentage: 0
                 voucher_discount_fix_price: 5000
+    UploadProductPictureResponse:
+      title: DefaultSuccess
+      type: object
+      description: Default Success.
+      properties:
+        message:
+          type: string
+          example: success
+          description: Success message from server.
+        data:
+          type: string
+          example: https://res.cloudinary.com/dhpao1zxi/image/upload/v1671705602/ldtzmxqeyb4nwu5p6y76.jpg
+          description: you get url picture.
+
+    CreateProductRequest:
+      title: CreateProductRequest
+      type: object
+      description: Create product request data model.
+      example:
+        products_info:
+          title: uniqlo shirt
+          description: this is description
+          thumbnail: https://res.cloudinary.com/dhpao1zxi/image/upload/v1671705602/ldtzmxqeyb4nwu5p6y76.jpg
+          category_id: d92a0995-78cd-4eba-a855-dfc096ffec5b
+        products_detail:
+          - price: 400000
+            stock: 40
+            weight: 40000
+            size: 40
+            hazardous: true
+            condition: new
+            bulk_price: true
+            photo:
+              - https://res.cloudinary.com/dhpao1zxi/image/upload/v1671705602/ldtzmxqeyb4nwu5p6y76.jpg
+              - https://res.cloudinary.com/dhpao1zxi/image/upload/v1671705602/ldtzmxqeyb4nwu5p6y76.jpg
+            variant_detail_id:
+              - 3ca7b55d-74f8-4fe0-9cee-fb7c8c35f05f
+              - 73e2e918-736a-4dd8-bf08-6a73cc3e1adc
+          - price: 500000
+            stock: 50
+            weight: 50000
+            size: 50
+            hazardous: true
+            condition: new
+            bulk_price: true
+            photo:
+              - https://res.cloudinary.com/dhpao1zxi/image/upload/v1671705602/ldtzmxqeyb4nwu5p6y76.jpg
+            variant_detail_id:
+              - 3ca7b55d-74f8-4fe0-9cee-fb7c8c35f05f
+              - 73e2e918-736a-4dd8-bf08-6a73cc3e1adc
+          - price: 600000
+            stock: 60
+            weight: 60000
+            size: 60
+            hazardous: true
+            condition: old
+            bulk_price: false
+            photo:
+              - https://res.cloudinary.com/dhpao1zxi/image/upload/v1671705602/ldtzmxqeyb4nwu5p6y76.jpg
+            variant_detail_id:
+              - 3ca7b55d-74f8-4fe0-9cee-fb7c8c35f05f
+              - 73e2e918-736a-4d
+
+    UpdateProductRequest:
+      title: UpdateProductRequest
+      type: object
+      description: Update product request data model.
+      example:
+        products_info_update:
+          title: uniqlo shirts
+          description: this is description
+          thumbnail: https://res.cloudinary.com/dhpao1zxi/image/upload/v1673329263/k6x5iqami51p1ouilukp.jpg
+          category_id: d92a0995-78cd-4eba-a855-dfc096ffec5b
+        products_detail_update:
+          - product_detail_id: a7e8e5c8-95a0-468f-b0e3-efd3d324e51c
+            price: 900000
+            stock: 80
+            weight: 10000
+            size: 1
+            hazardous: false
+            condition: old
+            bulk_price: false
+            photo:
+              - https://res.cloudinary.com/dhpao1zxi/image/upload/v1673329263/k6x5iqami51p1ouilukp.jpg
+            variant_info_update:
+              - variant_id: 04564f63-7a59-422a-9e52-64a4560f3896
+                variant_detail_id: c89f208d-19b2-4e47-a1e3-6ad10e433cd9
+            variant_id_remove:
+              - 17adb731-b4f4-44ef-ad52-887c4a7472b3
+        products_detail_id_remove:
+          - 13510b22-3aa2-432e-ae48-3d1566a2acb7
 
     GetFavoriteProductResponse:
       title: GetFavoriteProductResponse
@@ -3329,7 +3512,7 @@ components:
               comment: test
               rating: 5
               image_url: null
-              created_at: '2023-01-05T06:24:51.808605Z'
+              created_at: "2023-01-05T06:24:51.808605Z"
               photo_url: >-
                 https://res.cloudinary.com/dhpao1zxi/image/upload/v1671705602/ldtzmxqeyb4nwu5p6y76.jpg
               username: mLVacZT
@@ -3339,11 +3522,11 @@ components:
               comment: null
               rating: 2
               image_url: null
-              created_at: '2023-01-06T06:45:13.411051Z'
+              created_at: "2023-01-06T06:45:13.411051Z"
               photo_url: >-
                 https://res.cloudinary.com/dhpao1zxi/image/upload/v1671705602/ldtzmxqeyb4nwu5p6y76.jpg
               username: mLVacZT
-          
+
     GetTotalRatingReviewProductResponse:
       title: GetTotalRatingReviewProductResponse
       type: object
@@ -3386,7 +3569,6 @@ components:
               count: 1
             - rating: 5
               count: 1
-
 
     CreateProductReviewRequest:
       title: CreateProductReviewRequest

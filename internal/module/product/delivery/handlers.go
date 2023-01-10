@@ -4,8 +4,10 @@ import (
 	"errors"
 	"fmt"
 	"murakali/config"
+	"murakali/internal/constant"
 	"murakali/internal/module/product"
 	"murakali/internal/module/product/delivery/body"
+	"murakali/internal/util"
 	"murakali/pkg/httperror"
 	"murakali/pkg/logger"
 	"murakali/pkg/pagination"
@@ -254,7 +256,7 @@ func (h *productHandlers) ValidateQueryProduct(c *gin.Context) (*pagination.Pagi
 	}
 
 	if sortBy == "" {
-		sortBy = `unit_sold`
+		sortBy = "unit_sold"
 	}
 	if sort == "" {
 		sort = "desc"
@@ -403,6 +405,78 @@ func (h *productHandlers) UpdateListedStatus(c *gin.Context) {
 	}
 
 	response.SuccessResponse(c.Writer, nil, http.StatusOK)
+}
+
+func (h *productHandlers) UpdateProduct(c *gin.Context) {
+	id := c.Param("id")
+	productID, err := uuid.Parse(id)
+	if err != nil {
+		response.ErrorResponse(c.Writer, response.BadRequestMessage, http.StatusBadRequest)
+		return
+	}
+	userID, exist := c.Get("userID")
+	if !exist {
+		response.ErrorResponse(c.Writer, response.UnauthorizedMessage, http.StatusUnauthorized)
+		return
+	}
+
+	var requestBody body.UpdateProductRequest
+	if err := c.ShouldBind(&requestBody); err != nil {
+		response.ErrorResponse(c.Writer, response.BadRequestMessage, http.StatusBadRequest)
+		return
+	}
+
+	invalidFields, err := requestBody.ValidateUpdateProduct()
+	if err != nil {
+		response.ErrorResponseData(c.Writer, invalidFields, response.UnprocessableEntityMessage, http.StatusUnprocessableEntity)
+		return
+	}
+
+	if err := h.productUC.UpdateProduct(c, requestBody, userID.(string), productID.String()); err != nil {
+		var e *httperror.Error
+		if !errors.As(err, &e) {
+			h.logger.Errorf("HandlerUser, Error: %s", err)
+			response.ErrorResponse(c.Writer, response.InternalServerErrorMessage, http.StatusInternalServerError)
+			return
+		}
+		response.ErrorResponse(c.Writer, e.Err.Error(), e.Status)
+		return
+	}
+
+	response.SuccessResponse(c.Writer, nil, http.StatusOK)
+}
+
+func (h *productHandlers) UploadProductPicture(c *gin.Context) {
+	type Sizer interface {
+		Size() int64
+	}
+
+	var imgURL string
+	var img body.ImageRequest
+
+	err := c.ShouldBind(&img)
+	if err != nil {
+		response.ErrorResponse(c.Writer, response.InternalServerErrorMessage, http.StatusInternalServerError)
+		return
+	}
+	data, _, err := c.Request.FormFile("Img")
+	if err != nil {
+		response.ErrorResponse(c.Writer, body.ImageIsEmpty, http.StatusInternalServerError)
+		return
+	}
+
+	if data.(Sizer).Size() > constant.ImgMaxSize {
+		response.ErrorResponse(c.Writer, response.PictureSizeTooBig, http.StatusInternalServerError)
+		return
+	}
+
+	if data == nil {
+		response.ErrorResponse(c.Writer, response.InternalServerErrorMessage, http.StatusInternalServerError)
+		return
+	}
+	imgURL = util.UploadImageToCloudinary(c, h.cfg, data)
+
+	response.SuccessResponse(c.Writer, imgURL, http.StatusOK)
 }
 
 // get product review by product id
