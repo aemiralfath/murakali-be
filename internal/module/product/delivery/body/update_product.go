@@ -10,8 +10,9 @@ import (
 )
 
 type UpdateProductRequest struct {
-	ProductInfo   UpdateProductInfo            `json:"products_info"`
-	ProductDetail []UpdateProductDetailRequest `json:"products_detail"`
+	ProductInfo         UpdateProductInfo            `json:"products_info_update"`
+	ProductDetail       []UpdateProductDetailRequest `json:"products_detail_update"`
+	ProductDetailRemove []string                     `json:"products_detail_remove"`
 }
 
 type UpdateProductInfo struct {
@@ -52,7 +53,7 @@ func (r *UpdateProductRequest) ValidateUpdateProduct() (UnprocessableEntity, err
 	unprocessableEntity := false
 	entity := UnprocessableEntity{
 		Fields: map[string]string{
-			"products_info.title":       "",
+			"title":                     "",
 			"products_info.description": "",
 			"products_info.thumbnail":   "",
 			"products_info.category_id": "",
@@ -62,31 +63,31 @@ func (r *UpdateProductRequest) ValidateUpdateProduct() (UnprocessableEntity, err
 	r.ProductInfo.Title = strings.TrimSpace(r.ProductInfo.Title)
 	if r.ProductInfo.Title == "" {
 		unprocessableEntity = true
-		entity.Fields["products_info.title"] = FieldCannotBeEmptyMessage
+		entity.Fields["title"] = FieldCannotBeEmptyMessage
 	}
 
 	r.ProductInfo.Description = strings.TrimSpace(r.ProductInfo.Description)
 	if r.ProductInfo.Description == "" {
 		unprocessableEntity = true
-		entity.Fields["products_info.description"] = FieldCannotBeEmptyMessage
+		entity.Fields["description"] = FieldCannotBeEmptyMessage
 	}
 
 	r.ProductInfo.Thumbnail = strings.TrimSpace(r.ProductInfo.Thumbnail)
 	if r.ProductInfo.Thumbnail == "" {
 		unprocessableEntity = true
-		entity.Fields["products_info.thumbnail"] = FieldCannotBeEmptyMessage
+		entity.Fields["thumbnail"] = FieldCannotBeEmptyMessage
 	}
 
 	r.ProductInfo.CategoryID = strings.TrimSpace(r.ProductInfo.CategoryID)
 	if _, err := uuid.Parse(r.ProductInfo.CategoryID); err != nil {
 		unprocessableEntity = true
-		entity.Fields["products_info.category_id"] = FieldCannotBeEmptyMessage
+		entity.Fields["category_id"] = FieldCannotBeEmptyMessage
 	}
 
 	totalData := len(r.ProductDetail)
 	if totalData == 0 {
 		unprocessableEntity = true
-		entity.Fields["products_detail"] = FieldCannotBeEmptyMessage
+		entity.Fields["products_detail_update"] = FieldCannotBeEmptyMessage
 	}
 	for i := 0; i < totalData; i++ {
 		r.ProductDetail[i].ProductDetailID = strings.TrimSpace(r.ProductDetail[i].ProductDetailID)
@@ -119,7 +120,6 @@ func (r *UpdateProductRequest) ValidateUpdateProduct() (UnprocessableEntity, err
 			unprocessableEntity = true
 			entity.Fields["photo"] = FieldCannotBeEmptyMessage
 		}
-
 	}
 
 	if unprocessableEntity {

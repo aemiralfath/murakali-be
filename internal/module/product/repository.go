@@ -35,13 +35,12 @@ type Repository interface {
 	CreatePhoto(ctx context.Context, tx postgre.Transaction, productDetailID, url string) error
 	CreateVideo(ctx context.Context, tx postgre.Transaction, productDetailID, url string) error
 	CreateVariant(ctx context.Context, tx postgre.Transaction, productDetailID string, variantDetailID string) error
-
 	GetListedStatus(ctx context.Context, productID string) (bool, error)
 	UpdateListedStatus(ctx context.Context, listedStatus bool, productID string) error
-
 	UpdateProduct(ctx context.Context, tx postgre.Transaction, requestBody body.UpdateProductInfoForQuery, productID string) error
 	UpdateProductDetail(ctx context.Context, tx postgre.Transaction, requestBody body.UpdateProductDetailRequest, productID string) error
 	DeletePhoto(ctx context.Context, tx postgre.Transaction, productDetailID string) error
-
+	GetMaxMinPriceByID(ctx context.Context, productID string) (float64, float64, error)
 	UpdateVariant(ctx context.Context, tx postgre.Transaction, variantID, variantDetailID string) error
+	DeleteProductDetail(ctx context.Context, tx postgre.Transaction, productDetailID string) error
 }

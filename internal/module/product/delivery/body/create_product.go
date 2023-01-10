@@ -1,6 +1,7 @@
 package body
 
 import (
+	"mime/multipart"
 	"murakali/pkg/httperror"
 	"murakali/pkg/response"
 	"net/http"
@@ -8,6 +9,10 @@ import (
 
 	"github.com/google/uuid"
 )
+
+type ImageRequest struct {
+	Img multipart.File `form:"file"`
+}
 
 type CreateProductRequest struct {
 	ProductInfo   CreateProductInfo            `json:"products_info"`

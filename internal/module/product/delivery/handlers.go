@@ -4,8 +4,10 @@ import (
 	"errors"
 	"fmt"
 	"murakali/config"
+	"murakali/internal/constant"
 	"murakali/internal/module/product"
 	"murakali/internal/module/product/delivery/body"
+	"murakali/internal/util"
 	"murakali/pkg/httperror"
 	"murakali/pkg/logger"
 	"murakali/pkg/pagination"
@@ -254,7 +256,7 @@ func (h *productHandlers) ValidateQueryProduct(c *gin.Context) (*pagination.Pagi
 	}
 
 	if sortBy == "" {
-		sortBy = `unit_sold`
+		sortBy = "unit_sold"
 	}
 	if sort == "" {
 		sort = "desc"
@@ -442,6 +444,39 @@ func (h *productHandlers) UpdateProduct(c *gin.Context) {
 	}
 
 	response.SuccessResponse(c.Writer, nil, http.StatusOK)
+}
+
+func (h *productHandlers) UploadProductPicture(c *gin.Context) {
+	type Sizer interface {
+		Size() int64
+	}
+
+	var imgURL string
+	var img body.ImageRequest
+
+	err := c.ShouldBind(&img)
+	if err != nil {
+		response.ErrorResponse(c.Writer, response.InternalServerErrorMessage, http.StatusInternalServerError)
+		return
+	}
+	data, _, err := c.Request.FormFile("Img")
+	if err != nil {
+		response.ErrorResponse(c.Writer, body.ImageIsEmpty, http.StatusInternalServerError)
+		return
+	}
+
+	if data.(Sizer).Size() > constant.ImgMaxSize {
+		response.ErrorResponse(c.Writer, response.PictureSizeTooBig, http.StatusInternalServerError)
+		return
+	}
+
+	if data == nil {
+		response.ErrorResponse(c.Writer, response.InternalServerErrorMessage, http.StatusInternalServerError)
+		return
+	}
+	imgURL = util.UploadImageToCloudinary(c, h.cfg, data)
+
+	response.SuccessResponse(c.Writer, imgURL, http.StatusOK)
 }
 
 // get product review by product id

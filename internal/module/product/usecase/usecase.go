@@ -474,30 +474,18 @@ func (u *productUC) UpdateListedStatus(ctx context.Context, productID string) er
 }
 
 func (u *productUC) UpdateProduct(ctx context.Context, requestBody body.UpdateProductRequest, userID, productID string) error {
-	err := u.txRepo.WithTransaction(func(tx postgre.Transaction) error {
+
+	errTx := u.txRepo.WithTransaction(func(tx postgre.Transaction) error {
 		totalData := len(requestBody.ProductDetail)
-		minPriceTemp, maxPriceTemp := requestBody.ProductDetail[0].Price, requestBody.ProductDetail[0].Price
-		for i := 0; i < totalData; i++ {
-			if requestBody.ProductDetail[i].Price < minPriceTemp {
-				minPriceTemp = requestBody.ProductDetail[i].Price
-			}
-			if requestBody.ProductDetail[i].Price > maxPriceTemp {
-				maxPriceTemp = requestBody.ProductDetail[i].Price
-			}
-		}
 
-		var tempBodyProduct = body.UpdateProductInfoForQuery{
-			Title:       requestBody.ProductInfo.Title,
-			Description: requestBody.ProductInfo.Description,
-			Thumbnail:   requestBody.ProductInfo.Thumbnail,
-			CategoryID:  requestBody.ProductInfo.CategoryID,
-			MinPrice:    minPriceTemp,
-			MaxPrice:    maxPriceTemp,
-		}
-
-		err := u.productRepo.UpdateProduct(ctx, tx, tempBodyProduct, productID)
-		if err != nil {
-			return err
+		totalDataRemove := len(requestBody.ProductDetailRemove)
+		if totalDataRemove > 0 {
+			for i := 0; i < totalDataRemove; i++ {
+				err := u.productRepo.DeleteProductDetail(ctx, tx, requestBody.ProductDetailRemove[i])
+				if err != nil {
+					return err
+				}
+			}
 		}
 
 		for i := 0; i < totalData; i++ {
@@ -523,21 +511,41 @@ func (u *productUC) UpdateProduct(ctx context.Context, requestBody body.UpdatePr
 			totalDataVariant := len(requestBody.ProductDetail[i].VariantDetailID)
 			if totalDataVariant > 0 {
 				for j := 0; j < totalDataVariant; j++ {
-					err := u.productRepo.UpdateVariant(ctx, tx,
+					errVariant := u.productRepo.UpdateVariant(ctx, tx,
 						requestBody.ProductDetail[i].VariantDetailID[j].VariantID,
 						requestBody.ProductDetail[i].VariantDetailID[j].VariantDetailID)
-					if err != nil {
-						return err
+					if errVariant != nil {
+						return errVariant
 					}
 				}
 			}
 		}
 
+		maxPriceTemp, minPriceTemp, errMaxMin := u.productRepo.GetMaxMinPriceByID(ctx, productID)
+		if errMaxMin != nil {
+			return errMaxMin
+		}
+
+		var tempBodyProduct = body.UpdateProductInfoForQuery{
+			Title:       requestBody.ProductInfo.Title,
+			Description: requestBody.ProductInfo.Description,
+			Thumbnail:   requestBody.ProductInfo.Thumbnail,
+			CategoryID:  requestBody.ProductInfo.CategoryID,
+			MinPrice:    minPriceTemp,
+			MaxPrice:    maxPriceTemp,
+		}
+		err := u.productRepo.UpdateProduct(ctx, tx, tempBodyProduct, productID)
+		if err != nil {
+			return err
+		}
+
 		return nil
 	})
 
-	if err != nil {
-		return err
+	fmt.Println("here")
+	fmt.Println(errTx)
+	if errTx != nil {
+		return errTx
 	}
 	return nil
 }

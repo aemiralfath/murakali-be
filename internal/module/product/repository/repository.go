@@ -745,6 +745,7 @@ func (r *productRepo) UpdateProduct(ctx context.Context, tx postgre.Transaction,
 	_, err := tx.ExecContext(ctx, UpdateProductQuery,
 		requestBody.CategoryID,
 		requestBody.Title,
+		requestBody.Description,
 		requestBody.Thumbnail,
 		requestBody.MinPrice,
 		requestBody.MaxPrice,
@@ -754,7 +755,6 @@ func (r *productRepo) UpdateProduct(ctx context.Context, tx postgre.Transaction,
 	}
 	return nil
 }
-
 func (r *productRepo) UpdateProductDetail(ctx context.Context, tx postgre.Transaction, requestBody body.UpdateProductDetailRequest, productID string) error {
 	_, err := tx.ExecContext(ctx,
 		UpdateProductDetailQuery,
@@ -779,6 +779,22 @@ func (r *productRepo) DeletePhoto(ctx context.Context, tx postgre.Transaction, p
 		return err
 	}
 	return nil
+}
+
+func (r *productRepo) DeleteProductDetail(ctx context.Context, tx postgre.Transaction, productDetailID string) error {
+	_, err := r.PSQL.ExecContext(ctx, DeleteProductDetailByIDQuery, productDetailID)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (r *productRepo) GetMaxMinPriceByID(ctx context.Context, productID string) (float64, float64, error) {
+	var max, min float64
+	if err := r.PSQL.QueryRowContext(ctx, GetMaxMinPriceQuery, productID).Scan(&max, &min); err != nil {
+		return 0, 0, err
+	}
+	return max, min, nil
 }
 
 func (r *productRepo) UpdateVariant(ctx context.Context, tx postgre.Transaction, variantID, variantDetailID string) error {

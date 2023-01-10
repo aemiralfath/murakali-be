@@ -261,13 +261,18 @@ const (
 	WHERE "id" = $8 AND
 	"product_id" = $9`
 
+	DeleteProductDetailByIDQuery = `UPDATE "product_detail" set deleted_at = now() WHERE id = $1`
+
 	DeletePhotoByIDQuery = `
 	DELETE FROM "photo" WHERE "product_detail_id" = $1`
 
-	DeleteProductCourierByIDQuery = `
-	DELETE FROM "product_courier_whitelist" WHERE "product_id" = $1`
+	GetMaxMinPriceQuery = `
+	SELECT max(price), min(price) 
+	FROM product_detail
+	WHERE product_id = $1
+	and deleted_at IS NULL;`
 
 	UpdateVariantQuery = `UPDATE 
-	"variant_detail_id" SET $1
+	"variant" SET  "variant_detail_id" = $1
 	WHERE "id" = $2`
 )
