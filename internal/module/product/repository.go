@@ -40,6 +40,7 @@ type Repository interface {
 	UpdateProduct(ctx context.Context, tx postgre.Transaction, requestBody body.UpdateProductInfoForQuery, productID string) error
 	UpdateProductDetail(ctx context.Context, tx postgre.Transaction, requestBody body.UpdateProductDetailRequest, productID string) error
 	DeletePhoto(ctx context.Context, tx postgre.Transaction, productDetailID string) error
+	DeleteVariant(ctx context.Context, tx postgre.Transaction, productID string) error
 	GetMaxMinPriceByID(ctx context.Context, productID string) (float64, float64, error)
 	UpdateVariant(ctx context.Context, tx postgre.Transaction, variantID, variantDetailID string) error
 	DeleteProductDetail(ctx context.Context, tx postgre.Transaction, productDetailID string) error

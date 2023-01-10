@@ -263,6 +263,8 @@ const (
 
 	DeleteProductDetailByIDQuery = `UPDATE "product_detail" set deleted_at = now() WHERE id = $1`
 
+	DeleteVariantByIDQuery = `UPDATE "variant" set deleted_at = now() WHERE id = $1`
+
 	DeletePhotoByIDQuery = `
 	DELETE FROM "photo" WHERE "product_detail_id" = $1`
 

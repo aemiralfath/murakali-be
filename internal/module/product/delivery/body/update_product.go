@@ -41,7 +41,8 @@ type UpdateProductDetailRequest struct {
 	Codition        string          `json:"condition"`
 	BulkPrice       bool            `json:"bulk_price"`
 	Photo           []string        `json:"photo"`
-	VariantDetailID []UpdateVariant `json:"variant_info"`
+	VariantDetailID []UpdateVariant `json:"variant_info_update"`
+	VariantIDRemove []string        `json:"variant_id_remove"`
 }
 
 type UpdateVariant struct {
@@ -85,10 +86,7 @@ func (r *UpdateProductRequest) ValidateUpdateProduct() (UnprocessableEntity, err
 	}
 
 	totalData := len(r.ProductDetail)
-	if totalData == 0 {
-		unprocessableEntity = true
-		entity.Fields["products_detail_update"] = FieldCannotBeEmptyMessage
-	}
+
 	for i := 0; i < totalData; i++ {
 		r.ProductDetail[i].ProductDetailID = strings.TrimSpace(r.ProductDetail[i].ProductDetailID)
 		if r.ProductDetail[i].ProductDetailID == "" {
@@ -119,6 +117,22 @@ func (r *UpdateProductRequest) ValidateUpdateProduct() (UnprocessableEntity, err
 		if len(r.ProductDetail[i].Photo) == 0 {
 			unprocessableEntity = true
 			entity.Fields["photo"] = FieldCannotBeEmptyMessage
+		}
+		totalDataVariant := len(r.ProductDetail[i].VariantDetailID)
+		if totalDataVariant > 0 {
+			for j := 0; j < totalDataVariant; j++ {
+				r.ProductDetail[i].VariantDetailID[j].VariantID = strings.TrimSpace(r.ProductDetail[i].VariantDetailID[j].VariantID)
+				if _, err := uuid.Parse(r.ProductDetail[i].VariantDetailID[j].VariantID); err != nil {
+					unprocessableEntity = true
+					entity.Fields["variant_id"] = FieldCannotBeEmptyMessage
+				}
+
+				r.ProductDetail[i].VariantDetailID[j].VariantDetailID = strings.TrimSpace(r.ProductDetail[i].VariantDetailID[j].VariantDetailID)
+				if _, err := uuid.Parse(r.ProductDetail[i].VariantDetailID[j].VariantDetailID); err != nil {
+					unprocessableEntity = true
+					entity.Fields["variant_detail_id"] = FieldCannotBeEmptyMessage
+				}
+			}
 		}
 	}
 

@@ -789,6 +789,14 @@ func (r *productRepo) DeleteProductDetail(ctx context.Context, tx postgre.Transa
 	return nil
 }
 
+func (r *productRepo) DeleteVariant(ctx context.Context, tx postgre.Transaction, productID string) error {
+	_, err := r.PSQL.ExecContext(ctx, DeleteVariantByIDQuery, productID)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 func (r *productRepo) GetMaxMinPriceByID(ctx context.Context, productID string) (float64, float64, error) {
 	var max, min float64
 	if err := r.PSQL.QueryRowContext(ctx, GetMaxMinPriceQuery, productID).Scan(&max, &min); err != nil {

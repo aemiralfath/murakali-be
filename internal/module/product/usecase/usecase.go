@@ -3,7 +3,7 @@ package usecase
 import (
 	"context"
 	"database/sql"
-	"fmt"
+
 	"math"
 	"murakali/config"
 	"murakali/internal/model"
@@ -338,8 +338,7 @@ func (u *productUC) GetProductReviews(ctx context.Context, pgn *pagination.Pagin
 	pgn.TotalPages = totalPages
 
 	reviews, err := u.productRepo.GetProductReviews(ctx, pgn, productID, query)
-	fmt.Print("get review")
-	fmt.Println(reviews)
+
 	if err != nil {
 		if err != sql.ErrNoRows {
 			return nil, err
@@ -474,7 +473,6 @@ func (u *productUC) UpdateListedStatus(ctx context.Context, productID string) er
 }
 
 func (u *productUC) UpdateProduct(ctx context.Context, requestBody body.UpdateProductRequest, userID, productID string) error {
-
 	errTx := u.txRepo.WithTransaction(func(tx postgre.Transaction) error {
 		totalData := len(requestBody.ProductDetail)
 
@@ -519,13 +517,22 @@ func (u *productUC) UpdateProduct(ctx context.Context, requestBody body.UpdatePr
 					}
 				}
 			}
+
+			totalDataVariantRemove := len(requestBody.ProductDetail[i].VariantIDRemove)
+			if totalDataVariantRemove > 0 {
+				for j := 0; j < totalDataVariantRemove; j++ {
+					err := u.productRepo.DeleteVariant(ctx, tx, requestBody.ProductDetail[i].VariantIDRemove[j])
+					if err != nil {
+						return err
+					}
+				}
+			}
 		}
 
 		maxPriceTemp, minPriceTemp, errMaxMin := u.productRepo.GetMaxMinPriceByID(ctx, productID)
 		if errMaxMin != nil {
 			return errMaxMin
 		}
-
 		var tempBodyProduct = body.UpdateProductInfoForQuery{
 			Title:       requestBody.ProductInfo.Title,
 			Description: requestBody.ProductInfo.Description,
@@ -542,8 +549,6 @@ func (u *productUC) UpdateProduct(ctx context.Context, requestBody body.UpdatePr
 		return nil
 	})
 
-	fmt.Println("here")
-	fmt.Println(errTx)
 	if errTx != nil {
 		return errTx
 	}

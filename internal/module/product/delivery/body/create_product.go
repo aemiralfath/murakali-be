@@ -85,6 +85,10 @@ func (r *CreateProductRequest) ValidateCreateProduct() (UnprocessableEntity, err
 	}
 
 	totalData := len(r.ProductDetail)
+	if totalData == 0 {
+		unprocessableEntity = true
+		entity.Fields["products_detail"] = FieldCannotBeEmptyMessage
+	}
 	for i := 0; i < totalData; i++ {
 		if r.ProductDetail[i].Price == 0 {
 			unprocessableEntity = true
@@ -111,9 +115,20 @@ func (r *CreateProductRequest) ValidateCreateProduct() (UnprocessableEntity, err
 			unprocessableEntity = true
 			entity.Fields["photo"] = FieldCannotBeEmptyMessage
 		}
-		if len(r.ProductDetail[i].VariantDetailID) == 0 {
+
+		totalDataVariant := len(r.ProductDetail[i].VariantDetailID)
+		if totalDataVariant == 0 {
 			unprocessableEntity = true
 			entity.Fields["variant_detail_id"] = FieldCannotBeEmptyMessage
+		}
+		if totalDataVariant > 0 {
+			for j := 0; j < totalDataVariant; j++ {
+				r.ProductDetail[i].VariantDetailID[j] = strings.TrimSpace(r.ProductDetail[i].VariantDetailID[j])
+				if _, err := uuid.Parse(r.ProductDetail[i].VariantDetailID[j]); err != nil {
+					unprocessableEntity = true
+					entity.Fields["variant_detail_id"] = FieldCannotBeEmptyMessage
+				}
+			}
 		}
 	}
 
