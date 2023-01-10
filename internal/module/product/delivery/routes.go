@@ -21,6 +21,8 @@ func MapProductRoutes(productGroup *gin.RouterGroup, h product.Handlers, mw *mid
 	productUserGroup := productGroup.Group("/")
 	productUserGroup.Use(mw.AuthJWTMiddleware())
 	productUserGroup.GET("/favorite", h.GetFavoriteProducts)
+	productUserGroup.Use(mw.SellerJWTMiddleware())
 	productUserGroup.POST("/", h.CreateProduct)
-	productUserGroup.PUT("/", h.UpdateListedStatus)
+	productUserGroup.PUT("/status/:id", h.UpdateListedStatus)
+	productUserGroup.PUT("/", h.UpdateProduct)
 }

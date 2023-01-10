@@ -352,7 +352,6 @@ func (u *productUC) GetProductReviews(ctx context.Context, pgn *pagination.Pagin
 }
 
 func (u *productUC) GetTotalReviewRatingByProductID(ctx context.Context, productID string) (*body.AllRatingProduct, error) {
-
 	ratings, err := u.productRepo.GetTotalReviewRatingByProductID(ctx, productID)
 
 	valueRating := 0
@@ -441,15 +440,6 @@ func (u *productUC) CreateProduct(ctx context.Context, requestBody body.CreatePr
 			}
 		}
 
-		totalDataCourier := len(requestBody.Courier.CourierID)
-		if totalDataCourier > 0 {
-			for k := 0; k < totalDataCourier; k++ {
-				err := u.productRepo.CreateProductCourier(ctx, tx, productID, requestBody.Courier.CourierID[k])
-				if err != nil {
-					return err
-				}
-			}
-		}
 		return nil
 	})
 
@@ -478,6 +468,75 @@ func (u *productUC) UpdateListedStatus(ctx context.Context, productID string) er
 		if err == sql.ErrNoRows {
 			return httperror.New(http.StatusNotFound, body.UpdateProductFailed)
 		}
+		return err
+	}
+	return nil
+}
+
+func (u *productUC) UpdateProduct(ctx context.Context, requestBody body.UpdateProductRequest, userID, productID string) error {
+	err := u.txRepo.WithTransaction(func(tx postgre.Transaction) error {
+		totalData := len(requestBody.ProductDetail)
+		minPriceTemp, maxPriceTemp := requestBody.ProductDetail[0].Price, requestBody.ProductDetail[0].Price
+		for i := 0; i < totalData; i++ {
+			if requestBody.ProductDetail[i].Price < minPriceTemp {
+				minPriceTemp = requestBody.ProductDetail[i].Price
+			}
+			if requestBody.ProductDetail[i].Price > maxPriceTemp {
+				maxPriceTemp = requestBody.ProductDetail[i].Price
+			}
+		}
+
+		var tempBodyProduct = body.UpdateProductInfoForQuery{
+			Title:       requestBody.ProductInfo.Title,
+			Description: requestBody.ProductInfo.Description,
+			Thumbnail:   requestBody.ProductInfo.Thumbnail,
+			CategoryID:  requestBody.ProductInfo.CategoryID,
+			MinPrice:    minPriceTemp,
+			MaxPrice:    maxPriceTemp,
+		}
+
+		err := u.productRepo.UpdateProduct(ctx, tx, tempBodyProduct, productID)
+		if err != nil {
+			return err
+		}
+
+		for i := 0; i < totalData; i++ {
+			err := u.productRepo.UpdateProductDetail(ctx, tx, requestBody.ProductDetail[i], productID)
+			if err != nil {
+				return err
+			}
+
+			totalDataPhoto := len(requestBody.ProductDetail[i].Photo)
+			if totalDataPhoto > 0 {
+				err = u.productRepo.DeletePhoto(ctx, tx, requestBody.ProductDetail[i].ProductDetailID)
+				if err != nil {
+					return err
+				}
+				for k := 0; k < totalDataPhoto; k++ {
+					err = u.productRepo.CreatePhoto(ctx, tx, requestBody.ProductDetail[i].ProductDetailID, requestBody.ProductDetail[i].Photo[k])
+					if err != nil {
+						return err
+					}
+				}
+			}
+
+			totalDataVariant := len(requestBody.ProductDetail[i].VariantDetailID)
+			if totalDataVariant > 0 {
+				for j := 0; j < totalDataVariant; j++ {
+					err := u.productRepo.UpdateVariant(ctx, tx,
+						requestBody.ProductDetail[i].VariantDetailID[j].VariantID,
+						requestBody.ProductDetail[i].VariantDetailID[j].VariantDetailID)
+					if err != nil {
+						return err
+					}
+				}
+			}
+		}
+
+		return nil
+	})
+
+	if err != nil {
 		return err
 	}
 	return nil
