@@ -328,7 +328,8 @@ func (u *productUC) GetFavoriteProducts(
 	return pgn, nil
 }
 
-func (u *productUC) GetProductReviews(ctx context.Context, pgn *pagination.Pagination, productID string, query *body.GetReviewQueryRequest) (*pagination.Pagination, error) {
+func (u *productUC) GetProductReviews(ctx context.Context, pgn *pagination.Pagination,
+	productID string, query *body.GetReviewQueryRequest) (*pagination.Pagination, error) {
 	totalRows, err := u.productRepo.GetTotalAllReviewProduct(ctx, productID, query)
 	if err != nil {
 		return nil, err

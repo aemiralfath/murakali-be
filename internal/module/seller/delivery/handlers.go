@@ -294,7 +294,7 @@ func (h *sellerHandlers) UpdateResiNumberInOrderSeller(c *gin.Context) {
 	}
 
 	var requestBody body.UpdateNoResiOrderSellerRequest
-	if err := c.ShouldBind(&requestBody); err != nil {
+	if err = c.ShouldBind(&requestBody); err != nil {
 		response.ErrorResponse(c.Writer, response.BadRequestMessage, http.StatusBadRequest)
 		return
 	}

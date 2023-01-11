@@ -138,7 +138,6 @@ func (r *CreateProductRequest) ValidateCreateProduct() (UnprocessableEntity, err
 					unprocessableEntity = true
 					entity.Fields["name"] = FieldCannotBeEmptyMessage
 				}
-
 			}
 		}
 	}

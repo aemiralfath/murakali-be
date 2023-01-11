@@ -572,7 +572,8 @@ func (r *productRepo) GetAllFavoriteTotalProduct(ctx context.Context, query *bod
 	return total, nil
 }
 
-func (r *productRepo) GetProductReviews(ctx context.Context, pgn *pagination.Pagination, productID string, query *body.GetReviewQueryRequest) ([]*body.ReviewProduct, error) {
+func (r *productRepo) GetProductReviews(ctx context.Context,
+	pgn *pagination.Pagination, productID string, query *body.GetReviewQueryRequest) ([]*body.ReviewProduct, error) {
 	reviews := make([]*body.ReviewProduct, 0)
 
 	q := fmt.Sprintf(GetReviewProductQuery, query.GetValidate(), pgn.GetSort())
@@ -797,7 +798,8 @@ func (r *productRepo) UpdateProduct(ctx context.Context, tx postgre.Transaction,
 	}
 	return nil
 }
-func (r *productRepo) UpdateProductDetail(ctx context.Context, tx postgre.Transaction, requestBody body.UpdateProductDetailRequest, productID string) error {
+func (r *productRepo) UpdateProductDetail(ctx context.Context,
+	tx postgre.Transaction, requestBody body.UpdateProductDetailRequest, productID string) error {
 	_, err := tx.ExecContext(ctx,
 		UpdateProductDetailQuery,
 		requestBody.Price,

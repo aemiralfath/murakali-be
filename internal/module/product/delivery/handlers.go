@@ -256,19 +256,16 @@ func (h *productHandlers) ValidateQueryProduct(c *gin.Context) (*pagination.Pagi
 	} else if limitFilter > 100 {
 		limitFilter = 100
 	}
-
 	if sortBy == "" {
 		sortBy = "unit_sold"
 	}
 	if sort == "" {
 		sort = "desc"
 	}
-
 	pageFilter, err = strconv.Atoi(page)
 	if err != nil || pageFilter < 1 {
 		pageFilter = 1
 	}
-
 	pgn := &pagination.Pagination{
 		Limit: limitFilter,
 		Page:  pageFilter,
@@ -430,7 +427,7 @@ func (h *productHandlers) UpdateProduct(c *gin.Context) {
 	}
 
 	var requestBody body.UpdateProductRequest
-	if err := c.ShouldBind(&requestBody); err != nil {
+	if err = c.ShouldBind(&requestBody); err != nil {
 		response.ErrorResponse(c.Writer, response.BadRequestMessage, http.StatusBadRequest)
 		return
 	}

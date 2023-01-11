@@ -341,7 +341,6 @@ func (r *sellerRepo) UpdateResiNumberInOrderSeller(ctx context.Context, noResi, 
 	_, err := r.PSQL.ExecContext(ctx,
 		UpdateResiNumberInOrderSellerQuery,
 		noResi, orderID, shopID)
-	// temp, errNew := RowsEffected.RowsAffected()
 	if err != nil {
 		return err
 	}
