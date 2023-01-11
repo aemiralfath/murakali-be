@@ -3148,6 +3148,8 @@ components:
                   type: number
                 max_price:
                   type: number
+                shop_id:
+                  type: string
                 category_name:
                   type: string
                 category_url:
@@ -3226,6 +3228,7 @@ components:
               rating_avg: 4
               min_price: 15000
               max_price: 25000
+              shop_id: "e8854443-c2c7-488e-93d5-b9d93708b8a3",
               category_name: "laptop"
               category_url: "https://cf.shopee.co.id/file/c139370836a9daa649da70876a326b58"
             promotions_info:

@@ -26,7 +26,7 @@ const (
 	ORDER BY "p"."unit_sold" DESC LIMIT $1 OFFSET $2;
 	`
 	GetProductInfoQuery = `select
-	pr.id,pr.sku,pr.title,pr.description,pr.view_count,pr.favorite_count,pr.unit_sold,pr.listed_status,pr.thumbnail_url,pr.rating_avg,pr.min_price,pr.max_price
+	pr.id,pr.sku,pr.title,pr.description,pr.view_count,pr.favorite_count,pr.unit_sold,pr.listed_status,pr.thumbnail_url,pr.rating_avg,pr.min_price,pr.max_price,pr.shop_id
 	,c.name,c.photo_url
 	from 
 	product pr 

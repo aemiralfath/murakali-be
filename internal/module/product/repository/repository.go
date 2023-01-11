@@ -215,6 +215,7 @@ func (r *productRepo) GetProductInfo(ctx context.Context, productID string) (*bo
 			&productInfo.RatingAVG,
 			&productInfo.MinPrice,
 			&productInfo.MaxPrice,
+			&productInfo.ShopID,
 			&productInfo.CategoryName,
 			&productInfo.CategoryURL,
 		); err != nil {
@@ -324,7 +325,7 @@ func (r *productRepo) GetProductDetail(ctx context.Context, productID string, pr
 				return nil, err
 			}
 
-			mapVariant[variant.Type] = variant.Name
+			mapVariant[variant.Name] = variant.Type
 		}
 		detail.Variant = mapVariant
 
