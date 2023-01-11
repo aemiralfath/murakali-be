@@ -4,6 +4,7 @@ const (
 	FieldCannotBeEmptyMessage = "Field cannot be empty."
 	ProductNotFound           = "Product not found"
 	UpdateProductFailed       = "Update product failed"
+	ImageIsEmpty              = "image cannot be empty"
 )
 
 type UnprocessableEntity struct {
