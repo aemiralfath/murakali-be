@@ -38,15 +38,20 @@ type CreateProductInfoForQuery struct {
 }
 
 type CreateProductDetailRequest struct {
-	Price           float64  `json:"price"`
-	Stock           float64  `json:"stock"`
-	Weight          float64  `json:"weight"`
-	Size            float64  `json:"size"`
-	Hazardous       bool     `json:"hazardous"`
-	Codition        string   `json:"condition"`
-	BulkPrice       bool     `json:"bulk_price"`
-	Photo           []string `json:"photo"`
-	VariantDetailID []string `json:"variant_detail_id"`
+	Price         float64                `json:"price"`
+	Stock         float64                `json:"stock"`
+	Weight        float64                `json:"weight"`
+	Size          float64                `json:"size"`
+	Hazardous     bool                   `json:"hazardous"`
+	Codition      string                 `json:"condition"`
+	BulkPrice     bool                   `json:"bulk_price"`
+	Photo         []string               `json:"photo"`
+	VariantDetail []VariantDetailRequest `json:"variant_detail"`
+}
+
+type VariantDetailRequest struct {
+	Type string `json:"type"`
+	Name string `json:"name"`
 }
 
 func (r *CreateProductRequest) ValidateCreateProduct() (UnprocessableEntity, error) {
@@ -116,18 +121,24 @@ func (r *CreateProductRequest) ValidateCreateProduct() (UnprocessableEntity, err
 			entity.Fields["photo"] = FieldCannotBeEmptyMessage
 		}
 
-		totalDataVariant := len(r.ProductDetail[i].VariantDetailID)
+		totalDataVariant := len(r.ProductDetail[i].VariantDetail)
 		if totalDataVariant == 0 {
 			unprocessableEntity = true
-			entity.Fields["variant_detail_id"] = FieldCannotBeEmptyMessage
+			entity.Fields["variant_detail"] = FieldCannotBeEmptyMessage
 		}
 		if totalDataVariant > 0 {
 			for j := 0; j < totalDataVariant; j++ {
-				r.ProductDetail[i].VariantDetailID[j] = strings.TrimSpace(r.ProductDetail[i].VariantDetailID[j])
-				if _, err := uuid.Parse(r.ProductDetail[i].VariantDetailID[j]); err != nil {
+				r.ProductDetail[i].VariantDetail[j].Type = strings.TrimSpace(r.ProductDetail[i].VariantDetail[j].Type)
+				if r.ProductDetail[i].VariantDetail[j].Type == "" {
 					unprocessableEntity = true
-					entity.Fields["variant_detail_id"] = FieldCannotBeEmptyMessage
+					entity.Fields["type"] = FieldCannotBeEmptyMessage
 				}
+				r.ProductDetail[i].VariantDetail[j].Name = strings.TrimSpace(r.ProductDetail[i].VariantDetail[j].Name)
+				if r.ProductDetail[i].VariantDetail[j].Name == "" {
+					unprocessableEntity = true
+					entity.Fields["name"] = FieldCannotBeEmptyMessage
+				}
+
 			}
 		}
 	}

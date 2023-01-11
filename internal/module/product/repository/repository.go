@@ -737,19 +737,6 @@ func (r *productRepo) CreatePhoto(ctx context.Context, tx postgre.Transaction, p
 	return nil
 }
 
-func (r *productRepo) CreateVideo(ctx context.Context, tx postgre.Transaction, productDetailID, url string) error {
-	_, err := tx.ExecContext(
-		ctx,
-		CreateVideoQuery,
-		productDetailID,
-		url,
-	)
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
 func (r *productRepo) CreateVariant(ctx context.Context, tx postgre.Transaction, productDetailID, variantDetailID string) error {
 	_, err := tx.ExecContext(
 		ctx,
@@ -761,6 +748,22 @@ func (r *productRepo) CreateVariant(ctx context.Context, tx postgre.Transaction,
 		return err
 	}
 	return nil
+}
+
+func (r *productRepo) CreateVariantDetail(ctx context.Context, tx postgre.Transaction,
+	requestBody body.VariantDetailRequest) (string, error) {
+	var ID string
+	err := tx.QueryRowContext(
+		ctx,
+		CreateVariantDetailQuery,
+		requestBody.Name,
+		requestBody.Type,
+	).Scan(&ID)
+	if err != nil {
+		return "", err
+	}
+
+	return ID, nil
 }
 
 func (r *productRepo) GetListedStatus(ctx context.Context, productID string) (bool, error) {

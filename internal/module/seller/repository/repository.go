@@ -336,3 +336,14 @@ func (r *sellerRepo) DeleteCourierSellerByID(ctx context.Context, shopCourierID 
 	}
 	return nil
 }
+
+func (r *sellerRepo) UpdateResiNumberInOrderSeller(ctx context.Context, noResi, orderID, shopID string) error {
+	_, err := r.PSQL.ExecContext(ctx,
+		UpdateResiNumberInOrderSellerQuery,
+		noResi, orderID, shopID)
+	// temp, errNew := RowsEffected.RowsAffected()
+	if err != nil {
+		return err
+	}
+	return nil
+}

@@ -428,10 +428,14 @@ func (u *productUC) CreateProduct(ctx context.Context, requestBody body.CreatePr
 				}
 			}
 
-			totalDataVariant := len(requestBody.ProductDetail[i].VariantDetailID)
+			totalDataVariant := len(requestBody.ProductDetail[i].VariantDetail)
 			if totalDataVariant > 0 {
 				for j := 0; j < totalDataVariant; j++ {
-					err := u.productRepo.CreateVariant(ctx, tx, productDetilID, requestBody.ProductDetail[i].VariantDetailID[j])
+					variantDetailID, err := u.productRepo.CreateVariantDetail(ctx, tx, requestBody.ProductDetail[i].VariantDetail[j])
+					if err != nil {
+						return err
+					}
+					err = u.productRepo.CreateVariant(ctx, tx, productDetilID, variantDetailID)
 					if err != nil {
 						return err
 					}
