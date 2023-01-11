@@ -253,20 +253,19 @@ func (h *productHandlers) ValidateQueryProduct(c *gin.Context) (*pagination.Pagi
 	limitFilter, err := strconv.Atoi(limit)
 	if err != nil || limitFilter < 1 {
 		limitFilter = 12
+	} else if limitFilter > 100 {
+		limitFilter = 100
 	}
-
 	if sortBy == "" {
 		sortBy = "unit_sold"
 	}
 	if sort == "" {
 		sort = "desc"
 	}
-
 	pageFilter, err = strconv.Atoi(page)
 	if err != nil || pageFilter < 1 {
 		pageFilter = 1
 	}
-
 	pgn := &pagination.Pagination{
 		Limit: limitFilter,
 		Page:  pageFilter,
@@ -324,6 +323,8 @@ func (h *productHandlers) ValidateQueryProduct(c *gin.Context) (*pagination.Pagi
 	minRatingFilter, err = strconv.ParseFloat(minRating, 64)
 	if err != nil || minRatingFilter <= 0 {
 		minRatingFilter = 0
+	} else if minRatingFilter > 5 {
+		minRatingFilter = 0
 	}
 
 	maxRatingFilter, err = strconv.ParseFloat(maxRating, 64)
@@ -337,6 +338,11 @@ func (h *productHandlers) ValidateQueryProduct(c *gin.Context) (*pagination.Pagi
 	var provinceFilter []string
 	if province != "" {
 		provinceFilter = strings.Split(province, ",")
+	}
+
+	if maxRatingFilter < minRatingFilter {
+		minRatingFilter = 0
+		maxRatingFilter = 5
 	}
 	query := &body.GetProductQueryRequest{
 		Search:    searchFilter,
@@ -421,7 +427,7 @@ func (h *productHandlers) UpdateProduct(c *gin.Context) {
 	}
 
 	var requestBody body.UpdateProductRequest
-	if err := c.ShouldBind(&requestBody); err != nil {
+	if err = c.ShouldBind(&requestBody); err != nil {
 		response.ErrorResponse(c.Writer, response.BadRequestMessage, http.StatusBadRequest)
 		return
 	}

@@ -572,7 +572,8 @@ func (r *productRepo) GetAllFavoriteTotalProduct(ctx context.Context, query *bod
 	return total, nil
 }
 
-func (r *productRepo) GetProductReviews(ctx context.Context, pgn *pagination.Pagination, productID string, query *body.GetReviewQueryRequest) ([]*body.ReviewProduct, error) {
+func (r *productRepo) GetProductReviews(ctx context.Context,
+	pgn *pagination.Pagination, productID string, query *body.GetReviewQueryRequest) ([]*body.ReviewProduct, error) {
 	reviews := make([]*body.ReviewProduct, 0)
 
 	q := fmt.Sprintf(GetReviewProductQuery, query.GetValidate(), pgn.GetSort())
@@ -737,19 +738,6 @@ func (r *productRepo) CreatePhoto(ctx context.Context, tx postgre.Transaction, p
 	return nil
 }
 
-func (r *productRepo) CreateVideo(ctx context.Context, tx postgre.Transaction, productDetailID, url string) error {
-	_, err := tx.ExecContext(
-		ctx,
-		CreateVideoQuery,
-		productDetailID,
-		url,
-	)
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
 func (r *productRepo) CreateVariant(ctx context.Context, tx postgre.Transaction, productDetailID, variantDetailID string) error {
 	_, err := tx.ExecContext(
 		ctx,
@@ -761,6 +749,22 @@ func (r *productRepo) CreateVariant(ctx context.Context, tx postgre.Transaction,
 		return err
 	}
 	return nil
+}
+
+func (r *productRepo) CreateVariantDetail(ctx context.Context, tx postgre.Transaction,
+	requestBody body.VariantDetailRequest) (string, error) {
+	var ID string
+	err := tx.QueryRowContext(
+		ctx,
+		CreateVariantDetailQuery,
+		requestBody.Name,
+		requestBody.Type,
+	).Scan(&ID)
+	if err != nil {
+		return "", err
+	}
+
+	return ID, nil
 }
 
 func (r *productRepo) GetListedStatus(ctx context.Context, productID string) (bool, error) {
@@ -794,7 +798,8 @@ func (r *productRepo) UpdateProduct(ctx context.Context, tx postgre.Transaction,
 	}
 	return nil
 }
-func (r *productRepo) UpdateProductDetail(ctx context.Context, tx postgre.Transaction, requestBody body.UpdateProductDetailRequest, productID string) error {
+func (r *productRepo) UpdateProductDetail(ctx context.Context,
+	tx postgre.Transaction, requestBody body.UpdateProductDetailRequest, productID string) error {
 	_, err := tx.ExecContext(ctx,
 		UpdateProductDetailQuery,
 		requestBody.Price,

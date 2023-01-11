@@ -239,6 +239,10 @@ const (
 	(product_detail_id, variant_detail_id)
 	 VALUES ($1, $2) RETURNING "id";`
 
+	CreateVariantDetailQuery = `INSERT INTO "variant_detail" 
+	(name, type)
+	 VALUES ($1, $2) RETURNING "id";`
+
 	CreateProductCourierQuery = `INSERT 
 	INTO "product_courier_whitelist" 
 	(product_id, courier_id)

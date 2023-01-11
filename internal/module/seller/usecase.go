@@ -16,4 +16,5 @@ type UseCase interface {
 	CreateCourierSeller(ctx context.Context, userID string, courierID string) error
 	DeleteCourierSellerByID(ctx context.Context, shopCourierID string) error
 	GetCategoryBySellerID(ctx context.Context, shopID string) ([]*body.CategoryResponse, error)
+	UpdateResiNumberInOrderSeller(ctx context.Context, userID, orderID string, requestBody body.UpdateNoResiOrderSellerRequest) error
 }

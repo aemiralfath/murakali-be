@@ -3002,9 +3002,11 @@ components:
             photo:
               - https://res.cloudinary.com/dhpao1zxi/image/upload/v1671705602/ldtzmxqeyb4nwu5p6y76.jpg
               - https://res.cloudinary.com/dhpao1zxi/image/upload/v1671705602/ldtzmxqeyb4nwu5p6y76.jpg
-            variant_detail_id:
-              - 3ca7b55d-74f8-4fe0-9cee-fb7c8c35f05f
-              - 73e2e918-736a-4dd8-bf08-6a73cc3e1adc
+            variant_detail:
+              - type: color
+                name: red
+              - type: ukuran
+                name: L
           - price: 500000
             stock: 50
             weight: 50000
@@ -3014,9 +3016,11 @@ components:
             bulk_price: true
             photo:
               - https://res.cloudinary.com/dhpao1zxi/image/upload/v1671705602/ldtzmxqeyb4nwu5p6y76.jpg
-            variant_detail_id:
-              - 3ca7b55d-74f8-4fe0-9cee-fb7c8c35f05f
-              - 73e2e918-736a-4dd8-bf08-6a73cc3e1adc
+            variant_detail:
+              - type: color
+                name: blue
+              - type: ukuran
+                name: M
           - price: 600000
             stock: 60
             weight: 60000
@@ -3026,9 +3030,11 @@ components:
             bulk_price: false
             photo:
               - https://res.cloudinary.com/dhpao1zxi/image/upload/v1671705602/ldtzmxqeyb4nwu5p6y76.jpg
-            variant_detail_id:
-              - 3ca7b55d-74f8-4fe0-9cee-fb7c8c35f05f
-              - 73e2e918-736a-4d
+            variant_detail:
+              - type: color
+                name: blue
+              - type: ukuran
+                name: S
 
     UpdateProductRequest:
       title: UpdateProductRequest

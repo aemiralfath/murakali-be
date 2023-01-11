@@ -328,7 +328,8 @@ func (u *productUC) GetFavoriteProducts(
 	return pgn, nil
 }
 
-func (u *productUC) GetProductReviews(ctx context.Context, pgn *pagination.Pagination, productID string, query *body.GetReviewQueryRequest) (*pagination.Pagination, error) {
+func (u *productUC) GetProductReviews(ctx context.Context, pgn *pagination.Pagination,
+	productID string, query *body.GetReviewQueryRequest) (*pagination.Pagination, error) {
 	totalRows, err := u.productRepo.GetTotalAllReviewProduct(ctx, productID, query)
 	if err != nil {
 		return nil, err
@@ -428,10 +429,14 @@ func (u *productUC) CreateProduct(ctx context.Context, requestBody body.CreatePr
 				}
 			}
 
-			totalDataVariant := len(requestBody.ProductDetail[i].VariantDetailID)
+			totalDataVariant := len(requestBody.ProductDetail[i].VariantDetail)
 			if totalDataVariant > 0 {
 				for j := 0; j < totalDataVariant; j++ {
-					err := u.productRepo.CreateVariant(ctx, tx, productDetilID, requestBody.ProductDetail[i].VariantDetailID[j])
+					variantDetailID, err := u.productRepo.CreateVariantDetail(ctx, tx, requestBody.ProductDetail[i].VariantDetail[j])
+					if err != nil {
+						return err
+					}
+					err = u.productRepo.CreateVariant(ctx, tx, productDetilID, variantDetailID)
 					if err != nil {
 						return err
 					}

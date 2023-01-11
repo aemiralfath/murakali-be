@@ -11,4 +11,5 @@ type Handlers interface {
 	CreateCourierSeller(c *gin.Context)
 	DeleteCourierSellerByID(c *gin.Context)
 	GetCategoryBySellerID(c *gin.Context)
+	UpdateResiNumberInOrderSeller(c *gin.Context)
 }
