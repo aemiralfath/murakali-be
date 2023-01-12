@@ -282,6 +282,45 @@ func (u *productUC) GetProducts(ctx context.Context, pgn *pagination.Pagination,
 	return pgn, nil
 }
 
+func (u *productUC) GetAllProductImage(ctx context.Context, productID string) ([]*body.GetImageResponse, error) {
+	var images []*body.GetImageResponse
+	productInfo, err := u.productRepo.GetProductInfo(ctx, productID)
+	if err != nil {
+		if err != sql.ErrNoRows {
+			return nil, err
+		}
+	}
+
+	details, err := u.productRepo.GetProductDetail(ctx, productID, nil)
+	if err != nil {
+		if err != sql.ErrNoRows {
+			return nil, err
+		}
+	}
+
+	images = append(images, &body.GetImageResponse{
+		Url: productInfo.ThumbnailURL,
+	})
+
+	for _, detail := range details {
+		imageDetails, err := u.productRepo.GetAllImageByProductDetailID(ctx, detail.ProductDetailID)
+		if err != nil {
+			if err != sql.ErrNoRows {
+				return nil, err
+			}
+		}
+
+		for _, image := range imageDetails {
+			images = append(images, &body.GetImageResponse{
+				ProductDetailId: &detail.ProductDetailID,
+				Url:             *image,
+			})
+		}
+	}
+
+	return images, nil
+}
+
 func (u *productUC) GetFavoriteProducts(
 	ctx context.Context, pgn *pagination.Pagination, query *body.GetProductQueryRequest, userID string) (*pagination.Pagination, error) {
 	totalRows, err := u.productRepo.GetAllFavoriteTotalProduct(ctx, query, userID)

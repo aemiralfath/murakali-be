@@ -23,3 +23,12 @@ type GetProductQueryRequest struct {
 	MaxRating float64
 	Province  []string
 }
+
+type GetImageResponse struct {
+	ProductDetailId *string `json:"product_detail_id"`
+	Url             string  `json:"url"`
+}
+
+type GetAllProductImageResponse struct {
+	Image []*GetImageResponse `json:"image"`
+}

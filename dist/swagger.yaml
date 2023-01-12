@@ -1050,6 +1050,30 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/GetProductDetailResponse"
+
+  "/api/v1/product/{product_id}/picture":
+    get:
+      summary: Get Product Picture
+      description: >-
+        get product picture
+      tags:
+        - Product
+
+      parameters:
+        - in: path
+          name: product_id
+          schema:
+            type: string
+          required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GetAllImageProductResponse"
+      
+
   "/api/v1/product/status/{product_id}":
     put:
       summary: update product listed list status
@@ -3459,6 +3483,30 @@ components:
                 variant:
                   warna: "hitam"
                 variant_info: null
+    
+    GetAllImageProductResponse:
+      title: GetAllImageProductResponse
+      type: object
+      description: Get all image product response data model.
+      properties:
+        message:
+          type: string
+          example: "success"
+        data:
+          type: array
+          properties:
+            type: object
+            properties:
+              product_detail_id:
+                type: string
+              url:
+                type: string
+          example:
+            - product_detail_id: null
+              url: "https://cf.shopee.co.id/file/76a0969b7d64065bc13493bf55df1849_tn"
+            - product_detail_id: "b0348d20-f9dd-4f63-a558-3a6e1d4c6cd4"
+              url: "https://cf.shopee.co.id/file/76a0969b7d64065bc13493bf55df1849_tn"
+
 
     GetReviewProductResponse:
       title: GetReviewProductResponse

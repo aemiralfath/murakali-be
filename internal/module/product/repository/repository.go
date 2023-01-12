@@ -358,6 +358,29 @@ func (r *productRepo) GetProductDetail(ctx context.Context, productID string, pr
 	return productDetail, nil
 }
 
+func (r *productRepo) GetAllImageByProductDetailID(ctx context.Context, productDetailID string) ([]*string, error) {
+	res, err := r.PSQL.QueryContext(
+		ctx, GetProductDetailPhotosQuery, productDetailID)
+
+	if err != nil {
+		return nil, err
+	}
+
+	var productURLs []*string
+
+	for res.Next() {
+		var url string
+		if errScan := res.Scan(
+			&url,
+		); errScan != nil {
+			return nil, err
+		}
+		productURLs = append(productURLs, &url)
+	}
+
+	return productURLs, nil
+}
+
 func (r *productRepo) GetTotalProduct(ctx context.Context) (int64, error) {
 	var total int64
 	if err := r.PSQL.QueryRowContext(ctx, GetTotalProductQuery).Scan(&total); err != nil {
