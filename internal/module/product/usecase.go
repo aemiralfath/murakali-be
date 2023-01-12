@@ -13,6 +13,7 @@ type UseCase interface {
 	GetCategoriesByName(ctx context.Context, name string) ([]*body.CategoryResponse, error)
 	GetRecommendedProducts(ctx context.Context, pgn *pagination.Pagination) (*pagination.Pagination, error)
 	GetProductDetail(ctx context.Context, productID string) (*body.ProductDetailResponse, error)
+	GetAllProductImage(ctx context.Context, productID string) ([]*body.GetImageResponse, error)
 	GetProducts(ctx context.Context, pgn *pagination.Pagination, query *body.GetProductQueryRequest) (*pagination.Pagination, error)
 	GetFavoriteProducts(ctx context.Context, pgn *pagination.Pagination, query *body.GetProductQueryRequest, userID string) (*pagination.Pagination, error)
 	CreateFavoriteProduct(ctx context.Context, productID, userID string) error

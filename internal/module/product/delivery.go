@@ -11,6 +11,7 @@ type Handlers interface {
 	GetCategoriesByNameLevelThree(c *gin.Context)
 	GetRecommendedProducts(c *gin.Context)
 	GetProductDetail(c *gin.Context)
+	GetAllProductImage(c *gin.Context)
 	GetFavoriteProducts(c *gin.Context)
 	CreateFavoriteProduct(c *gin.Context)
 	DeleteFavoriteProduct(c *gin.Context)

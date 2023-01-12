@@ -19,6 +19,7 @@ type Repository interface {
 	GetTotalProduct(ctx context.Context) (int64, error)
 	GetProductInfo(ctx context.Context, productID string) (*body.ProductInfo, error)
 	GetProductDetail(ctx context.Context, productID string, promo *body.PromotionInfo) ([]*body.ProductDetail, error)
+	GetAllImageByProductDetailID(ctx context.Context, productDetailID string) ([]*string, error)
 	GetPromotionInfo(ctx context.Context, productID string) (*body.PromotionInfo, error)
 	GetProducts(ctx context.Context, pgn *pagination.Pagination, query *body.GetProductQueryRequest) ([]*body.Products,
 		[]*model.Promotion, []*model.Voucher, error)
