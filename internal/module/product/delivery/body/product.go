@@ -1,5 +1,12 @@
 package body
 
+import (
+	"murakali/pkg/httperror"
+	"murakali/pkg/response"
+	"net/http"
+	"strings"
+)
+
 const (
 	FieldCannotBeEmptyMessage = "Field cannot be empty."
 	ProductNotFound           = "Product not found"
@@ -24,6 +31,33 @@ type GetProductQueryRequest struct {
 	ListedStatus int
 	Province     []string
 }
+
+type GetProductRequest struct {
+	ProductID string `uri:"product_id" binding:"required"`
+}
+
+func (r *GetProductRequest) Validate() (UnprocessableEntity, error) {
+	unprocessableEntity := false
+	entity := UnprocessableEntity{
+		Fields: map[string]string{
+			"product_id": "",
+		},
+	}
+
+	r.ProductID = strings.TrimSpace(r.ProductID)
+	if r.ProductID == "" {
+		unprocessableEntity = true
+		entity.Fields["product_id"] = FieldCannotBeEmptyMessage
+	}
+
+	if unprocessableEntity {
+		return entity, httperror.New(
+			http.StatusUnprocessableEntity,
+			response.UnprocessableEntityMessage,
+		)
+	}
+
+	return entity, nil
 
 type GetImageResponse struct {
 	ProductDetailId *string `json:"product_detail_id"`

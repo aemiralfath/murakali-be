@@ -367,8 +367,63 @@ func (u *productUC) GetFavoriteProducts(
 	return pgn, nil
 }
 
-func (u *productUC) GetProductReviews(ctx context.Context, pgn *pagination.Pagination,
-	productID string, query *body.GetReviewQueryRequest) (*pagination.Pagination, error) {
+func (u *productUC) CreateFavoriteProduct(ctx context.Context, productID, userID string) error {
+
+	_, err := u.productRepo.GetProductInfo(ctx, productID)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return httperror.New(http.StatusBadRequest, response.ProductNotExistMessage)
+		}
+		return err
+	}
+
+	isExist, err := u.productRepo.FindFavoriteProduct(ctx, userID, productID)
+
+	if err != nil {
+		return err
+	}
+
+	if isExist {
+		return httperror.New(http.StatusBadRequest, response.ProductAlreadyInFavMessage)
+	}
+
+	err = u.txRepo.WithTransaction(func(tx postgre.Transaction) error {
+		err = u.productRepo.CreateFavoriteProduct(ctx, tx, userID, productID)
+		if err != nil {
+			return err
+		}
+		return nil
+	})
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (u *productUC) DeleteFavoriteProduct(ctx context.Context, productID, userID string) error {
+	isExist, err := u.productRepo.FindFavoriteProduct(ctx, userID, productID)
+	if err != nil {
+		return err
+	}
+
+	if !isExist {
+		return httperror.New(http.StatusBadRequest, response.ProductNotExistMessage)
+	}
+	err = u.txRepo.WithTransaction(func(tx postgre.Transaction) error {
+		err = u.productRepo.DeleteFavoriteProduct(ctx, tx, userID, productID)
+		if err != nil {
+			return err
+		}
+		return nil
+	})
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (u *productUC) GetProductReviews(ctx context.Context, pgn *pagination.Pagination, productID string, query *body.GetReviewQueryRequest) (*pagination.Pagination, error) {
 	totalRows, err := u.productRepo.GetTotalAllReviewProduct(ctx, productID, query)
 	if err != nil {
 		return nil, err

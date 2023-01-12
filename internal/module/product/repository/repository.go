@@ -215,6 +215,7 @@ func (r *productRepo) GetProductInfo(ctx context.Context, productID string) (*bo
 			&productInfo.RatingAVG,
 			&productInfo.MinPrice,
 			&productInfo.MaxPrice,
+			&productInfo.ShopID,
 			&productInfo.CategoryName,
 			&productInfo.CategoryURL,
 		); err != nil {
@@ -324,7 +325,7 @@ func (r *productRepo) GetProductDetail(ctx context.Context, productID string, pr
 				return nil, err
 			}
 
-			mapVariant[variant.Type] = variant.Name
+			mapVariant[variant.Name] = variant.Type
 		}
 		detail.Variant = mapVariant
 
@@ -616,8 +617,35 @@ func (r *productRepo) GetAllFavoriteTotalProduct(ctx context.Context, query *bod
 	return total, nil
 }
 
-func (r *productRepo) GetProductReviews(ctx context.Context,
-	pgn *pagination.Pagination, productID string, query *body.GetReviewQueryRequest) ([]*body.ReviewProduct, error) {
+func (r *productRepo) CreateFavoriteProduct(ctx context.Context, tx postgre.Transaction, userID, productID string) error {
+	_, err := r.PSQL.ExecContext(ctx, CreateFavoriteProductQuery, userID, productID)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (r *productRepo) DeleteFavoriteProduct(ctx context.Context, tx postgre.Transaction, userID, productID string) error {
+	_, err := r.PSQL.ExecContext(ctx, DeleteFavoriteProductQuery, userID, productID)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (r *productRepo) FindFavoriteProduct(ctx context.Context, userID, productID string) (bool, error) {
+	var isExist bool
+
+	if err := r.PSQL.QueryRowContext(ctx, CheckFavoriteProductIsExistQuery, userID, productID).Scan(&isExist); err != nil {
+		return false, err
+	}
+
+	return isExist, nil
+}
+
+func (r *productRepo) GetProductReviews(ctx context.Context, pgn *pagination.Pagination, productID string, query *body.GetReviewQueryRequest) ([]*body.ReviewProduct, error) {
 	reviews := make([]*body.ReviewProduct, 0)
 
 	q := fmt.Sprintf(GetReviewProductQuery, query.GetValidate(), pgn.GetSort())

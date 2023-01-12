@@ -1110,7 +1110,7 @@ paths:
 
   "/api/v1/product/favorite":
     get:
-      summary: Get Favorite Product {WIP}
+      summary: Get Favorite Product
       description: >-
         get product
       tags:
@@ -1199,6 +1199,46 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/GetFavoriteProductResponse"
+    post:
+      summary: Create Favorite Product
+      description: >-
+        create favorite product
+      tags:
+        - Product
+      security:
+        - BEARER: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateProductFavoriteRequest"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CreateProductFavoriteResponse"
+    delete:
+      summary: Delete Favorite Product
+      description: >-
+        delete favorite product
+      tags:
+        - Product
+      security:
+        - BEARER: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DeleteProductFavoriteRequest"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DeleteProductFavoriteResponse"
 
   "/api/v1/product/recommended":
     get:
@@ -3226,6 +3266,38 @@ components:
                 voucher_discount_percentage: 0
                 voucher_discount_fix_price: 5000
 
+    CreateProductFavoriteRequest:
+      title: CreateProductFavoriteRequest
+      type: object
+      description: Create product favorite request data model.
+      example:
+        product_id: "2fe8ee60-06b7-4e74-890e-8b00cbcb5af9"
+
+    CreateProductFavoriteResponse:
+      title: CreateProductFavoriteResponse
+      type: object
+      description: Create product favorite response data model.
+      properties:
+        message: 
+          type: string
+          example: "success"
+
+    DeleteProductFavoriteRequest:
+      title: DeleteProductFavoriteRequest
+      type: object
+      description: Delete product favorite request data model.
+      example:
+        product_id: "2fe8ee60-06b7-4e74-890e-8b00cbcb5af9"
+
+    DeleteProductFavoriteResponse:
+      title: DeleteProductFavoriteResponse
+      type: object
+      description: Delete product favorite response data model.
+      properties:
+        message: 
+          type: string
+          example: "success"
+
     GetRecommendedProductListResponse:
       title: GetRecommendedProductListResponse
       type: object
@@ -3394,6 +3466,8 @@ components:
                   type: number
                 max_price:
                   type: number
+                shop_id:
+                  type: string
                 category_name:
                   type: string
                 category_url:
@@ -3472,6 +3546,7 @@ components:
               rating_avg: 4
               min_price: 15000
               max_price: 25000
+              shop_id: "e8854443-c2c7-488e-93d5-b9d93708b8a3"
               category_name: "laptop"
               category_url: "https://cf.shopee.co.id/file/c139370836a9daa649da70876a326b58"
             promotions_info:

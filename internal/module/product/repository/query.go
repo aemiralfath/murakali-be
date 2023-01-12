@@ -26,7 +26,7 @@ const (
 	ORDER BY "p"."unit_sold" DESC LIMIT $1 OFFSET $2;
 	`
 	GetProductInfoQuery = `select
-	pr.id,pr.sku,pr.title,pr.description,pr.view_count,pr.favorite_count,pr.unit_sold,pr.listed_status,pr.thumbnail_url,pr.rating_avg,pr.min_price,pr.max_price
+	pr.id,pr.sku,pr.title,pr.description,pr.view_count,pr.favorite_count,pr.unit_sold,pr.listed_status,pr.thumbnail_url,pr.rating_avg,pr.min_price,pr.max_price,pr.shop_id
 	,c.name,c.photo_url
 	from 
 	product pr 
@@ -197,6 +197,32 @@ const (
 	AND "f"."user_id" = $7
 	 AND "p"."deleted_at" IS NULL
 	 AND "p"."listed_status" = true `
+
+	CreateFavoriteProductQuery = `
+	INSERT INTO "favorite" ("user_id", "product_id")
+	VALUES ($1, $2);`
+
+	DeleteFavoriteProductQuery = `
+	DELETE FROM "favorite"
+	WHERE "user_id" = $1 AND "product_id" = $2;`
+
+	CheckFavoriteProductIsExistQuery = `
+	SELECT
+		CASE WHEN EXISTS 
+		(
+			SELECT "user_id", "product_id"
+			FROM "favorite"
+			WHERE "user_id" = $1 AND "product_id" = $2
+		)
+		THEN 'TRUE'
+		ELSE 'FALSE'
+	END;
+	`
+
+	FindFavoriteProductQuery = `
+	SELECT "user_id", "product_id"
+	FROM "favorite"
+	WHERE "user_id" = $1 AND "product_id" = $2;`
 
 	GetAllTotalReviewProductQuery = `
 	SELECT count(r.id)
