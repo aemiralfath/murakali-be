@@ -3,7 +3,6 @@ package usecase
 import (
 	"context"
 	"database/sql"
-	"fmt"
 	"math"
 	"murakali/config"
 	"murakali/internal/model"
@@ -59,7 +58,6 @@ func (u *sellerUC) ChangeOrderStatus(ctx context.Context, userID string, request
 	if err != nil {
 		return err
 	}
-
 	if shopIDFromUser != shopIDFromOrder {
 		return httperror.New(http.StatusUnauthorized, response.UnauthorizedMessage)
 	}
@@ -76,6 +74,28 @@ func (u *sellerUC) GetOrderByOrderID(ctx context.Context, orderID string) (*mode
 	if err != nil {
 		return nil, err
 	}
+	buyerID, err := u.sellerRepo.GetBuyerIDByOrderID(ctx, orderID)
+	if err != nil {
+		return nil, err
+	}
+
+	sellerID, err := u.sellerRepo.GetSellerIDByOrderID(ctx, orderID)
+	if err != nil {
+		return nil, err
+	}
+
+	buyerAddress, err := u.sellerRepo.GetAddressByBuyerID(ctx, buyerID)
+	if err != nil {
+		return nil, err
+	}
+
+	sellerAddress, err := u.sellerRepo.GetAddressBySellerID(ctx, sellerID)
+	if err != nil {
+		return nil, err
+	}
+
+	order.BuyerAddress = buyerAddress
+	order.SellerAddress = sellerAddress
 
 	return order, nil
 }
@@ -94,7 +114,6 @@ func (u *sellerUC) GetCourierSeller(ctx context.Context, userID string) (*body.C
 	resultCourierSeller := make([]*body.CourierSellerInfo, 0)
 	totalData := len(courier)
 	totalDataCourierSeller := len(courierSeller)
-	fmt.Println("ini courier seller", courierSeller)
 	for i := 0; i < totalData; i++ {
 		var shopCourierIDTemp string
 		var deletedAtTemp string

@@ -23,7 +23,10 @@ type Repository interface {
 	UpdateCourierSellerByID(ctx context.Context, shopID, courierID string) error
 	DeleteCourierSellerByID(ctx context.Context, shopCourierID string) error
 	GetCategoryBySellerID(ctx context.Context, shopID string) ([]*body.CategoryResponse, error)
-
+	GetAddressByBuyerID(ctx context.Context, userID string) (*model.Address, error)
+	GetAddressBySellerID(ctx context.Context, userID string) (*model.Address, error)
 	GetAllCourier(ctx context.Context) ([]*body.CourierInfo, error)
 	GetCourierSeller(ctx context.Context, userID string) ([]*body.CourierSellerRelationInfo, error)
+	GetBuyerIDByOrderID(ctx context.Context, orderID string) (string, error)
+	GetSellerIDByOrderID(ctx context.Context, orderID string) (string, error)
 }
