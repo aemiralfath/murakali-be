@@ -4,8 +4,10 @@ import (
 	"errors"
 	"fmt"
 	"murakali/config"
+	"murakali/internal/constant"
 	"murakali/internal/module/product"
 	"murakali/internal/module/product/delivery/body"
+	"murakali/internal/util"
 	"murakali/pkg/httperror"
 	"murakali/pkg/logger"
 	"murakali/pkg/pagination"
@@ -201,6 +203,24 @@ func (h *productHandlers) GetProductDetail(c *gin.Context) {
 	response.SuccessResponse(c.Writer, productDetail, http.StatusOK)
 }
 
+func (h *productHandlers) GetAllProductImage(c *gin.Context) {
+	productID := c.Param("product_id")
+	productImages, err := h.productUC.GetAllProductImage(c, productID)
+	if err != nil {
+		var e *httperror.Error
+		if !errors.As(err, &e) {
+			h.logger.Errorf("HandlerProduct, Error: %s", err)
+			response.ErrorResponse(c.Writer, response.InternalServerErrorMessage, http.StatusInternalServerError)
+			return
+		}
+
+		response.ErrorResponse(c.Writer, e.Err.Error(), e.Status)
+		return
+	}
+
+	response.SuccessResponse(c.Writer, productImages, http.StatusOK)
+}
+
 func (h *productHandlers) ValidateQueryRecommendProduct(c *gin.Context) *pagination.Pagination {
 	limit := strings.TrimSpace(c.Query("limit"))
 	page := strings.TrimSpace(c.Query("page"))
@@ -243,28 +263,41 @@ func (h *productHandlers) ValidateQueryProduct(c *gin.Context) (*pagination.Pagi
 	category := strings.TrimSpace(c.Query("category"))
 	shop := strings.TrimSpace(c.Query("shop_id"))
 
+	listedStatus := strings.TrimSpace(c.Query("listed_status"))
+
 	province := strings.TrimSpace(c.Query("province_ids"))
 
 	var limitFilter, pageFilter int
 	var minPriceFilter, maxPriceFilter, minRatingFilter, maxRatingFilter float64
 
+	listedStatusFilter, _ := strconv.Atoi(listedStatus)
+	switch listedStatusFilter {
+	case 0:
+		listedStatusFilter = 0
+	case 1:
+		listedStatusFilter = 1
+	case 2:
+		listedStatusFilter = 2
+	default:
+		listedStatusFilter = 0
+	}
+
 	limitFilter, err := strconv.Atoi(limit)
 	if err != nil || limitFilter < 1 {
 		limitFilter = 12
+	} else if limitFilter > 100 {
+		limitFilter = 100
 	}
-
 	if sortBy == "" {
-		sortBy = `unit_sold`
+		sortBy = "unit_sold"
 	}
 	if sort == "" {
 		sort = "desc"
 	}
-
 	pageFilter, err = strconv.Atoi(page)
 	if err != nil || pageFilter < 1 {
 		pageFilter = 1
 	}
-
 	pgn := &pagination.Pagination{
 		Limit: limitFilter,
 		Page:  pageFilter,
@@ -322,6 +355,8 @@ func (h *productHandlers) ValidateQueryProduct(c *gin.Context) (*pagination.Pagi
 	minRatingFilter, err = strconv.ParseFloat(minRating, 64)
 	if err != nil || minRatingFilter <= 0 {
 		minRatingFilter = 0
+	} else if minRatingFilter > 5 {
+		minRatingFilter = 0
 	}
 
 	maxRatingFilter, err = strconv.ParseFloat(maxRating, 64)
@@ -336,15 +371,21 @@ func (h *productHandlers) ValidateQueryProduct(c *gin.Context) (*pagination.Pagi
 	if province != "" {
 		provinceFilter = strings.Split(province, ",")
 	}
+
+	if maxRatingFilter < minRatingFilter {
+		minRatingFilter = 0
+		maxRatingFilter = 5
+	}
 	query := &body.GetProductQueryRequest{
-		Search:    searchFilter,
-		Shop:      shop,
-		Category:  categoryFilter,
-		MinPrice:  minPriceFilter,
-		MaxPrice:  maxPriceFilter,
-		MinRating: minRatingFilter,
-		MaxRating: maxRatingFilter,
-		Province:  provinceFilter,
+		Search:       searchFilter,
+		Shop:         shop,
+		Category:     categoryFilter,
+		MinPrice:     minPriceFilter,
+		MaxPrice:     maxPriceFilter,
+		MinRating:    minRatingFilter,
+		MaxRating:    maxRatingFilter,
+		Province:     provinceFilter,
+		ListedStatus: listedStatusFilter,
 	}
 	return pgn, query
 }
@@ -403,6 +444,78 @@ func (h *productHandlers) UpdateListedStatus(c *gin.Context) {
 	}
 
 	response.SuccessResponse(c.Writer, nil, http.StatusOK)
+}
+
+func (h *productHandlers) UpdateProduct(c *gin.Context) {
+	id := c.Param("id")
+	productID, err := uuid.Parse(id)
+	if err != nil {
+		response.ErrorResponse(c.Writer, response.BadRequestMessage, http.StatusBadRequest)
+		return
+	}
+	userID, exist := c.Get("userID")
+	if !exist {
+		response.ErrorResponse(c.Writer, response.UnauthorizedMessage, http.StatusUnauthorized)
+		return
+	}
+
+	var requestBody body.UpdateProductRequest
+	if err = c.ShouldBind(&requestBody); err != nil {
+		response.ErrorResponse(c.Writer, response.BadRequestMessage, http.StatusBadRequest)
+		return
+	}
+
+	invalidFields, err := requestBody.ValidateUpdateProduct()
+	if err != nil {
+		response.ErrorResponseData(c.Writer, invalidFields, response.UnprocessableEntityMessage, http.StatusUnprocessableEntity)
+		return
+	}
+
+	if err := h.productUC.UpdateProduct(c, requestBody, userID.(string), productID.String()); err != nil {
+		var e *httperror.Error
+		if !errors.As(err, &e) {
+			h.logger.Errorf("HandlerUser, Error: %s", err)
+			response.ErrorResponse(c.Writer, response.InternalServerErrorMessage, http.StatusInternalServerError)
+			return
+		}
+		response.ErrorResponse(c.Writer, e.Err.Error(), e.Status)
+		return
+	}
+
+	response.SuccessResponse(c.Writer, nil, http.StatusOK)
+}
+
+func (h *productHandlers) UploadProductPicture(c *gin.Context) {
+	type Sizer interface {
+		Size() int64
+	}
+
+	var imgURL string
+	var img body.ImageRequest
+
+	err := c.ShouldBind(&img)
+	if err != nil {
+		response.ErrorResponse(c.Writer, response.InternalServerErrorMessage, http.StatusInternalServerError)
+		return
+	}
+	data, _, err := c.Request.FormFile("Img")
+	if err != nil {
+		response.ErrorResponse(c.Writer, body.ImageIsEmpty, http.StatusInternalServerError)
+		return
+	}
+
+	if data.(Sizer).Size() > constant.ImgMaxSize {
+		response.ErrorResponse(c.Writer, response.PictureSizeTooBig, http.StatusInternalServerError)
+		return
+	}
+
+	if data == nil {
+		response.ErrorResponse(c.Writer, response.InternalServerErrorMessage, http.StatusInternalServerError)
+		return
+	}
+	imgURL = util.UploadImageToCloudinary(c, h.cfg, data)
+
+	response.SuccessResponse(c.Writer, imgURL, http.StatusOK)
 }
 
 // get product review by product id

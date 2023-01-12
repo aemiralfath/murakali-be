@@ -85,4 +85,8 @@ const (
 	and s.id = $1
 	and c.deleted_at is null
 	group by c.id`
+
+	UpdateResiNumberInOrderSellerQuery = `UPDATE
+	 "order" set resi_no = $1 WHERE id = $2 
+	 AND shop_id = $3`
 )

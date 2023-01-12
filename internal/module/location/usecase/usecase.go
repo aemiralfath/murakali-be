@@ -246,15 +246,18 @@ func (u *locationUC) GetShippingCost(ctx context.Context, requestBody body.GetSh
 			return nil, err
 		}
 
-		for _, cost := range costResp.Rajaongkir.Results[0].Costs {
-			costCourier := &model.Cost{}
-			if cost.Service == courier.Service {
-				costCourier.Courier = *courier
-				costCourier.Fee = cost.Cost[0].Value
-				costCourier.ETD = cost.Cost[0].Etd
-				resp.ShippingOption = append(resp.ShippingOption, costCourier)
+		if len(costResp.Rajaongkir.Results) > 0 {
+			for _, cost := range costResp.Rajaongkir.Results[0].Costs {
+				costCourier := &model.Cost{}
+				if cost.Service == courier.Service {
+					costCourier.Courier = *courier
+					costCourier.Fee = cost.Cost[0].Value
+					costCourier.ETD = cost.Cost[0].Etd
+					resp.ShippingOption = append(resp.ShippingOption, costCourier)
+				}
 			}
 		}
+
 	}
 
 	return resp, nil

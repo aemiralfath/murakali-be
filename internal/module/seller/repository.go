@@ -29,4 +29,5 @@ type Repository interface {
 	GetSellerIDByOrderID(ctx context.Context, orderID string) (string, error)
 	GetAddressByBuyerID(ctx context.Context, userID string) (*model.Address, error)
 	GetAddressBySellerID(ctx context.Context, userID string) (*model.Address, error)
+	UpdateResiNumberInOrderSeller(ctx context.Context, noResi, orderID, shopID string) error
 }

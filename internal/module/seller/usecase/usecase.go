@@ -54,6 +54,7 @@ func (u *sellerUC) ChangeOrderStatus(ctx context.Context, userID string, request
 	if err != nil {
 		return err
 	}
+
 	shopIDFromOrder, err := u.sellerRepo.GetShopIDByOrder(ctx, requestBody.OrderID)
 	if err != nil {
 		return err
@@ -223,4 +224,21 @@ func (u *sellerUC) GetCategoryBySellerID(ctx context.Context, shopID string) ([]
 	}
 
 	return categories, nil
+}
+
+func (u *sellerUC) UpdateResiNumberInOrderSeller(ctx context.Context, userID, orderID string, requestBody body.UpdateNoResiOrderSellerRequest) error {
+	shopID, err := u.sellerRepo.GetShopIDByUserID(ctx, userID)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return httperror.New(http.StatusBadRequest, response.ShopAddressNotFound)
+		}
+		return err
+	}
+
+	err = u.sellerRepo.UpdateResiNumberInOrderSeller(ctx, requestBody.NoResi, orderID, shopID)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

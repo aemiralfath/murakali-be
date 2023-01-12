@@ -31,12 +31,12 @@ func (tr *TxRepo) WithTransactionReturnData(fn TxFnData) (data interface{}, err 
 
 	defer func() {
 		if p := recover(); p != nil {
-			err = tx.Rollback()
+			tx.Rollback()
 			panic(p)
 		} else if err != nil {
-			err = tx.Rollback()
+			tx.Rollback()
 		} else {
-			err = tx.Commit()
+			tx.Commit()
 		}
 	}()
 
@@ -52,12 +52,12 @@ func (tr *TxRepo) WithTransaction(fn TxFn) (err error) {
 
 	defer func() {
 		if p := recover(); p != nil {
-			err = tx.Rollback()
+			tx.Rollback()
 			panic(p)
 		} else if err != nil {
-			err = tx.Rollback()
+			tx.Rollback()
 		} else {
-			err = tx.Commit()
+			tx.Commit()
 		}
 	}()
 
