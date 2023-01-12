@@ -140,7 +140,7 @@ func (r *sellerRepo) GetOrderByOrderID(ctx context.Context, orderID string) (*mo
 		&order.CourierCode,
 		&order.CourierService,
 		&order.CourierDescription,
-		&order.BuyerName,
+		&order.BuyerUsername,
 		&order.BuyerPhoneNumber,
 	); err != nil {
 		return nil, err
