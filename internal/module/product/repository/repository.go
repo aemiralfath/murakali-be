@@ -380,11 +380,22 @@ func (r *productRepo) GetProducts(ctx context.Context, pgn *pagination.Paginatio
 	if query.Shop != "" {
 		queryWhereShopIds = fmt.Sprintf(WhereShopIds, query.Shop)
 	}
+
+	var queryListedStatus string
+	switch query.ListedStatus {
+	case 0:
+		queryListedStatus = ``
+	case 1:
+		queryListedStatus = WhereListedStatusTrue
+	case 2:
+		queryListedStatus = WhereListedStatusFalse
+	}
+
 	var res *sql.Rows
 	var err error
 	if len(query.Province) > 0 {
 		res, err = r.PSQL.QueryContext(
-			ctx, GetProductsWithProvinceQuery+queryWhereShopIds+queryWhereProvinceIds+queryOrderBySomething,
+			ctx, GetProductsWithProvinceQuery+queryWhereShopIds+queryWhereProvinceIds+queryListedStatus+queryOrderBySomething,
 			query.Search,
 			query.Category,
 			query.MinRating,
@@ -395,7 +406,7 @@ func (r *productRepo) GetProducts(ctx context.Context, pgn *pagination.Paginatio
 		)
 	} else {
 		res, err = r.PSQL.QueryContext(
-			ctx, GetProductsQuery+queryWhereShopIds+queryWhereProvinceIds+queryOrderBySomething,
+			ctx, GetProductsQuery+queryWhereShopIds+queryWhereProvinceIds+queryListedStatus+queryOrderBySomething,
 			query.Search,
 			query.Category,
 			query.MinRating,
@@ -461,9 +472,19 @@ func (r *productRepo) GetAllTotalProduct(ctx context.Context, query *body.GetPro
 		queryWhereShopIds = fmt.Sprintf(WhereShopIds, query.Shop)
 	}
 
+	var queryListedStatus string
+	switch query.ListedStatus {
+	case 0:
+		queryListedStatus = ``
+	case 1:
+		queryListedStatus = WhereListedStatusTrue
+	case 2:
+		queryListedStatus = WhereListedStatusFalse
+	}
+
 	if len(query.Province) > 0 {
 		if err := r.PSQL.QueryRowContext(ctx,
-			GetAllTotalProductWithProvinceQuery+queryWhereShopIds+queryWhereProvinceIds,
+			GetAllTotalProductWithProvinceQuery+queryWhereShopIds+queryWhereProvinceIds+queryListedStatus,
 			query.Search,
 			query.Category,
 			query.MinRating,
@@ -476,7 +497,7 @@ func (r *productRepo) GetAllTotalProduct(ctx context.Context, query *body.GetPro
 		}
 	} else {
 		if err := r.PSQL.QueryRowContext(ctx,
-			GetAllTotalProductQuery+queryWhereShopIds+queryWhereProvinceIds,
+			GetAllTotalProductQuery+queryWhereShopIds+queryWhereProvinceIds+queryListedStatus,
 			query.Search,
 			query.Category,
 			query.MinRating,

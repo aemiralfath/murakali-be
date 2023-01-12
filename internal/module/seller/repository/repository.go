@@ -7,7 +7,10 @@ import (
 	"murakali/internal/model"
 	"murakali/internal/module/seller"
 	"murakali/internal/module/seller/delivery/body"
+	"murakali/pkg/httperror"
 	"murakali/pkg/pagination"
+	"murakali/pkg/response"
+	"net/http"
 
 	"github.com/go-redis/redis/v8"
 )
@@ -338,11 +341,16 @@ func (r *sellerRepo) DeleteCourierSellerByID(ctx context.Context, shopCourierID 
 }
 
 func (r *sellerRepo) UpdateResiNumberInOrderSeller(ctx context.Context, noResi, orderID, shopID string) error {
-	_, err := r.PSQL.ExecContext(ctx,
+	temp, err := r.PSQL.ExecContext(ctx,
 		UpdateResiNumberInOrderSellerQuery,
 		noResi, orderID, shopID)
 	if err != nil {
 		return err
+	}
+
+	rowsAffected, _ := temp.RowsAffected()
+	if rowsAffected == 0 {
+		return httperror.New(http.StatusNotFound, response.OrderNotExistMessage)
 	}
 	return nil
 }

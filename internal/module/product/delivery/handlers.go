@@ -245,10 +245,24 @@ func (h *productHandlers) ValidateQueryProduct(c *gin.Context) (*pagination.Pagi
 	category := strings.TrimSpace(c.Query("category"))
 	shop := strings.TrimSpace(c.Query("shop_id"))
 
+	listedStatus := strings.TrimSpace(c.Query("listed_status"))
+
 	province := strings.TrimSpace(c.Query("province_ids"))
 
 	var limitFilter, pageFilter int
 	var minPriceFilter, maxPriceFilter, minRatingFilter, maxRatingFilter float64
+
+	listedStatusFilter, _ := strconv.Atoi(listedStatus)
+	switch listedStatusFilter {
+	case 0:
+		listedStatusFilter = 0
+	case 1:
+		listedStatusFilter = 1
+	case 2:
+		listedStatusFilter = 2
+	default:
+		listedStatusFilter = 0
+	}
 
 	limitFilter, err := strconv.Atoi(limit)
 	if err != nil || limitFilter < 1 {
@@ -345,14 +359,15 @@ func (h *productHandlers) ValidateQueryProduct(c *gin.Context) (*pagination.Pagi
 		maxRatingFilter = 5
 	}
 	query := &body.GetProductQueryRequest{
-		Search:    searchFilter,
-		Shop:      shop,
-		Category:  categoryFilter,
-		MinPrice:  minPriceFilter,
-		MaxPrice:  maxPriceFilter,
-		MinRating: minRatingFilter,
-		MaxRating: maxRatingFilter,
-		Province:  provinceFilter,
+		Search:       searchFilter,
+		Shop:         shop,
+		Category:     categoryFilter,
+		MinPrice:     minPriceFilter,
+		MaxPrice:     maxPriceFilter,
+		MinRating:    minRatingFilter,
+		MaxRating:    maxRatingFilter,
+		Province:     provinceFilter,
+		ListedStatus: listedStatusFilter,
 	}
 	return pgn, query
 }
