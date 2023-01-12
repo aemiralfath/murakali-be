@@ -189,6 +189,32 @@ const (
 	AND "f"."user_id" = $7
 	 AND "p"."deleted_at" IS NULL `
 
+	CreateFavoriteProductQuery = `
+	INSERT INTO "favorite" ("user_id", "product_id")
+	VALUES ($1, $2);`
+
+	DeleteFavoriteProductQuery = `
+	DELETE FROM "favorite"
+	WHERE "user_id" = $1 AND "product_id" = $2;`
+
+	CheckFavoriteProductIsExistQuery = `
+	SELECT
+		CASE WHEN EXISTS 
+		(
+			SELECT "user_id", "product_id"
+			FROM "favorite"
+			WHERE "user_id" = $1 AND "product_id" = $2
+		)
+		THEN 'TRUE'
+		ELSE 'FALSE'
+	END;
+	`
+
+	FindFavoriteProductQuery = `
+	SELECT "user_id", "product_id"
+	FROM "favorite"
+	WHERE "user_id" = $1 AND "product_id" = $2;`
+
 	GetAllTotalReviewProductQuery = `
 	SELECT count(r.id)
 	FROM review r

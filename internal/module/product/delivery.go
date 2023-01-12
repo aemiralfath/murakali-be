@@ -12,6 +12,8 @@ type Handlers interface {
 	GetRecommendedProducts(c *gin.Context)
 	GetProductDetail(c *gin.Context)
 	GetFavoriteProducts(c *gin.Context)
+	CreateFavoriteProduct(c *gin.Context)
+	DeleteFavoriteProduct(c *gin.Context)
 	GetProductReviews(c *gin.Context)
 	GetTotalReviewRatingByProductID(c *gin.Context)
 	CreateProduct(c *gin.Context)
