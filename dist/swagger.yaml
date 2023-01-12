@@ -922,6 +922,13 @@ paths:
 
       parameters:
         - in: query
+          name: listed_status
+          schema:
+            type: string
+            enum: [0, 1, 2]
+            description: >-
+              query for see active product(0: all product, 1 :active product, 2 : non active product)
+        - in: query
           name: search
           schema:
             type: string
@@ -1644,7 +1651,33 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/GetOrderDetailResponse"
-
+  "/api/v1/seller/order-resi/{order_id}":
+    patch:
+      summary: Get Seller Orders
+      description: >-
+        Get Seller Orders
+      tags:
+        - Seller
+      security:
+        - BEARER: []
+      parameters:
+        - in: path
+          name: order_id
+          schema:
+            type: string
+          required: true
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ChangeOrderResiRequest"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DefaultSuccess"
   "/api/v1/seller/order-status":
     patch:
       summary: Get Seller Orders
@@ -4125,6 +4158,15 @@ components:
         order_status_id:
           type: number
           example: 2
+
+    ChangeOrderResiRequest:
+      title: ChangeOrderResiRequest
+      type: object
+      description: Change Order Resi Number Request data model.
+      properties:
+        resi_no:
+          type: string
+          example: "2131231231231232142"
 
     CheckUniqueTrueSuccess:
       title: CheckUniqueTrueSuccess

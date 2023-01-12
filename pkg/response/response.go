@@ -49,6 +49,7 @@ const (
 	WalletPinIsInvalid             = "Wallet pin is invalid."
 	WalletBalanceNotEnough         = "Insufficient wallet balance, please top up!"
 	InvalidPaymentMethod           = "Invalid payment method."
+	OrderNotExistMessage           = "Order not exist."
 )
 
 type JSONResponse struct {
