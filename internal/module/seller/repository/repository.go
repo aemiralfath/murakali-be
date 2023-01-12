@@ -54,6 +54,74 @@ func (r *sellerRepo) GetShopIDByOrder(ctx context.Context, orderID string) (stri
 	return shopID, nil
 }
 
+func (r *sellerRepo) GetAddressByBuyerID(ctx context.Context, userID string) (*model.Address, error) {
+	var address model.Address
+	if err := r.PSQL.QueryRowContext(ctx, GetAddressByBuyerIDQuery, userID).Scan(
+		&address.ID,
+		&address.UserID,
+		&address.Name,
+		&address.ProvinceID,
+		&address.CityID,
+		&address.Province,
+		&address.City,
+		&address.District,
+		&address.SubDistrict,
+		&address.AddressDetail,
+		&address.ZipCode,
+		&address.IsDefault,
+		&address.IsShopDefault,
+		&address.CreatedAt,
+		&address.UpdatedAt); err != nil {
+		return nil, err
+	}
+
+	return &address, nil
+}
+
+func (r *sellerRepo) GetAddressBySellerID(ctx context.Context, userID string) (*model.Address, error) {
+	var address model.Address
+	if err := r.PSQL.QueryRowContext(ctx, GetAddressBySellerIDQuery, userID).Scan(
+		&address.ID,
+		&address.UserID,
+		&address.Name,
+		&address.ProvinceID,
+		&address.CityID,
+		&address.Province,
+		&address.City,
+		&address.District,
+		&address.SubDistrict,
+		&address.AddressDetail,
+		&address.ZipCode,
+		&address.IsDefault,
+		&address.IsShopDefault,
+		&address.CreatedAt,
+		&address.UpdatedAt); err != nil {
+		return nil, err
+	}
+
+	return &address, nil
+}
+
+func (r *sellerRepo) GetBuyerIDByOrderID(ctx context.Context, orderID string) (string, error) {
+	var buyerID string
+	if err := r.PSQL.QueryRowContext(ctx, GetBuyerIDByOrderIDQuery, orderID).Scan(
+		&buyerID); err != nil {
+		return "", err
+	}
+
+	return buyerID, nil
+}
+
+func (r *sellerRepo) GetSellerIDByOrderID(ctx context.Context, orderID string) (string, error) {
+	var sellerID string
+	if err := r.PSQL.QueryRowContext(ctx, GetSellerIDByOrderIDQuery, orderID).Scan(
+		&sellerID); err != nil {
+		return "", err
+	}
+
+	return sellerID, nil
+}
+
 func (r *sellerRepo) GetOrderByOrderID(ctx context.Context, orderID string) (*model.Order, error) {
 	var order model.Order
 	if err := r.PSQL.QueryRowContext(ctx, GetOrderByOrderID, orderID).Scan(
@@ -64,8 +132,16 @@ func (r *sellerRepo) GetOrderByOrderID(ctx context.Context, orderID string) (*mo
 		&order.ResiNumber,
 		&order.ShopID,
 		&order.ShopName,
+		&order.SellerName,
 		&order.VoucherCode,
 		&order.CreatedAt,
+		&order.Invoice,
+		&order.CourierName,
+		&order.CourierCode,
+		&order.CourierService,
+		&order.CourierDescription,
+		&order.BuyerName,
+		&order.BuyerPhoneNumber,
 	); err != nil {
 		return nil, err
 	}

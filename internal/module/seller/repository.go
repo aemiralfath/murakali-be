@@ -25,5 +25,9 @@ type Repository interface {
 	GetCategoryBySellerID(ctx context.Context, shopID string) ([]*body.CategoryResponse, error)
 	GetAllCourier(ctx context.Context) ([]*body.CourierInfo, error)
 	GetCourierSeller(ctx context.Context, userID string) ([]*body.CourierSellerRelationInfo, error)
+	GetBuyerIDByOrderID(ctx context.Context, orderID string) (string, error)
+	GetSellerIDByOrderID(ctx context.Context, orderID string) (string, error)
+	GetAddressByBuyerID(ctx context.Context, userID string) (*model.Address, error)
+	GetAddressBySellerID(ctx context.Context, userID string) (*model.Address, error)
 	UpdateResiNumberInOrderSeller(ctx context.Context, noResi, orderID, shopID string) error
 }
