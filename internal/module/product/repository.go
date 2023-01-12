@@ -26,9 +26,6 @@ type Repository interface {
 	GetFavoriteProducts(ctx context.Context, pgn *pagination.Pagination, query *body.GetProductQueryRequest, userID string) ([]*body.Products,
 		[]*model.Promotion, []*model.Voucher, error)
 	GetAllFavoriteTotalProduct(ctx context.Context, query *body.GetProductQueryRequest, userID string) (int64, error)
-	CreateFavoriteProduct(ctx context.Context, tx postgre.Transaction, userID, productID string) error
-	DeleteFavoriteProduct(ctx context.Context, tx postgre.Transaction, userID, productID string) error
-	FindFavoriteProduct(ctx context.Context, userID, productID string) (bool, error)
 	GetProductReviews(ctx context.Context, pgn *pagination.Pagination, productID string, query *body.GetReviewQueryRequest) ([]*body.ReviewProduct, error)
 	GetTotalAllReviewProduct(ctx context.Context, productID string, query *body.GetReviewQueryRequest) (int64, error)
 	GetTotalReviewRatingByProductID(ctx context.Context, productID string) ([]*body.RatingProduct, error)
@@ -36,8 +33,8 @@ type Repository interface {
 	CreateProduct(ctx context.Context, tx postgre.Transaction, requestBody body.CreateProductInfoForQuery) (string, error)
 	CreateProductDetail(ctx context.Context, tx postgre.Transaction, requestBody body.CreateProductDetailRequest, ProductID string) (string, error)
 	CreatePhoto(ctx context.Context, tx postgre.Transaction, productDetailID, url string) error
-	CreateVideo(ctx context.Context, tx postgre.Transaction, productDetailID, url string) error
 	CreateVariant(ctx context.Context, tx postgre.Transaction, productDetailID string, variantDetailID string) error
+	CreateVariantDetail(ctx context.Context, tx postgre.Transaction, requestBody body.VariantDetailRequest) (string, error)
 	GetListedStatus(ctx context.Context, productID string) (bool, error)
 	UpdateListedStatus(ctx context.Context, listedStatus bool, productID string) error
 	UpdateProduct(ctx context.Context, tx postgre.Transaction, requestBody body.UpdateProductInfoForQuery, productID string) error

@@ -62,11 +62,17 @@ func UploadImageToCloudinary(c *gin.Context, cfg *config.Config, file multipart.
 }
 
 func SKUGenerator(productName string) string {
-	var alpha = "abcdefghijkmnpqrstuvwxyz123456789"
-	buf := make([]byte, 8)
-
-	for i := 0; i < 8; i++ {
-		buf[i] = alpha[int(buf[i])%8]
+	const otpChars = "1234567890"
+	buffer := make([]byte, 8)
+	_, err := rand.Read(buffer)
+	if err != nil {
+		return ""
 	}
-	return productName + "-" + string(buf)
+
+	otpCharsLength := len(otpChars)
+	for i := 0; i < 8; i++ {
+		buffer[i] = otpChars[int(buffer[i])%otpCharsLength]
+	}
+
+	return productName + "-" + string(buffer)
 }

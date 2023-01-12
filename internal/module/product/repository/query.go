@@ -124,6 +124,13 @@ const (
 		AND "s"."id" = '%s'
 	`
 
+	WhereListedStatusTrue = ` 
+		AND "p"."listed_status" = true
+	`
+	WhereListedStatusFalse = ` 
+		AND "p"."listed_status" = false
+	`
+
 	GetAllTotalProductQuery = `
 	SELECT count("p"."id") FROM "product" as "p" 
 	INNER JOIN "category" as "c" ON "c"."id" = "p"."category_id" 
@@ -173,6 +180,7 @@ const (
 	AND ("p".min_price BETWEEN $5 AND $6)
 	AND "f"."user_id" = $7
 	AND "p"."deleted_at" IS NULL
+	AND "p"."listed_status" = true
 	ORDER BY %s LIMIT $8 OFFSET $9;
 	`
 
@@ -187,7 +195,8 @@ const (
 	AND ("p".rating_avg BETWEEN $3 AND $4)
 	AND ("p".min_price BETWEEN $5 AND $6)
 	AND "f"."user_id" = $7
-	 AND "p"."deleted_at" IS NULL `
+	 AND "p"."deleted_at" IS NULL
+	 AND "p"."listed_status" = true `
 
 	CreateFavoriteProductQuery = `
 	INSERT INTO "favorite" ("user_id", "product_id")
@@ -263,6 +272,10 @@ const (
 
 	CreateVariantQuery = `INSERT INTO "variant" 
 	(product_detail_id, variant_detail_id)
+	 VALUES ($1, $2) RETURNING "id";`
+
+	CreateVariantDetailQuery = `INSERT INTO "variant_detail" 
+	(name, type)
 	 VALUES ($1, $2) RETURNING "id";`
 
 	CreateProductCourierQuery = `INSERT 

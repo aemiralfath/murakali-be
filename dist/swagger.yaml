@@ -922,6 +922,13 @@ paths:
 
       parameters:
         - in: query
+          name: listed_status
+          schema:
+            type: string
+            enum: [0, 1, 2]
+            description: >-
+              query for see active product(0: all product, 1 :active product, 2 : non active product)
+        - in: query
           name: search
           schema:
             type: string
@@ -1684,7 +1691,33 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/GetOrderDetailResponse"
-
+  "/api/v1/seller/order-resi/{order_id}":
+    patch:
+      summary: Get Seller Orders
+      description: >-
+        Get Seller Orders
+      tags:
+        - Seller
+      security:
+        - BEARER: []
+      parameters:
+        - in: path
+          name: order_id
+          schema:
+            type: string
+          required: true
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ChangeOrderResiRequest"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DefaultSuccess"
   "/api/v1/seller/order-status":
     patch:
       summary: Get Seller Orders
@@ -3042,9 +3075,11 @@ components:
             photo:
               - https://res.cloudinary.com/dhpao1zxi/image/upload/v1671705602/ldtzmxqeyb4nwu5p6y76.jpg
               - https://res.cloudinary.com/dhpao1zxi/image/upload/v1671705602/ldtzmxqeyb4nwu5p6y76.jpg
-            variant_detail_id:
-              - 3ca7b55d-74f8-4fe0-9cee-fb7c8c35f05f
-              - 73e2e918-736a-4dd8-bf08-6a73cc3e1adc
+            variant_detail:
+              - type: color
+                name: red
+              - type: ukuran
+                name: L
           - price: 500000
             stock: 50
             weight: 50000
@@ -3054,9 +3089,11 @@ components:
             bulk_price: true
             photo:
               - https://res.cloudinary.com/dhpao1zxi/image/upload/v1671705602/ldtzmxqeyb4nwu5p6y76.jpg
-            variant_detail_id:
-              - 3ca7b55d-74f8-4fe0-9cee-fb7c8c35f05f
-              - 73e2e918-736a-4dd8-bf08-6a73cc3e1adc
+            variant_detail:
+              - type: color
+                name: blue
+              - type: ukuran
+                name: M
           - price: 600000
             stock: 60
             weight: 60000
@@ -3066,9 +3103,11 @@ components:
             bulk_price: false
             photo:
               - https://res.cloudinary.com/dhpao1zxi/image/upload/v1671705602/ldtzmxqeyb4nwu5p6y76.jpg
-            variant_detail_id:
-              - 3ca7b55d-74f8-4fe0-9cee-fb7c8c35f05f
-              - 73e2e918-736a-4d
+            variant_detail:
+              - type: color
+                name: blue
+              - type: ukuran
+                name: S
 
     UpdateProductRequest:
       title: UpdateProductRequest
@@ -4194,6 +4233,15 @@ components:
         order_status_id:
           type: number
           example: 2
+
+    ChangeOrderResiRequest:
+      title: ChangeOrderResiRequest
+      type: object
+      description: Change Order Resi Number Request data model.
+      properties:
+        resi_no:
+          type: string
+          example: "2131231231231232142"
 
     CheckUniqueTrueSuccess:
       title: CheckUniqueTrueSuccess

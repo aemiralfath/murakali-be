@@ -381,11 +381,22 @@ func (r *productRepo) GetProducts(ctx context.Context, pgn *pagination.Paginatio
 	if query.Shop != "" {
 		queryWhereShopIds = fmt.Sprintf(WhereShopIds, query.Shop)
 	}
+
+	var queryListedStatus string
+	switch query.ListedStatus {
+	case 0:
+		queryListedStatus = ``
+	case 1:
+		queryListedStatus = WhereListedStatusTrue
+	case 2:
+		queryListedStatus = WhereListedStatusFalse
+	}
+
 	var res *sql.Rows
 	var err error
 	if len(query.Province) > 0 {
 		res, err = r.PSQL.QueryContext(
-			ctx, GetProductsWithProvinceQuery+queryWhereShopIds+queryWhereProvinceIds+queryOrderBySomething,
+			ctx, GetProductsWithProvinceQuery+queryWhereShopIds+queryWhereProvinceIds+queryListedStatus+queryOrderBySomething,
 			query.Search,
 			query.Category,
 			query.MinRating,
@@ -396,7 +407,7 @@ func (r *productRepo) GetProducts(ctx context.Context, pgn *pagination.Paginatio
 		)
 	} else {
 		res, err = r.PSQL.QueryContext(
-			ctx, GetProductsQuery+queryWhereShopIds+queryWhereProvinceIds+queryOrderBySomething,
+			ctx, GetProductsQuery+queryWhereShopIds+queryWhereProvinceIds+queryListedStatus+queryOrderBySomething,
 			query.Search,
 			query.Category,
 			query.MinRating,
@@ -462,9 +473,19 @@ func (r *productRepo) GetAllTotalProduct(ctx context.Context, query *body.GetPro
 		queryWhereShopIds = fmt.Sprintf(WhereShopIds, query.Shop)
 	}
 
+	var queryListedStatus string
+	switch query.ListedStatus {
+	case 0:
+		queryListedStatus = ``
+	case 1:
+		queryListedStatus = WhereListedStatusTrue
+	case 2:
+		queryListedStatus = WhereListedStatusFalse
+	}
+
 	if len(query.Province) > 0 {
 		if err := r.PSQL.QueryRowContext(ctx,
-			GetAllTotalProductWithProvinceQuery+queryWhereShopIds+queryWhereProvinceIds,
+			GetAllTotalProductWithProvinceQuery+queryWhereShopIds+queryWhereProvinceIds+queryListedStatus,
 			query.Search,
 			query.Category,
 			query.MinRating,
@@ -477,7 +498,7 @@ func (r *productRepo) GetAllTotalProduct(ctx context.Context, query *body.GetPro
 		}
 	} else {
 		if err := r.PSQL.QueryRowContext(ctx,
-			GetAllTotalProductQuery+queryWhereShopIds+queryWhereProvinceIds,
+			GetAllTotalProductQuery+queryWhereShopIds+queryWhereProvinceIds+queryListedStatus,
 			query.Search,
 			query.Category,
 			query.MinRating,
@@ -766,19 +787,6 @@ func (r *productRepo) CreatePhoto(ctx context.Context, tx postgre.Transaction, p
 	return nil
 }
 
-func (r *productRepo) CreateVideo(ctx context.Context, tx postgre.Transaction, productDetailID, url string) error {
-	_, err := tx.ExecContext(
-		ctx,
-		CreateVideoQuery,
-		productDetailID,
-		url,
-	)
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
 func (r *productRepo) CreateVariant(ctx context.Context, tx postgre.Transaction, productDetailID, variantDetailID string) error {
 	_, err := tx.ExecContext(
 		ctx,
@@ -790,6 +798,22 @@ func (r *productRepo) CreateVariant(ctx context.Context, tx postgre.Transaction,
 		return err
 	}
 	return nil
+}
+
+func (r *productRepo) CreateVariantDetail(ctx context.Context, tx postgre.Transaction,
+	requestBody body.VariantDetailRequest) (string, error) {
+	var ID string
+	err := tx.QueryRowContext(
+		ctx,
+		CreateVariantDetailQuery,
+		requestBody.Name,
+		requestBody.Type,
+	).Scan(&ID)
+	if err != nil {
+		return "", err
+	}
+
+	return ID, nil
 }
 
 func (r *productRepo) GetListedStatus(ctx context.Context, productID string) (bool, error) {
@@ -823,7 +847,8 @@ func (r *productRepo) UpdateProduct(ctx context.Context, tx postgre.Transaction,
 	}
 	return nil
 }
-func (r *productRepo) UpdateProductDetail(ctx context.Context, tx postgre.Transaction, requestBody body.UpdateProductDetailRequest, productID string) error {
+func (r *productRepo) UpdateProductDetail(ctx context.Context,
+	tx postgre.Transaction, requestBody body.UpdateProductDetailRequest, productID string) error {
 	_, err := tx.ExecContext(ctx,
 		UpdateProductDetailQuery,
 		requestBody.Price,

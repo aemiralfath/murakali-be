@@ -316,28 +316,41 @@ func (h *productHandlers) ValidateQueryProduct(c *gin.Context) (*pagination.Pagi
 	category := strings.TrimSpace(c.Query("category"))
 	shop := strings.TrimSpace(c.Query("shop_id"))
 
+	listedStatus := strings.TrimSpace(c.Query("listed_status"))
+
 	province := strings.TrimSpace(c.Query("province_ids"))
 
 	var limitFilter, pageFilter int
 	var minPriceFilter, maxPriceFilter, minRatingFilter, maxRatingFilter float64
 
+	listedStatusFilter, _ := strconv.Atoi(listedStatus)
+	switch listedStatusFilter {
+	case 0:
+		listedStatusFilter = 0
+	case 1:
+		listedStatusFilter = 1
+	case 2:
+		listedStatusFilter = 2
+	default:
+		listedStatusFilter = 0
+	}
+
 	limitFilter, err := strconv.Atoi(limit)
 	if err != nil || limitFilter < 1 {
 		limitFilter = 12
+	} else if limitFilter > 100 {
+		limitFilter = 100
 	}
-
 	if sortBy == "" {
 		sortBy = "unit_sold"
 	}
 	if sort == "" {
 		sort = "desc"
 	}
-
 	pageFilter, err = strconv.Atoi(page)
 	if err != nil || pageFilter < 1 {
 		pageFilter = 1
 	}
-
 	pgn := &pagination.Pagination{
 		Limit: limitFilter,
 		Page:  pageFilter,
@@ -395,6 +408,8 @@ func (h *productHandlers) ValidateQueryProduct(c *gin.Context) (*pagination.Pagi
 	minRatingFilter, err = strconv.ParseFloat(minRating, 64)
 	if err != nil || minRatingFilter <= 0 {
 		minRatingFilter = 0
+	} else if minRatingFilter > 5 {
+		minRatingFilter = 0
 	}
 
 	maxRatingFilter, err = strconv.ParseFloat(maxRating, 64)
@@ -409,15 +424,21 @@ func (h *productHandlers) ValidateQueryProduct(c *gin.Context) (*pagination.Pagi
 	if province != "" {
 		provinceFilter = strings.Split(province, ",")
 	}
+
+	if maxRatingFilter < minRatingFilter {
+		minRatingFilter = 0
+		maxRatingFilter = 5
+	}
 	query := &body.GetProductQueryRequest{
-		Search:    searchFilter,
-		Shop:      shop,
-		Category:  categoryFilter,
-		MinPrice:  minPriceFilter,
-		MaxPrice:  maxPriceFilter,
-		MinRating: minRatingFilter,
-		MaxRating: maxRatingFilter,
-		Province:  provinceFilter,
+		Search:       searchFilter,
+		Shop:         shop,
+		Category:     categoryFilter,
+		MinPrice:     minPriceFilter,
+		MaxPrice:     maxPriceFilter,
+		MinRating:    minRatingFilter,
+		MaxRating:    maxRatingFilter,
+		Province:     provinceFilter,
+		ListedStatus: listedStatusFilter,
 	}
 	return pgn, query
 }
