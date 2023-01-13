@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"murakali/config"
 	"net/http"
 	"net/url"
@@ -29,7 +29,7 @@ type GoogleUserResult struct {
 }
 
 func GetGoogleOauthToken(cfg *config.Config, code string) (*GoogleOauthToken, error) {
-	const rootURl = "https://oauth2.googleapis.com/token"
+	const rootURL = "https://oauth2.googleapis.com/token"
 
 	values := url.Values{}
 	values.Add("grant_type", "authorization_code")
@@ -40,7 +40,7 @@ func GetGoogleOauthToken(cfg *config.Config, code string) (*GoogleOauthToken, er
 
 	query := values.Encode()
 
-	req, err := http.NewRequest("POST", rootURl, bytes.NewBufferString(query))
+	req, err := http.NewRequest("POST", rootURL, bytes.NewBufferString(query))
 	if err != nil {
 		return nil, err
 	}
@@ -54,12 +54,13 @@ func GetGoogleOauthToken(cfg *config.Config, code string) (*GoogleOauthToken, er
 	if err != nil {
 		return nil, err
 	}
+	defer res.Body.Close()
 
 	if res.StatusCode != http.StatusOK {
 		return nil, errors.New("could not retrieve token")
 	}
 
-	resBody, err := ioutil.ReadAll(res.Body)
+	resBody, err := io.ReadAll(res.Body)
 	if err != nil {
 		return nil, err
 	}
@@ -78,10 +79,10 @@ func GetGoogleOauthToken(cfg *config.Config, code string) (*GoogleOauthToken, er
 	return tokenBody, nil
 }
 
-func GetGoogleUser(accessToken string, idToken string) (*GoogleUserResult, error) {
-	rootUrl := fmt.Sprintf("https://www.googleapis.com/oauth2/v1/userinfo?alt=json&access_token=%s", accessToken)
+func GetGoogleUser(accessToken, idToken string) (*GoogleUserResult, error) {
+	rootURL := fmt.Sprintf("https://www.googleapis.com/oauth2/v1/userinfo?alt=json&access_token=%s", accessToken)
 
-	req, err := http.NewRequest("GET", rootUrl, nil)
+	req, err := http.NewRequest("GET", rootURL, http.NoBody)
 	if err != nil {
 		return nil, err
 	}
@@ -96,12 +97,13 @@ func GetGoogleUser(accessToken string, idToken string) (*GoogleUserResult, error
 	if err != nil {
 		return nil, err
 	}
+	defer res.Body.Close()
 
 	if res.StatusCode != http.StatusOK {
 		return nil, errors.New("could not retrieve user")
 	}
 
-	resBody, err := ioutil.ReadAll(res.Body)
+	resBody, err := io.ReadAll(res.Body)
 	if err != nil {
 		return nil, err
 	}

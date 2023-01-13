@@ -299,7 +299,7 @@ func (u *productUC) GetAllProductImage(ctx context.Context, productID string) ([
 	}
 
 	images = append(images, &body.GetImageResponse{
-		Url: productInfo.ThumbnailURL,
+		URL: productInfo.ThumbnailURL,
 	})
 
 	for _, detail := range details {
@@ -312,8 +312,8 @@ func (u *productUC) GetAllProductImage(ctx context.Context, productID string) ([
 
 		for _, image := range imageDetails {
 			images = append(images, &body.GetImageResponse{
-				ProductDetailId: &detail.ProductDetailID,
-				Url:             *image,
+				ProductDetailID: &detail.ProductDetailID,
+				URL:             *image,
 			})
 		}
 	}
@@ -368,7 +368,6 @@ func (u *productUC) GetFavoriteProducts(
 }
 
 func (u *productUC) CreateFavoriteProduct(ctx context.Context, productID, userID string) error {
-
 	_, err := u.productRepo.GetProductInfo(ctx, productID)
 	if err != nil {
 		if err == sql.ErrNoRows {
@@ -423,7 +422,8 @@ func (u *productUC) DeleteFavoriteProduct(ctx context.Context, productID, userID
 	return nil
 }
 
-func (u *productUC) GetProductReviews(ctx context.Context, pgn *pagination.Pagination, productID string, query *body.GetReviewQueryRequest) (*pagination.Pagination, error) {
+func (u *productUC) GetProductReviews(ctx context.Context, pgn *pagination.Pagination,
+	productID string, query *body.GetReviewQueryRequest) (*pagination.Pagination, error) {
 	totalRows, err := u.productRepo.GetTotalAllReviewProduct(ctx, productID, query)
 	if err != nil {
 		return nil, err

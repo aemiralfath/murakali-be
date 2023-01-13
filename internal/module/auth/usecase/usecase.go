@@ -383,10 +383,10 @@ func (u *authUC) GoogleAuth(ctx context.Context, userAuth *oauth.GoogleUserResul
 	user, err := u.authRepo.GetUserByEmail(ctx, userAuth.Email)
 	if err != nil {
 		if err == sql.ErrNoRows {
-			emailHistory, err := u.authRepo.CheckEmailHistory(ctx, userAuth.Email)
-			if err != nil {
-				if err != sql.ErrNoRows {
-					return nil, err
+			emailHistory, errHistory := u.authRepo.CheckEmailHistory(ctx, userAuth.Email)
+			if errHistory != nil {
+				if errHistory != sql.ErrNoRows {
+					return nil, errHistory
 				}
 			}
 
@@ -415,9 +415,9 @@ func (u *authUC) GoogleAuth(ctx context.Context, userAuth *oauth.GoogleUserResul
 				return nil, err
 			}
 
-			registerToken, err := jwt.GenerateJWTRegisterToken(userAuth.Email, u.cfg)
-			if err != nil {
-				return nil, err
+			registerToken, errToken := jwt.GenerateJWTRegisterToken(userAuth.Email, u.cfg)
+			if errToken != nil {
+				return nil, errToken
 			}
 
 			return &model.GoogleAuthToken{RegisterToken: &registerToken}, nil

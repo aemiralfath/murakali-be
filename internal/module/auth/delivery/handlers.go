@@ -351,14 +351,14 @@ func (h *authHandlers) CheckUniquePhoneNo(c *gin.Context) {
 func (h *authHandlers) GoogleAuth(c *gin.Context) {
 	code := c.Query("code")
 
-	pathUrl := "/"
+	pathURL := "/"
 	if c.Query("state") != "" {
-		pathUrl = c.Query("state")
+		pathURL = c.Query("state")
 	}
 
 	errResponse := struct {
 		PathURL string `json:"path_url"`
-	}{PathURL: pathUrl}
+	}{PathURL: pathURL}
 
 	if code == "" {
 		response.ErrorResponseData(c.Writer, errResponse, response.ForbiddenMessage, http.StatusForbidden)
@@ -399,5 +399,7 @@ func (h *authHandlers) GoogleAuth(c *gin.Context) {
 	}
 
 	c.SetCookie(constant.RefreshTokenCookie, token.Token.RefreshToken.Token, h.cfg.JWT.RefreshExpMin*60, "/", h.cfg.Server.Domain, true, true)
-	response.SuccessResponse(c.Writer, body.LoginResponse{AccessToken: token.Token.AccessToken.Token, ExpiredAt: token.Token.AccessToken.ExpiredAt}, http.StatusOK)
+	response.SuccessResponse(c.Writer, body.LoginResponse{
+		AccessToken: token.Token.AccessToken.Token,
+		ExpiredAt:   token.Token.AccessToken.ExpiredAt}, http.StatusOK)
 }

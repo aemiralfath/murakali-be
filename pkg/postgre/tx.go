@@ -3,6 +3,7 @@ package postgre
 import (
 	"context"
 	"database/sql"
+	"fmt"
 )
 
 type Transaction interface {
@@ -30,14 +31,17 @@ func (tr *TxRepo) WithTransactionReturnData(fn TxFnData) (data interface{}, err 
 	}
 
 	defer func() {
+		var errTx error
 		if p := recover(); p != nil {
-			tx.Rollback()
+			errTx = tx.Rollback()
+			fmt.Println(errTx.Error())
 			panic(p)
 		} else if err != nil {
-			tx.Rollback()
+			errTx = tx.Rollback()
 		} else {
-			tx.Commit()
+			errTx = tx.Commit()
 		}
+		fmt.Println(errTx.Error())
 	}()
 
 	data, err = fn(tx)
@@ -51,14 +55,17 @@ func (tr *TxRepo) WithTransaction(fn TxFn) (err error) {
 	}
 
 	defer func() {
+		var errTx error
 		if p := recover(); p != nil {
-			tx.Rollback()
+			errTx = tx.Rollback()
+			fmt.Println(errTx.Error())
 			panic(p)
 		} else if err != nil {
-			tx.Rollback()
+			errTx = tx.Rollback()
 		} else {
-			tx.Commit()
+			errTx = tx.Commit()
 		}
+		fmt.Println(errTx.Error())
 	}()
 
 	err = fn(tx)

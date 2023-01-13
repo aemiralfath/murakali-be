@@ -161,7 +161,8 @@ func (r *authRepo) DeleteOTPValue(ctx context.Context, email string) (int64, err
 }
 
 func (r *authRepo) CreateUserGoogle(ctx context.Context, tx postgre.Transaction, user *model.User) (*model.User, error) {
-	if err := tx.QueryRowContext(ctx, CreateUserGoogleQuery, constant.RoleUser, user.Username, user.Email, user.FullName, user.PhotoURL, user.IsSSO, user.IsVerify).Scan(&user.ID, &user.RoleID); err != nil {
+	if err := tx.QueryRowContext(ctx, CreateUserGoogleQuery, constant.RoleUser, user.Username, user.Email,
+		user.FullName, user.PhotoURL, user.IsSSO, user.IsVerify).Scan(&user.ID, &user.RoleID); err != nil {
 		return nil, err
 	}
 
