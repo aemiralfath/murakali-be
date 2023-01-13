@@ -269,23 +269,19 @@ func (r *productRepo) GetProductDetail(ctx context.Context, productID string, pr
 		}
 		if promo != nil {
 			if promo.PromotionDiscountPercentage != nil {
-				if *detail.NormalPrice >= *promo.PromotionMinProductPrice {
-					discountedPrice := *detail.NormalPrice - (*detail.NormalPrice * (*promo.PromotionDiscountPercentage / float64(100)))
-					if discountedPrice > *promo.PromotionMaxDiscountPrice {
-						discountedPrice = *detail.NormalPrice - *promo.PromotionMaxDiscountPrice
-					}
-					detail.DiscountPrice = &discountedPrice
-				}
+				discountedPrice = *detail.NormalPrice - (*detail.NormalPrice * (*promo.PromotionDiscountPercentage / float64(100)))
 			}
 			if promo.PromotionDiscountFixPrice != nil {
-				if *detail.NormalPrice >= *promo.PromotionMinProductPrice {
-					discountedPrice := *detail.NormalPrice - float64(*promo.PromotionDiscountFixPrice)
-					if float64(*promo.PromotionDiscountFixPrice) > *promo.PromotionMaxDiscountPrice {
-						discountedPrice = *detail.NormalPrice - *promo.PromotionMaxDiscountPrice
-					}
-					detail.DiscountPrice = &discountedPrice
+				discountedPrice = *detail.NormalPrice - *promo.PromotionDiscountFixPrice
+			}
+			if *detail.NormalPrice >= *promo.PromotionMinProductPrice {
+				if promo.PromotionDiscountFixPrice != nil && *promo.PromotionDiscountFixPrice > *promo.PromotionMaxDiscountPrice {
+					discountedPrice = *detail.NormalPrice - *promo.PromotionDiscountFixPrice
+				} else if discountedPrice > *promo.PromotionMaxDiscountPrice {
+					discountedPrice = *detail.NormalPrice - *promo.PromotionMaxDiscountPrice
 				}
 			}
+
 		}
 
 		mapVariant := make(map[string]string, 0)
