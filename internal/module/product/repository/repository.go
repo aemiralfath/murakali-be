@@ -293,18 +293,20 @@ func (r *productRepo) GetProductDetail(ctx context.Context, productID string, pr
 		if promo != nil {
 			discountedPrice := 0.0
 			if promo.PromotionDiscountPercentage != nil {
-				discountedPrice = *detail.NormalPrice - *promo.PromotionDiscountFixPrice
-			} else if promo.PromotionDiscountFixPrice != nil {
 				discountedPrice = *detail.NormalPrice - (*detail.NormalPrice * (*promo.PromotionDiscountPercentage / float64(100)))
 			}
+			if promo.PromotionDiscountFixPrice != nil {
+				discountedPrice = *detail.NormalPrice - *promo.PromotionDiscountFixPrice
+			}
 			if *detail.NormalPrice >= *promo.PromotionMinProductPrice {
-				if *promo.PromotionDiscountFixPrice > *promo.PromotionMaxDiscountPrice {
-					discountedPrice = *detail.NormalPrice - *promo.PromotionMaxDiscountPrice
+				if promo.PromotionDiscountFixPrice != nil && *promo.PromotionDiscountFixPrice > *promo.PromotionMaxDiscountPrice {
+					discountedPrice = *detail.NormalPrice - *promo.PromotionDiscountFixPrice
 				} else if discountedPrice > *promo.PromotionMaxDiscountPrice {
-					discountedPrice = *promo.PromotionMaxDiscountPrice
+					discountedPrice = *detail.NormalPrice - *promo.PromotionMaxDiscountPrice
 				}
 				detail.DiscountPrice = &discountedPrice
 			}
+
 		}
 
 		mapVariant := make(map[string]string, 0)

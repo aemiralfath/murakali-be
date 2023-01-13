@@ -132,6 +132,7 @@ func (r *sellerRepo) GetOrderByOrderID(ctx context.Context, orderID string) (*mo
 		&order.ResiNumber,
 		&order.ShopID,
 		&order.ShopName,
+		&order.ShopPhoneNumber,
 		&order.SellerName,
 		&order.VoucherCode,
 		&order.CreatedAt,
@@ -145,7 +146,6 @@ func (r *sellerRepo) GetOrderByOrderID(ctx context.Context, orderID string) (*mo
 	); err != nil {
 		return nil, err
 	}
-
 	orderDetail := make([]*model.OrderDetail, 0)
 
 	res, err := r.PSQL.QueryContext(
@@ -155,6 +155,7 @@ func (r *sellerRepo) GetOrderByOrderID(ctx context.Context, orderID string) (*mo
 		return nil, err
 	}
 	for res.Next() {
+
 		var detail model.OrderDetail
 		if errScan := res.Scan(
 			&detail.ProductDetailID,
@@ -167,6 +168,26 @@ func (r *sellerRepo) GetOrderByOrderID(ctx context.Context, orderID string) (*mo
 		); errScan != nil {
 			return nil, errScan
 		}
+		variant := make(map[string]string, 0)
+		variantResult, errVariant := r.PSQL.QueryContext(ctx, GetOrderDetailProductVariant, detail.ProductDetailID)
+		if errVariant != nil {
+			if errVariant != sql.ErrNoRows {
+				return nil, err
+			}
+		}
+		for variantResult.Next() {
+			var varName string
+			var varType string
+			if errScanVariant := variantResult.Scan(
+				&varName,
+				&varType,
+			); errScanVariant != nil {
+				return nil, errScanVariant
+			}
+			variant[varName] = varType
+		}
+
+		detail.Variant = variant
 		orderDetail = append(orderDetail, &detail)
 	}
 
