@@ -146,7 +146,6 @@ func (r *sellerRepo) GetOrderByOrderID(ctx context.Context, orderID string) (*mo
 	); err != nil {
 		return nil, err
 	}
-	fmt.Println("asd")
 	orderDetail := make([]*model.OrderDetail, 0)
 
 	res, err := r.PSQL.QueryContext(
@@ -156,7 +155,6 @@ func (r *sellerRepo) GetOrderByOrderID(ctx context.Context, orderID string) (*mo
 		return nil, err
 	}
 	for res.Next() {
-		fmt.Println("asd1111")
 
 		var detail model.OrderDetail
 		if errScan := res.Scan(
@@ -178,7 +176,6 @@ func (r *sellerRepo) GetOrderByOrderID(ctx context.Context, orderID string) (*mo
 			}
 		}
 		for variantResult.Next() {
-			fmt.Println("qwiejqiwejqwie")
 			var varName string
 			var varType string
 			if errScanVariant := variantResult.Scan(
