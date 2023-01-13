@@ -15,6 +15,7 @@ type Order struct {
 	ResiNumber         *string        `json:"resi_no"`
 	ShopID             string         `json:"shop_id"`
 	ShopName           string         `json:"shop_name"`
+	ShopPhoneNumber    *string        `json:"shop_phone_number"`
 	SellerName         string         `json:"seller_name"`
 	VoucherCode        *string        `json:"voucher_code"`
 	CreatedAt          time.Time      `json:"created_at"`
