@@ -13,7 +13,7 @@ CREATE TABLE IF NOT EXISTS "user"
     "email" varchar UNIQUE NOT NULL,
     "phone_no" varchar UNIQUE,
     "fullname" varchar,
-    "password" varchar,
+    "password" varchar NOT NULL DEFAULT '',
     "gender" varchar,
     "birth_date" timestamp,
     "photo_url" varchar,

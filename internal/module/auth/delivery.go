@@ -14,4 +14,5 @@ type Handlers interface {
 	ResetPasswordVerifyOTP(c *gin.Context)
 	CheckUniqueUsername(c *gin.Context)
 	CheckUniquePhoneNo(c *gin.Context)
+	GoogleAuth(c *gin.Context)
 }

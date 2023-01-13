@@ -443,7 +443,7 @@ func (u *userUC) SendLinkOTPEmail(ctx context.Context, email string) error {
 	h.Write([]byte(otp))
 	hashedOTP := fmt.Sprintf("%x", h.Sum(nil))
 
-	link := fmt.Sprintf("http://%s/verify/email?code=%s&email=%s", u.cfg.Server.Origin, hashedOTP, email)
+	link := fmt.Sprintf("%s/verify/email?code=%s&email=%s", u.cfg.Server.Origin, hashedOTP, email)
 
 	subject := "Change email!"
 	msg := smtp.VerificationEmailLinkOTPBody(link)

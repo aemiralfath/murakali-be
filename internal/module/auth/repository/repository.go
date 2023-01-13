@@ -48,7 +48,7 @@ func (r *authRepo) GetUserByID(ctx context.Context, id string) (*model.User, err
 func (r *authRepo) GetUserByEmail(ctx context.Context, email string) (*model.User, error) {
 	var user model.User
 	if err := r.PSQL.QueryRowContext(ctx, GetUserByEmailQuery, email).
-		Scan(&user.ID, &user.RoleID, &user.Email, &user.Password, &user.Username, &user.IsVerify); err != nil {
+		Scan(&user.ID, &user.RoleID, &user.Email, &user.Password, &user.Username, &user.IsVerify, &user.IsSSO); err != nil {
 		return nil, err
 	}
 
@@ -158,4 +158,12 @@ func (r *authRepo) DeleteOTPValue(ctx context.Context, email string) (int64, err
 	}
 
 	return value, nil
+}
+
+func (r *authRepo) CreateUserGoogle(ctx context.Context, tx postgre.Transaction, user *model.User) (*model.User, error) {
+	if err := tx.QueryRowContext(ctx, CreateUserGoogleQuery, constant.RoleUser, user.Username, user.Email, user.FullName, user.PhotoURL, user.IsSSO, user.IsVerify).Scan(&user.ID, &user.RoleID); err != nil {
+		return nil, err
+	}
+
+	return user, nil
 }
