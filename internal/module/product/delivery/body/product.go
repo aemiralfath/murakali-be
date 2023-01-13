@@ -59,6 +59,7 @@ func (r *GetProductRequest) Validate() (UnprocessableEntity, error) {
 
 	return entity, nil
 }
+
 type GetImageResponse struct {
 	ProductDetailId *string `json:"product_detail_id"`
 	Url             string  `json:"url"`
