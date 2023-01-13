@@ -124,9 +124,24 @@ func (r *userRepo) GetDefaultShopAddress(ctx context.Context, userID string) (*m
 	return &address, nil
 }
 
-func (r *userRepo) GetTotalAddress(ctx context.Context, userID, name string, isDefault, isShopDefault bool) (int64, error) {
+func (r *userRepo) GetTotalAddress(ctx context.Context, userID, name string) (int64, error) {
 	var total int64
 	if err := r.PSQL.QueryRowContext(ctx, GetTotalAddressQuery, userID, fmt.Sprintf("%%%s%%", name)).Scan(&total); err != nil {
+		return 0, err
+	}
+
+	return total, nil
+}
+
+func (r *userRepo) GetTotalAddressDefault(ctx context.Context, userID, name string, isDefault, isShopDefault bool) (int64, error) {
+	var total int64
+	if err := r.PSQL.QueryRowContext(
+		ctx,
+		GetTotalAddressDefaultQuery,
+		userID,
+		fmt.Sprintf("%%%s%%", name),
+		isDefault,
+		isShopDefault).Scan(&total); err != nil {
 		return 0, err
 	}
 
@@ -196,7 +211,7 @@ func (r *userRepo) GetAddresses(ctx context.Context, userID, name string, isDefa
 	pgn *pagination.Pagination) ([]*model.Address, error) {
 	addresses := make([]*model.Address, 0)
 	res, err := r.PSQL.QueryContext(
-		ctx, GetAddressesQuery,
+		ctx, GetAddressesDefaultQuery,
 		userID,
 		fmt.Sprintf("%%%s%%", name),
 		isDefault,
@@ -228,14 +243,14 @@ func (r *userRepo) GetAddresses(ctx context.Context, userID, name string, isDefa
 			&address.IsShopDefault,
 			&address.CreatedAt,
 			&address.UpdatedAt); errScan != nil {
-			return nil, err
+			return nil, errScan
 		}
 
 		addresses = append(addresses, &address)
 	}
 
 	if res.Err() != nil {
-		return nil, err
+		return nil, res.Err()
 	}
 
 	return addresses, nil
@@ -352,6 +367,25 @@ func (r *userRepo) GetOrders(ctx context.Context, userID string, pgn *pagination
 	return orders, nil
 }
 
+func (r *userRepo) GetTransactionByID(ctx context.Context, transactionID string) (*model.Transaction, error) {
+	var transaction model.Transaction
+	if err := r.PSQL.QueryRowContext(ctx, GetTransactionByIDQuery, transactionID).
+		Scan(
+			&transaction.ID,
+			&transaction.VoucherMarketplaceID,
+			&transaction.WalletID,
+			&transaction.CardNumber,
+			&transaction.Invoice,
+			&transaction.TotalPrice,
+			&transaction.PaidAt,
+			&transaction.CanceledAt,
+			&transaction.ExpiredAt); err != nil {
+		return nil, err
+	}
+
+	return &transaction, nil
+}
+
 func (r *userRepo) GetUserByID(ctx context.Context, id string) (*model.User, error) {
 	var userModel model.User
 	if err := r.PSQL.QueryRowContext(ctx, GetUserByIDQuery, id).
@@ -392,6 +426,17 @@ func (r *userRepo) GetUserByUsername(ctx context.Context, username string) (*mod
 	return &userModel, nil
 }
 
+func (r *userRepo) GetWalletByUserID(ctx context.Context, userID string) (*model.Wallet, error) {
+	var walletModel model.Wallet
+	if err := r.PSQL.QueryRowContext(ctx, GetWalletByUserIDQuery, userID).Scan(&walletModel.ID, &walletModel.UserID,
+		&walletModel.Balance, &walletModel.PIN, &walletModel.AttemptCount,
+		&walletModel.AttemptAt, &walletModel.UnlockedAt, &walletModel.ActiveDate); err != nil {
+		return nil, err
+	}
+
+	return &walletModel, nil
+}
+
 func (r *userRepo) GetUserByPhoneNo(ctx context.Context, phoneNo string) (*model.User, error) {
 	var userModel model.User
 	if err := r.PSQL.QueryRowContext(ctx, GetUserByPhoneNoQuery, phoneNo).
@@ -415,6 +460,15 @@ func (r *userRepo) UpdateUserField(ctx context.Context, userModel *model.User) e
 func (r *userRepo) UpdateUserEmail(ctx context.Context, tx postgre.Transaction, userModel *model.User) error {
 	_, err := tx.ExecContext(
 		ctx, UpdateUserEmailQuery, userModel.Email, userModel.UpdatedAt, userModel.ID)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (r *userRepo) CreateWallet(ctx context.Context, wallet *model.Wallet) error {
+	_, err := r.PSQL.ExecContext(ctx, CreateWalletQuery, wallet.UserID, wallet.Balance, wallet.PIN, wallet.AttemptCount, wallet.ActiveDate)
 	if err != nil {
 		return err
 	}
@@ -539,8 +593,8 @@ func (r *userRepo) SetDefaultSealabsPay(ctx context.Context, cardNumber, userid 
 	return nil
 }
 
-func (r *userRepo) AddSealabsPay(ctx context.Context, tx postgre.Transaction, request body.AddSealabsPayRequest) error {
-	if _, err := tx.ExecContext(ctx, CreateSealabsPayQuery, request.CardNumber, request.UserID,
+func (r *userRepo) AddSealabsPay(ctx context.Context, tx postgre.Transaction, request body.AddSealabsPayRequest, userid string) error {
+	if _, err := tx.ExecContext(ctx, CreateSealabsPayQuery, request.CardNumber, userid,
 		request.Name, request.IsDefault, request.ActiveDateTime); err != nil {
 		return err
 	}
@@ -600,9 +654,9 @@ func (r *userRepo) UpdatePasswordByID(ctx context.Context, userID, newPassword s
 	return nil
 }
 
-func (r *userRepo) GetWalletUser(ctx context.Context, userID, walletID string) (*model.Wallet, error) {
+func (r *userRepo) GetWalletUser(ctx context.Context, walletID string) (*model.Wallet, error) {
 	var walletUser model.Wallet
-	if err := r.PSQL.QueryRowContext(ctx, GetWalletUserQuery, userID, walletID).Scan(
+	if err := r.PSQL.QueryRowContext(ctx, GetWalletUserQuery, walletID).Scan(
 		&walletUser.ID,
 		&walletUser.UserID,
 		&walletUser.Balance,
@@ -618,7 +672,7 @@ func (r *userRepo) GetWalletUser(ctx context.Context, userID, walletID string) (
 
 func (r *userRepo) GetSealabsPayUser(ctx context.Context, userID, cardNumber string) (*model.SealabsPay, error) {
 	var sealabsPayUser model.SealabsPay
-	if err := r.PSQL.QueryRowContext(ctx, GetWalletUserQuery, userID, cardNumber).Scan(
+	if err := r.PSQL.QueryRowContext(ctx, GetSealabsPayUserQuery, userID, cardNumber).Scan(
 		&sealabsPayUser.CardNumber,
 		&sealabsPayUser.UserID,
 		&sealabsPayUser.Name,
@@ -630,9 +684,9 @@ func (r *userRepo) GetSealabsPayUser(ctx context.Context, userID, cardNumber str
 	return &sealabsPayUser, nil
 }
 
-func (r *userRepo) GetVoucherMarketplacebyID(ctx context.Context, voucherMarketplaceID string) (*model.Voucher, error) {
+func (r *userRepo) GetVoucherMarketplaceByID(ctx context.Context, voucherMarketplaceID string) (*model.Voucher, error) {
 	var VoucherMarketplace model.Voucher
-	if err := r.PSQL.QueryRowContext(ctx, GetVoucherMarketplacebyIDQuery, voucherMarketplaceID).Scan(
+	if err := r.PSQL.QueryRowContext(ctx, GetVoucherMarketplaceByIDQuery, voucherMarketplaceID).Scan(
 		&VoucherMarketplace.ID,
 		&VoucherMarketplace.ShopID,
 		&VoucherMarketplace.Code,
@@ -649,9 +703,9 @@ func (r *userRepo) GetVoucherMarketplacebyID(ctx context.Context, voucherMarketp
 	return &VoucherMarketplace, nil
 }
 
-func (r *userRepo) GetShopbyID(ctx context.Context, shopID string) (*model.Shop, error) {
+func (r *userRepo) GetShopByID(ctx context.Context, shopID string) (*model.Shop, error) {
 	var shopCart model.Shop
-	if err := r.PSQL.QueryRowContext(ctx, GetShopbyIDQuery, shopID).Scan(
+	if err := r.PSQL.QueryRowContext(ctx, GetShopByIDQuery, shopID).Scan(
 		&shopCart.ID,
 		&shopCart.Name); err != nil {
 		return nil, err
@@ -660,9 +714,9 @@ func (r *userRepo) GetShopbyID(ctx context.Context, shopID string) (*model.Shop,
 	return &shopCart, nil
 }
 
-func (r *userRepo) GetVoucherShopbyID(ctx context.Context, voucherShopID, shopID string) (*model.Voucher, error) {
+func (r *userRepo) GetVoucherShopByID(ctx context.Context, voucherShopID, shopID string) (*model.Voucher, error) {
 	var VoucherShop model.Voucher
-	if err := r.PSQL.QueryRowContext(ctx, GetVoucherShopbyIDQuery, voucherShopID, shopID).Scan(
+	if err := r.PSQL.QueryRowContext(ctx, GetVoucherShopByIDQuery, voucherShopID, shopID).Scan(
 		&VoucherShop.ID,
 		&VoucherShop.ShopID,
 		&VoucherShop.Code,
@@ -679,9 +733,9 @@ func (r *userRepo) GetVoucherShopbyID(ctx context.Context, voucherShopID, shopID
 	return &VoucherShop, nil
 }
 
-func (r *userRepo) GetCourierShopbyID(ctx context.Context, courierID, shopID string) (*model.Courier, error) {
+func (r *userRepo) GetCourierShopByID(ctx context.Context, courierID, shopID string) (*model.Courier, error) {
 	var CourierShop model.Courier
-	if err := r.PSQL.QueryRowContext(ctx, GetCourierShopbyIDQuery, courierID, shopID).Scan(
+	if err := r.PSQL.QueryRowContext(ctx, GetCourierShopByIDQuery, courierID, shopID).Scan(
 		&CourierShop.ID,
 		&CourierShop.Name,
 		&CourierShop.Code,
@@ -717,7 +771,8 @@ func (r *userRepo) CreateTransaction(ctx context.Context, tx postgre.Transaction
 		transactionData.VoucherMarketplaceID,
 		transactionData.WalletID,
 		transactionData.CardNumber,
-		transactionData.TotalPrice).Scan(&transactionID); err != nil {
+		transactionData.TotalPrice,
+		transactionData.ExpiredAt).Scan(&transactionID); err != nil {
 		return nil, err
 	}
 
@@ -779,8 +834,89 @@ func (r *userRepo) UpdateProductDetailStock(ctx context.Context, tx postgre.Tran
 	return nil
 }
 
+func (r *userRepo) UpdateWalletBalance(ctx context.Context, tx postgre.Transaction, wallet *model.Wallet) error {
+	_, err := tx.ExecContext(ctx, UpdateWalletBalanceQuery, wallet.Balance, wallet.UpdatedAt, wallet.ID)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (r *userRepo) UpdateWallet(ctx context.Context, wallet *model.Wallet) error {
+	_, err := r.PSQL.ExecContext(ctx, UpdateWalletQuery, wallet.AttemptCount, wallet.AttemptAt, wallet.UnlockedAt, wallet.ID)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (r *userRepo) InsertWalletHistory(ctx context.Context, tx postgre.Transaction, walletHistory *model.WalletHistory) error {
+	_, err := tx.ExecContext(ctx, CreateWalletHistoryQuery, walletHistory.TransactionID, walletHistory.WalletID,
+		walletHistory.From, walletHistory.To, walletHistory.Description, walletHistory.Amount, walletHistory.CreatedAt)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (r *userRepo) GetOrderByTransactionID(ctx context.Context, transactionID string) ([]*model.OrderModel, error) {
+	orders := make([]*model.OrderModel, 0)
+	res, err := r.PSQL.QueryContext(ctx, GetOrderByTransactionID, transactionID)
+	if err != nil {
+		return nil, err
+	}
+	defer res.Close()
+
+	for res.Next() {
+		var order model.OrderModel
+		if errScan := res.Scan(
+			&order.ID,
+			&order.TransactionID,
+			&order.UserID,
+			&order.ShopID,
+			&order.CourierID,
+			&order.VoucherShopID,
+			&order.OrderStatusID,
+			&order.TotalPrice,
+			&order.DeliveryFee,
+			&order.ResiNo,
+			&order.CreatedAt,
+			&order.ArrivedAt); errScan != nil {
+			return nil, errScan
+		}
+
+		orders = append(orders, &order)
+	}
+
+	if res.Err() != nil {
+		return nil, res.Err()
+	}
+
+	return orders, nil
+}
+
+func (r *userRepo) UpdateTransaction(ctx context.Context, tx postgre.Transaction, transactionData *model.Transaction) error {
+	_, err := tx.ExecContext(ctx, UpdateTransactionByID, transactionData.PaidAt, transactionData.CanceledAt, transactionData.ID)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (r *userRepo) UpdateOrder(ctx context.Context, tx postgre.Transaction, orderData *model.OrderModel) error {
+	_, err := tx.ExecContext(ctx, UpdateOrderByID, orderData.OrderStatusID, orderData.ID)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func (r *userRepo) DeleteCartItemByID(ctx context.Context, tx postgre.Transaction, cartItemData *model.CartItem) error {
-	_, err := r.PSQL.ExecContext(ctx, DeleteCartItemByIDQuery, cartItemData.ID.String())
+	_, err := tx.ExecContext(ctx, DeleteCartItemByIDQuery, cartItemData.ID.String())
 	if err != nil {
 		return err
 	}

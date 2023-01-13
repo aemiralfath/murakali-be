@@ -11,6 +11,9 @@ import (
 	"murakali/pkg/logger"
 	"murakali/pkg/response"
 	"net/http"
+	"regexp"
+	"strconv"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 )
@@ -294,4 +297,52 @@ func (h *authHandlers) ResetPasswordVerifyOTP(c *gin.Context) {
 	c.SetSameSite(http.SameSiteNoneMode)
 	c.SetCookie(constant.ResetPasswordTokenCookie, ResetPasswordToken, h.cfg.JWT.RefreshExpMin*60, "/", h.cfg.Server.Domain, true, true)
 	response.SuccessResponse(c.Writer, nil, http.StatusOK)
+}
+
+func (h *authHandlers) CheckUniqueUsername(c *gin.Context) {
+	username := strings.TrimSpace(c.Param("username"))
+	username = strings.ToLower(username)
+	exist, err := h.authUC.CheckUniqueUsername(c, username)
+	if err != nil {
+		var e *httperror.Error
+		if !errors.As(err, &e) {
+			h.logger.Errorf("HandlerAuth, Error: %s", err)
+			response.ErrorResponse(c.Writer, response.InternalServerErrorMessage, http.StatusInternalServerError)
+			return
+		}
+
+		response.ErrorResponse(c.Writer, e.Err.Error(), e.Status)
+		return
+	}
+
+	response.SuccessResponse(c.Writer, exist, http.StatusOK)
+}
+
+func (h *authHandlers) CheckUniquePhoneNo(c *gin.Context) {
+	phoneNo := strings.TrimSpace(c.Param("phone_no"))
+	if _, err := strconv.Atoi(phoneNo); err != nil {
+		response.ErrorResponse(c.Writer, body.InvalidPhoneNoFormatMessage, http.StatusBadRequest)
+		return
+	}
+
+	regex := regexp.MustCompile(`^8[1-9]\d{6,9}$`)
+	if !regex.MatchString(phoneNo) {
+		response.ErrorResponse(c.Writer, body.InvalidPhoneNoFormatMessage, http.StatusBadRequest)
+		return
+	}
+
+	exist, err := h.authUC.CheckUniquePhoneNo(c, phoneNo)
+	if err != nil {
+		var e *httperror.Error
+		if !errors.As(err, &e) {
+			h.logger.Errorf("HandlerAuth, Error: %s", err)
+			response.ErrorResponse(c.Writer, response.InternalServerErrorMessage, http.StatusInternalServerError)
+			return
+		}
+
+		response.ErrorResponse(c.Writer, e.Err.Error(), e.Status)
+		return
+	}
+
+	response.SuccessResponse(c.Writer, exist, http.StatusOK)
 }

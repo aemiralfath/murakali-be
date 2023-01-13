@@ -18,3 +18,9 @@ type Urban struct {
 	Urban      string `json:"urban"`
 	PostalCode string `json:"postal_code"`
 }
+
+type Cost struct {
+	Courier Courier `json:"courier"`
+	Fee     int     `json:"fee"`
+	ETD     string  `json:"etd"`
+}

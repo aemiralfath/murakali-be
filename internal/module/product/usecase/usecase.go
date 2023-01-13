@@ -3,13 +3,18 @@ package usecase
 import (
 	"context"
 	"database/sql"
+
 	"math"
 	"murakali/config"
 	"murakali/internal/model"
 	"murakali/internal/module/product"
 	"murakali/internal/module/product/delivery/body"
+	"murakali/internal/util"
+	"murakali/pkg/httperror"
 	"murakali/pkg/pagination"
 	"murakali/pkg/postgre"
+	"murakali/pkg/response"
+	"net/http"
 
 	"github.com/google/uuid"
 )
@@ -139,6 +144,7 @@ func (u *productUC) GetRecommendedProducts(ctx context.Context, pgn *pagination.
 	totalData := len(products)
 	for i := 0; i < totalData; i++ {
 		p := &body.Products{
+			ID:                        products[i].ID,
 			Title:                     products[i].Title,
 			UnitSold:                  products[i].UnitSold,
 			RatingAVG:                 products[i].RatingAVG,
@@ -228,4 +234,422 @@ func (u *productUC) GetProductDetail(ctx context.Context, productID string) (*bo
 		ProductDetail: details,
 	}
 	return &result, nil
+}
+
+func (u *productUC) GetProducts(ctx context.Context, pgn *pagination.Pagination, query *body.GetProductQueryRequest) (*pagination.Pagination, error) {
+	totalRows, err := u.productRepo.GetAllTotalProduct(ctx, query)
+	if err != nil {
+		return nil, err
+	}
+	totalPages := int(math.Ceil(float64(totalRows) / float64(pgn.Limit)))
+	pgn.TotalRows = totalRows
+	pgn.TotalPages = totalPages
+
+	products, promotions, vouchers, err := u.productRepo.GetProducts(ctx, pgn, query)
+	if err != nil {
+		if err != sql.ErrNoRows {
+			return nil, err
+		}
+	}
+
+	resultProduct := make([]*body.Products, 0)
+	totalData := len(products)
+	for i := 0; i < totalData; i++ {
+		p := &body.Products{
+			ID:                        products[i].ID,
+			Title:                     products[i].Title,
+			UnitSold:                  products[i].UnitSold,
+			RatingAVG:                 products[i].RatingAVG,
+			ThumbnailURL:              products[i].ThumbnailURL,
+			MinPrice:                  products[i].MinPrice,
+			MaxPrice:                  products[i].MaxPrice,
+			ViewCount:                 products[i].ViewCount,
+			PromoDiscountPercentage:   promotions[i].DiscountPercentage,
+			PromoDiscountFixPrice:     promotions[i].DiscountFixPrice,
+			PromoMinProductPrice:      promotions[i].MinProductPrice,
+			PromoMaxDiscountPrice:     promotions[i].MaxDiscountPrice,
+			VoucherDiscountPercentage: vouchers[i].DiscountPercentage,
+			VoucherDiscountFixPrice:   vouchers[i].DiscountFixPrice,
+			ShopName:                  products[i].ShopName,
+			CategoryName:              products[i].CategoryName,
+			ShopProvince:              products[i].ShopProvince,
+		}
+		p = u.CalculateDiscountProduct(p)
+		resultProduct = append(resultProduct, p)
+	}
+	pgn.Rows = resultProduct
+
+	return pgn, nil
+}
+
+func (u *productUC) GetAllProductImage(ctx context.Context, productID string) ([]*body.GetImageResponse, error) {
+	var images []*body.GetImageResponse
+	productInfo, err := u.productRepo.GetProductInfo(ctx, productID)
+	if err != nil {
+		if err != sql.ErrNoRows {
+			return nil, err
+		}
+	}
+
+	details, err := u.productRepo.GetProductDetail(ctx, productID, nil)
+	if err != nil {
+		if err != sql.ErrNoRows {
+			return nil, err
+		}
+	}
+
+	images = append(images, &body.GetImageResponse{
+		Url: productInfo.ThumbnailURL,
+	})
+
+	for _, detail := range details {
+		imageDetails, err := u.productRepo.GetAllImageByProductDetailID(ctx, detail.ProductDetailID)
+		if err != nil {
+			if err != sql.ErrNoRows {
+				return nil, err
+			}
+		}
+
+		for _, image := range imageDetails {
+			images = append(images, &body.GetImageResponse{
+				ProductDetailId: &detail.ProductDetailID,
+				Url:             *image,
+			})
+		}
+	}
+
+	return images, nil
+}
+
+func (u *productUC) GetFavoriteProducts(
+	ctx context.Context, pgn *pagination.Pagination, query *body.GetProductQueryRequest, userID string) (*pagination.Pagination, error) {
+	totalRows, err := u.productRepo.GetAllFavoriteTotalProduct(ctx, query, userID)
+	if err != nil {
+		return nil, err
+	}
+	totalPages := int(math.Ceil(float64(totalRows) / float64(pgn.Limit)))
+	pgn.TotalRows = totalRows
+	pgn.TotalPages = totalPages
+
+	products, promotions, vouchers, err := u.productRepo.GetFavoriteProducts(ctx, pgn, query, userID)
+	if err != nil {
+		if err != sql.ErrNoRows {
+			return nil, err
+		}
+	}
+
+	resultProduct := make([]*body.Products, 0)
+	totalData := len(products)
+	for i := 0; i < totalData; i++ {
+		p := &body.Products{
+			ID:                        products[i].ID,
+			Title:                     products[i].Title,
+			UnitSold:                  products[i].UnitSold,
+			RatingAVG:                 products[i].RatingAVG,
+			ThumbnailURL:              products[i].ThumbnailURL,
+			MinPrice:                  products[i].MinPrice,
+			MaxPrice:                  products[i].MaxPrice,
+			ViewCount:                 products[i].ViewCount,
+			PromoDiscountPercentage:   promotions[i].DiscountPercentage,
+			PromoDiscountFixPrice:     promotions[i].DiscountFixPrice,
+			PromoMinProductPrice:      promotions[i].MinProductPrice,
+			PromoMaxDiscountPrice:     promotions[i].MaxDiscountPrice,
+			VoucherDiscountPercentage: vouchers[i].DiscountPercentage,
+			VoucherDiscountFixPrice:   vouchers[i].DiscountFixPrice,
+			ShopName:                  products[i].ShopName,
+			CategoryName:              products[i].CategoryName,
+		}
+		p = u.CalculateDiscountProduct(p)
+		resultProduct = append(resultProduct, p)
+	}
+	pgn.Rows = resultProduct
+
+	return pgn, nil
+}
+
+func (u *productUC) CreateFavoriteProduct(ctx context.Context, productID, userID string) error {
+
+	_, err := u.productRepo.GetProductInfo(ctx, productID)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return httperror.New(http.StatusBadRequest, response.ProductNotExistMessage)
+		}
+		return err
+	}
+
+	isExist, err := u.productRepo.FindFavoriteProduct(ctx, userID, productID)
+
+	if err != nil {
+		return err
+	}
+
+	if isExist {
+		return httperror.New(http.StatusBadRequest, response.ProductAlreadyInFavMessage)
+	}
+
+	err = u.txRepo.WithTransaction(func(tx postgre.Transaction) error {
+		err = u.productRepo.CreateFavoriteProduct(ctx, tx, userID, productID)
+		if err != nil {
+			return err
+		}
+		return nil
+	})
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (u *productUC) DeleteFavoriteProduct(ctx context.Context, productID, userID string) error {
+	isExist, err := u.productRepo.FindFavoriteProduct(ctx, userID, productID)
+	if err != nil {
+		return err
+	}
+
+	if !isExist {
+		return httperror.New(http.StatusBadRequest, response.ProductNotExistMessage)
+	}
+	err = u.txRepo.WithTransaction(func(tx postgre.Transaction) error {
+		err = u.productRepo.DeleteFavoriteProduct(ctx, tx, userID, productID)
+		if err != nil {
+			return err
+		}
+		return nil
+	})
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (u *productUC) GetProductReviews(ctx context.Context, pgn *pagination.Pagination, productID string, query *body.GetReviewQueryRequest) (*pagination.Pagination, error) {
+	totalRows, err := u.productRepo.GetTotalAllReviewProduct(ctx, productID, query)
+	if err != nil {
+		return nil, err
+	}
+	totalPages := int(math.Ceil(float64(totalRows) / float64(pgn.Limit)))
+	pgn.TotalRows = totalRows
+	pgn.TotalPages = totalPages
+
+	reviews, err := u.productRepo.GetProductReviews(ctx, pgn, productID, query)
+
+	if err != nil {
+		if err != sql.ErrNoRows {
+			return nil, err
+		}
+	}
+
+	pgn.Rows = reviews
+
+	return pgn, nil
+}
+
+func (u *productUC) GetTotalReviewRatingByProductID(ctx context.Context, productID string) (*body.AllRatingProduct, error) {
+	ratings, err := u.productRepo.GetTotalReviewRatingByProductID(ctx, productID)
+
+	valueRating := 0
+	totalRating := 0
+
+	// get avg rating from total rating
+	for i := 0; i < len(ratings); i++ {
+		valueRating += ratings[i].Rating * ratings[i].Count
+		totalRating += ratings[i].Count
+	}
+
+	allTotalRating := &body.AllRatingProduct{
+		AvgRating:     float64(valueRating) / float64(totalRating),
+		TotalRating:   float64(totalRating),
+		RatingProduct: ratings,
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	return allTotalRating, nil
+}
+
+func (u *productUC) CreateProduct(ctx context.Context, requestBody body.CreateProductRequest, userID string) error {
+	shopID, errGet := u.productRepo.GetShopIDByUserID(ctx, userID)
+	if errGet != nil {
+		if errGet == sql.ErrNoRows {
+			return httperror.New(http.StatusBadRequest, response.UserNotExistMessage)
+		}
+		return errGet
+	}
+
+	err := u.txRepo.WithTransaction(func(tx postgre.Transaction) error {
+		totalData := len(requestBody.ProductDetail)
+		minPriceTemp, maxPriceTemp := requestBody.ProductDetail[0].Price, requestBody.ProductDetail[0].Price
+		for i := 0; i < totalData; i++ {
+			if requestBody.ProductDetail[i].Price < minPriceTemp {
+				minPriceTemp = requestBody.ProductDetail[i].Price
+			}
+			if requestBody.ProductDetail[i].Price > maxPriceTemp {
+				maxPriceTemp = requestBody.ProductDetail[i].Price
+			}
+		}
+
+		var tempBodyProduct = body.CreateProductInfoForQuery{
+			Title:       requestBody.ProductInfo.Title,
+			Description: requestBody.ProductInfo.Description,
+			Thumbnail:   requestBody.ProductInfo.Thumbnail,
+			CategoryID:  requestBody.ProductInfo.CategoryID,
+			MinPrice:    minPriceTemp,
+			MaxPrice:    maxPriceTemp,
+			ShopID:      shopID,
+			SKU:         util.SKUGenerator(requestBody.ProductInfo.Title),
+		}
+
+		productID, err := u.productRepo.CreateProduct(ctx, tx, tempBodyProduct)
+		if err != nil {
+			return err
+		}
+
+		for i := 0; i < totalData; i++ {
+			productDetilID, err := u.productRepo.CreateProductDetail(ctx, tx, requestBody.ProductDetail[i], productID)
+			if err != nil {
+				return err
+			}
+
+			totalDataPhoto := len(requestBody.ProductDetail[i].Photo)
+			if totalDataPhoto > 0 {
+				for k := 0; k < totalDataPhoto; k++ {
+					err = u.productRepo.CreatePhoto(ctx, tx, productDetilID, requestBody.ProductDetail[i].Photo[k])
+					if err != nil {
+						return err
+					}
+				}
+			}
+
+			totalDataVariant := len(requestBody.ProductDetail[i].VariantDetail)
+			if totalDataVariant > 0 {
+				for j := 0; j < totalDataVariant; j++ {
+					variantDetailID, err := u.productRepo.CreateVariantDetail(ctx, tx, requestBody.ProductDetail[i].VariantDetail[j])
+					if err != nil {
+						return err
+					}
+					err = u.productRepo.CreateVariant(ctx, tx, productDetilID, variantDetailID)
+					if err != nil {
+						return err
+					}
+				}
+			}
+		}
+
+		return nil
+	})
+
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (u *productUC) UpdateListedStatus(ctx context.Context, productID string) error {
+	listedStatus, err := u.productRepo.GetListedStatus(ctx, productID)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return httperror.New(http.StatusBadRequest, body.ProductNotFound)
+		}
+		return err
+	}
+	tempListedStatus := false
+	if listedStatus {
+		tempListedStatus = false
+	} else {
+		tempListedStatus = true
+	}
+
+	if err := u.productRepo.UpdateListedStatus(ctx, tempListedStatus, productID); err != nil {
+		if err == sql.ErrNoRows {
+			return httperror.New(http.StatusNotFound, body.UpdateProductFailed)
+		}
+		return err
+	}
+	return nil
+}
+
+func (u *productUC) UpdateProduct(ctx context.Context, requestBody body.UpdateProductRequest, userID, productID string) error {
+	errTx := u.txRepo.WithTransaction(func(tx postgre.Transaction) error {
+		totalData := len(requestBody.ProductDetail)
+
+		totalDataRemove := len(requestBody.ProductDetailRemove)
+		if totalDataRemove > 0 {
+			for i := 0; i < totalDataRemove; i++ {
+				err := u.productRepo.DeleteProductDetail(ctx, tx, requestBody.ProductDetailRemove[i])
+				if err != nil {
+					return err
+				}
+			}
+		}
+
+		for i := 0; i < totalData; i++ {
+			err := u.productRepo.UpdateProductDetail(ctx, tx, requestBody.ProductDetail[i], productID)
+			if err != nil {
+				return err
+			}
+
+			totalDataPhoto := len(requestBody.ProductDetail[i].Photo)
+			if totalDataPhoto > 0 {
+				err = u.productRepo.DeletePhoto(ctx, tx, requestBody.ProductDetail[i].ProductDetailID)
+				if err != nil {
+					return err
+				}
+				for k := 0; k < totalDataPhoto; k++ {
+					err = u.productRepo.CreatePhoto(ctx, tx, requestBody.ProductDetail[i].ProductDetailID, requestBody.ProductDetail[i].Photo[k])
+					if err != nil {
+						return err
+					}
+				}
+			}
+
+			totalDataVariant := len(requestBody.ProductDetail[i].VariantDetailID)
+			if totalDataVariant > 0 {
+				for j := 0; j < totalDataVariant; j++ {
+					errVariant := u.productRepo.UpdateVariant(ctx, tx,
+						requestBody.ProductDetail[i].VariantDetailID[j].VariantID,
+						requestBody.ProductDetail[i].VariantDetailID[j].VariantDetailID)
+					if errVariant != nil {
+						return errVariant
+					}
+				}
+			}
+
+			totalDataVariantRemove := len(requestBody.ProductDetail[i].VariantIDRemove)
+			if totalDataVariantRemove > 0 {
+				for j := 0; j < totalDataVariantRemove; j++ {
+					err := u.productRepo.DeleteVariant(ctx, tx, requestBody.ProductDetail[i].VariantIDRemove[j])
+					if err != nil {
+						return err
+					}
+				}
+			}
+		}
+
+		maxPriceTemp, minPriceTemp, errMaxMin := u.productRepo.GetMaxMinPriceByID(ctx, productID)
+		if errMaxMin != nil {
+			return errMaxMin
+		}
+		var tempBodyProduct = body.UpdateProductInfoForQuery{
+			Title:       requestBody.ProductInfo.Title,
+			Description: requestBody.ProductInfo.Description,
+			Thumbnail:   requestBody.ProductInfo.Thumbnail,
+			CategoryID:  requestBody.ProductInfo.CategoryID,
+			MinPrice:    minPriceTemp,
+			MaxPrice:    maxPriceTemp,
+		}
+		err := u.productRepo.UpdateProduct(ctx, tx, tempBodyProduct, productID)
+		if err != nil {
+			return err
+		}
+
+		return nil
+	})
+
+	if errTx != nil {
+		return errTx
+	}
+	return nil
 }

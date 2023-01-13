@@ -3,7 +3,6 @@ package repository
 import (
 	"context"
 	"database/sql"
-	"fmt"
 	"murakali/internal/model"
 	"murakali/internal/module/cart"
 	"murakali/internal/module/cart/delivery/body"
@@ -121,8 +120,7 @@ func (r *cartRepo) GetCartHoverHome(ctx context.Context, userID string, limit in
 			(*pq.StringArray)(&VariantName),
 			(*pq.StringArray)(&VariantType),
 		); errScan != nil {
-			fmt.Println(errScan)
-			return nil, err
+			return nil, errScan
 		}
 
 		mapVariant := make(map[string]string, 0)
@@ -176,6 +174,7 @@ func (r *cartRepo) GetCartItems(ctx context.Context, userID string, pgn *paginat
 			&productData.ThumbnailURL,
 			&productData.ProductPrice,
 			&productData.ProductStock,
+			&productData.Weight,
 			&promo.DiscountPercentage,
 			&promo.DiscountFixPrice,
 			&promo.MinProductPrice,

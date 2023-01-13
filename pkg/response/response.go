@@ -14,8 +14,6 @@ const (
 	ForbiddenMessage           = "Forbidden"
 
 	AddressIsDefaultMessage        = "Address is default."
-	UserNotMatchMessage            = "User not match."
-	UserNotASellerMessage          = "User not a seller."
 	EmailAlreadyExistMessage       = "Email already exist."
 	EmailSamePreviousEmailMessage  = "This email same as your current email."
 	EmailNotExistMessage           = "Email not exist."
@@ -33,11 +31,27 @@ const (
 	ShopAlreadyExists              = "Shop already exists."
 	QuantityReachedMaximum         = "Quantity has reached the maximum limit!"
 	ProductDetailNotExistMessage   = "Product Detail not exist."
+	ProductNotExistMessage         = "Product not exist."
+	ProductAlreadyInFavMessage     = "Product already in favorite."
 	PictureSizeTooBig              = "Picture size too big"
-	SelectOnlyOnePaymentMethod     = "Select only one payment method."
+	TransactionIDNotExist          = "Transaction not exist."
+	TransactionAlreadyExpired      = "Transaction already expired."
+	TransactionAlreadyFinished     = "Transaction already finished."
 	SelectShippingCourier          = "Select shipping Courier"
 	UnknownShop                    = "Unknown shop."
 	CartItemNotExist               = "Cart Item not exist."
+	ShopAddressNotFound            = "Shop address not found."
+	DefaultAddressNotFound         = "Default address not found."
+	ShopCourierNotExist            = "Shop courier not exist."
+	WalletAlreadyActivated         = "Wallet already activated."
+	WalletIsNotActivated           = `Wallet is not activated.`
+	SealabsCardNotFound            = "Sealabs pay card not valid."
+	SealabsCardAlreadyExist        = "Sealabs card already exist."
+	WalletIsBlocked                = "Wallet is temporarily blocked, please wait."
+	WalletPinIsInvalid             = "Wallet pin is invalid."
+	WalletBalanceNotEnough         = "Insufficient wallet balance, please top up!"
+	InvalidPaymentMethod           = "Invalid payment method."
+	OrderNotExistMessage           = "Order not exist."
 )
 
 type JSONResponse struct {

@@ -10,4 +10,5 @@ type UseCase interface {
 	GetCity(ctx context.Context, provinceID int) (*body.CityResponse, error)
 	GetSubDistrict(ctx context.Context, province, city string) (*body.SubDistrictResponse, error)
 	GetUrban(ctx context.Context, province, city, subdistrict string) (*body.UrbanResponse, error)
+	GetShippingCost(ctx context.Context, requestBody body.GetShippingCostRequest) (*body.GetShippingCostResponse, error)
 }

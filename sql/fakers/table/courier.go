@@ -6,13 +6,14 @@ import (
 )
 
 type CourierFaker struct {
-	ID   []string
-	Name []string
-	Code []string
+	ID      []string
+	Name    []string
+	Code    []string
+	Service []string
 }
 
-func NewCourierFaker(id, name, code []string) ISeeder {
-	return &CourierFaker{ID: id, Name: name, Code: code}
+func NewCourierFaker(id, name, code, service []string) ISeeder {
+	return &CourierFaker{ID: id, Name: name, Code: code, Service: service}
 }
 
 func (f *CourierFaker) GenerateData(tx postgre.Transaction) error {
@@ -23,7 +24,7 @@ func (f *CourierFaker) GenerateData(tx postgre.Transaction) error {
 			return err
 		}
 
-		if _, err := tx.Exec(InsertCourierQuery, id, f.Name[i], f.Code[i], "REG", "Layanan Reguler"); err != nil {
+		if _, err := tx.Exec(InsertCourierQuery, id, f.Name[i], f.Code[i], f.Service[i], "Layanan Reguler"); err != nil {
 			return err
 		}
 	}

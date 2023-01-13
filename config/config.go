@@ -60,16 +60,17 @@ type LoggerConfig struct {
 }
 
 type ExternalConfig struct {
-	SlpURL        string `mapstructure:"SLP_URL"`
-	SlpAPIKey     string `mapstructure:"SLP_API_KEY"`
-	SMTPHost      string `mapstructure:"SMTP_HOST"`
-	SMTPPort      string `mapstructure:"SMTP_PORT"`
-	SMTPPassword  string `mapstructure:"SMTP_PASSWORD"`
-	SMTPFrom      string `mapstructure:"SMTP_FROM"`
-	CloudinaryURL string `mapstructure:"CLOUDINARY_URL"`
-	OngkirAPIURL  string `mapstructure:"ONGKIR_API_URL"`
-	OngkirAPIKey  string `mapstructure:"ONGKIR_API_KEY"`
-	KodePosURL    string `mapstructure:"KODE_POS_URL"`
+	SlpURL          string `mapstructure:"SLP_URL"`
+	SlpAPIKey       string `mapstructure:"SLP_API_KEY"`
+	SlpMerchantCode string `mapstructure:"SLP_MERCHANT_CODE"`
+	SMTPHost        string `mapstructure:"SMTP_HOST"`
+	SMTPPort        string `mapstructure:"SMTP_PORT"`
+	SMTPPassword    string `mapstructure:"SMTP_PASSWORD"`
+	SMTPFrom        string `mapstructure:"SMTP_FROM"`
+	CloudinaryURL   string `mapstructure:"CLOUDINARY_URL"`
+	OngkirAPIURL    string `mapstructure:"ONGKIR_API_URL"`
+	OngkirAPIKey    string `mapstructure:"ONGKIR_API_KEY"`
+	KodePosURL      string `mapstructure:"KODE_POS_URL"`
 }
 
 func LoadConfig() (*viper.Viper, error) {

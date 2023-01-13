@@ -13,6 +13,7 @@ const InsertProductQuery = `INSERT INTO "product" (id, category_id, shop_id, sku
 const InsertProductDetailQuery = `INSERT INTO "product_detail" (id, product_id, price, stock, weight, size, hazardous, condition, bulk_price) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9);`
 const InsertVariantDetailQuery = `INSERT INTO "variant_detail" (id, name, type) VALUES ($1, $2, $3)`
 const InsertVariantQuery = `INSERT INTO "variant" (id, product_detail_id, variant_detail_id) VALUES ($1, $2, $3);`
+const InsertProductDetailPhoto = `INSERT INTO "photo" (product_detail_id, url) VALUES ($1, $2);`
 
 type ProductFaker struct {
 	Size       int
@@ -89,6 +90,11 @@ func (f *ProductFaker) GenerateDataProductDetail(tx postgre.Transaction, id, pro
 		return err
 	}
 
+	_, err = tx.Exec(InsertProductDetailPhoto, data.ID, "https://cf.shopee.co.id/file/76a0969b7d64065bc13493bf55df1849_tn")
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -98,7 +104,7 @@ func (f *ProductFaker) GenerateProductDetail(id, productID uuid.UUID, price floa
 		ProductID: productID,
 		Price:     price,
 		Stock:     float64(rand.Intn(20000)),
-		Weight:    float64(rand.Intn(10-1) + 1),
+		Weight:    float64(rand.Intn(10-1)+1) * 1000,
 		Size:      float64(rand.Intn(20000)),
 		Hazardous: false,
 		Condition: "new",

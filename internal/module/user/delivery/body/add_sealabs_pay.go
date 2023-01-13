@@ -10,7 +10,6 @@ import (
 
 type AddSealabsPayRequest struct {
 	CardNumber     string `json:"card_number"`
-	UserID         string `json:"user_id"`
 	Name           string `json:"name"`
 	IsDefault      bool   `json:"is_default"`
 	ActiveDate     string `json:"active_date"`
@@ -22,7 +21,6 @@ func (r *AddSealabsPayRequest) Validate() (UnprocessableEntity, error) {
 	entity := UnprocessableEntity{
 		Fields: map[string]string{
 			"card_number": "",
-			"user_id":     "",
 			"name":        "",
 			"is_default":  "",
 			"active_date": "",
@@ -33,12 +31,6 @@ func (r *AddSealabsPayRequest) Validate() (UnprocessableEntity, error) {
 	if r.CardNumber == "" {
 		unprocessableEntity = true
 		entity.Fields["card_number"] = FieldCannotBeEmptyMessage
-	}
-
-	r.UserID = strings.TrimSpace(r.UserID)
-	if r.UserID == "" {
-		unprocessableEntity = true
-		entity.Fields["user_id"] = FieldCannotBeEmptyMessage
 	}
 
 	r.Name = strings.TrimSpace(r.Name)
