@@ -9,15 +9,46 @@ const (
 	left join "voucher" v on v.id = o.voucher_shop_id WHERE o.shop_id = $1 and "order_status_id"::text LIKE $2 ORDER BY o.created_at asc LIMIT $3 OFFSET $4
 	`
 
-	GetOrderByOrderID = `SELECT o.id,o.order_status_id,o.total_price,o.delivery_fee,o.resi_no,s.id,s.name,v.code,o.created_at
+	GetAddressByBuyerIDQuery = `SELECT
+	"id", "user_id", "name", "province_id", "city_id", "province", "city", "district", "sub_district",  
+	"address_detail", "zip_code", "is_default", "is_shop_default", "created_at", "updated_at"
+	FROM "address" WHERE "user_id" = $1 AND "deleted_at" IS NULL AND is_default is true`
+
+	GetAddressBySellerIDQuery = `SELECT
+	"id", "user_id", "name", "province_id", "city_id", "province", "city", "district", "sub_district",  
+	"address_detail", "zip_code", "is_default", "is_shop_default", "created_at", "updated_at"
+	FROM "address" WHERE "user_id" = $1 AND "deleted_at" IS NULL AND is_shop_default is true`
+
+	GetOrderByOrderID = `SELECT o.id,o.order_status_id,o.total_price,o.delivery_fee,o.resi_no,s.id,s.name,u2.phone_no,u2.username,v.code,o.created_at,t.invoice
+	,c.name,c.code,c.service,c.description,u.username,u.phone_no
 	from "order" o
 	join "shop" s on s.id = o.shop_id
-	join "voucher" v on v.id = o.voucher_shop_id WHERE o.id = $1 ORDER BY o.created_at asc`
+	join "courier" c on o.courier_id = c.id
+	join "user" u on o.user_id = u.id
+	join "user" u2 on s.user_Id = u2.id
+	join transaction t on o.transaction_id = t.id
+	left join "voucher" v on v.id = o.voucher_shop_id WHERE o.id = $1 ORDER BY o.created_at asc`
 
-	GetOrderDetailQuery = `SELECT pd.id,pd.product_id,p.title,ph.url,oi.quantity,oi.item_price,oi.total_price
+	GetBuyerIDByOrderIDQuery = `SELECT o.user_id from "order" o where o.id = $1`
+
+	GetSellerIDByOrderIDQuery = `SELECT s.user_id from "order" o join shop s on o.shop_id = s.id where o.id = $1`
+
+	GetOrderDetailQuery = `SELECT pd.id,pd.product_id,p.title,
+		(select ph.url from "photo" ph 
+			join product_detail pd on pd.id = ph.product_detail_id 
+			join "order_item" oi on pd.id = oi.product_detail_id limit 1
+		),oi.quantity,oi.item_price,oi.total_price
 	from  "product_detail" pd 
-	join "photo" ph on pd.id = ph.product_detail_id join "order_item" oi on pd.id = oi.product_detail_id 
-	join "product" p on p.id = pd.product_id WHERE oi.order_id = $1`
+	join "order_item" oi on pd.id = oi.product_detail_id 
+	join "product" p on p.id = pd.product_id WHERE oi.order_id = $1 `
+
+	GetOrderDetailProductVariant = `
+		SELECT "vd"."name" as "name", "vd"."type" as "type" 
+		FROM "variant_detail" as "vd"
+		INNER JOIN "variant" as "v" ON "v"."variant_detail_id" = "vd"."id"
+		INNER JOIN "product_detail" as "pd" ON "pd"."id" = "v"."product_detail_id"
+		WHERE "pd"."id" = $1 AND "pd"."deleted_at" IS NULL
+	`
 
 	GetShopIDByUserQuery = `SELECT id from shop where user_id = $1 and deleted_at is null`
 
