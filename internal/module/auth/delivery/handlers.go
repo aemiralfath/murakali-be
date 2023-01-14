@@ -377,7 +377,7 @@ func (h *authHandlers) GoogleAuth(c *gin.Context) {
 		return
 	}
 
-	token, err := h.authUC.GoogleAuth(c, user)
+	token, err := h.authUC.GoogleAuth(c, pathURL, user)
 	if err != nil {
 		var e *httperror.Error
 		if !errors.As(err, &e) {

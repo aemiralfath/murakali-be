@@ -18,5 +18,5 @@ type UseCase interface {
 	ResetPasswordUser(ctx context.Context, email string, body *body2.ResetPasswordUserRequest) (*model.User, error)
 	CheckUniqueUsername(ctx context.Context, username string) (bool, error)
 	CheckUniquePhoneNo(ctx context.Context, phoneNo string) (bool, error)
-	GoogleAuth(ctx context.Context, userAuth *oauth.GoogleUserResult) (*model.GoogleAuthToken, error)
+	GoogleAuth(ctx context.Context, state string, userAuth *oauth.GoogleUserResult) (*model.GoogleAuthToken, error)
 }

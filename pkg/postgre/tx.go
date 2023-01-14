@@ -34,14 +34,18 @@ func (tr *TxRepo) WithTransactionReturnData(fn TxFnData) (data interface{}, err 
 		var errTx error
 		if p := recover(); p != nil {
 			errTx = tx.Rollback()
-			fmt.Println(errTx.Error())
+			if errTx != nil {
+				fmt.Println(errTx.Error())
+			}
 			panic(p)
 		} else if err != nil {
 			errTx = tx.Rollback()
 		} else {
 			errTx = tx.Commit()
 		}
-		fmt.Println(errTx.Error())
+		if errTx != nil {
+			fmt.Println(errTx.Error())
+		}
 	}()
 
 	data, err = fn(tx)
@@ -58,14 +62,18 @@ func (tr *TxRepo) WithTransaction(fn TxFn) (err error) {
 		var errTx error
 		if p := recover(); p != nil {
 			errTx = tx.Rollback()
-			fmt.Println(errTx.Error())
+			if errTx != nil {
+				fmt.Println(errTx.Error())
+			}
 			panic(p)
 		} else if err != nil {
 			errTx = tx.Rollback()
 		} else {
 			errTx = tx.Commit()
 		}
-		fmt.Println(errTx.Error())
+		if errTx != nil {
+			fmt.Println(errTx.Error())
+		}
 	}()
 
 	err = fn(tx)

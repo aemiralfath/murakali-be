@@ -615,6 +615,10 @@ CREATE INDEX ON "email_history" ("email");
 
 CREATE INDEX ON "banner" ("title");
 
+CREATE INDEX ON "promotion" ("actived_date", "expired_date");
+
+CREATE INDEX ON "voucher" ("actived_date", "expired_date");
+
 ALTER TABLE "user"
     ADD FOREIGN KEY ("role_id") REFERENCES "role" ("id");
 

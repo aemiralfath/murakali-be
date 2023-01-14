@@ -6,6 +6,7 @@ import (
 	"database/sql"
 	"fmt"
 	"murakali/config"
+	"murakali/internal/constant"
 	"murakali/internal/model"
 	"murakali/internal/module/auth"
 	"murakali/internal/module/auth/delivery/body"
@@ -379,9 +380,9 @@ func (u *authUC) CheckUniquePhoneNo(ctx context.Context, phoneNo string) (bool, 
 	return false, nil
 }
 
-func (u *authUC) GoogleAuth(ctx context.Context, userAuth *oauth.GoogleUserResult) (*model.GoogleAuthToken, error) {
+func (u *authUC) GoogleAuth(ctx context.Context, state string, userAuth *oauth.GoogleUserResult) (*model.GoogleAuthToken, error) {
 	user, err := u.authRepo.GetUserByEmail(ctx, userAuth.Email)
-	if err != nil {
+	if err != nil || !user.IsVerify {
 		if err == sql.ErrNoRows {
 			emailHistory, errHistory := u.authRepo.CheckEmailHistory(ctx, userAuth.Email)
 			if errHistory != nil {
@@ -391,6 +392,9 @@ func (u *authUC) GoogleAuth(ctx context.Context, userAuth *oauth.GoogleUserResul
 			}
 
 			if emailHistory != nil {
+				if state == constant.LoginOauth {
+					return nil, httperror.New(http.StatusBadRequest, response.EmailAlreadyChangedMessage)
+				}
 				return nil, httperror.New(http.StatusBadRequest, response.EmailAlreadyExistMessage)
 			}
 
@@ -400,7 +404,6 @@ func (u *authUC) GoogleAuth(ctx context.Context, userAuth *oauth.GoogleUserResul
 			user.FullName = &userAuth.Name
 			user.PhotoURL = &userAuth.Picture
 			user.IsSSO = true
-			user.IsVerify = userAuth.VerifiedEmail
 
 			err = u.txRepo.WithTransaction(func(tx postgre.Transaction) error {
 				user, err = u.authRepo.CreateUserGoogle(ctx, tx, user)
@@ -423,11 +426,16 @@ func (u *authUC) GoogleAuth(ctx context.Context, userAuth *oauth.GoogleUserResul
 			return &model.GoogleAuthToken{RegisterToken: &registerToken}, nil
 		}
 
-		return nil, err
-	}
+		if !user.IsVerify {
+			registerToken, errToken := jwt.GenerateJWTRegisterToken(userAuth.Email, u.cfg)
+			if errToken != nil {
+				return nil, errToken
+			}
 
-	if !user.IsVerify {
-		return nil, httperror.New(http.StatusForbidden, response.ForbiddenMessage)
+			return &model.GoogleAuthToken{RegisterToken: &registerToken}, nil
+		}
+
+		return nil, err
 	}
 
 	accessToken, err := jwt.GenerateJWTAccessToken(user.ID.String(), user.RoleID, u.cfg)

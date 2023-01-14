@@ -31,6 +31,9 @@ const (
 	ASC   = "asc"
 	DESC  = "desc"
 
+	LoginOauth    = "/login"
+	RegisterOauth = "/register"
+
 	OrderStatusWaitingToPay      = 1
 	OrderStatusWaitingForSeller  = 2
 	OrderStatusWaitingForPacking = 3

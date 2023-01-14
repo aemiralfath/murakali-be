@@ -19,13 +19,11 @@ type ProductFaker struct {
 	Size       int
 	ShopID     string
 	CategoryID string
-	MinPrice   int
-	MaxPrice   int
 	ID         []string
 }
 
-func NewProductFaker(size int, shopID, categoryID string, minPrice, maxPrice int, id []string) ISeeder {
-	return &ProductFaker{Size: size, ShopID: shopID, ID: id, MinPrice: minPrice, MaxPrice: maxPrice, CategoryID: categoryID}
+func NewProductFaker(size int, shopID, categoryID string, id []string) ISeeder {
+	return &ProductFaker{Size: size, ShopID: shopID, ID: id, CategoryID: categoryID}
 }
 
 func (f *ProductFaker) GenerateData(tx postgre.Transaction) error {
@@ -114,7 +112,7 @@ func (f *ProductFaker) GenerateProductDetail(id, productID uuid.UUID, price floa
 
 func (f *ProductFaker) GenerateProduct(id, categoryID, shopID uuid.UUID) *model.Product {
 	name := faker.Username()
-	price := rand.Intn(f.MaxPrice-f.MinPrice) + f.MinPrice
+	price := (rand.Intn(1000-100) + 100) * 1000
 	return &model.Product{
 		ID:            id,
 		CategoryID:    categoryID,
