@@ -17,7 +17,7 @@ const (
 	EmailAlreadyExistMessage       = "User already registered."
 	EmailAlreadyChangedMessage     = "Email already changed."
 	EmailSamePreviousEmailMessage  = "This email same as your current email."
-	EmailNotExistMessage           = "Email not exist."
+	EmailNotExistMessage           = "User not registered."
 	UserNotVerifyMessage           = "User not verify."
 	UserAlreadyExistMessage        = "User already exist."
 	UserNameAlreadyExistMessage    = "Username already exist."

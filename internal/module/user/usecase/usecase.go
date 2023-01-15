@@ -628,7 +628,7 @@ func (u *userUC) VerifyPasswordChange(ctx context.Context, userID string) error 
 }
 
 func (u *userUC) SendOTPEmail(ctx context.Context, email string) error {
-	otp, err := util.GenerateOTP(6)
+	otp, err := util.GenerateRandomAlpaNumeric(6)
 	if err != nil {
 		return err
 	}
