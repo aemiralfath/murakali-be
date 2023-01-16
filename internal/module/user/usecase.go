@@ -35,6 +35,7 @@ type UseCase interface {
 	GetOrder(ctx context.Context, userID string, pgn *pagination.Pagination) (*pagination.Pagination, error)
 	ActivateWallet(ctx context.Context, userID, pin string) error
 	GetWallet(ctx context.Context, userID string) (*model.Wallet, error)
+	GetWalletHistory(ctx context.Context, userID string, pgn *pagination.Pagination) (*pagination.Pagination, error)
 	TopUpWallet(ctx context.Context, userID string, requestBody body.TopUpWalletRequest) (string, error)
 	WalletStepUp(ctx context.Context, userID string, requestBody body.WalletStepUpRequest) (string, error)
 	CreateWalletPayment(ctx context.Context, transactionID string) error

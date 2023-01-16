@@ -1086,6 +1086,33 @@ func (u *userUC) GetWallet(ctx context.Context, userID string) (*model.Wallet, e
 	return wallet, nil
 }
 
+func (u *userUC) GetWalletHistory(ctx context.Context, userID string, pgn *pagination.Pagination) (*pagination.Pagination, error) {
+	wallet, err := u.userRepo.GetWalletByUserID(ctx, userID)
+	if err != nil {
+		if err != sql.ErrNoRows {
+			return nil, err
+		}
+	}
+
+	totalRows, err := u.userRepo.GetTotalWalletHistoryByWalletID(ctx, wallet.ID.String())
+	if err != nil {
+		return nil, err
+	}
+
+	totalPages := int(math.Ceil(float64(totalRows) / float64(pgn.Limit)))
+	pgn.TotalRows = totalRows
+	pgn.TotalPages = totalPages
+
+	walletHistory, err := u.userRepo.GetWalletHistoryByWalletID(ctx, pgn, wallet.ID.String())
+	if err != nil {
+		return nil, err
+	}
+
+	pgn.Rows = walletHistory
+
+	return pgn, nil
+}
+
 func (u *userUC) WalletStepUp(ctx context.Context, userID string, requestBody body.WalletStepUpRequest) (string, error) {
 	wallet, err := u.userRepo.GetWalletByUserID(ctx, userID)
 	if err != nil {
