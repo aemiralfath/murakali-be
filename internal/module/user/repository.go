@@ -51,6 +51,8 @@ type Repository interface {
 	GetTotalOrder(ctx context.Context, userID string) (int64, error)
 	GetOrders(ctx context.Context, userID string, pgn *pagination.Pagination) ([]*model.Order, error)
 	GetWalletUser(ctx context.Context, walletID string) (*model.Wallet, error)
+	GetWalletHistoryByWalletID(ctx context.Context, pgn *pagination.Pagination, walletID string) ([]*body.HistoryWalletResponse, error)
+	GetTotalWalletHistoryByWalletID(ctx context.Context, walletID string) (int64, error)
 	GetSealabsPayUser(ctx context.Context, userID, CardNumber string) (*model.SealabsPay, error)
 	GetVoucherMarketplaceByID(ctx context.Context, voucherMarketplaceID string) (*model.Voucher, error)
 	GetShopByID(ctx context.Context, shopID string) (*model.Shop, error)

@@ -75,7 +75,11 @@ const (
 	UpdateProfileImageQuery        = `UPDATE "user" SET "photo_url" = $1,updated_at = now() where id = $2`
 	UpdatePasswordQuery            = `UPDATE "user" SET "password" = $1 WHERE "id" = $2`
 
-	GetWalletUserQuery             = `SELECT "id", "user_id", "balance", "attempt_count", "attempt_at", "unlocked_at", "active_date" FROM "wallet" WHERE "id" = $1 AND "deleted_at" IS NULL;`
+	GetWalletUserQuery        = `SELECT "id", "user_id", "balance", "attempt_count", "attempt_at", "unlocked_at", "active_date" FROM "wallet" WHERE "id" = $1 AND "deleted_at" IS NULL;`
+	GetWalletHistoryUserQuery = `SELECT "id", "from", "to", "amount", "description", "created_at" 
+	FROM "wallet_history" 
+	WHERE "wallet_id" = $1`
+	GetTotalWalletHistoryUserQuery = `SELECT count(id) FROM "wallet_history" WHERE "wallet_id" = $1;`
 	GetSealabsPayUserQuery         = `SELECT "card_number", "user_id", "name", "is_default", "active_date" FROM "sealabs_pay" WHERE "user_id" = $1 AND "card_number" = $2 AND "deleted_at" IS NULL;`
 	GetVoucherMarketplaceByIDQuery = `SELECT "id", "shop_id", "code", "quota", "actived_date", "expired_date", "discount_percentage", "discount_fix_price", "min_product_price", "max_discount_price" FROM "voucher"
 		WHERE "id" = $1 AND "shop_id" is NULL AND "deleted_at" IS NULL AND now() BETWEEN "actived_date" AND "expired_date";`
@@ -103,4 +107,7 @@ const (
 	GetOrderByTransactionID       = `SELECT 
 		"id", "transaction_id", "shop_id", "user_id", "courier_id", "voucher_shop_id", "order_status_id", "total_price", "delivery_fee", "resi_no", "created_at", "arrived_at" 
 	FROM "order" WHERE "transaction_id" = $1`
+
+	OrderBySomething = ` 
+	ORDER BY %s LIMIT %d OFFSET %d`
 )

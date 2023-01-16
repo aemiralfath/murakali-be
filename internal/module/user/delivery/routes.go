@@ -35,6 +35,7 @@ func MapUserRoutes(userGroup *gin.RouterGroup, h user.Handlers, mw *middleware.M
 	userGroup.GET("/order", h.GetOrder)
 	userGroup.POST("/wallet", h.ActivateWallet)
 	userGroup.GET("/wallet", h.GetWallet)
+	userGroup.GET("/wallet/history", h.GetWalletHistory)
 	userGroup.PATCH("/wallet", h.TopUpWallet)
 	userGroup.POST("/wallet/step-up/pin", h.WalletStepUp)
 }
