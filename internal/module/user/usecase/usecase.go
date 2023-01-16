@@ -978,6 +978,34 @@ func (u *userUC) GetTransactionByUserID(ctx context.Context, UserID string, pgn 
 	return pgn, nil
 }
 
+func (u *userUC) GetTransactionByID(ctx context.Context, transactionID string) (*body.GetTransactionByIDResponse, error) {
+	transaction, err := u.userRepo.GetTransactionByID(ctx, transactionID)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, httperror.New(http.StatusBadRequest, response.TransactionIDNotExist)
+		}
+		return nil, err
+	}
+
+	res := &body.GetTransactionByIDResponse{
+		ID:         transaction.ID,
+		WalletID:   transaction.WalletID,
+		CardNumber: transaction.CardNumber,
+		Invoice:    transaction.Invoice,
+		TotalPrice: transaction.TotalPrice,
+		ExpiredAt:  transaction.ExpiredAt,
+	}
+
+	res.Orders, err = u.userRepo.GetOrderDetailByTransactionID(ctx, res.ID.String())
+
+	if err != nil {
+		return nil, err
+	}
+
+	return res, nil
+
+}
+
 func (u *userUC) UpdateTransaction(ctx context.Context, transactionID string, requestBody body.SLPCallbackRequest) error {
 	transaction, err := u.userRepo.GetTransactionByID(ctx, transactionID)
 	if err != nil {

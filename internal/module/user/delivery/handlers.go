@@ -1101,6 +1101,32 @@ func (h *userHandlers) GetTransactions(c *gin.Context) {
 	response.SuccessResponse(c.Writer, transactions, http.StatusOK)
 }
 
+func (h *userHandlers) GetTransaction(c *gin.Context) {
+
+	_, exist := c.Get("userID")
+	if !exist {
+		response.ErrorResponse(c.Writer, response.UnauthorizedMessage, http.StatusUnauthorized)
+		return
+	}
+
+	id := c.Param("id")
+
+	transactions, err := h.userUC.GetTransactionByID(c, id)
+	if err != nil {
+		var e *httperror.Error
+		if !errors.As(err, &e) {
+			h.logger.Errorf("HandlerUser, Error: %s", err)
+			response.ErrorResponse(c.Writer, response.InternalServerErrorMessage, http.StatusInternalServerError)
+			return
+		}
+
+		response.ErrorResponse(c.Writer, e.Err.Error(), e.Status)
+		return
+	}
+
+	response.SuccessResponse(c.Writer, transactions, http.StatusOK)
+}
+
 func (h *userHandlers) CreateTransaction(c *gin.Context) {
 	var requestBody body.CreateTransactionRequest
 	if err := c.ShouldBind(&requestBody); err != nil {

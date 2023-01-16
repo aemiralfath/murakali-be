@@ -69,6 +69,7 @@ type Repository interface {
 	UpdateProductDetailStock(ctx context.Context, tx postgre.Transaction, productDetailData *model.ProductDetail) error
 	DeleteCartItemByID(ctx context.Context, tx postgre.Transaction, cartItemData *model.CartItem) error
 	GetOrderByTransactionID(ctx context.Context, transactionID string) ([]*model.OrderModel, error)
+	GetOrderDetailByTransactionID(ctx context.Context, TransactionID string) ([]*model.Order, error)
 	UpdateOrder(ctx context.Context, tx postgre.Transaction, orderData *model.OrderModel) error
 	CreateWallet(ctx context.Context, walletData *model.Wallet) error
 	GetWalletByUserID(ctx context.Context, userID string) (*model.Wallet, error)

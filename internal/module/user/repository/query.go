@@ -42,6 +42,14 @@ const (
 	ORDER BY o.created_at asc LIMIT $3 OFFSET $4
 	`
 
+	GetOrderDetailProductVariant = `
+		SELECT "vd"."name" as "name", "vd"."type" as "type" 
+		FROM "variant_detail" as "vd"
+		INNER JOIN "variant" as "v" ON "v"."variant_detail_id" = "vd"."id"
+		INNER JOIN "product_detail" as "pd" ON "pd"."id" = "v"."product_detail_id"
+		WHERE "pd"."id" = $1 AND "pd"."deleted_at" IS NULL
+	`
+
 	GetTotalTransactionByUserIDQuery = `SELECT count(t.id) FROM "transaction" t, "order" o
 	WHERE t.id = o.transaction_id
 	AND o.user_id = $1
