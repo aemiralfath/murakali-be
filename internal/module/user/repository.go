@@ -48,8 +48,8 @@ type Repository interface {
 	UpdateProfileImage(ctx context.Context, imgURL, userID string) error
 	UpdatePasswordByID(ctx context.Context, userID, newPassword string) error
 	GetPasswordByID(ctx context.Context, id string) (string, error)
-	GetTotalOrder(ctx context.Context, userID string) (int64, error)
-	GetOrders(ctx context.Context, userID string, pgn *pagination.Pagination) ([]*model.Order, error)
+	GetTotalOrder(ctx context.Context, userID, orderStatusID string) (int64, error)
+	GetOrders(ctx context.Context, userID, orderStatusID string, pgn *pagination.Pagination) ([]*model.Order, error)
 	GetWalletUser(ctx context.Context, walletID string) (*model.Wallet, error)
 	GetWalletHistoryByWalletID(ctx context.Context, pgn *pagination.Pagination, walletID string) ([]*body.HistoryWalletResponse, error)
 	GetTotalWalletHistoryByWalletID(ctx context.Context, walletID string) (int64, error)

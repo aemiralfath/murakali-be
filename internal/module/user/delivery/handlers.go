@@ -449,11 +449,19 @@ func (h *userHandlers) GetOrder(c *gin.Context) {
 		return
 	}
 
-	pgn := &pagination.Pagination{}
+	userIDString := fmt.Sprintf("%v", userID)
 
+	_, err := uuid.Parse(userIDString)
+	if err != nil {
+		response.ErrorResponse(c.Writer, response.BadRequestMessage, http.StatusBadRequest)
+		return
+	}
+
+	pgn := &pagination.Pagination{}
+	orderStatusID := c.DefaultQuery("order_status", "")
 	h.ValidateQueryOrder(c, pgn)
 
-	orders, err := h.userUC.GetOrder(c, userID.(string), pgn)
+	orders, err := h.userUC.GetOrder(c, userID.(string), orderStatusID, pgn)
 	if err != nil {
 		var e *httperror.Error
 		if !errors.As(err, &e) {

@@ -225,8 +225,8 @@ func (u *userUC) GetAddress(ctx context.Context, userID string, pgn *pagination.
 	return pgn, nil
 }
 
-func (u *userUC) GetOrder(ctx context.Context, userID string, pgn *pagination.Pagination) (*pagination.Pagination, error) {
-	totalRows, err := u.userRepo.GetTotalOrder(ctx, userID)
+func (u *userUC) GetOrder(ctx context.Context, userID, orderStatusID string, pgn *pagination.Pagination) (*pagination.Pagination, error) {
+	totalRows, err := u.userRepo.GetTotalOrder(ctx, userID, orderStatusID)
 	if err != nil {
 		return nil, err
 	}
@@ -235,10 +235,11 @@ func (u *userUC) GetOrder(ctx context.Context, userID string, pgn *pagination.Pa
 	pgn.TotalRows = totalRows
 	pgn.TotalPages = totalPages
 
-	orders, err := u.userRepo.GetOrders(ctx, userID, pgn)
+	orders, err := u.userRepo.GetOrders(ctx, userID, orderStatusID, pgn)
 	if err != nil {
 		return nil, err
 	}
+
 	pgn.Rows = orders
 	return pgn, nil
 }

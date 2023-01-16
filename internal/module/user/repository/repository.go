@@ -148,9 +148,9 @@ func (r *userRepo) GetTotalAddressDefault(ctx context.Context, userID, name stri
 	return total, nil
 }
 
-func (r *userRepo) GetTotalOrder(ctx context.Context, userID string) (int64, error) {
+func (r *userRepo) GetTotalOrder(ctx context.Context, userID, orderStatusID string) (int64, error) {
 	var total int64
-	if err := r.PSQL.QueryRowContext(ctx, GetTotalOrderQuery, userID).Scan(&total); err != nil {
+	if err := r.PSQL.QueryRowContext(ctx, GetTotalOrderQuery, userID, fmt.Sprintf("%%%s%%", orderStatusID)).Scan(&total); err != nil {
 		return 0, err
 	}
 
@@ -302,11 +302,13 @@ func (r *userRepo) GetAllAddresses(ctx context.Context, userID, name string, pgn
 	return addresses, nil
 }
 
-func (r *userRepo) GetOrders(ctx context.Context, userID string, pgn *pagination.Pagination) ([]*model.Order, error) {
+func (r *userRepo) GetOrders(ctx context.Context, userID, orderStatusID string, pgn *pagination.Pagination) ([]*model.Order, error) {
 	orders := make([]*model.Order, 0)
+
 	res, err := r.PSQL.QueryContext(
 		ctx, GetOrdersQuery,
 		userID,
+		fmt.Sprintf("%%%s%%", orderStatusID),
 		pgn.GetLimit(),
 		pgn.GetOffset())
 
@@ -357,10 +359,8 @@ func (r *userRepo) GetOrders(ctx context.Context, userID string, pgn *pagination
 		}
 
 		order.Detail = orderDetail
-
 		orders = append(orders, &order)
 	}
-
 	if res.Err() != nil {
 		return nil, err
 	}
