@@ -8,6 +8,7 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	"github.com/google/uuid"
 	"math"
 	"murakali/config"
 	"murakali/internal/constant"
@@ -25,7 +26,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/google/uuid"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -1173,6 +1173,7 @@ func (u *userUC) WalletStepUp(ctx context.Context, userID string, requestBody bo
 }
 
 func (u *userUC) CreateTransaction(ctx context.Context, userID string, requestBody body.CreateTransactionRequest) (string, error) {
+	// TODO: Add voucher promotion stock & validation
 	transactionData := &model.Transaction{}
 	orderResponses := make([]*body.OrderResponse, 0)
 
@@ -1218,82 +1219,96 @@ func (u *userUC) CreateTransaction(ctx context.Context, userID string, requestBo
 		transactionData.VoucherMarketplaceID = &voucherMarketplace.ID
 	}
 
-	for _, cart := range requestBody.CartItems {
-		orderData := &model.OrderModel{}
-		cartShop, err := u.userRepo.GetShopByID(ctx, cart.ShopID)
-		if err != nil {
-			if err == sql.ErrNoRows {
-				return "", httperror.New(http.StatusBadRequest, response.UnknownShop)
-			}
-			return "", err
-		}
-		var voucherShop *model.Voucher
-		var voucherShopID *uuid.UUID
-		if cart.VoucherShopID != "" {
-			voucherShop, err = u.userRepo.GetVoucherShopByID(ctx, cart.VoucherShopID, cartShop.ID.String())
-			if err != nil {
-				if err != sql.ErrNoRows {
-					return "", err
-				}
-			}
-			voucherShopID = &voucherShop.ID
-		}
-
-		courierShop, err := u.userRepo.GetCourierShopByID(ctx, cart.CourierID, cartShop.ID.String())
-		if err != nil {
-			return "", httperror.New(http.StatusBadRequest, response.SelectShippingCourier)
-		}
-		orderResponse := &body.OrderResponse{
-			Items: make([]*body.OrderItemResponse, 0),
-		}
-
-		for _, bodyProductDetail := range cart.ProductDetails {
-			productDetailData, err := u.userRepo.GetProductDetailByID(ctx, bodyProductDetail.ID)
-			if err != nil {
-				return "", err
-			}
-
-			cartData, err := u.userRepo.GetCartItemUser(ctx, userModel.ID.String(), productDetailData.ID.String())
-			if err != nil {
-				return "", httperror.New(http.StatusBadRequest, response.CartItemNotExist)
-			}
-
-			orderItem := &model.OrderItem{
-				ProductDetailID: productDetailData.ID,
-				Quantity:        bodyProductDetail.Quantity,
-				ItemPrice:       bodyProductDetail.SubPrice,
-				TotalPrice:      bodyProductDetail.SubPrice,
-			}
-			item := &body.OrderItemResponse{
-				Item:              orderItem,
-				ProductDetailData: productDetailData,
-				CartItemData:      cartData,
-			}
-			orderResponse.Items = append(orderResponse.Items, item)
-			orderData.TotalPrice += orderItem.TotalPrice
-		}
-		orderData.ShopID = cartShop.ID
-		orderData.UserID = userModel.ID
-		orderData.VoucherShopID = voucherShopID
-		orderData.CourierID = courierShop.ID
-		orderData.DeliveryFee = cart.CourierFee
-		orderData.OrderStatusID = 1
-
-		orderResponse.OrderData = orderData
-		transactionData.TotalPrice += orderData.TotalPrice + orderData.DeliveryFee
-
-		orderResponses = append(orderResponses, orderResponse)
-	}
-
-	transactionData.ExpiredAt.Valid = true
-	transactionData.ExpiredAt.Time = time.Now().Add(time.Hour * 24)
-
-	transactionResponse := &body.TransactionResponse{
-		TransactionData: transactionData,
-		OrderResponses:  orderResponses,
-	}
-
 	data, err := u.txRepo.WithTransactionReturnData(func(tx postgre.Transaction) (interface{}, error) {
+		for _, cart := range requestBody.CartItems {
+			orderData := &model.OrderModel{}
+			cartShop, err := u.userRepo.GetShopByID(ctx, cart.ShopID)
+			if err != nil {
+				if err == sql.ErrNoRows {
+					return nil, httperror.New(http.StatusBadRequest, response.UnknownShop)
+				}
+				return nil, err
+			}
+
+			var voucherShop *model.Voucher
+			var voucherShopID *uuid.UUID
+			if cart.VoucherShopID != "" {
+				voucherShop, err = u.userRepo.GetVoucherShopByID(ctx, cart.VoucherShopID, cartShop.ID.String())
+				if err != nil {
+					if err != sql.ErrNoRows {
+						return nil, err
+					}
+				}
+				voucherShopID = &voucherShop.ID
+			}
+
+			courierShop, err := u.userRepo.GetCourierShopByID(ctx, cart.CourierID, cartShop.ID.String())
+			if err != nil {
+				return nil, httperror.New(http.StatusBadRequest, response.SelectShippingCourier)
+			}
+			orderResponse := &body.OrderResponse{
+				Items: make([]*body.OrderItemResponse, 0),
+			}
+
+			isAvail := true
+			for _, bodyProductDetail := range cart.ProductDetails {
+				productDetailData, err := u.userRepo.GetProductDetailByID(ctx, tx, bodyProductDetail.ID)
+				if err != nil {
+					return nil, err
+				}
+
+				cartData, err := u.userRepo.GetCartItemUser(ctx, userModel.ID.String(), productDetailData.ID.String())
+				if err != nil {
+					return nil, httperror.New(http.StatusBadRequest, response.CartItemNotExist)
+				}
+
+				if int(productDetailData.Stock)-bodyProductDetail.Quantity < 0 {
+					isAvail = false
+					errCart := u.userRepo.DeleteCartItemByID(ctx, tx, cartData)
+					if errCart != nil {
+						return nil, errCart
+					}
+				}
+
+				orderItem := &model.OrderItem{
+					ProductDetailID: productDetailData.ID,
+					Quantity:        bodyProductDetail.Quantity,
+					ItemPrice:       bodyProductDetail.SubPrice,
+					TotalPrice:      bodyProductDetail.SubPrice,
+				}
+				item := &body.OrderItemResponse{
+					Item:              orderItem,
+					ProductDetailData: productDetailData,
+					CartItemData:      cartData,
+				}
+				orderResponse.Items = append(orderResponse.Items, item)
+				orderData.TotalPrice += orderItem.TotalPrice
+			}
+
+			if !isAvail {
+				return nil, httperror.New(http.StatusBadRequest, response.ProductQuantityNotAvailable)
+			}
+
+			orderData.ShopID = cartShop.ID
+			orderData.UserID = userModel.ID
+			orderData.VoucherShopID = voucherShopID
+			orderData.CourierID = courierShop.ID
+			orderData.DeliveryFee = cart.CourierFee
+			orderData.OrderStatusID = 1
+
+			orderResponse.OrderData = orderData
+			transactionData.TotalPrice += orderData.TotalPrice + orderData.DeliveryFee
+
+			orderResponses = append(orderResponses, orderResponse)
+		}
+
+		transactionData.ExpiredAt.Valid = true
+		transactionData.ExpiredAt.Time = time.Now().Add(time.Hour * 24)
+		transactionResponse := &body.TransactionResponse{
+			TransactionData: transactionData,
+			OrderResponses:  orderResponses,
+		}
+
 		transactionID, errTrans := u.userRepo.CreateTransaction(ctx, tx, transactionResponse.TransactionData)
 		if errTrans != nil {
 			return nil, errTrans

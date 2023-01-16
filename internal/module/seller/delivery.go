@@ -8,6 +8,7 @@ type Handlers interface {
 	GetOrderByOrderID(c *gin.Context)
 	GetCourierSeller(c *gin.Context)
 	GetSellerBySellerID(c *gin.Context)
+	GetSellerByUserID(c *gin.Context)
 	CreateCourierSeller(c *gin.Context)
 	DeleteCourierSellerByID(c *gin.Context)
 	GetCategoryBySellerID(c *gin.Context)

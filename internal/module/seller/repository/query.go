@@ -76,6 +76,12 @@ const (
 	JOIN "user" u ON u.id = s.user_id
 	WHERE s.id = $1 AND s.deleted_at is null`
 
+	GetShopDetailIDByUserIDQuery = `SELECT s.id, s.user_id, s.name, s.total_product,
+	 s.total_rating, s.rating_avg, s.created_at, u.photo_url 
+	FROM "shop" s 
+	JOIN "user" u ON u.id = s.user_id
+	WHERE s.user_id = $1 AND s.deleted_at is null`
+
 	GetCourierByIDQuery                            = `SELECT id FROM "courier" WHERE id = $1 AND deleted_at IS NULL`
 	GetShopIDByUserIDQuery                         = `SELECT id from "shop" WHERE user_id = $1 AND deleted_at IS NULL `
 	GetCourierSellerNotNullByShopAndCourierIDQuery = `SELECT id from "shop_courier" WHERE shop_id = $1 AND courier_id = $2 `

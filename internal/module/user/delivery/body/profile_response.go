@@ -3,6 +3,7 @@ package body
 import "time"
 
 type ProfileResponse struct {
+	ID          string    `json:"id"`
 	Role        int       `json:"role"`
 	UserName    *string   `json:"user_name"`
 	Email       string    `json:"email"`

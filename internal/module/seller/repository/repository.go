@@ -351,6 +351,24 @@ func (r *sellerRepo) GetSellerBySellerID(ctx context.Context, sellerID string) (
 	return &sellerData, nil
 }
 
+func (r *sellerRepo) GetSellerByUserID(ctx context.Context, sellerID string) (*body.SellerResponse, error) {
+	var sellerData body.SellerResponse
+	if err := r.PSQL.QueryRowContext(ctx, GetShopDetailIDByUserIDQuery, sellerID).Scan(
+		&sellerData.ID,
+		&sellerData.UserID,
+		&sellerData.Name,
+		&sellerData.TotalProduct,
+		&sellerData.TotalRating,
+		&sellerData.RatingAVG,
+		&sellerData.CreatedAt,
+		&sellerData.PhotoURL,
+	); err != nil {
+		return nil, err
+	}
+
+	return &sellerData, nil
+}
+
 func (r *sellerRepo) GetCategoryBySellerID(ctx context.Context, shopID string) ([]*body.CategoryResponse, error) {
 	categories := make([]*body.CategoryResponse, 0)
 

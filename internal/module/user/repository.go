@@ -58,7 +58,7 @@ type Repository interface {
 	GetShopByID(ctx context.Context, shopID string) (*model.Shop, error)
 	GetVoucherShopByID(ctx context.Context, VoucherShopID, shopID string) (*model.Voucher, error)
 	GetCourierShopByID(ctx context.Context, CourierID, shopID string) (*model.Courier, error)
-	GetProductDetailByID(ctx context.Context, productDetailID string) (*model.ProductDetail, error)
+	GetProductDetailByID(ctx context.Context, tx postgre.Transaction, productDetailID string) (*model.ProductDetail, error)
 	GetCartItemUser(ctx context.Context, userID, productDetailID string) (*model.CartItem, error)
 	CreateTransaction(ctx context.Context, tx postgre.Transaction, transactionData *model.Transaction) (*uuid.UUID, error)
 	UpdateTransaction(ctx context.Context, tx postgre.Transaction, transactionData *model.Transaction) error

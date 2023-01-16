@@ -732,6 +732,7 @@ func (h *userHandlers) GetUserProfile(c *gin.Context) {
 		return
 	}
 
+	profile.ID = userID.(string)
 	response.SuccessResponse(c.Writer, profile, http.StatusOK)
 }
 

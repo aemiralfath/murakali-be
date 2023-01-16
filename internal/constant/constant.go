@@ -34,12 +34,13 @@ const (
 	LoginOauth    = "/login"
 	RegisterOauth = "/register"
 
-	OrderStatusWaitingToPay      = 1
-	OrderStatusWaitingForSeller  = 2
-	OrderStatusWaitingForPacking = 3
-	OrderStatusOnDelivery        = 4
-	OrderStatusReceived          = 6
-	OrderStatusCompleted         = 5
-	OrderStatusCanceled          = 7
-	OrderStatusRefund            = 8
+	OrderStatusWaitingToPay     = 1
+	OrderStatusWaitingForSeller = 2
+	OrderStatusProcessed        = 3
+	OrderStatusOnDelivery       = 4
+	OrderStatusDelivered        = 6
+	OrderStatusReceived         = 5
+	OrderStatusCompleted        = 7
+	OrderStatusCanceled         = 8
+	OrderStatusRefunded         = 9
 )

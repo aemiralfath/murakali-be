@@ -155,6 +155,18 @@ func (u *sellerUC) GetSellerBySellerID(ctx context.Context, sellerID string) (*b
 	return sellerData, nil
 }
 
+func (u *sellerUC) GetSellerByUserID(ctx context.Context, userID string) (*body.SellerResponse, error) {
+	sellerData, err := u.sellerRepo.GetSellerByUserID(ctx, userID)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, httperror.New(http.StatusNotFound, body.SellerNotFoundMessage)
+		}
+		return nil, err
+	}
+
+	return sellerData, nil
+}
+
 func (u *sellerUC) CreateCourierSeller(ctx context.Context, userID, courierID string) error {
 	_, err := u.sellerRepo.GetCourierByID(ctx, courierID)
 	if err != nil {
@@ -214,6 +226,7 @@ func (u *sellerUC) DeleteCourierSellerByID(ctx context.Context, shopCourierID st
 	}
 	return nil
 }
+
 func (u *sellerUC) GetCategoryBySellerID(ctx context.Context, shopID string) ([]*body.CategoryResponse, error) {
 	categories, err := u.sellerRepo.GetCategoryBySellerID(ctx, shopID)
 	if err != nil {

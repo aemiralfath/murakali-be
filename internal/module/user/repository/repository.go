@@ -793,9 +793,9 @@ func (r *userRepo) GetCourierShopByID(ctx context.Context, courierID, shopID str
 	return &CourierShop, nil
 }
 
-func (r *userRepo) GetProductDetailByID(ctx context.Context, productDetailID string) (*model.ProductDetail, error) {
+func (r *userRepo) GetProductDetailByID(ctx context.Context, tx postgre.Transaction, productDetailID string) (*model.ProductDetail, error) {
 	var pd model.ProductDetail
-	if err := r.PSQL.QueryRowContext(ctx, GetProductDetailByIDQuery, productDetailID).Scan(
+	if err := tx.QueryRowContext(ctx, GetProductDetailByIDQuery, productDetailID).Scan(
 		&pd.ID,
 		&pd.Price,
 		&pd.Stock,
