@@ -911,6 +911,73 @@ func (u *userUC) GetRedirectURL(transaction *model.Transaction, sign string) (st
 	return res.Header.Get("Location"), nil
 }
 
+func (u *userUC) GetTransactionByUserID(ctx context.Context, UserID string, pgn *pagination.Pagination) (*pagination.Pagination, error) {
+
+	totalRows, err := u.userRepo.GetTotalTransactionByUserID(ctx, UserID)
+	if err != nil {
+		fmt.Println("coba error")
+		return nil, err
+	}
+
+	totalPages := int(math.Ceil(float64(totalRows) / float64(pgn.Limit)))
+	pgn.TotalRows = totalRows
+	pgn.TotalPages = totalPages
+
+	transactionsRes := make([]*body.GetTransactionByUserIDResponse, 0)
+	transactions, err := u.userRepo.GetTransactionByUserID(ctx, UserID, pgn)
+
+	if err != nil {
+		return nil, err
+	}
+
+	for _, transaction := range transactions {
+		res := &body.GetTransactionByUserIDResponse{
+			ID:         transaction.ID,
+			WalletID:   transaction.WalletID,
+			CardNumber: transaction.CardNumber,
+			Invoice:    transaction.Invoice,
+			TotalPrice: transaction.TotalPrice,
+			ExpiredAt:  transaction.ExpiredAt,
+		}
+
+		orders, err := u.userRepo.GetOrderByTransactionID(ctx, res.ID.String())
+		if err != nil {
+			return nil, err
+		}
+
+		res.VoucherMarketplace, err = u.userRepo.GetVoucherMarketplaceByID(ctx, res.ID.String())
+		if err != nil {
+			return nil, err
+		}
+
+		res.Orders = make([]*model.OrderModel, 0)
+		for _, order := range orders {
+			orderRes := &model.OrderModel{
+				ID:            order.ID,
+				TransactionID: order.TransactionID,
+				ShopID:        order.ShopID,
+				UserID:        order.UserID,
+				CourierID:     order.CourierID,
+				VoucherShopID: order.VoucherShopID,
+				OrderStatusID: order.OrderStatusID,
+				TotalPrice:    order.TotalPrice,
+				DeliveryFee:   order.DeliveryFee,
+				ResiNo:        order.ResiNo,
+				CreatedAt:     order.CreatedAt,
+				ArrivedAt:     order.ArrivedAt,
+			}
+
+			res.Orders = append(res.Orders, orderRes)
+		}
+
+		transactionsRes = append(transactionsRes, res)
+	}
+
+	pgn.Rows = transactionsRes
+
+	return pgn, nil
+}
+
 func (u *userUC) UpdateTransaction(ctx context.Context, transactionID string, requestBody body.SLPCallbackRequest) error {
 	transaction, err := u.userRepo.GetTransactionByID(ctx, transactionID)
 	if err != nil {

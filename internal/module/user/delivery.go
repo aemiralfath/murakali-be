@@ -21,6 +21,7 @@ type Handlers interface {
 	VerifyPasswordChange(c *gin.Context)
 	VerifyOTP(c *gin.Context)
 	ChangePassword(c *gin.Context)
+	GetTransactions(c *gin.Context)
 	CreateTransaction(c *gin.Context)
 	CreateSLPPayment(c *gin.Context)
 	SLPPaymentCallback(c *gin.Context)

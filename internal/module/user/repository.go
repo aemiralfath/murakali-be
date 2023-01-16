@@ -12,6 +12,8 @@ import (
 
 type Repository interface {
 	GetTransactionByID(ctx context.Context, transactionID string) (*model.Transaction, error)
+	GetTransactionByUserID(ctx context.Context, userID string, pgn *pagination.Pagination) ([]*model.Transaction, error)
+	GetTotalTransactionByUserID(ctx context.Context, userID string) (int64, error)
 	GetUserByID(ctx context.Context, id string) (*model.User, error)
 	GetTotalAddress(ctx context.Context, userID, name string) (int64, error)
 	GetTotalAddressDefault(ctx context.Context, userID, name string, isDefault, isShopDefault bool) (int64, error)

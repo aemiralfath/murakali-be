@@ -157,6 +157,18 @@ func (r *userRepo) GetTotalOrder(ctx context.Context, userID, orderStatusID stri
 	return total, nil
 }
 
+func (r *userRepo) GetTotalTransactionByUserID(ctx context.Context, userID string) (int64, error) {
+	var total int64
+	if err := r.PSQL.QueryRowContext(ctx, GetTotalTransactionByUserIDQuery, userID).Scan(&total); err != nil {
+		if err == sql.ErrNoRows {
+			return 0, nil
+		}
+		return 0, err
+	}
+
+	return total, nil
+}
+
 func (r *userRepo) UpdateAddress(ctx context.Context, tx postgre.Transaction, address *model.Address) error {
 	_, err := tx.ExecContext(ctx, UpdateAddressByIDQuery,
 		address.Name,
@@ -365,6 +377,45 @@ func (r *userRepo) GetOrders(ctx context.Context, userID, orderStatusID string, 
 		return nil, err
 	}
 	return orders, nil
+}
+
+func (r *userRepo) GetTransactionByUserID(ctx context.Context, userID string, pgn *pagination.Pagination) ([]*model.Transaction, error) {
+	transactions := make([]*model.Transaction, 0)
+
+	res, err := r.PSQL.QueryContext(
+		ctx, GetTransactionByUserIDQuery,
+		userID,
+		pgn.GetLimit(),
+		pgn.GetOffset())
+
+	if err != nil {
+		return nil, err
+	}
+	defer res.Close()
+
+	for res.Next() {
+		var transaction model.Transaction
+		if errScan := res.Scan(
+			&transaction.ID,
+			&transaction.VoucherMarketplaceID,
+			&transaction.WalletID,
+			&transaction.CardNumber,
+			&transaction.Invoice,
+			&transaction.TotalPrice,
+			&transaction.PaidAt,
+			&transaction.CanceledAt,
+			&transaction.ExpiredAt); errScan != nil {
+			return nil, err
+		}
+
+		transactions = append(transactions, &transaction)
+	}
+
+	if res.Err() != nil {
+		return nil, res.Err()
+	}
+
+	return transactions, nil
 }
 
 func (r *userRepo) GetTransactionByID(ctx context.Context, transactionID string) (*model.Transaction, error) {

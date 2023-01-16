@@ -42,6 +42,20 @@ const (
 	ORDER BY o.created_at asc LIMIT $3 OFFSET $4
 	`
 
+	GetTotalTransactionByUserIDQuery = `SELECT count(t.id) FROM "transaction" t, "order" o
+	WHERE t.id = o.transaction_id
+	AND o.user_id = $1
+	GROUP BY t.id`
+
+	GetTransactionByUserIDQuery = `
+	SELECT t.id,t.voucher_marketplace_id,t.wallet_id,t.card_number,t.invoice,t.total_price,t.expired_at
+	from "transaction" t, "order" o
+	WHERE t.id = o.transaction_id
+	AND o.user_id = $1
+	GROUP BY t.id
+	ORDER BY t.expired_at DESC LIMIT $2 OFFSET $3
+	`
+
 	GetOrderDetailQuery = `SELECT pd.id,pd.product_id,p.title,ph.url,oi.quantity,oi.item_price,oi.total_price
 	from  "product_detail" pd 
 	join "photo" ph on pd.id = ph.product_detail_id join "order_item" oi on pd.id = oi.product_detail_id 
