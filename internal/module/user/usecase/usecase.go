@@ -912,10 +912,8 @@ func (u *userUC) GetRedirectURL(transaction *model.Transaction, sign string) (st
 }
 
 func (u *userUC) GetTransactionByUserID(ctx context.Context, UserID string, pgn *pagination.Pagination) (*pagination.Pagination, error) {
-
 	totalRows, err := u.userRepo.GetTotalTransactionByUserID(ctx, UserID)
 	if err != nil {
-		fmt.Println("coba error")
 		return nil, err
 	}
 
@@ -925,7 +923,6 @@ func (u *userUC) GetTransactionByUserID(ctx context.Context, UserID string, pgn 
 
 	transactionsRes := make([]*body.GetTransactionByUserIDResponse, 0)
 	transactions, err := u.userRepo.GetTransactionByUserID(ctx, UserID, pgn)
-
 	if err != nil {
 		return nil, err
 	}
@@ -947,7 +944,9 @@ func (u *userUC) GetTransactionByUserID(ctx context.Context, UserID string, pgn 
 
 		res.VoucherMarketplace, err = u.userRepo.GetVoucherMarketplaceByID(ctx, res.ID.String())
 		if err != nil {
-			return nil, err
+			if err != sql.ErrNoRows {
+				return nil, err
+			}
 		}
 
 		res.Orders = make([]*model.OrderModel, 0)
@@ -1003,7 +1002,6 @@ func (u *userUC) GetTransactionByID(ctx context.Context, transactionID string) (
 	}
 
 	return res, nil
-
 }
 
 func (u *userUC) UpdateTransaction(ctx context.Context, transactionID string, requestBody body.SLPCallbackRequest) error {
