@@ -101,7 +101,7 @@ const (
 	AND shop_id = $3`
 
 	GetTotalVoucherSellerQuery = `
-	SELECT count(id) FROM "voucher" WHERE "shop_id" = $1 AND "deleted_at" IS NULL 
+	SELECT count(id) FROM "voucher" WHERE "shop_id" = $1
 	`
 	GetAllVoucherSellerQuery = `
 	SELECT "v"."id", "v"."shop_id", "v"."code", "v"."quota", "v"."actived_date", "v"."expired_date",
@@ -109,6 +109,6 @@ const (
 		"v"."created_at", "v"."updated_at",  "v"."deleted_at"
 	FROM "voucher" as "v"
 	INNER JOIN "shop" as "s" ON "s"."id" = "v"."shop_id"
-	WHERE "v"."shop_id" = $1 AND "v"."deleted_at" IS NULL
+	WHERE "v"."shop_id" = $1
 	`
 )
