@@ -33,7 +33,7 @@ type GetProductQueryRequest struct {
 }
 
 type GetProductRequest struct {
-	ProductID string `uri:"product_id" binding:"required"`
+	ProductID string `json:"product_id" binding:"required"`
 }
 
 func (r *GetProductRequest) Validate() (UnprocessableEntity, error) {
