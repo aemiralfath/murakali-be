@@ -28,7 +28,7 @@ type Repository interface {
 	UpdateDefaultShopAddress(ctx context.Context, tx postgre.Transaction, status bool, address *model.Address) error
 	DeleteAddress(ctx context.Context, addressID string) error
 	GetSealabsPay(ctx context.Context, userid string) ([]*model.SealabsPay, error)
-	AddSealabsPay(ctx context.Context, tx postgre.Transaction, request body.AddSealabsPayRequest, userid string) error
+	AddSealabsPayTrans(ctx context.Context, tx postgre.Transaction, request body.AddSealabsPayRequest, userid string) error
 	PatchSealabsPay(ctx context.Context, cardNumber string) error
 	CheckDefaultSealabsPay(ctx context.Context, userid string) (*string, error)
 	SetDefaultSealabsPayTrans(ctx context.Context, tx postgre.Transaction, cardNumber *string) error
@@ -76,4 +76,9 @@ type Repository interface {
 	InsertWalletHistory(ctx context.Context, tx postgre.Transaction, walletHistory *model.WalletHistory) error
 	UpdateWalletBalance(ctx context.Context, tx postgre.Transaction, wallet *model.Wallet) error
 	UpdateWallet(ctx context.Context, wallet *model.Wallet) error
+	CheckUserSealabsPay(ctx context.Context, userid string) (int, error)
+	CheckDeletedSealabsPay(ctx context.Context, cardNumber string) (int, error)
+	AddSealabsPay(ctx context.Context, request body.AddSealabsPayRequest, userid string) error
+	UpdateUserSealabsPay(ctx context.Context, request body.AddSealabsPayRequest, userid string) error
+	UpdateUserSealabsPayTrans(ctx context.Context, tx postgre.Transaction, request body.AddSealabsPayRequest, userid string) error
 }

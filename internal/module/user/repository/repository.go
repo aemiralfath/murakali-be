@@ -747,6 +747,26 @@ func (r *userRepo) PatchSealabsPay(ctx context.Context, cardNumber string) error
 	return nil
 }
 
+func (r *userRepo) CheckUserSealabsPay(ctx context.Context, userid string) (int, error) {
+	var temp int
+	if err := r.PSQL.QueryRowContext(ctx, CheckUserSealabsPayQuery, userid).
+		Scan(&temp); err != nil {
+		return 0, err
+	}
+
+	return temp, nil
+}
+
+func (r *userRepo) CheckDeletedSealabsPay(ctx context.Context, cardNumber string) (int, error) {
+	var temp int
+	if err := r.PSQL.QueryRowContext(ctx, CheckDeletedSealabsPayQuery, cardNumber).
+		Scan(&temp); err != nil {
+		return 0, err
+	}
+
+	return temp, nil
+}
+
 func (r *userRepo) DeleteSealabsPay(ctx context.Context, cardNumber string) error {
 	if _, err := r.PSQL.ExecContext(ctx, DeleteSealabsPayQuery, cardNumber); err != nil {
 		return err
@@ -770,9 +790,34 @@ func (r *userRepo) SetDefaultSealabsPay(ctx context.Context, cardNumber, userid 
 	return nil
 }
 
-func (r *userRepo) AddSealabsPay(ctx context.Context, tx postgre.Transaction, request body.AddSealabsPayRequest, userid string) error {
+func (r *userRepo) AddSealabsPayTrans(ctx context.Context, tx postgre.Transaction, request body.AddSealabsPayRequest, userid string) error {
 	if _, err := tx.ExecContext(ctx, CreateSealabsPayQuery, request.CardNumber, userid,
 		request.Name, request.IsDefault, request.ActiveDateTime); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (r *userRepo) UpdateUserSealabsPayTrans(ctx context.Context, tx postgre.Transaction, request body.AddSealabsPayRequest, userid string) error {
+	if _, err := tx.ExecContext(ctx, UpdateUserSealabsPayQuery, userid, request.Name, request.CardNumber); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (r *userRepo) AddSealabsPay(ctx context.Context, request body.AddSealabsPayRequest, userid string) error {
+	if _, err := r.PSQL.ExecContext(ctx, CreateSealabsPayQuery, request.CardNumber, userid,
+		request.Name, request.IsDefault, request.ActiveDateTime); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (r *userRepo) UpdateUserSealabsPay(ctx context.Context, request body.AddSealabsPayRequest, userid string) error {
+	if _, err := r.PSQL.ExecContext(ctx, UpdateUserSealabsPayQuery, userid, request.Name, request.CardNumber); err != nil {
 		return err
 	}
 

@@ -695,7 +695,6 @@ func (h *userHandlers) PatchSealabsPay(c *gin.Context) {
 
 func (h *userHandlers) DeleteSealabsPay(c *gin.Context) {
 	cardNumber := c.Param("cardNumber")
-
 	var requestBody body.SlpCardRequest
 	requestBody.CardNumber = cardNumber
 

@@ -444,7 +444,7 @@ func (u *userUC) SendLinkOTPEmail(ctx context.Context, email string) error {
 	h.Write([]byte(otp))
 	hashedOTP := fmt.Sprintf("%x", h.Sum(nil))
 
-	link := fmt.Sprintf("http://%s/verify/email?code=%s&email=%s", u.cfg.Server.Origin, hashedOTP, email)
+	link := fmt.Sprintf("%s/verify/email?code=%s&email=%s", u.cfg.Server.Origin, hashedOTP, email)
 
 	subject := "Change email!"
 	msg := smtp.VerificationEmailLinkOTPBody(link)
@@ -463,27 +463,67 @@ func (u *userUC) GetSealabsPay(ctx context.Context, userid string) ([]*model.Sea
 }
 
 func (u *userUC) AddSealabsPay(ctx context.Context, request body.AddSealabsPayRequest, userid string) error {
-	cardNumber, err := u.userRepo.CheckDefaultSealabsPay(ctx, userid)
-	if err != nil && err != sql.ErrNoRows {
-		return err
-	}
-	if *cardNumber == request.CardNumber {
-		return httperror.New(http.StatusBadRequest, response.SealabsCardAlreadyExist)
-	}
-
-	err = u.txRepo.WithTransaction(func(tx postgre.Transaction) error {
-		if u.userRepo.SetDefaultSealabsPayTrans(ctx, tx, cardNumber) != nil {
-			return err
-		}
-
-		err = u.userRepo.AddSealabsPay(ctx, tx, request, userid)
-		if err != nil {
-			return err
-		}
-		return nil
-	})
+	slpCount, err := u.userRepo.CheckUserSealabsPay(ctx, userid)
 	if err != nil {
 		return err
+	}
+	cardCount, err := u.userRepo.CheckDeletedSealabsPay(ctx, request.CardNumber)
+	if err != nil {
+		return err
+	}
+
+	if slpCount == 0 {
+		if cardCount == 0 {
+			err = u.userRepo.AddSealabsPay(ctx, request, userid)
+			if err != nil {
+				return err
+			}
+		} else {
+			err = u.userRepo.UpdateUserSealabsPay(ctx, request, userid)
+			if err != nil {
+				return err
+			}
+		}
+	} else {
+		cardNumber, err := u.userRepo.CheckDefaultSealabsPay(ctx, userid)
+		if err != nil && err != sql.ErrNoRows {
+			return err
+		}
+		if *cardNumber == request.CardNumber {
+			return httperror.New(http.StatusBadRequest, response.SealabsCardAlreadyExist)
+		}
+
+		if cardCount == 0 {
+			err = u.txRepo.WithTransaction(func(tx postgre.Transaction) error {
+				if u.userRepo.SetDefaultSealabsPayTrans(ctx, tx, cardNumber) != nil {
+					return err
+				}
+
+				err = u.userRepo.AddSealabsPayTrans(ctx, tx, request, userid)
+				if err != nil {
+					return err
+				}
+				return nil
+			})
+			if err != nil {
+				return httperror.New(http.StatusBadRequest, response.SealabsCardAlreadyExist)
+			}
+		} else {
+			err = u.txRepo.WithTransaction(func(tx postgre.Transaction) error {
+				if u.userRepo.SetDefaultSealabsPayTrans(ctx, tx, cardNumber) != nil {
+					return err
+				}
+
+				err = u.userRepo.UpdateUserSealabsPayTrans(ctx, tx, request, userid)
+				if err != nil {
+					return err
+				}
+				return nil
+			})
+			if err != nil {
+				return err
+			}
+		}
 	}
 	return nil
 }
@@ -629,7 +669,7 @@ func (u *userUC) VerifyPasswordChange(ctx context.Context, userID string) error 
 }
 
 func (u *userUC) SendOTPEmail(ctx context.Context, email string) error {
-	otp, err := util.GenerateOTP(6)
+	otp, err := util.GenerateRandomAlpaNumeric(6)
 	if err != nil {
 		return err
 	}

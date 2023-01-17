@@ -9,6 +9,7 @@ import (
 	"murakali/pkg/httperror"
 	"murakali/pkg/jwt"
 	"murakali/pkg/logger"
+	"murakali/pkg/oauth"
 	"murakali/pkg/response"
 	"net/http"
 	"regexp"
@@ -345,4 +346,60 @@ func (h *authHandlers) CheckUniquePhoneNo(c *gin.Context) {
 	}
 
 	response.SuccessResponse(c.Writer, exist, http.StatusOK)
+}
+
+func (h *authHandlers) GoogleAuth(c *gin.Context) {
+	code := c.Query("code")
+
+	pathURL := "/"
+	if c.Query("state") != "" {
+		pathURL = c.Query("state")
+	}
+
+	errResponse := struct {
+		PathURL string `json:"path_url"`
+	}{PathURL: pathURL}
+
+	if code == "" {
+		response.ErrorResponseData(c.Writer, errResponse, response.ForbiddenMessage, http.StatusForbidden)
+		return
+	}
+
+	tokenRes, err := oauth.GetGoogleOauthToken(h.cfg, code)
+	if err != nil {
+		response.ErrorResponseData(c.Writer, errResponse, response.ForbiddenMessage, http.StatusForbidden)
+		return
+	}
+
+	user, err := oauth.GetGoogleUser(tokenRes.AccessToken, tokenRes.IDToken)
+	if err != nil {
+		response.ErrorResponseData(c.Writer, errResponse, response.ForbiddenMessage, http.StatusForbidden)
+		return
+	}
+
+	token, err := h.authUC.GoogleAuth(c, pathURL, user)
+	if err != nil {
+		var e *httperror.Error
+		if !errors.As(err, &e) {
+			h.logger.Errorf("HandlerAuth, Error: %s", err)
+			response.ErrorResponseData(c.Writer, errResponse, response.InternalServerErrorMessage, http.StatusInternalServerError)
+			return
+		}
+
+		response.ErrorResponseData(c.Writer, errResponse, e.Err.Error(), e.Status)
+		return
+	}
+
+	c.SetSameSite(http.SameSiteNoneMode)
+
+	if token.RegisterToken != nil {
+		c.SetCookie(constant.RegisterTokenCookie, *token.RegisterToken, h.cfg.JWT.RefreshExpMin*60, "/", h.cfg.Server.Domain, true, true)
+		response.SuccessResponse(c.Writer, nil, http.StatusOK)
+		return
+	}
+
+	c.SetCookie(constant.RefreshTokenCookie, token.Token.RefreshToken.Token, h.cfg.JWT.RefreshExpMin*60, "/", h.cfg.Server.Domain, true, true)
+	response.SuccessResponse(c.Writer, body.LoginResponse{
+		AccessToken: token.Token.AccessToken.Token,
+		ExpiredAt:   token.Token.AccessToken.ExpiredAt}, http.StatusOK)
 }
