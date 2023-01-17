@@ -30,4 +30,6 @@ type Repository interface {
 	GetAddressByBuyerID(ctx context.Context, userID string) (*model.Address, error)
 	GetAddressBySellerID(ctx context.Context, userID string) (*model.Address, error)
 	UpdateResiNumberInOrderSeller(ctx context.Context, noResi, orderID, shopID string) error
+	GetAllVoucherSeller(ctx context.Context, shopID string) ([]*model.Voucher, error)
+	GetTotalVoucherSeller(ctx context.Context, shopID string) (int64, error)
 }

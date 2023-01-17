@@ -20,4 +20,5 @@ func MapSellerRoutes(sellerGroup *gin.RouterGroup, h seller.Handlers, mw *middle
 	sellerGroup.POST("/courier", h.CreateCourierSeller)
 	sellerGroup.DELETE("/courier/:id", h.DeleteCourierSellerByID)
 	sellerGroup.PATCH("/order-resi/:id", h.UpdateResiNumberInOrderSeller)
+	sellerGroup.GET("/voucher", h.GetAllVoucherSeller)
 }

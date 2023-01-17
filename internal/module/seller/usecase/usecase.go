@@ -242,3 +242,31 @@ func (u *sellerUC) UpdateResiNumberInOrderSeller(ctx context.Context, userID, or
 
 	return nil
 }
+
+func (u *sellerUC) GetAllVoucherSeller(ctx context.Context, userID string, pgn *pagination.Pagination) (*pagination.Pagination, error) {
+	shopID, err := u.sellerRepo.GetShopIDByUserID(ctx, userID)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, httperror.New(http.StatusBadRequest, response.ShopAddressNotFound)
+		}
+		return nil, err
+	}
+
+	totalRows, err := u.sellerRepo.GetTotalVoucherSeller(ctx, shopID)
+	if err != nil {
+		return nil, err
+	}
+
+	totalPages := int(math.Ceil(float64(totalRows) / float64(pgn.Limit)))
+	pgn.TotalRows = totalRows
+	pgn.TotalPages = totalPages
+
+	ShopVouchers, err := u.sellerRepo.GetAllVoucherSeller(ctx, shopID)
+	if err != nil {
+		return nil, err
+	}
+
+	pgn.Rows = ShopVouchers
+
+	return pgn, nil
+}

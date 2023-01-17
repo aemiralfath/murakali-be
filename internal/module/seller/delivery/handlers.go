@@ -319,3 +319,51 @@ func (h *sellerHandlers) UpdateResiNumberInOrderSeller(c *gin.Context) {
 
 	response.SuccessResponse(c.Writer, nil, http.StatusOK)
 }
+
+func (h *sellerHandlers) GetAllVoucherSeller(c *gin.Context) {
+
+	userID, exist := c.Get("userID")
+	if !exist {
+		response.ErrorResponse(c.Writer, response.UnauthorizedMessage, http.StatusUnauthorized)
+		return
+	}
+
+	pgn := &pagination.Pagination{}
+	h.ValidateQueryPagination(c, pgn)
+	
+	shopVouchers, err := h.sellerUC.GetAllVoucherSeller(c, userID.(string), pgn)
+	if err != nil {
+		var e *httperror.Error
+		if !errors.As(err, &e) {
+			h.logger.Errorf("HandlerUser, Error: %s", err)
+			response.ErrorResponse(c.Writer, response.InternalServerErrorMessage, http.StatusInternalServerError)
+			return
+		}
+
+		response.ErrorResponse(c.Writer, e.Err.Error(), e.Status)
+		return
+	}
+
+	response.SuccessResponse(c.Writer, shopVouchers, http.StatusOK)
+}
+
+func (h *sellerHandlers) ValidateQueryPagination(c *gin.Context, pgn *pagination.Pagination) {
+	limit := strings.TrimSpace(c.Query("limit"))
+	page := strings.TrimSpace(c.Query("page"))
+
+	var limitFilter int
+	var pageFilter int
+
+	limitFilter, err := strconv.Atoi(limit)
+	if err != nil || limitFilter < 1 {
+		limitFilter = 10
+	}
+
+	pageFilter, err = strconv.Atoi(page)
+	if err != nil || pageFilter < 1 {
+		pageFilter = 1
+	}
+
+	pgn.Limit = limitFilter
+	pgn.Page = pageFilter
+}

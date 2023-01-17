@@ -17,4 +17,5 @@ type UseCase interface {
 	DeleteCourierSellerByID(ctx context.Context, shopCourierID string) error
 	GetCategoryBySellerID(ctx context.Context, shopID string) ([]*body.CategoryResponse, error)
 	UpdateResiNumberInOrderSeller(ctx context.Context, userID, orderID string, requestBody body.UpdateNoResiOrderSellerRequest) error
+	GetAllVoucherSeller(ctx context.Context, userID string, pgn *pagination.Pagination) (*pagination.Pagination, error)
 }

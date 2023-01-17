@@ -97,6 +97,18 @@ const (
 	group by c.id`
 
 	UpdateResiNumberInOrderSellerQuery = `UPDATE
-	 "order" set resi_no = $1 WHERE id = $2 
-	 AND shop_id = $3`
+	"order" set resi_no = $1 WHERE id = $2 
+	AND shop_id = $3`
+
+	GetTotalVoucherSellerQuery = `
+	SELECT count(id) FROM "voucher" WHERE "shop_id" = $1 AND "deleted_at" IS NULL 
+	`
+	GetAllVoucherSellerQuery = `
+	SELECT "v"."id", "v"."shop_id", "v"."code", "v"."quota", "v"."actived_date", "v"."expired_date",
+		"v"."discount_percentage", "v"."discount_fix_price", "v"."min_product_price", "v"."max_discount_price",
+		"v"."created_at", "v"."updated_at",  "v"."deleted_at"
+	FROM "voucher" as "v"
+	INNER JOIN "shop" as "s" ON "s"."id" = "v"."shop_id"
+	WHERE "v"."shop_id" = $1 AND "v"."deleted_at" IS NULL
+	`
 )
