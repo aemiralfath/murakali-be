@@ -292,8 +292,9 @@ const (
 	"title" =$2,"description"=$3,
 	"thumbnail_url"= $4,
 	"min_price"=$5,
-	"max_price"=$6
-	WHERE "id" = $7`
+	"max_price"=$6,
+	"listed_status"=$7
+	WHERE "id" = $8`
 
 	UpdateProductDetailQuery = `UPDATE 
 	"product_detail" SET 

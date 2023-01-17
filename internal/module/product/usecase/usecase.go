@@ -492,14 +492,15 @@ func (u *productUC) CreateProduct(ctx context.Context, requestBody body.CreatePr
 		}
 
 		var tempBodyProduct = body.CreateProductInfoForQuery{
-			Title:       requestBody.ProductInfo.Title,
-			Description: requestBody.ProductInfo.Description,
-			Thumbnail:   requestBody.ProductInfo.Thumbnail,
-			CategoryID:  requestBody.ProductInfo.CategoryID,
-			MinPrice:    minPriceTemp,
-			MaxPrice:    maxPriceTemp,
-			ShopID:      shopID,
-			SKU:         util.SKUGenerator(requestBody.ProductInfo.Title),
+			Title:        requestBody.ProductInfo.Title,
+			Description:  requestBody.ProductInfo.Description,
+			Thumbnail:    requestBody.ProductInfo.Thumbnail,
+			CategoryID:   requestBody.ProductInfo.CategoryID,
+			ListedStatus: requestBody.ProductInfo.ListedStatus,
+			MinPrice:     minPriceTemp,
+			MaxPrice:     maxPriceTemp,
+			ShopID:       shopID,
+			SKU:          util.SKUGenerator(requestBody.ProductInfo.Title),
 		}
 
 		productID, err := u.productRepo.CreateProduct(ctx, tx, tempBodyProduct)
@@ -562,11 +563,38 @@ func (u *productUC) UpdateListedStatus(ctx context.Context, productID string) er
 		tempListedStatus = true
 	}
 
-	if err := u.productRepo.UpdateListedStatus(ctx, tempListedStatus, productID); err != nil {
-		if err == sql.ErrNoRows {
-			return httperror.New(http.StatusNotFound, body.UpdateProductFailed)
+	errTx := u.txRepo.WithTransaction(func(tx postgre.Transaction) error {
+		if err := u.productRepo.UpdateListedStatus(ctx, tx, tempListedStatus, productID); err != nil {
+			if err == sql.ErrNoRows {
+				return httperror.New(http.StatusNotFound, body.UpdateProductFailed)
+			}
+			return err
 		}
-		return err
+		return nil
+	})
+
+	if errTx != nil {
+		return errTx
+	}
+	return nil
+}
+
+func (u *productUC) UpdateProductListedStatusBulk(ctx context.Context, product body.UpdateProductListedStatusBulkRequest) error {
+	errTx := u.txRepo.WithTransaction(func(tx postgre.Transaction) error {
+		for i := 0; i < len(product.ProductIDS); i++ {
+			if err := u.productRepo.UpdateListedStatus(ctx, tx, product.ListedStatus, product.ProductIDS[i]); err != nil {
+				if err == sql.ErrNoRows {
+					return httperror.New(http.StatusNotFound, body.UpdateProductFailed)
+				}
+				return err
+			}
+		}
+		return nil
+
+	})
+
+	if errTx != nil {
+		return errTx
 	}
 	return nil
 }
@@ -633,12 +661,13 @@ func (u *productUC) UpdateProduct(ctx context.Context, requestBody body.UpdatePr
 			return errMaxMin
 		}
 		var tempBodyProduct = body.UpdateProductInfoForQuery{
-			Title:       requestBody.ProductInfo.Title,
-			Description: requestBody.ProductInfo.Description,
-			Thumbnail:   requestBody.ProductInfo.Thumbnail,
-			CategoryID:  requestBody.ProductInfo.CategoryID,
-			MinPrice:    minPriceTemp,
-			MaxPrice:    maxPriceTemp,
+			Title:        requestBody.ProductInfo.Title,
+			Description:  requestBody.ProductInfo.Description,
+			Thumbnail:    requestBody.ProductInfo.Thumbnail,
+			CategoryID:   requestBody.ProductInfo.CategoryID,
+			ListedStatus: requestBody.ProductInfo.ListedStatus,
+			MinPrice:     minPriceTemp,
+			MaxPrice:     maxPriceTemp,
 		}
 		err := u.productRepo.UpdateProduct(ctx, tx, tempBodyProduct, productID)
 		if err != nil {

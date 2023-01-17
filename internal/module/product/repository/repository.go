@@ -7,8 +7,11 @@ import (
 	"murakali/internal/model"
 	"murakali/internal/module/product"
 	"murakali/internal/module/product/delivery/body"
+	"murakali/pkg/httperror"
 	"murakali/pkg/pagination"
 	"murakali/pkg/postgre"
+	"murakali/pkg/response"
+	"net/http"
 
 	"github.com/go-redis/redis/v8"
 	"github.com/google/uuid"
@@ -766,7 +769,7 @@ func (r *productRepo) CreateProduct(ctx context.Context, tx postgre.Transaction,
 		0,
 		0,
 		0,
-		true,
+		requestBody.ListedStatus,
 		requestBody.Thumbnail,
 		0,
 		requestBody.MinPrice,
@@ -850,10 +853,15 @@ func (r *productRepo) GetListedStatus(ctx context.Context, productID string) (bo
 	return listedStatus, nil
 }
 
-func (r *productRepo) UpdateListedStatus(ctx context.Context, listedStatus bool, productID string) error {
-	_, err := r.PSQL.ExecContext(ctx, UpdateListedStatusQuery, listedStatus, productID)
+func (r *productRepo) UpdateListedStatus(ctx context.Context, tx postgre.Transaction, listedStatus bool, productID string) error {
+	temp, err := tx.ExecContext(ctx, UpdateListedStatusQuery, listedStatus, productID)
 	if err != nil {
 		return err
+	}
+
+	rowsAffected, _ := temp.RowsAffected()
+	if rowsAffected == 0 {
+		return httperror.New(http.StatusNotFound, response.ProductNotExistMessage)
 	}
 	return nil
 }
@@ -866,6 +874,7 @@ func (r *productRepo) UpdateProduct(ctx context.Context, tx postgre.Transaction,
 		requestBody.Thumbnail,
 		requestBody.MinPrice,
 		requestBody.MaxPrice,
+		requestBody.ListedStatus,
 		productID)
 	if err != nil {
 		return err
