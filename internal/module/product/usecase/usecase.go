@@ -627,8 +627,8 @@ func (u *productUC) UpdateProduct(ctx context.Context, requestBody body.UpdatePr
 				}
 			}
 		}
-
-		maxPriceTemp, minPriceTemp, errMaxMin := u.productRepo.GetMaxMinPriceByID(ctx, productID)
+		var rangePrice *body.RangePrice
+		rangePrice, errMaxMin := u.productRepo.GetMaxMinPriceByID(ctx, productID)
 		if errMaxMin != nil {
 			return errMaxMin
 		}
@@ -637,8 +637,8 @@ func (u *productUC) UpdateProduct(ctx context.Context, requestBody body.UpdatePr
 			Description: requestBody.ProductInfo.Description,
 			Thumbnail:   requestBody.ProductInfo.Thumbnail,
 			CategoryID:  requestBody.ProductInfo.CategoryID,
-			MinPrice:    minPriceTemp,
-			MaxPrice:    maxPriceTemp,
+			MinPrice:    rangePrice.MinPrice,
+			MaxPrice:    rangePrice.MaxPrice,
 		}
 		err := u.productRepo.UpdateProduct(ctx, tx, tempBodyProduct, productID)
 		if err != nil {

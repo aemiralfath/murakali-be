@@ -132,8 +132,9 @@ func (h *userHandlers) ValidateQuery(c *gin.Context) *pagination.Pagination {
 		pageFilter = 1
 	}
 
-	if sort == "ASC" || sort == "asc" {
-		sortFilter = "ASC"
+	sort = strings.ToLower(sort)
+	if sort == constant.ASC {
+		sortFilter = constant.ASC
 	}
 
 	pgn := &pagination.Pagination{

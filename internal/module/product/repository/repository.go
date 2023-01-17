@@ -915,12 +915,12 @@ func (r *productRepo) DeleteVariant(ctx context.Context, tx postgre.Transaction,
 	return nil
 }
 
-func (r *productRepo) GetMaxMinPriceByID(ctx context.Context, productID string) (float64, float64, error) {
-	var max, min float64
-	if err := r.PSQL.QueryRowContext(ctx, GetMaxMinPriceQuery, productID).Scan(&max, &min); err != nil {
-		return 0, 0, err
+func (r *productRepo) GetMaxMinPriceByID(ctx context.Context, productID string) (*body.RangePrice, error) {
+	var rangePrice body.RangePrice
+	if err := r.PSQL.QueryRowContext(ctx, GetMaxMinPriceQuery, productID).Scan(&rangePrice.MaxPrice, &rangePrice.MinPrice); err != nil {
+		return nil, err
 	}
-	return max, min, nil
+	return &rangePrice, nil
 }
 
 func (r *productRepo) UpdateVariant(ctx context.Context, tx postgre.Transaction, variantID, variantDetailID string) error {
