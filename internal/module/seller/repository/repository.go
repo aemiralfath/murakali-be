@@ -559,3 +559,54 @@ func (r *sellerRepo) GetAllVoucherSellerByIDandShopID(ctx context.Context, vouch
 
 	return &voucher, nil
 }
+
+func (r *sellerRepo) GetAllPromotionSeller(ctx context.Context, shopID string) ([]*body.PromotionSellerResponse, error) {
+	var promotionSeller []*body.PromotionSellerResponse
+	res, err := r.PSQL.QueryContext(ctx, GetAllPromotionSellerQuery, shopID)
+	if err != nil {
+		return nil, err
+	}
+	defer res.Close()
+
+	for res.Next() {
+		var promotion body.PromotionSellerResponse
+
+		if errScan := res.Scan(
+			&promotion.ID,
+			&promotion.PromotionName,
+			&promotion.ProductID,
+			&promotion.ProductName,
+			&promotion.ProductThumbnailURL,
+			&promotion.DiscountPercentage,
+			&promotion.DiscountFixPrice,
+			&promotion.MinProductPrice,
+			&promotion.MaxDiscountPrice,
+			&promotion.Quota,
+			&promotion.MaxQuantity,
+			&promotion.ActivedDate,
+			&promotion.ExpiredDate,
+			&promotion.CreatedAt,
+			&promotion.UpdatedAt,
+			&promotion.DeletedAt,
+		); errScan != nil {
+			return nil, err
+		}
+
+		promotionSeller = append(promotionSeller, &promotion)
+	}
+
+	if res.Err() != nil {
+		return nil, err
+	}
+
+	return promotionSeller, nil
+}
+
+func (r *sellerRepo) GetTotalPromotionSeller(ctx context.Context, shopID string) (int64, error) {
+	var total int64
+	if err := r.PSQL.QueryRowContext(ctx, GetTotalPromotionSellerQuery, shopID).Scan(&total); err != nil {
+		return -1, err
+	}
+
+	return total, nil
+}

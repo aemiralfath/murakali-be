@@ -131,4 +131,20 @@ const (
 			"discount_fix_price" = $5, "min_product_price" = $6, "max_discount_price" = $7, "updated_at" = now()
 		WHERE "id" = $8
 	`
+	GetAllPromotionSellerQuery = `
+	SELECT "promo"."id", "promo"."name", "p"."id", "p"."title", "p"."thumbnail_url", "promo"."discount_percentage",
+		"promo"."discount_fix_price", "promo"."min_product_price", "promo"."max_discount_price", "promo"."quota", "promo"."max_quantity", 
+		"promo"."actived_date", "promo"."expired_date", "promo"."created_at", "promo"."updated_at", "promo"."deleted_at"
+	FROM "promotion" as "promo"
+	INNER JOIN "product" as "p" ON "p"."id" = "promo"."product_id"
+	INNER JOIN "shop" as "s" ON "s"."id" = "p"."shop_id"
+	WHERE "s"."id" = $1
+	`
+
+	GetTotalPromotionSellerQuery = `
+	SELECT count("promo"."id") FROM "promotion" as "promo" 
+	INNER JOIN "product" as "p" ON "p"."id" = "promo"."product_id"
+	INNER JOIN "shop" as "s" ON "s"."id" = "p"."shop_id"
+	WHERE "s"."id" = $1
+	`
 )

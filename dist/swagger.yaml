@@ -1898,6 +1898,23 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/DefaultSuccess"
+
+  "/api/v1/seller/promotion":
+    get:
+      summary: Get All Seller Voucher 
+      description: >-
+        Get All Seller Voucher
+      tags:
+        - Seller
+      security:
+        - BEARER: []
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GetAllPromotionSellerResponse"
                 
 components:
   schemas:
@@ -4808,6 +4825,40 @@ components:
           deleted_at:
             Time: '0001-01-01T00:00:00Z'
             Valid: false
+
+    GetAllPromotionSellerResponse:
+      title: UpdateVoucherSellerRequest
+      type: object
+      description: Update voucher seller request data model.
+      properties:
+      example:
+        message: success
+        data:
+          limit: 10
+          page: 1
+          total_rows: 1
+          total_pages: 1
+          rows:
+          - id: a8f690aa-8838-4a2d-ba60-cf25f9d943cf
+            promotion_name: promo murah
+            product_id: 53874e1e-3c1e-4f46-84fd-2863efb15bcb
+            product_name: PAxYvNY
+            product_thumbnail_url: https://cf.shopee.co.id/file/76a0969b7d64065bc13493bf55df1849_tn
+            discount_percentage: 25
+            discount_fix_price: 0
+            min_product_price: 50000
+            max_discount_price: 30000
+            quota: 10
+            max_quantity: 1
+            actived_date: '2022-12-21T07:00:00Z'
+            expired_date: '2023-02-01T07:00:00Z'
+            created_at: '2023-01-16T12:36:27.068087Z'
+            updated_at:
+              Time: '0001-01-01T00:00:00Z'
+              Valid: false
+            deleted_at:
+              Time: '0001-01-01T00:00:00Z'
+              Valid: false
 
 
     CheckUniqueTrueSuccess:

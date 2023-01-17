@@ -36,4 +36,6 @@ type Repository interface {
 	UpdateVoucherSeller(ctx context.Context, voucherShop *model.Voucher) error
 	DeleteVoucherSeller(ctx context.Context, voucherIDShopID *body.VoucherIDShopID) error
 	GetAllVoucherSellerByIDandShopID(ctx context.Context, voucherIDShopID *body.VoucherIDShopID) (*model.Voucher, error)
+	GetAllPromotionSeller(ctx context.Context, shopID string) ([]*body.PromotionSellerResponse, error)
+	GetTotalPromotionSeller(ctx context.Context, shopID string) (int64, error)
 }
