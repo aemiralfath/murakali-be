@@ -437,7 +437,8 @@ func (r *userRepo) GetWalletByUserID(ctx context.Context, userID string) (*model
 	return &walletModel, nil
 }
 
-func (r *userRepo) GetWalletHistoryByWalletID(ctx context.Context, pgn *pagination.Pagination, walletID string) ([]*body.HistoryWalletResponse, error) {
+func (r *userRepo) GetWalletHistoryByWalletID(ctx context.Context, pgn *pagination.Pagination,
+	walletID string) ([]*body.HistoryWalletResponse, error) {
 	queryOrderBySomething := fmt.Sprintf(OrderBySomething, pgn.GetSort(), pgn.GetLimit(),
 		pgn.GetOffset())
 

@@ -321,7 +321,6 @@ func (h *sellerHandlers) UpdateResiNumberInOrderSeller(c *gin.Context) {
 }
 
 func (h *sellerHandlers) GetAllVoucherSeller(c *gin.Context) {
-
 	userID, exist := c.Get("userID")
 	if !exist {
 		response.ErrorResponse(c.Writer, response.UnauthorizedMessage, http.StatusUnauthorized)
@@ -330,7 +329,7 @@ func (h *sellerHandlers) GetAllVoucherSeller(c *gin.Context) {
 
 	pgn := &pagination.Pagination{}
 	h.ValidateQueryPagination(c, pgn)
-	
+
 	shopVouchers, err := h.sellerUC.GetAllVoucherSeller(c, userID.(string), pgn)
 	if err != nil {
 		var e *httperror.Error

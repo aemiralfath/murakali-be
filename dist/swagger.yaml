@@ -1797,6 +1797,23 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/DefaultSuccess"
+
+  "/api/v1/seller/voucher":
+    get:
+      summary: Get All Seller Voucher 
+      description: >-
+        Get All Seller Voucher
+      tags:
+        - Seller
+      security:
+        - BEARER: []
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GetAllSellerVoucherResponse"
 components:
   schemas:
     LoginRequest:
@@ -4617,6 +4634,38 @@ components:
         resi_no:
           type: string
           example: "2131231231231232142"
+
+    GetAllSellerVoucherResponse:
+      title: GetAllSellerVoucherResponse
+      type: object
+      description: Get All Seller Voucher Response data model.
+      properties:
+      example:
+        message: success
+        data:
+          limit: 10
+          page: 1
+          total_rows: 1
+          total_pages: 1
+          rows:
+          - id: 59bfcd74-e278-4c70-a889-d9c8515bf71c
+            shop_id: e8854443-c2c7-488e-93d5-b9d93708b8a3
+            code: ASD123
+            quota: 11
+            actived_date: '2022-12-22T21:43:56.202214Z'
+            expired_date: '2023-02-01T21:43:56.202214Z'
+            discount_percentage: 0
+            discount_fix_price: 5000
+            min_product_price: 5000
+            max_discount_price: 100000
+            max_quantity: 0
+            created_at: '2022-12-23T02:34:38.854025Z'
+            updated_at:
+              Time: '0001-01-01T00:00:00Z'
+              Valid: false
+            deleted_at:
+              Time: '0001-01-01T00:00:00Z'
+              Valid: false
 
     CheckUniqueTrueSuccess:
       title: CheckUniqueTrueSuccess
