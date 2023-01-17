@@ -32,4 +32,5 @@ type Repository interface {
 	UpdateResiNumberInOrderSeller(ctx context.Context, noResi, orderID, shopID string) error
 	GetAllVoucherSeller(ctx context.Context, shopID string) ([]*model.Voucher, error)
 	GetTotalVoucherSeller(ctx context.Context, shopID string) (int64, error)
+	CreateVoucherSeller(ctx context.Context, voucherShop *model.Voucher) error
 }

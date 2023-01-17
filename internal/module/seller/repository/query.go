@@ -111,4 +111,8 @@ const (
 	INNER JOIN "shop" as "s" ON "s"."id" = "v"."shop_id"
 	WHERE "v"."shop_id" = $1
 	`
+	CreateVoucherSellerQuery = `INSERT INTO "voucher" 
+    	(shop_id, code, quota, actived_date, expired_date, discount_percentage, discount_fix_price, min_product_price, max_discount_price)
+    	VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+	`
 )

@@ -497,3 +497,19 @@ func (r *sellerRepo) GetAllVoucherSeller(ctx context.Context, shopID string) ([]
 
 	return shopVouchers, nil
 }
+
+func (r *sellerRepo) CreateVoucherSeller(ctx context.Context, voucherShop *model.Voucher) error {
+	if _, err := r.PSQL.ExecContext(ctx, CreateVoucherSellerQuery,
+		voucherShop.ShopID,
+		voucherShop.Code,
+		voucherShop.Quota,
+		voucherShop.ActivedDate,
+		voucherShop.ExpiredDate,
+		voucherShop.DiscountFixPrice,
+		voucherShop.DiscountFixPrice,
+		voucherShop.MinProductPrice,
+		voucherShop.MaxDiscountPrice); err != nil {
+		return err
+	}
+	return nil
+}

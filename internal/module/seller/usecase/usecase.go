@@ -13,6 +13,8 @@ import (
 	"murakali/pkg/postgre"
 	"murakali/pkg/response"
 	"net/http"
+
+	"github.com/google/uuid"
 )
 
 type sellerUC struct {
@@ -247,7 +249,7 @@ func (u *sellerUC) GetAllVoucherSeller(ctx context.Context, userID string, pgn *
 	shopID, err := u.sellerRepo.GetShopIDByUserID(ctx, userID)
 	if err != nil {
 		if err == sql.ErrNoRows {
-			return nil, httperror.New(http.StatusBadRequest, response.ShopAddressNotFound)
+			return nil, httperror.New(http.StatusBadRequest, response.UserNotHaveShop)
 		}
 		return nil, err
 	}
@@ -269,4 +271,38 @@ func (u *sellerUC) GetAllVoucherSeller(ctx context.Context, userID string, pgn *
 	pgn.Rows = ShopVouchers
 
 	return pgn, nil
+}
+
+func (u *sellerUC) CreateVoucherSeller(ctx context.Context, userID string, requestBody body.CreateVoucherRequest) error {
+	id, err := u.sellerRepo.GetShopIDByUserID(ctx, userID)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return httperror.New(http.StatusBadRequest, response.UserNotHaveShop)
+		}
+		return err
+	}
+
+	shopID, err := uuid.Parse(id)
+	if err != nil {
+		return err
+	}
+
+	voucherShop := &model.Voucher{
+		ShopID:             shopID,
+		Code:               requestBody.Code,
+		Quota:              requestBody.Quota,
+		ActivedDate:        requestBody.ActiveDateTime,
+		ExpiredDate:        requestBody.ExpiredDateTime,
+		DiscountPercentage: &requestBody.DiscountPercentage,
+		DiscountFixPrice:   &requestBody.DiscountFixPrice,
+		MinProductPrice:    &requestBody.MinProductPrice,
+		MaxDiscountPrice:   &requestBody.MaxDiscountPrice,
+	}
+
+	err = u.sellerRepo.CreateVoucherSeller(ctx, voucherShop)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
