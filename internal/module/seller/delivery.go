@@ -16,4 +16,5 @@ type Handlers interface {
 	CreateVoucherSeller(c *gin.Context)
 	UpdateVoucherSeller(c *gin.Context)
 	DeleteVoucherSeller(c *gin.Context)
+	DetailVoucherSeller(c *gin.Context)
 }

@@ -20,5 +20,6 @@ type UseCase interface {
 	GetAllVoucherSeller(ctx context.Context, userID string, pgn *pagination.Pagination) (*pagination.Pagination, error)
 	CreateVoucherSeller(ctx context.Context, userID string, requestBody body.CreateVoucherRequest) error
 	UpdateVoucherSeller(ctx context.Context, userID string, requestBody body.UpdateVoucherRequest) error
+	GetDetailVoucherSeller(ctx context.Context, voucherIDShopID *body.VoucherIDShopID) (*model.Voucher, error)
 	DeleteVoucherSeller(ctx context.Context, voucherIDShopID *body.VoucherIDShopID) error
 }
