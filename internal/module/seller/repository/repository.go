@@ -514,6 +514,21 @@ func (r *sellerRepo) CreateVoucherSeller(ctx context.Context, voucherShop *model
 	return nil
 }
 
+func (r *sellerRepo) UpdateVoucherSeller(ctx context.Context, voucherShop *model.Voucher) error {
+	if _, err := r.PSQL.ExecContext(ctx, UpdateVoucherSellerQuery,
+		voucherShop.Quota,
+		voucherShop.ActivedDate,
+		voucherShop.ExpiredDate,
+		voucherShop.DiscountPercentage,
+		voucherShop.DiscountFixPrice,
+		voucherShop.MinProductPrice,
+		voucherShop.MaxDiscountPrice,
+		voucherShop.ID); err != nil {
+		return err
+	}
+	return nil
+}
+
 func (r *sellerRepo) DeleteVoucherSeller(ctx context.Context, voucherIDShopID *body.VoucherIDShopID) error {
 	_, err := r.PSQL.ExecContext(ctx, DeleteVoucherSellerQuery, voucherIDShopID.VoucherID, voucherIDShopID.ShopID)
 	if err != nil {

@@ -1834,6 +1834,26 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/DefaultSuccess"
+    put:
+      summary: Update Voucher Seller 
+      description: >-
+        Update Voucher Seller
+      tags:
+        - Seller
+      security:
+        - BEARER: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateVoucherSellerRequest"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DefaultSuccess"
 
   "/api/v1/seller/voucher/{id}":
     delete:
@@ -4718,6 +4738,21 @@ components:
       example:
         shop_id: e8854443-c2c7-488e-93d5-b9d93708b8a3
         code: QWE1233
+        quota: 5
+        actived_date: 22-12-2022 21:43:56
+        expired_date: 22-02-2023 21:43:56
+        discount_percentage: 0
+        discount_fix_price: 1000
+        min_product_price: 5000
+        max_discount_price: 10000
+
+    UpdateVoucherSellerRequest:
+      title: UpdateVoucherSellerRequest
+      type: object
+      description: Update voucher seller request data model.
+      properties:
+      example:
+        voucher_id: e8854443-c2c7-488e-93d5-b9d93708b8a3
         quota: 5
         actived_date: 22-12-2022 21:43:56
         expired_date: 22-02-2023 21:43:56
