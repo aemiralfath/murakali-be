@@ -53,7 +53,7 @@ func (f *ShopFaker) GenerateData(tx postgre.Transaction) error {
 			}
 		}
 
-		productFaker := NewProductFaker(f.TotalProduct[i], id.String(), categoryID.String(), 1000, 10000000, []string{})
+		productFaker := NewProductFaker(f.TotalProduct[i], id.String(), categoryID.String(), []string{})
 		if err := productFaker.GenerateData(tx); err != nil {
 			return err
 		}

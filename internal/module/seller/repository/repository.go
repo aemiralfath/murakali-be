@@ -155,7 +155,6 @@ func (r *sellerRepo) GetOrderByOrderID(ctx context.Context, orderID string) (*mo
 		return nil, err
 	}
 	for res.Next() {
-
 		var detail model.OrderDetail
 		if errScan := res.Scan(
 			&detail.ProductDetailID,

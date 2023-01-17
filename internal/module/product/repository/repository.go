@@ -306,7 +306,6 @@ func (r *productRepo) GetProductDetail(ctx context.Context, productID string, pr
 				}
 				detail.DiscountPrice = &discountedPrice
 			}
-
 		}
 
 		mapVariant := make(map[string]string, 0)
@@ -647,7 +646,8 @@ func (r *productRepo) FindFavoriteProduct(ctx context.Context, userID, productID
 	return isExist, nil
 }
 
-func (r *productRepo) GetProductReviews(ctx context.Context, pgn *pagination.Pagination, productID string, query *body.GetReviewQueryRequest) ([]*body.ReviewProduct, error) {
+func (r *productRepo) GetProductReviews(ctx context.Context,
+	pgn *pagination.Pagination, productID string, query *body.GetReviewQueryRequest) ([]*body.ReviewProduct, error) {
 	reviews := make([]*body.ReviewProduct, 0)
 
 	q := fmt.Sprintf(GetReviewProductQuery, query.GetValidate(), pgn.GetSort())

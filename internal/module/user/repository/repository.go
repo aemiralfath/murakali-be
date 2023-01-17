@@ -437,6 +437,52 @@ func (r *userRepo) GetWalletByUserID(ctx context.Context, userID string) (*model
 	return &walletModel, nil
 }
 
+func (r *userRepo) GetWalletHistoryByWalletID(ctx context.Context, pgn *pagination.Pagination, walletID string) ([]*body.HistoryWalletResponse, error) {
+	queryOrderBySomething := fmt.Sprintf(OrderBySomething, pgn.GetSort(), pgn.GetLimit(),
+		pgn.GetOffset())
+
+	walletHistory := make([]*body.HistoryWalletResponse, 0)
+
+	res, err := r.PSQL.QueryContext(
+		ctx, GetWalletHistoryUserQuery+queryOrderBySomething,
+		walletID,
+	)
+
+	if err != nil {
+		return nil, err
+	}
+
+	for res.Next() {
+		var history body.HistoryWalletResponse
+		if errScan := res.Scan(
+			&history.ID,
+			&history.From,
+			&history.To,
+			&history.Amount,
+			&history.Description,
+			&history.CreatedAt,
+		); errScan != nil {
+			return nil, err
+		}
+		walletHistory = append(walletHistory, &history)
+	}
+
+	if res.Err() != nil {
+		return nil, err
+	}
+	return walletHistory, nil
+}
+
+func (r *userRepo) GetTotalWalletHistoryByWalletID(ctx context.Context, walletID string) (int64, error) {
+	var total int64
+	if err := r.PSQL.QueryRowContext(ctx, GetTotalWalletHistoryUserQuery, walletID).
+		Scan(&total); err != nil {
+		return 0, err
+	}
+
+	return total, nil
+}
+
 func (r *userRepo) GetUserByPhoneNo(ctx context.Context, phoneNo string) (*model.User, error) {
 	var userModel model.User
 	if err := r.PSQL.QueryRowContext(ctx, GetUserByPhoneNoQuery, phoneNo).
