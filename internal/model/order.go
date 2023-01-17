@@ -23,6 +23,7 @@ type Order struct {
 	CourierName        string         `json:"courier_name"`
 	CourierCode        string         `json:"courier_code"`
 	CourierService     string         `json:"courier_service"`
+	CourierETD         string         `json:"courier_etd"`
 	CourierDescription string         `json:"courier_description"`
 	BuyerUsername      string         `json:"buyer_username"`
 	BuyerPhoneNumber   *string        `json:"buyer_phone_number"`

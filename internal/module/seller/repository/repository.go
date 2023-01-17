@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"murakali/internal/constant"
 	"murakali/internal/model"
 	"murakali/internal/module/seller"
 	"murakali/internal/module/seller/delivery/body"
@@ -11,6 +12,7 @@ import (
 	"murakali/pkg/pagination"
 	"murakali/pkg/response"
 	"net/http"
+	"time"
 
 	"github.com/go-redis/redis/v8"
 )
@@ -160,6 +162,7 @@ func (r *sellerRepo) GetOrderByOrderID(ctx context.Context, orderID string) (*mo
 			&detail.ProductDetailID,
 			&detail.ProductID,
 			&detail.ProductTitle,
+			&detail.ProductWeight,
 			&detail.ProductDetailURL,
 			&detail.OrderQuantity,
 			&detail.ItemPrice,
@@ -240,6 +243,7 @@ func (r *sellerRepo) GetOrders(ctx context.Context, shopID, orderStatusID string
 				&detail.ProductDetailID,
 				&detail.ProductID,
 				&detail.ProductTitle,
+				&detail.ProductWeight,
 				&detail.ProductDetailURL,
 				&detail.OrderQuantity,
 				&detail.ItemPrice,
@@ -454,10 +458,10 @@ func (r *sellerRepo) DeleteCourierSellerByID(ctx context.Context, shopCourierID 
 	return nil
 }
 
-func (r *sellerRepo) UpdateResiNumberInOrderSeller(ctx context.Context, noResi, orderID, shopID string) error {
+func (r *sellerRepo) UpdateResiNumberInOrderSeller(ctx context.Context, noResi, orderID, shopID string, arriveAt time.Time) error {
 	temp, err := r.PSQL.ExecContext(ctx,
 		UpdateResiNumberInOrderSellerQuery,
-		noResi, orderID, shopID)
+		noResi, arriveAt, constant.OrderStatusOnDelivery, orderID, shopID)
 	if err != nil {
 		return err
 	}
@@ -466,5 +470,27 @@ func (r *sellerRepo) UpdateResiNumberInOrderSeller(ctx context.Context, noResi, 
 	if rowsAffected == 0 {
 		return httperror.New(http.StatusNotFound, response.OrderNotExistMessage)
 	}
+	return nil
+}
+
+func (r *sellerRepo) GetCostRedis(ctx context.Context, key string) (*string, error) {
+	res := r.RedisClient.Get(ctx, key)
+	if res.Err() != nil {
+		return nil, res.Err()
+	}
+
+	value, err := res.Result()
+	if err != nil {
+		return nil, err
+	}
+
+	return &value, nil
+}
+
+func (r *sellerRepo) InsertCostRedis(ctx context.Context, key, value string) error {
+	if err := r.RedisClient.Set(ctx, key, value, 0); err.Err() != nil {
+		return err.Err()
+	}
+
 	return nil
 }

@@ -5,6 +5,7 @@ import (
 	"murakali/internal/model"
 	"murakali/internal/module/seller/delivery/body"
 	"murakali/pkg/pagination"
+	"time"
 )
 
 type Repository interface {
@@ -30,5 +31,7 @@ type Repository interface {
 	GetSellerIDByOrderID(ctx context.Context, orderID string) (string, error)
 	GetAddressByBuyerID(ctx context.Context, userID string) (*model.Address, error)
 	GetAddressBySellerID(ctx context.Context, userID string) (*model.Address, error)
-	UpdateResiNumberInOrderSeller(ctx context.Context, noResi, orderID, shopID string) error
+	UpdateResiNumberInOrderSeller(ctx context.Context, noResi, orderID, shopID string, arriveAt time.Time) error
+	GetCostRedis(ctx context.Context, key string) (*string, error)
+	InsertCostRedis(ctx context.Context, key string, value string) error
 }

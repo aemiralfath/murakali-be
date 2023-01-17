@@ -4,6 +4,7 @@ type OrderDetail struct {
 	ProductDetailID  string            `json:"product_detail_id"`
 	ProductID        string            `json:"product_id"`
 	ProductTitle     string            `json:"product_title"`
+	ProductWeight    float64           `json:"product_weight"`
 	ProductDetailURL *string           `json:"product_detail_url"`
 	OrderQuantity    int               `json:"order_quantity"`
 	ItemPrice        *float64          `json:"order_item_price"`

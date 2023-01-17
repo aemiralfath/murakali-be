@@ -33,7 +33,7 @@ const (
 
 	GetSellerIDByOrderIDQuery = `SELECT s.user_id from "order" o join shop s on o.shop_id = s.id where o.id = $1`
 
-	GetOrderDetailQuery = `SELECT pd.id,pd.product_id,p.title,
+	GetOrderDetailQuery = `SELECT pd.id,pd.product_id,p.title, pd.weight,
 		(select ph.url from "photo" ph 
 			join product_detail pd on pd.id = ph.product_detail_id 
 			join "order_item" oi on pd.id = oi.product_detail_id limit 1
@@ -103,6 +103,6 @@ const (
 	group by c.id`
 
 	UpdateResiNumberInOrderSellerQuery = `UPDATE
-	 "order" set resi_no = $1 WHERE id = $2 
-	 AND shop_id = $3`
+	 "order" set resi_no = $1, arrived_at = $2, order_status_id = $3 WHERE id = $4 
+	 AND shop_id = $5`
 )

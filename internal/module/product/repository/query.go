@@ -65,7 +65,9 @@ const (
 		"v"."discount_percentage" as "voucher_discount_percentage",  "v"."discount_fix_price" as "voucher_discount_fix_price", 
 		"s"."name" as "shop_name", 
 		"c"."name" as "category_name",
-		"a"."province" as "province"
+		"a"."province" as "province",
+		"p"."created_at",
+		"p"."updated_at"
 	FROM "product" as "p"
 	LEFT JOIN (
 		SELECT * FROM "promotion"
@@ -95,7 +97,9 @@ const (
 		"v"."discount_percentage" as "voucher_discount_percentage",  "v"."discount_fix_price" as "voucher_discount_fix_price", 
 		"s"."name" as "shop_name", 
 		"c"."name" as "category_name",
-		"a"."province" as "province"
+		"a"."province" as "province",
+		"p"."created_at",
+		"p"."updated_at"
 	FROM "product" as "p"
 	LEFT JOIN (
 		SELECT * FROM "promotion"
