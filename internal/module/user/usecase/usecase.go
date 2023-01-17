@@ -1204,12 +1204,60 @@ func (u *userUC) WalletStepUp(ctx context.Context, userID string, requestBody bo
 		return "", httperror.New(http.StatusBadRequest, response.WalletPinIsInvalid)
 	}
 
-	walletToken, err := jwt.GenerateJWTWalletToken(userID, u.cfg)
+	walletToken, err := jwt.GenerateJWTWalletToken(userID, "level1", u.cfg)
 	if err != nil {
 		return "", err
 	}
 
 	return walletToken, nil
+}
+
+func (u *userUC) ChangeWalletPinStepUp(ctx context.Context, userID string, requestBody body.ChangeWalletPinStepUpRequest) (string, error) {
+	wallet, err := u.userRepo.GetWalletByUserID(ctx, userID)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return "", httperror.New(http.StatusBadRequest, response.WalletIsNotActivated)
+		}
+		return "", err
+	}
+
+	user, err := u.userRepo.GetUserPasswordByID(ctx, wallet.UserID.String())
+	if err != nil {
+		return "", err
+	}
+
+	if bcrypt.CompareHashAndPassword([]byte(*user.Password), []byte(requestBody.Password)) != nil {
+		return "", httperror.New(http.StatusBadRequest, response.InvalidPasswordMessage)
+	}
+
+	walletToken, err := jwt.GenerateJWTWalletToken(userID, "level2", u.cfg)
+	if err != nil {
+		return "", err
+	}
+
+	return walletToken, nil
+}
+
+func (u *userUC) ChangeWalletPin(ctx context.Context, userID, pin string) error {
+	wallet, err := u.userRepo.GetWalletByUserID(ctx, userID)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return httperror.New(http.StatusBadRequest, response.WalletIsNotActivated)
+		}
+		return err
+	}
+
+	hashedPin, err := bcrypt.GenerateFromPassword([]byte(pin), bcrypt.DefaultCost)
+	if err != nil {
+		return err
+	}
+
+	wallet.PIN = string(hashedPin)
+	if err := u.userRepo.UpdateWalletPin(ctx, wallet); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func (u *userUC) CreateTransaction(ctx context.Context, userID string, requestBody body.CreateTransactionRequest) (string, error) {

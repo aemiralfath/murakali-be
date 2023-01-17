@@ -13,6 +13,7 @@ import (
 type Repository interface {
 	GetTransactionByID(ctx context.Context, transactionID string) (*model.Transaction, error)
 	GetUserByID(ctx context.Context, id string) (*model.User, error)
+	GetUserPasswordByID(ctx context.Context, id string) (*model.User, error)
 	GetTotalAddress(ctx context.Context, userID, name string) (int64, error)
 	GetTotalAddressDefault(ctx context.Context, userID, name string, isDefault, isShopDefault bool) (int64, error)
 	GetAddresses(ctx context.Context, userID, name string, isDefault, isShopDefault bool, pagination *pagination.Pagination) ([]*model.Address, error)
@@ -78,4 +79,5 @@ type Repository interface {
 	AddSealabsPay(ctx context.Context, request body.AddSealabsPayRequest, userid string) error
 	UpdateUserSealabsPay(ctx context.Context, request body.AddSealabsPayRequest, userid string) error
 	UpdateUserSealabsPayTrans(ctx context.Context, tx postgre.Transaction, request body.AddSealabsPayRequest, userid string) error
+	UpdateWalletPin(ctx context.Context, wallet *model.Wallet) error
 }

@@ -66,6 +66,7 @@ const (
 		"s"."name" as "shop_name", 
 		"c"."name" as "category_name",
 		"a"."province" as "province",
+		"p".listed_status,
 		"p"."created_at",
 		"p"."updated_at"
 	FROM "product" as "p"
@@ -98,6 +99,7 @@ const (
 		"s"."name" as "shop_name", 
 		"c"."name" as "category_name",
 		"a"."province" as "province",
+		"p".listed_status,
 		"p"."created_at",
 		"p"."updated_at"
 	FROM "product" as "p"
