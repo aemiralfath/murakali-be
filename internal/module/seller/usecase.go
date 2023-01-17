@@ -19,4 +19,5 @@ type UseCase interface {
 	UpdateResiNumberInOrderSeller(ctx context.Context, userID, orderID string, requestBody body.UpdateNoResiOrderSellerRequest) error
 	GetAllVoucherSeller(ctx context.Context, userID string, pgn *pagination.Pagination) (*pagination.Pagination, error)
 	CreateVoucherSeller(ctx context.Context, userID string, requestBody body.CreateVoucherRequest) error
+	DeleteVoucherSeller(ctx context.Context, voucherIDShopID *body.VoucherIDShopID) error
 }

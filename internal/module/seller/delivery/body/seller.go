@@ -15,6 +15,7 @@ const (
 	CourierSellerAlreadyExistMessage      = "Courier Seller Already Exist"
 	CourierNotFoundMessage                = "Courier not exist"
 	CourierSellerNotFoundMessage          = "Courier Seller Not Found"
+	VoucherSellerNotFoundMessage          = "Voucher Seller Not Found"
 	CategoryNotFoundMessage               = "Category not found."
 	ShopNotFoundMessage                   = "Shop not found."
 )

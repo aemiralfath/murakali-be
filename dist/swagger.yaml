@@ -1834,6 +1834,29 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/DefaultSuccess"
+
+  "/api/v1/seller/voucher/{id}":
+    delete:
+      summary: Get All Seller Voucher 
+      description: >-
+        Get All Seller Voucher
+      tags:
+        - Seller
+      security:
+        - BEARER: []
+      parameters:
+        - in: path
+          name: id
+          schema:
+            type: string
+          required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DefaultSuccess"
 components:
   schemas:
     LoginRequest:

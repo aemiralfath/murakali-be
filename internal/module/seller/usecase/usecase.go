@@ -306,3 +306,29 @@ func (u *sellerUC) CreateVoucherSeller(ctx context.Context, userID string, reque
 
 	return nil
 }
+
+func (u *sellerUC) DeleteVoucherSeller(ctx context.Context, voucherIDShopID *body.VoucherIDShopID) error {
+	shopID, err := u.sellerRepo.GetShopIDByUserID(ctx, voucherIDShopID.UserID)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return httperror.New(http.StatusBadRequest, response.UserNotHaveShop)
+		}
+		return err
+	}
+	voucherIDShopID.ShopID = shopID
+
+	_, errVoucher := u.sellerRepo.GetAllVoucherSellerByIDandShopID(ctx, voucherIDShopID)
+	if errVoucher != nil {
+		if errVoucher == sql.ErrNoRows {
+			return httperror.New(http.StatusBadRequest, body.VoucherSellerNotFoundMessage)
+		}
+
+		return errVoucher
+	}
+
+	if err := u.sellerRepo.DeleteVoucherSeller(ctx, voucherIDShopID); err != nil {
+		return err
+	}
+
+	return nil
+}
