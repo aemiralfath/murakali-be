@@ -1826,7 +1826,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/CreateVoucherSeller"
+              $ref: "#/components/schemas/CreateVoucherSellerRequest"
       responses:
         "200":
           description: OK
