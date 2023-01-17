@@ -326,12 +326,18 @@ func (h *productHandlers) ValidateQueryProduct(c *gin.Context) (*pagination.Pagi
 	sort := strings.TrimSpace(c.Query("sort"))
 	sortBy := strings.TrimSpace(c.Query("sort_by"))
 
+	sortBy = strings.ToLower(sortBy)
+	sort = strings.ToLower(sort)
+
 	minPrice := strings.TrimSpace(c.Query("min_price"))
 	maxPrice := strings.TrimSpace(c.Query("max_price"))
 	minRating := strings.TrimSpace(c.Query("min_rating"))
 	maxRating := strings.TrimSpace(c.Query("max_rating"))
 
 	category := strings.TrimSpace(c.Query("category"))
+
+	category = strings.ToLower(category)
+
 	shop := strings.TrimSpace(c.Query("shop_id"))
 
 	listedStatus := strings.TrimSpace(c.Query("listed_status"))

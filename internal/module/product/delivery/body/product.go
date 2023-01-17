@@ -33,7 +33,7 @@ type GetProductQueryRequest struct {
 }
 
 type GetProductRequest struct {
-	ProductID string `uri:"product_id" binding:"required"`
+	ProductID string `json:"product_id" binding:"required"`
 }
 
 func (r *GetProductRequest) Validate() (UnprocessableEntity, error) {
@@ -59,6 +59,7 @@ func (r *GetProductRequest) Validate() (UnprocessableEntity, error) {
 
 	return entity, nil
 }
+
 type GetImageResponse struct {
 	ProductDetailId *string `json:"product_detail_id"`
 	Url             string  `json:"url"`
