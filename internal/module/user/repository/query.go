@@ -61,6 +61,7 @@ const (
 	SetDefaultSealabsPayQuery      = `UPDATE "sealabs_pay" set is_default = FALSE where card_number <> $1 and user_id = $2`
 	DeleteSealabsPayQuery          = `UPDATE "sealabs_pay" set "deleted_at" = now() where "card_number" = $1 and "is_default" = FALSE`
 	GetUserByIDQuery               = `SELECT "id", "role_id", "email", "username", "phone_no", "fullname", "gender", "birth_date", "is_verify","photo_url" FROM "user" WHERE "id" = $1`
+	GetUserPasswordByIDQuery       = `SELECT "id", "role_id", "email", "password", "username", "phone_no", "fullname", "gender", "birth_date", "is_verify","photo_url" FROM "user" WHERE "id" = $1`
 	GetPasswordByIDQuery           = `SELECT "password" FROM "user" WHERE "id" = $1`
 	CheckEmailHistoryQuery         = `SELECT "id", "email" FROM "email_history" WHERE "email" ILIKE $1`
 	GetUserByUsernameQuery         = `SELECT "id", "email", "username", "is_verify" FROM "user" WHERE "username" ILIKE $1`
@@ -74,6 +75,7 @@ const (
 	UpdateRoleQuery                = `UPDATE "user" SET "role_id" = 2,updated_at = now() where id = $1`
 	UpdateProfileImageQuery        = `UPDATE "user" SET "photo_url" = $1,updated_at = now() where id = $2`
 	UpdatePasswordQuery            = `UPDATE "user" SET "password" = $1 WHERE "id" = $2`
+	UpdateWalletPinQuery           = `UPDATE "wallet" SET "pin" = $1 WHERE "id" = $2`
 
 	GetWalletUserQuery        = `SELECT "id", "user_id", "balance", "attempt_count", "attempt_at", "unlocked_at", "active_date" FROM "wallet" WHERE "id" = $1 AND "deleted_at" IS NULL;`
 	GetWalletHistoryUserQuery = `SELECT "id", "from", "to", "amount", "description", "created_at" 

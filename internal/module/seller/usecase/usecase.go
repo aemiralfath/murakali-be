@@ -3,9 +3,12 @@ package usecase
 import (
 	"context"
 	"database/sql"
+	"encoding/json"
+	"fmt"
 	"math"
 	"murakali/config"
 	"murakali/internal/model"
+	body2 "murakali/internal/module/location/delivery/body"
 	"murakali/internal/module/seller"
 	"murakali/internal/module/seller/delivery/body"
 	"murakali/pkg/httperror"
@@ -13,6 +16,7 @@ import (
 	"murakali/pkg/postgre"
 	"murakali/pkg/response"
 	"net/http"
+	"strings"
 )
 
 type sellerUC struct {
@@ -75,6 +79,7 @@ func (u *sellerUC) GetOrderByOrderID(ctx context.Context, orderID string) (*mode
 	if err != nil {
 		return nil, err
 	}
+
 	buyerID, err := u.sellerRepo.GetBuyerIDByOrderID(ctx, orderID)
 	if err != nil {
 		return nil, err
@@ -97,6 +102,46 @@ func (u *sellerUC) GetOrderByOrderID(ctx context.Context, orderID string) (*mode
 
 	order.BuyerAddress = buyerAddress
 	order.SellerAddress = sellerAddress
+
+	totalWeight := 0
+	for _, detail := range order.Detail {
+		totalWeight += int(detail.ProductWeight) * detail.OrderQuantity
+	}
+
+	var costRedis *string
+	key := fmt.Sprintf("%d:%d:%d:%s", sellerAddress.CityID, buyerAddress.CityID, totalWeight, order.CourierCode)
+	costRedis, err = u.sellerRepo.GetCostRedis(ctx, key)
+	if err != nil {
+		res, err := u.GetCostRajaOngkir(sellerAddress.CityID, buyerAddress.CityID, totalWeight, order.CourierCode)
+		if err != nil {
+			return nil, err
+		}
+
+		redisValue, err := json.Marshal(res)
+		if err != nil {
+			return nil, err
+		}
+
+		if errInsert := u.sellerRepo.InsertCostRedis(ctx, key, string(redisValue)); errInsert != nil {
+			return nil, errInsert
+		}
+
+		value := string(redisValue)
+		costRedis = &value
+	}
+
+	var costResp body2.RajaOngkirCostResponse
+	if err := json.Unmarshal([]byte(*costRedis), &costResp); err != nil {
+		return nil, err
+	}
+
+	if len(costResp.Rajaongkir.Results) > 0 {
+		for _, cost := range costResp.Rajaongkir.Results[0].Costs {
+			if cost.Service == order.CourierService {
+				order.CourierETD = cost.Cost[0].Etd
+			}
+		}
+	}
 
 	return order, nil
 }
@@ -145,6 +190,18 @@ func (u *sellerUC) GetCourierSeller(ctx context.Context, userID string) (*body.C
 }
 func (u *sellerUC) GetSellerBySellerID(ctx context.Context, sellerID string) (*body.SellerResponse, error) {
 	sellerData, err := u.sellerRepo.GetSellerBySellerID(ctx, sellerID)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, httperror.New(http.StatusNotFound, body.SellerNotFoundMessage)
+		}
+		return nil, err
+	}
+
+	return sellerData, nil
+}
+
+func (u *sellerUC) GetSellerByUserID(ctx context.Context, userID string) (*body.SellerResponse, error) {
+	sellerData, err := u.sellerRepo.GetSellerByUserID(ctx, userID)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return nil, httperror.New(http.StatusNotFound, body.SellerNotFoundMessage)
@@ -214,6 +271,7 @@ func (u *sellerUC) DeleteCourierSellerByID(ctx context.Context, shopCourierID st
 	}
 	return nil
 }
+
 func (u *sellerUC) GetCategoryBySellerID(ctx context.Context, shopID string) ([]*body.CategoryResponse, error) {
 	categories, err := u.sellerRepo.GetCategoryBySellerID(ctx, shopID)
 	if err != nil {
@@ -235,10 +293,37 @@ func (u *sellerUC) UpdateResiNumberInOrderSeller(ctx context.Context, userID, or
 		return err
 	}
 
-	err = u.sellerRepo.UpdateResiNumberInOrderSeller(ctx, requestBody.NoResi, orderID, shopID)
+	err = u.sellerRepo.UpdateResiNumberInOrderSeller(ctx, requestBody.NoResi, orderID, shopID, requestBody.EstimateArriveAtTime)
 	if err != nil {
 		return err
 	}
 
 	return nil
+}
+
+func (u *sellerUC) GetCostRajaOngkir(origin, destination, weight int, code string) (*body2.RajaOngkirCostResponse, error) {
+	var responseCost body2.RajaOngkirCostResponse
+	url := fmt.Sprintf("%s/cost", u.cfg.External.OngkirAPIURL)
+	payload := fmt.Sprintf(
+		"origin=%d&destination=%d&weight=%d&courier=%s", origin, destination, weight, code)
+
+	req, err := http.NewRequest("POST", url, strings.NewReader(payload))
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("key", u.cfg.External.OngkirAPIKey)
+	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
+	res, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer res.Body.Close()
+
+	readErr := json.NewDecoder(res.Body).Decode(&responseCost)
+	if readErr != nil {
+		return nil, err
+	}
+
+	return &responseCost, nil
 }

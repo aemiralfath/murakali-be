@@ -475,6 +475,9 @@ func (r *productRepo) GetProducts(ctx context.Context, pgn *pagination.Paginatio
 			&productData.ShopName,
 			&productData.CategoryName,
 			&productData.ShopProvince,
+			&productData.ListedStatus,
+			&productData.CreatedAt,
+			&productData.UpdatedAt,
 		); errScan != nil {
 			return nil, nil, nil, err
 		}
