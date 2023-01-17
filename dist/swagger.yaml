@@ -1814,6 +1814,26 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/GetAllSellerVoucherResponse"
+    post:
+      summary: Create Voucher Seller 
+      description: >-
+        Create Voucher Seller
+      tags:
+        - Seller
+      security:
+        - BEARER: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateVoucherSeller"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DefaultSuccess"
 components:
   schemas:
     LoginRequest:
@@ -4666,6 +4686,23 @@ components:
             deleted_at:
               Time: '0001-01-01T00:00:00Z'
               Valid: false
+
+    CreateVoucherSellerRequest:
+      title: CreateVoucherSellerRequest
+      type: object
+      description: Create voucher seller request data model.
+      properties:
+      example:
+        shop_id: e8854443-c2c7-488e-93d5-b9d93708b8a3
+        code: QWE1233
+        quota: 5
+        actived_date: 22-12-2022 21:43:56
+        expired_date: 22-02-2023 21:43:56
+        discount_percentage: 0
+        discount_fix_price: 1000
+        min_product_price: 5000
+        max_discount_price: 10000
+
 
     CheckUniqueTrueSuccess:
       title: CheckUniqueTrueSuccess
