@@ -523,6 +523,33 @@ func (h *productHandlers) UpdateListedStatus(c *gin.Context) {
 	response.SuccessResponse(c.Writer, nil, http.StatusOK)
 }
 
+func (h *productHandlers) UpdateListedStatusBulk(c *gin.Context) {
+	var requestBody body.UpdateProductListedStatusBulkRequest
+	if err := c.ShouldBind(&requestBody); err != nil {
+		response.ErrorResponse(c.Writer, response.BadRequestMessage, http.StatusBadRequest)
+		return
+	}
+
+	invalidFields, err := requestBody.ValidateUpdateProductListedStatusBulk()
+	if err != nil {
+		response.ErrorResponseData(c.Writer, invalidFields, response.UnprocessableEntityMessage, http.StatusUnprocessableEntity)
+		return
+	}
+
+	if err := h.productUC.UpdateProductListedStatusBulk(c, requestBody); err != nil {
+		var e *httperror.Error
+		if !errors.As(err, &e) {
+			h.logger.Errorf("HandlerUser, Error: %s", err)
+			response.ErrorResponse(c.Writer, response.InternalServerErrorMessage, http.StatusInternalServerError)
+			return
+		}
+		response.ErrorResponse(c.Writer, e.Err.Error(), e.Status)
+		return
+	}
+
+	response.SuccessResponse(c.Writer, nil, http.StatusOK)
+}
+
 func (h *productHandlers) UpdateProduct(c *gin.Context) {
 	id := c.Param("id")
 	productID, err := uuid.Parse(id)
