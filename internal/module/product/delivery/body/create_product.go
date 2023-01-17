@@ -20,21 +20,23 @@ type CreateProductRequest struct {
 }
 
 type CreateProductInfo struct {
-	Title       string `json:"title"`
-	Description string `json:"description"`
-	Thumbnail   string `json:"thumbnail"`
-	CategoryID  string `json:"category_id"`
+	Title        string `json:"title"`
+	Description  string `json:"description"`
+	Thumbnail    string `json:"thumbnail"`
+	CategoryID   string `json:"category_id"`
+	ListedStatus bool   `json:"listed_status"`
 }
 
 type CreateProductInfoForQuery struct {
-	Title       string
-	Description string
-	Thumbnail   string
-	CategoryID  string
-	MinPrice    float64
-	MaxPrice    float64
-	ShopID      string
-	SKU         string
+	Title        string
+	Description  string
+	Thumbnail    string
+	CategoryID   string
+	MinPrice     float64
+	MaxPrice     float64
+	ShopID       string
+	SKU          string
+	ListedStatus bool
 }
 
 type CreateProductDetailRequest struct {

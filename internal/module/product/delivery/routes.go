@@ -29,5 +29,6 @@ func MapProductRoutes(productGroup *gin.RouterGroup, h product.Handlers, mw *mid
 	productGroup.POST("/", h.CreateProduct)
 	productGroup.POST("/picture", h.UploadProductPicture)
 	productGroup.PUT("/status/:id", h.UpdateListedStatus)
+	productGroup.PATCH("/bulk-status", h.UpdateListedStatusBulk)
 	productGroup.PUT("/:id", h.UpdateProduct)
 }

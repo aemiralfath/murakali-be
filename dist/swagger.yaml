@@ -1142,6 +1142,28 @@ paths:
               schema:
                 $ref: "#/components/schemas/DefaultSuccess"
 
+  "/api/v1/product/bulk-status":
+    patch:
+      summary: update product listed list bulk status
+      description: >-
+        update for product  listed list status bulk
+      tags:
+        - Seller
+      security:
+        - BEARER: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateProductListedStatusBulkRequest"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DefaultSuccess"
+
   "/api/v1/product/favorite":
     get:
       summary: Get Favorite Product
@@ -3183,6 +3205,7 @@ components:
           description: this is description
           thumbnail: https://res.cloudinary.com/dhpao1zxi/image/upload/v1671705602/ldtzmxqeyb4nwu5p6y76.jpg
           category_id: d92a0995-78cd-4eba-a855-dfc096ffec5b
+          listed_status: true
         products_detail:
           - price: 400000
             stock: 40
@@ -3238,6 +3261,7 @@ components:
           description: this is description
           thumbnail: https://res.cloudinary.com/dhpao1zxi/image/upload/v1673329263/k6x5iqami51p1ouilukp.jpg
           category_id: d92a0995-78cd-4eba-a855-dfc096ffec5b
+          listed_status: true
         products_detail_update:
           - product_detail_id: a7e8e5c8-95a0-468f-b0e3-efd3d324e51c
             price: 900000
@@ -3256,6 +3280,16 @@ components:
               - 17adb731-b4f4-44ef-ad52-887c4a7472b3
         products_detail_id_remove:
           - 13510b22-3aa2-432e-ae48-3d1566a2acb7
+
+    UpdateProductListedStatusBulkRequest:
+      title: UpdateProductListedStatusBulkRequest
+      type: object
+      description: Update product listed status bulk request data model.
+      example:
+        products_ids:
+          - 2166a57e-ac15-45dc-8293-b1ae0dee1747
+          - edb9e5b1-c1a7-49c5-a90a-3d89a558d455
+        listed_status: true
 
     GetFavoriteProductResponse:
       title: GetFavoriteProductResponse

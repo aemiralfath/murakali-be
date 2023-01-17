@@ -19,6 +19,7 @@ type Handlers interface {
 	GetTotalReviewRatingByProductID(c *gin.Context)
 	CreateProduct(c *gin.Context)
 	UpdateListedStatus(c *gin.Context)
+	UpdateListedStatusBulk(c *gin.Context)
 	UpdateProduct(c *gin.Context)
 	UploadProductPicture(c *gin.Context)
 }

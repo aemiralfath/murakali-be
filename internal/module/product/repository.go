@@ -41,7 +41,7 @@ type Repository interface {
 	CreateVariant(ctx context.Context, tx postgre.Transaction, productDetailID string, variantDetailID string) error
 	CreateVariantDetail(ctx context.Context, tx postgre.Transaction, requestBody body.VariantDetailRequest) (string, error)
 	GetListedStatus(ctx context.Context, productID string) (bool, error)
-	UpdateListedStatus(ctx context.Context, listedStatus bool, productID string) error
+	UpdateListedStatus(ctx context.Context, tx postgre.Transaction, listedStatus bool, productID string) error
 	UpdateProduct(ctx context.Context, tx postgre.Transaction, requestBody body.UpdateProductInfoForQuery, productID string) error
 	UpdateProductDetail(ctx context.Context, tx postgre.Transaction, requestBody body.UpdateProductDetailRequest, productID string) error
 	DeletePhoto(ctx context.Context, tx postgre.Transaction, productDetailID string) error
