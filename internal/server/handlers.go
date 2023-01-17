@@ -1,7 +1,6 @@
 package server
 
 import (
-	"fmt"
 	"murakali/internal/middleware"
 	authDelivery "murakali/internal/module/auth/delivery"
 	authRepository "murakali/internal/module/auth/repository"
@@ -58,13 +57,13 @@ func (s *Server) MapHandlers() error {
 	sellerHandlers := sellerDelivery.NewSellerHandlers(s.cfg, sellerUC, s.log)
 
 	s.gin.Use(cors.New(cors.Config{
-		AllowOrigins:     []string{fmt.Sprintf("http://%s", s.cfg.Server.Origin)},
+		AllowOrigins:     []string{s.cfg.Server.Origin},
 		AllowMethods:     []string{"GET", "POST", "PUT", "PATCH", "DELETE"},
 		AllowHeaders:     []string{"Origin", "Content-type", "Authorization"},
 		ExposeHeaders:    []string{"Content-Length"},
 		AllowCredentials: true,
 		AllowOriginFunc: func(origin string) bool {
-			return origin == fmt.Sprintf("http://%s", s.cfg.Server.Origin)
+			return origin == s.cfg.Server.Origin
 		},
 		MaxAge: 12 * time.Hour,
 	}))

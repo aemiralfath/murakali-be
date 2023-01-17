@@ -28,6 +28,22 @@ func GenerateOTP(length int) (string, error) {
 	return string(buffer), nil
 }
 
+func GenerateRandomAlpaNumeric(length int) (string, error) {
+	const alphaNum = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+	buffer := make([]byte, length)
+	_, err := rand.Read(buffer)
+	if err != nil {
+		return "", err
+	}
+
+	charsLength := len(alphaNum)
+	for i := 0; i < length; i++ {
+		buffer[i] = alphaNum[int(buffer[i])%charsLength]
+	}
+
+	return string(buffer), nil
+}
+
 func VerifyPassword(s string) bool {
 	if len(s) < 8 || len(s) > 40 {
 		return false

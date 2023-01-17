@@ -443,7 +443,7 @@ func (u *userUC) SendLinkOTPEmail(ctx context.Context, email string) error {
 	h.Write([]byte(otp))
 	hashedOTP := fmt.Sprintf("%x", h.Sum(nil))
 
-	link := fmt.Sprintf("http://%s/verify/email?code=%s&email=%s", u.cfg.Server.Origin, hashedOTP, email)
+	link := fmt.Sprintf("%s/verify/email?code=%s&email=%s", u.cfg.Server.Origin, hashedOTP, email)
 
 	subject := "Change email!"
 	msg := smtp.VerificationEmailLinkOTPBody(link)
@@ -668,7 +668,7 @@ func (u *userUC) VerifyPasswordChange(ctx context.Context, userID string) error 
 }
 
 func (u *userUC) SendOTPEmail(ctx context.Context, email string) error {
-	otp, err := util.GenerateOTP(6)
+	otp, err := util.GenerateRandomAlpaNumeric(6)
 	if err != nil {
 		return err
 	}
@@ -1124,6 +1124,33 @@ func (u *userUC) GetWallet(ctx context.Context, userID string) (*model.Wallet, e
 	}
 
 	return wallet, nil
+}
+
+func (u *userUC) GetWalletHistory(ctx context.Context, userID string, pgn *pagination.Pagination) (*pagination.Pagination, error) {
+	wallet, err := u.userRepo.GetWalletByUserID(ctx, userID)
+	if err != nil {
+		if err != sql.ErrNoRows {
+			return nil, err
+		}
+	}
+
+	totalRows, err := u.userRepo.GetTotalWalletHistoryByWalletID(ctx, wallet.ID.String())
+	if err != nil {
+		return nil, err
+	}
+
+	totalPages := int(math.Ceil(float64(totalRows) / float64(pgn.Limit)))
+	pgn.TotalRows = totalRows
+	pgn.TotalPages = totalPages
+
+	walletHistory, err := u.userRepo.GetWalletHistoryByWalletID(ctx, pgn, wallet.ID.String())
+	if err != nil {
+		return nil, err
+	}
+
+	pgn.Rows = walletHistory
+
+	return pgn, nil
 }
 
 func (u *userUC) WalletStepUp(ctx context.Context, userID string, requestBody body.WalletStepUpRequest) (string, error) {

@@ -765,6 +765,41 @@ paths:
               schema:
                 $ref: "#/components/schemas/InputPinWalletResponse"
 
+  "/api/v1/user/wallet/history":
+    get:
+      summary: Get user wallet history
+      description: >-
+        Get user wallet history
+      tags:
+        - User
+      parameters:
+        - in: query
+          name: page
+          schema:
+            type: integer
+          required: false
+        - in: query
+          name: limit
+          schema:
+            type: integer
+          required: false
+        - in: query
+          name: sort
+          schema:
+            type: string
+          required: false
+          example: "ASC"
+          
+      security:
+        - BEARER: []
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GetWalletResponse"
+
   "/api/v1/user/password":
     post:
       summary: verification password
@@ -2481,6 +2516,65 @@ components:
               active_date:
                 Time: "2023-01-05T10:02:58.493922Z"
                 Valid: true
+
+    GetWalletHistoryResponse:
+      title: GetWalletHistoryResponse
+      type: object
+      properties:
+        message:
+          type: string
+        data:
+          type: object
+          properties:
+            limit:
+              type: integer
+            page:
+              type: integer
+            sort:
+              type: string
+            total_rows:
+              type: integer
+            total_pages:
+              type: integer
+            rows:
+              type: array
+              items:
+                - type: object
+                  properties:
+                    id:
+                      type: string
+                    from:
+                      type: string
+                    to:
+                      type: string
+                    amount:
+                      type: integer
+                    description:
+                      type: string
+                    created_at:
+                      type: string
+                  required:
+                    - id
+                    - from
+                    - to
+                    - amount
+                    - description
+                    - created_at
+      example:
+        message: success
+        data:
+          limit: 10
+          page: 1
+          sort: created_at DESC
+          total_rows: 1
+          total_pages: 1
+          rows:
+            - id: 9e13d61e-397a-4ab7-b1ea-569f4667012c
+              from: SEA BANK
+              to: USER
+              amount: -20000
+              description: TopUp
+              created_at: '2023-01-16T06:01:19.776573Z'
 
     InputPinWalletRequest:
       title: InputPinWalletRequest

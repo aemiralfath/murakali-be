@@ -6,6 +6,7 @@ import (
 	"database/sql"
 	"fmt"
 	"murakali/config"
+	"murakali/internal/constant"
 	"murakali/internal/model"
 	"murakali/internal/module/auth"
 	"murakali/internal/module/auth/delivery/body"
@@ -13,6 +14,7 @@ import (
 	smtp "murakali/pkg/email"
 	"murakali/pkg/httperror"
 	"murakali/pkg/jwt"
+	"murakali/pkg/oauth"
 	"murakali/pkg/postgre"
 	"murakali/pkg/response"
 	"net/http"
@@ -157,7 +159,7 @@ func (u *authUC) RegisterUser(ctx context.Context, email string, requestBody bod
 	}
 
 	password := string(hashedPassword)
-	if !user.IsVerify {
+	if !user.IsVerify || user.IsSSO {
 		user.PhoneNo = &requestBody.PhoneNo
 		user.FullName = &requestBody.FullName
 		user.Username = &requestBody.Username
@@ -347,7 +349,7 @@ func (u *authUC) SendLinkOTPEmail(ctx context.Context, email string) error {
 	h.Write([]byte(otp))
 	hashedOTP := fmt.Sprintf("%x", h.Sum(nil))
 
-	link := fmt.Sprintf("http://%s/verify?code=%s&email=%s", u.cfg.Server.Origin, hashedOTP, email)
+	link := fmt.Sprintf("%s/verify?code=%s&email=%s", u.cfg.Server.Origin, hashedOTP, email)
 
 	subject := "Reset Password!"
 	msg := smtp.VerificationEmailLinkOTPBody(link)
@@ -376,4 +378,75 @@ func (u *authUC) CheckUniquePhoneNo(ctx context.Context, phoneNo string) (bool, 
 		return true, nil
 	}
 	return false, nil
+}
+
+func (u *authUC) GoogleAuth(ctx context.Context, state string, userAuth *oauth.GoogleUserResult) (*model.GoogleAuthToken, error) {
+	user, err := u.authRepo.GetUserByEmail(ctx, userAuth.Email)
+	if err != nil || !user.IsVerify {
+		if err == sql.ErrNoRows {
+			emailHistory, errHistory := u.authRepo.CheckEmailHistory(ctx, userAuth.Email)
+			if errHistory != nil {
+				if errHistory != sql.ErrNoRows {
+					return nil, errHistory
+				}
+			}
+
+			if emailHistory != nil {
+				if state == constant.LoginOauth {
+					return nil, httperror.New(http.StatusBadRequest, response.EmailAlreadyChangedMessage)
+				}
+				return nil, httperror.New(http.StatusBadRequest, response.EmailAlreadyExistMessage)
+			}
+
+			user = &model.User{}
+			user.Email = userAuth.Email
+			user.Username = &userAuth.ID
+			user.FullName = &userAuth.Name
+			user.PhotoURL = &userAuth.Picture
+			user.IsSSO = true
+
+			err = u.txRepo.WithTransaction(func(tx postgre.Transaction) error {
+				user, err = u.authRepo.CreateUserGoogle(ctx, tx, user)
+				if err != nil {
+					return err
+				}
+
+				return nil
+			})
+
+			if err != nil {
+				return nil, err
+			}
+
+			registerToken, errToken := jwt.GenerateJWTRegisterToken(userAuth.Email, u.cfg)
+			if errToken != nil {
+				return nil, errToken
+			}
+
+			return &model.GoogleAuthToken{RegisterToken: &registerToken}, nil
+		}
+
+		if !user.IsVerify {
+			registerToken, errToken := jwt.GenerateJWTRegisterToken(userAuth.Email, u.cfg)
+			if errToken != nil {
+				return nil, errToken
+			}
+
+			return &model.GoogleAuthToken{RegisterToken: &registerToken}, nil
+		}
+
+		return nil, err
+	}
+
+	accessToken, err := jwt.GenerateJWTAccessToken(user.ID.String(), user.RoleID, u.cfg)
+	if err != nil {
+		return nil, err
+	}
+
+	refreshToken, err := jwt.GenerateJWTRefreshToken(user.ID.String(), u.cfg)
+	if err != nil {
+		return nil, err
+	}
+
+	return &model.GoogleAuthToken{Token: &model.Token{AccessToken: accessToken, RefreshToken: refreshToken}}, nil
 }
