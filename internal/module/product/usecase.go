@@ -24,5 +24,6 @@ type UseCase interface {
 	GetTotalReviewRatingByProductID(ctx context.Context, productID string) (*body.AllRatingProduct, error)
 	CreateProduct(ctx context.Context, requestBody body.CreateProductRequest, userID string) error
 	UpdateListedStatus(ctx context.Context, productID string) error
+	UpdateProductListedStatusBulk(ctx context.Context, product body.UpdateProductListedStatusBulkRequest) error
 	UpdateProduct(ctx context.Context, requestBody body.UpdateProductRequest, userID, productID string) error
 }

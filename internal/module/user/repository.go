@@ -13,6 +13,7 @@ import (
 type Repository interface {
 	GetTransactionByID(ctx context.Context, transactionID string) (*model.Transaction, error)
 	GetUserByID(ctx context.Context, id string) (*model.User, error)
+	GetUserPasswordByID(ctx context.Context, id string) (*model.User, error)
 	GetTotalAddress(ctx context.Context, userID, name string) (int64, error)
 	GetTotalAddressDefault(ctx context.Context, userID, name string, isDefault, isShopDefault bool) (int64, error)
 	GetAddresses(ctx context.Context, userID, name string, isDefault, isShopDefault bool, pagination *pagination.Pagination) ([]*model.Address, error)
@@ -26,7 +27,7 @@ type Repository interface {
 	UpdateDefaultShopAddress(ctx context.Context, tx postgre.Transaction, status bool, address *model.Address) error
 	DeleteAddress(ctx context.Context, addressID string) error
 	GetSealabsPay(ctx context.Context, userid string) ([]*model.SealabsPay, error)
-	AddSealabsPay(ctx context.Context, tx postgre.Transaction, request body.AddSealabsPayRequest, userid string) error
+	AddSealabsPayTrans(ctx context.Context, tx postgre.Transaction, request body.AddSealabsPayRequest, userid string) error
 	PatchSealabsPay(ctx context.Context, cardNumber string) error
 	CheckDefaultSealabsPay(ctx context.Context, userid string) (*string, error)
 	SetDefaultSealabsPayTrans(ctx context.Context, tx postgre.Transaction, cardNumber *string) error
@@ -58,7 +59,7 @@ type Repository interface {
 	GetShopByID(ctx context.Context, shopID string) (*model.Shop, error)
 	GetVoucherShopByID(ctx context.Context, VoucherShopID, shopID string) (*model.Voucher, error)
 	GetCourierShopByID(ctx context.Context, CourierID, shopID string) (*model.Courier, error)
-	GetProductDetailByID(ctx context.Context, productDetailID string) (*model.ProductDetail, error)
+	GetProductDetailByID(ctx context.Context, tx postgre.Transaction, productDetailID string) (*model.ProductDetail, error)
 	GetCartItemUser(ctx context.Context, userID, productDetailID string) (*model.CartItem, error)
 	CreateTransaction(ctx context.Context, tx postgre.Transaction, transactionData *model.Transaction) (*uuid.UUID, error)
 	UpdateTransaction(ctx context.Context, tx postgre.Transaction, transactionData *model.Transaction) error
@@ -73,4 +74,10 @@ type Repository interface {
 	InsertWalletHistory(ctx context.Context, tx postgre.Transaction, walletHistory *model.WalletHistory) error
 	UpdateWalletBalance(ctx context.Context, tx postgre.Transaction, wallet *model.Wallet) error
 	UpdateWallet(ctx context.Context, wallet *model.Wallet) error
+	CheckUserSealabsPay(ctx context.Context, userid string) (int, error)
+	CheckDeletedSealabsPay(ctx context.Context, cardNumber string) (int, error)
+	AddSealabsPay(ctx context.Context, request body.AddSealabsPayRequest, userid string) error
+	UpdateUserSealabsPay(ctx context.Context, request body.AddSealabsPayRequest, userid string) error
+	UpdateUserSealabsPayTrans(ctx context.Context, tx postgre.Transaction, request body.AddSealabsPayRequest, userid string) error
+	UpdateWalletPin(ctx context.Context, wallet *model.Wallet) error
 }

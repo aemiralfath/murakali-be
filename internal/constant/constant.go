@@ -3,11 +3,12 @@ package constant
 const (
 	AdminMarketplaceID = "4df967a8-5b05-4d2a-bb72-da3921dce8fb"
 
-	RegisterTokenCookie       = "register_token"
-	RefreshTokenCookie        = "refresh_token"
-	WalletTokenCookie         = "wallet_token"
-	ResetPasswordTokenCookie  = "reset_password_token"
-	ChangePasswordTokenCookie = "change_password_token"
+	RegisterTokenCookie        = "register_token"
+	RefreshTokenCookie         = "refresh_token"
+	WalletTokenCookie          = "wallet_token"
+	ChangeWalletPinTokenCookie = "change_wallet_pin_token"
+	ResetPasswordTokenCookie   = "reset_password_token"
+	ChangePasswordTokenCookie  = "change_password_token"
 
 	ProvinceKey    = "location:province"
 	CityKey        = "location:city"
@@ -34,12 +35,13 @@ const (
 	LoginOauth    = "/login"
 	RegisterOauth = "/register"
 
-	OrderStatusWaitingToPay      = 1
-	OrderStatusWaitingForSeller  = 2
-	OrderStatusWaitingForPacking = 3
-	OrderStatusOnDelivery        = 4
-	OrderStatusReceived          = 6
-	OrderStatusCompleted         = 5
-	OrderStatusCanceled          = 7
-	OrderStatusRefund            = 8
+	OrderStatusWaitingToPay     = 1
+	OrderStatusWaitingForSeller = 2
+	OrderStatusProcessed        = 3
+	OrderStatusOnDelivery       = 4
+	OrderStatusDelivered        = 6
+	OrderStatusReceived         = 5
+	OrderStatusCompleted        = 7
+	OrderStatusCanceled         = 8
+	OrderStatusRefunded         = 9
 )

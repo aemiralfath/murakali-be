@@ -16,19 +16,21 @@ type UpdateProductRequest struct {
 }
 
 type UpdateProductInfo struct {
-	Title       string `json:"title"`
-	Description string `json:"description"`
-	Thumbnail   string `json:"thumbnail"`
-	CategoryID  string `json:"category_id"`
+	Title        string `json:"title"`
+	Description  string `json:"description"`
+	Thumbnail    string `json:"thumbnail"`
+	CategoryID   string `json:"category_id"`
+	ListedStatus bool   `json:"listed_status"`
 }
 
 type UpdateProductInfoForQuery struct {
-	Title       string
-	Description string
-	Thumbnail   string
-	CategoryID  string
-	MinPrice    float64
-	MaxPrice    float64
+	Title        string
+	Description  string
+	Thumbnail    string
+	CategoryID   string
+	MinPrice     float64
+	MaxPrice     float64
+	ListedStatus bool
 }
 
 type UpdateProductDetailRequest struct {
@@ -149,4 +151,45 @@ func (r *UpdateProductRequest) ValidateUpdateProduct() (UnprocessableEntity, err
 	}
 
 	return entity, nil
+}
+
+func (r *UpdateProductListedStatusBulkRequest) ValidateUpdateProductListedStatusBulk() (UnprocessableEntity, error) {
+	unprocessableEntity := false
+	entity := UnprocessableEntity{
+		Fields: map[string]string{
+			"products_ids":  "",
+			"listed_status": "",
+		},
+	}
+
+	if len(r.ProductIDS) == 0 {
+		unprocessableEntity = true
+		entity.Fields["products_ids"] = FieldCannotBeEmptyMessage
+	}
+
+	totalData := len(r.ProductIDS)
+	if totalData > 0 {
+		for i := 0; i < totalData; i++ {
+			r.ProductIDS[i] = strings.TrimSpace(r.ProductIDS[i])
+			if _, err := uuid.Parse(r.ProductIDS[i]); err != nil {
+				unprocessableEntity = true
+				entity.Fields["products_ids"] = FieldCannotBeEmptyMessage
+			}
+
+		}
+	}
+
+	if unprocessableEntity {
+		return entity, httperror.New(
+			http.StatusUnprocessableEntity,
+			response.UnprocessableEntityMessage,
+		)
+	}
+
+	return entity, nil
+}
+
+type UpdateProductListedStatusBulkRequest struct {
+	ProductIDS   []string `json:"products_ids"`
+	ListedStatus bool     `json:"listed_status"`
 }
