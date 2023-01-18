@@ -3166,7 +3166,6 @@ components:
           title: uniqlo shirts
           description: this is description
           thumbnail: https://res.cloudinary.com/dhpao1zxi/image/upload/v1673329263/k6x5iqami51p1ouilukp.jpg
-          category_id: d92a0995-78cd-4eba-a855-dfc096ffec5b
           listed_status: true
         products_detail_update:
           - product_detail_id: a7e8e5c8-95a0-468f-b0e3-efd3d324e51c
