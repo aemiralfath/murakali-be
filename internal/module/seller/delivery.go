@@ -19,4 +19,5 @@ type Handlers interface {
 	DeleteVoucherSeller(c *gin.Context)
 	DetailVoucherSeller(c *gin.Context)
 	UpdateOnDeliveryOrder(c *gin.Context)
+	UpdateExpiredAtOrder(c *gin.Context)
 }

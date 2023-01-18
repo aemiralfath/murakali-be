@@ -36,6 +36,10 @@ func main() {
 		updateOnDelivery(cfg, appLogger)
 	})
 
+	cronJob.AddFunc("@every 1m", func() {
+		updateExpiredAt(cfg, appLogger)
+	})
+
 	go cronJob.Start()
 
 	sig := make(chan os.Signal, 1)
@@ -47,6 +51,29 @@ func main() {
 func updateOnDelivery(cfg *config.Config, appLogger logger.Logger) {
 	appLogger.Info("cron update delivery start")
 	url := fmt.Sprintf("https://%s/api/v1/seller/delivery", cfg.Server.Domain)
+	req, err := http.NewRequest("POST", url, http.NoBody)
+	if err != nil {
+		appLogger.Warnf("request error: ", err.Error())
+		return
+	}
+
+	res, err := http.DefaultClient.Do(req)
+	if err != nil {
+		appLogger.Warn("response error: ", err.Error())
+		return
+	}
+
+	if res.StatusCode != http.StatusOK {
+		appLogger.Warn("status code error: ", res.StatusCode)
+		return
+	}
+
+	appLogger.Infof("update delivery success")
+}
+
+func updateExpiredAt(cfg *config.Config, appLogger logger.Logger) {
+	appLogger.Info("cron update expired at start")
+	url := fmt.Sprintf("https://%s/api/v1/seller/expired", cfg.Server.Domain)
 	req, err := http.NewRequest("POST", url, http.NoBody)
 	if err != nil {
 		appLogger.Warnf("request error: ", err.Error())

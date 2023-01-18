@@ -5,6 +5,7 @@ import (
 	"murakali/internal/model"
 	"murakali/internal/module/seller/delivery/body"
 	"murakali/pkg/pagination"
+	"murakali/pkg/postgre"
 	"time"
 )
 
@@ -40,5 +41,12 @@ type Repository interface {
 	CreateVoucherSeller(ctx context.Context, voucherShop *model.Voucher) error
 	UpdateVoucherSeller(ctx context.Context, voucherShop *model.Voucher) error
 	DeleteVoucherSeller(ctx context.Context, voucherIDShopID *body.VoucherIDShopID) error
-	GetAllVoucherSellerByIDandShopID(ctx context.Context, voucherIDShopID *body.VoucherIDShopID) (*model.Voucher, error)
+	GetAllVoucherSellerByIDAndShopID(ctx context.Context, voucherIDShopID *body.VoucherIDShopID) (*model.Voucher, error)
+	UpdateOrder(ctx context.Context, tx postgre.Transaction, orderData *model.OrderModel) error
+	UpdateTransaction(ctx context.Context, tx postgre.Transaction, transactionData *model.Transaction) error
+	GetOrderByTransactionID(ctx context.Context, tx postgre.Transaction, transactionID string) ([]*model.OrderModel, error)
+	GetTransactionsExpired(ctx context.Context) ([]*model.Transaction, error)
+	GetOrderItemsByOrderID(ctx context.Context, tx postgre.Transaction, orderID string) ([]*model.OrderItem, error)
+	GetProductDetailByID(ctx context.Context, tx postgre.Transaction, productDetailID string) (*model.ProductDetail, error)
+	UpdateProductDetailStock(ctx context.Context, tx postgre.Transaction, productDetailData *model.ProductDetail) error
 }

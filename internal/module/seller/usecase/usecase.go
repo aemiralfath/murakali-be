@@ -323,6 +323,62 @@ func (u *sellerUC) UpdateOnDeliveryOrder(ctx context.Context) error {
 	return nil
 }
 
+func (u *sellerUC) UpdateExpiredAtOrder(ctx context.Context) error {
+	// TODO: Add voucher promotion stock & validation
+	transactions, err := u.sellerRepo.GetTransactionsExpired(ctx)
+	if err != nil {
+		return nil
+	}
+
+	for _, transaction := range transactions {
+		err := u.txRepo.WithTransaction(func(tx postgre.Transaction) error {
+			transaction.CanceledAt.Valid = true
+			transaction.CanceledAt.Time = time.Now()
+			if err := u.sellerRepo.UpdateTransaction(ctx, tx, transaction); err != nil {
+				return err
+			}
+
+			orders, err := u.sellerRepo.GetOrderByTransactionID(ctx, tx, transaction.ID.String())
+			if err != nil {
+				return err
+			}
+
+			for _, order := range orders {
+				order.OrderStatusID = constant.OrderStatusWaitingForSeller
+				if err := u.sellerRepo.UpdateOrder(ctx, tx, order); err != nil {
+					return err
+				}
+
+				orderItems, err := u.sellerRepo.GetOrderItemsByOrderID(ctx, tx, order.ID.String())
+				if err != nil {
+					return err
+				}
+
+				for _, item := range orderItems {
+					productDetailData, err := u.sellerRepo.GetProductDetailByID(ctx, tx, item.ProductDetailID.String())
+					if err != nil {
+						return err
+					}
+
+					productDetailData.Stock += float64(item.Quantity)
+					errProduct := u.sellerRepo.UpdateProductDetailStock(ctx, tx, productDetailData)
+					if errProduct != nil {
+						return errProduct
+					}
+				}
+			}
+
+			return nil
+		})
+
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
 func (u *sellerUC) GetCostRajaOngkir(origin, destination, weight int, code string) (*body2.RajaOngkirCostResponse, error) {
 	var responseCost body2.RajaOngkirCostResponse
 	url := fmt.Sprintf("%s/cost", u.cfg.External.OngkirAPIURL)
@@ -426,7 +482,7 @@ func (u *sellerUC) UpdateVoucherSeller(ctx context.Context, userID string, reque
 		VoucherID: requestBody.VoucherID,
 	}
 
-	voucherShop, errVoucher := u.sellerRepo.GetAllVoucherSellerByIDandShopID(ctx, voucherIDShopID)
+	voucherShop, errVoucher := u.sellerRepo.GetAllVoucherSellerByIDAndShopID(ctx, voucherIDShopID)
 	if errVoucher != nil {
 		if errVoucher == sql.ErrNoRows {
 			return httperror.New(http.StatusBadRequest, body.VoucherSellerNotFoundMessage)
@@ -461,7 +517,7 @@ func (u *sellerUC) GetDetailVoucherSeller(ctx context.Context, voucherIDShopID *
 	}
 	voucherIDShopID.ShopID = shopID
 
-	voucherShop, errVoucher := u.sellerRepo.GetAllVoucherSellerByIDandShopID(ctx, voucherIDShopID)
+	voucherShop, errVoucher := u.sellerRepo.GetAllVoucherSellerByIDAndShopID(ctx, voucherIDShopID)
 	if errVoucher != nil {
 		if errVoucher == sql.ErrNoRows {
 			return nil, httperror.New(http.StatusBadRequest, body.VoucherSellerNotFoundMessage)
@@ -483,7 +539,7 @@ func (u *sellerUC) DeleteVoucherSeller(ctx context.Context, voucherIDShopID *bod
 	}
 	voucherIDShopID.ShopID = shopID
 
-	_, errVoucher := u.sellerRepo.GetAllVoucherSellerByIDandShopID(ctx, voucherIDShopID)
+	_, errVoucher := u.sellerRepo.GetAllVoucherSellerByIDAndShopID(ctx, voucherIDShopID)
 	if errVoucher != nil {
 		if errVoucher == sql.ErrNoRows {
 			return httperror.New(http.StatusBadRequest, body.VoucherSellerNotFoundMessage)

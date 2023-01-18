@@ -139,4 +139,13 @@ const (
 			"discount_fix_price" = $5, "min_product_price" = $6, "max_discount_price" = $7, "updated_at" = now()
 		WHERE "id" = $8
 	`
+
+	UpdateOrderByID               = `UPDATE "order" SET "order_status_id" = $1 WHERE "id" = $2`
+	UpdateTransactionByID         = `UPDATE "transaction" SET "paid_at" = $1, "canceled_at" = $2 WHERE "id" = $3`
+	GetProductDetailByIDQuery     = `SELECT "id", "price", "stock", "weight", "size", "hazardous", "condition", "bulk_price" FROM "product_detail" WHERE "id" = $1 AND "deleted_at" IS NULL;`
+	GetTransactionsExpiredQuery   = `SELECT "id", "voucher_marketplace_id", "wallet_id", "card_number", "invoice", "total_price", "paid_at", "canceled_at", "expired_at" FROM "transaction" WHERE "paid_at" IS NULL AND "canceled_at" IS NULL AND "expired_at" < current_timestamp`
+	UpdateProductDetailStockQuery = `UPDATE "product_detail" SET "stock" = $1, "updated_at" = now() WHERE "id" = $2;`
+	GetOrderByTransactionID       = `SELECT 
+		"id", "transaction_id", "shop_id", "user_id", "courier_id", "voucher_shop_id", "order_status_id", "total_price", "delivery_fee", "resi_no", "created_at", "arrived_at" 
+	FROM "order" WHERE "transaction_id" = $1`
 )
