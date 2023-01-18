@@ -42,6 +42,7 @@ const (
 	UnknownShop                    = "Unknown shop."
 	CartItemNotExist               = "Cart Item not exist."
 	ShopAddressNotFound            = "Shop address not found."
+	UserNotHaveShop                = "User not register shop"
 	DefaultAddressNotFound         = "Default address not found."
 	ShopCourierNotExist            = "Shop courier not exist."
 	WalletAlreadyActivated         = "Wallet already activated."

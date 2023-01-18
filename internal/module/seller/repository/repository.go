@@ -497,3 +497,65 @@ func (r *sellerRepo) GetAllVoucherSeller(ctx context.Context, shopID string) ([]
 
 	return shopVouchers, nil
 }
+
+func (r *sellerRepo) CreateVoucherSeller(ctx context.Context, voucherShop *model.Voucher) error {
+	if _, err := r.PSQL.ExecContext(ctx, CreateVoucherSellerQuery,
+		voucherShop.ShopID,
+		voucherShop.Code,
+		voucherShop.Quota,
+		voucherShop.ActivedDate,
+		voucherShop.ExpiredDate,
+		voucherShop.DiscountPercentage,
+		voucherShop.DiscountFixPrice,
+		voucherShop.MinProductPrice,
+		voucherShop.MaxDiscountPrice); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (r *sellerRepo) UpdateVoucherSeller(ctx context.Context, voucherShop *model.Voucher) error {
+	if _, err := r.PSQL.ExecContext(ctx, UpdateVoucherSellerQuery,
+		voucherShop.Quota,
+		voucherShop.ActivedDate,
+		voucherShop.ExpiredDate,
+		voucherShop.DiscountPercentage,
+		voucherShop.DiscountFixPrice,
+		voucherShop.MinProductPrice,
+		voucherShop.MaxDiscountPrice,
+		voucherShop.ID); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (r *sellerRepo) DeleteVoucherSeller(ctx context.Context, voucherIDShopID *body.VoucherIDShopID) error {
+	_, err := r.PSQL.ExecContext(ctx, DeleteVoucherSellerQuery, voucherIDShopID.VoucherID, voucherIDShopID.ShopID)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (r *sellerRepo) GetAllVoucherSellerByIDandShopID(ctx context.Context, voucherIDShopID *body.VoucherIDShopID) (*model.Voucher, error) {
+	var voucher model.Voucher
+	if err := r.PSQL.QueryRowContext(ctx, GetAllVoucherSellerByIDandShopIDQuery, voucherIDShopID.VoucherID, voucherIDShopID.ShopID).Scan(
+		&voucher.ID,
+		&voucher.ShopID,
+		&voucher.Code,
+		&voucher.Quota,
+		&voucher.ActivedDate,
+		&voucher.ExpiredDate,
+		&voucher.DiscountPercentage,
+		&voucher.DiscountFixPrice,
+		&voucher.MinProductPrice,
+		&voucher.MaxDiscountPrice,
+		&voucher.CreatedAt,
+		&voucher.UpdatedAt,
+		&voucher.DeletedAt,
+	); err != nil {
+		return nil, err
+	}
+
+	return &voucher, nil
+}
