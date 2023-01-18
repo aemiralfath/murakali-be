@@ -1925,9 +1925,9 @@ paths:
 
   "/api/v1/seller/promotion":
     get:
-      summary: Get All Seller Voucher 
+      summary: Get All Seller Promotion 
       description: >-
-        Get All Seller Voucher
+        Get All Seller Promotion
       tags:
         - Seller
       security:
@@ -1939,6 +1939,26 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/GetAllPromotionSellerResponse"
+    post:
+      summary: Create Seller Promotion 
+      description: >-
+        Create Seller Promotion
+      tags:
+        - Seller
+      security:
+        - BEARER: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreatePromotionSellerRequest"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CreatedRowSuccess"
                 
 components:
   schemas:
@@ -4895,6 +4915,39 @@ components:
               Time: '0001-01-01T00:00:00Z'
               Valid: false
 
+    CreatePromotionSellerRequest:
+      title: CreatePromotionSellerRequest
+      type: object
+      description: Create promotion seller request data model.
+      properties:
+      example:
+        name: dih promo
+        shop_id: e8854443-c2c7-488e-93d5-b9d93708b8a3
+        quota: 5
+        max_quantity: 2
+        actived_date: 22-12-2022 21:43:56
+        expired_date: 22-02-2023 21:43:56
+        discount_percentage: 19
+        discount_fix_price: 0
+        min_product_price: 5000
+        max_discount_price: 10000
+        product_ids:
+          - b73be319-6598-40ef-a0b3-f5a238a66940
+          - 8a185d4b-fd59-4c7b-9b1a-1b626bd91af0
+
+    CreatedRowSuccess:
+      title: CheckUniqueTrueSuccess
+      type: object
+      description: Check Unique True Success.
+      properties:
+        message:
+          type: string
+          example: success
+          description: Success message from server.
+        data:
+          type: number
+          example: 2
+          description: number of created row effected
 
     CheckUniqueTrueSuccess:
       title: CheckUniqueTrueSuccess

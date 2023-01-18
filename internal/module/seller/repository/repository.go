@@ -10,6 +10,7 @@ import (
 	"murakali/internal/module/seller/delivery/body"
 	"murakali/pkg/httperror"
 	"murakali/pkg/pagination"
+	"murakali/pkg/postgre"
 	"murakali/pkg/response"
 	"net/http"
 	"time"
@@ -653,4 +654,33 @@ func (r *sellerRepo) GetTotalPromotionSeller(ctx context.Context, shopID string)
 	}
 
 	return total, nil
+}
+
+func (r *sellerRepo) GetProductPromotion(ctx context.Context, shopProduct *body.ShopProduct) (*body.ProductPromotion, error) {
+	var productPromo body.ProductPromotion
+	if err := r.PSQL.QueryRowContext(ctx, GetProductPromotionQuery,
+		shopProduct.ShopID, shopProduct.ProductID).Scan(
+		&productPromo.ProductID,
+		&productPromo.PromotionID); err != nil {
+		return nil, err
+	}
+	return &productPromo, nil
+}
+
+func (r *sellerRepo) CreatePromotionSeller(ctx context.Context, tx postgre.Transaction, promotionShop *model.Promotion) error {
+	if _, err := r.PSQL.ExecContext(ctx, CreatePromotionSellerQuery,
+		promotionShop.Name,
+		promotionShop.ProductID,
+		promotionShop.DiscountPercentage,
+		promotionShop.DiscountFixPrice,
+		promotionShop.MinProductPrice,
+		promotionShop.MaxDiscountPrice,
+		promotionShop.Quota,
+		promotionShop.MaxQuantity,
+		promotionShop.ActivedDate,
+		promotionShop.ExpiredDate,
+	); err != nil {
+		return err
+	}
+	return nil
 }

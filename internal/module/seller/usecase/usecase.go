@@ -506,3 +506,63 @@ func (u *sellerUC) GetAllPromotionSeller(ctx context.Context, userID string, pgn
 
 	return pgn, nil
 }
+
+func (u *sellerUC) CreatePromotionSeller(ctx context.Context, userID string, requestBody body.CreatePromotionRequest) (int, error) {
+	shopID, err := u.sellerRepo.GetShopIDByUserID(ctx, userID)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return -1, httperror.New(http.StatusBadRequest, response.UserNotHaveShop)
+		}
+		return -1, err
+	}
+
+	data, errTx := u.txRepo.WithTransactionReturnData(func(tx postgre.Transaction) (interface{}, error) {
+		countProduct := 0
+		for _, productID := range requestBody.ProductIDs {
+			shopProduct := &body.ShopProduct{ShopID: shopID, ProductID: productID}
+
+			productPromo, errProductPromo := u.sellerRepo.GetProductPromotion(ctx, shopProduct)
+			if errProductPromo != nil {
+				if errProductPromo == sql.ErrNoRows {
+					return nil, httperror.New(http.StatusBadRequest, response.ProductNotExistMessage)
+				}
+				return nil, errProductPromo
+			}
+
+			if productPromo.PromotionID != nil {
+				return nil, httperror.New(http.StatusBadRequest, response.ProductAlreadyHasPromoMessage)
+			}
+
+			PID, err := uuid.Parse(productID)
+			if err != nil {
+				return nil, err
+			}
+
+			promotionShop := &model.Promotion{
+				Name:               requestBody.Name,
+				ProductID:          PID,
+				DiscountPercentage: &requestBody.DiscountPercentage,
+				DiscountFixPrice:   &requestBody.DiscountFixPrice,
+				MinProductPrice:    &requestBody.MinProductPrice,
+				MaxDiscountPrice:   &requestBody.MaxDiscountPrice,
+				Quota:              requestBody.Quota,
+				MaxQuantity:        requestBody.MaxQuantity,
+				ActivedDate:        requestBody.ActiveDateTime,
+				ExpiredDate:        requestBody.ExpiredDateTime,
+			}
+
+			err = u.sellerRepo.CreatePromotionSeller(ctx, tx, promotionShop)
+			if err != nil {
+				return nil, err
+			}
+			countProduct++
+		}
+		return countProduct, nil
+	})
+
+	if errTx != nil {
+		return -1, errTx
+	}
+
+	return data.(int), nil
+}

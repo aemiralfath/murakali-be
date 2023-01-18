@@ -153,4 +153,21 @@ const (
 	INNER JOIN "shop" as "s" ON "s"."id" = "p"."shop_id"
 	WHERE "s"."id" = $1
 	`
+
+	GetProductPromotionQuery = `
+	SELECT "p"."id", "promo"."id"
+	FROM "product" as "p"
+	INNER JOIN "shop" as "s" ON "s"."id" = "p"."shop_id"
+	LEFT JOIN (
+		SELECT "promotion"."id", "promotion"."actived_date", "promotion"."expired_date", "promotion"."product_id"
+		FROM "promotion" WHERE now() BETWEEN "promotion"."actived_date" AND "promotion"."expired_date"
+	) as "promo" ON "promo"."product_id" = "p"."id"
+	WHERE "s"."id" = $1 AND "p"."id" = $2;
+	`
+	CreatePromotionSellerQuery = `
+	INSERT INTO "promotion"
+		(name, product_id, discount_percentage, discount_fix_price, min_product_price, max_discount_price,
+		quota, max_quantity, actived_date, expired_date)
+	VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+	`
 )
