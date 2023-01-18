@@ -87,6 +87,9 @@ const (
 	GetWalletHistoryUserQuery = `SELECT "id", "from", "to", "amount", "description", "created_at" 
 	FROM "wallet_history" 
 	WHERE "wallet_id" = $1`
+	GetWalletHistoryByIDQuery = `SELECT "id", "from", "to", "amount", "description", "created_at" 
+	FROM "wallet_history" 
+	WHERE "id" = $1`
 	GetTotalWalletHistoryUserQuery = `SELECT count(id) FROM "wallet_history" WHERE "wallet_id" = $1;`
 	GetSealabsPayUserQuery         = `SELECT "card_number", "user_id", "name", "is_default", "active_date" FROM "sealabs_pay" WHERE "user_id" = $1 AND "card_number" = $2 AND "deleted_at" IS NULL;`
 	GetVoucherMarketplaceByIDQuery = `SELECT "id", "shop_id", "code", "quota", "actived_date", "expired_date", "discount_percentage", "discount_fix_price", "min_product_price", "max_discount_price" FROM "voucher"

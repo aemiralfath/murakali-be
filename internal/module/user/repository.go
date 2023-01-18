@@ -53,6 +53,7 @@ type Repository interface {
 	GetOrders(ctx context.Context, userID string, pgn *pagination.Pagination) ([]*model.Order, error)
 	GetOrdersByTransactionID(ctx context.Context, transactionID, userID string) ([]*model.Order, error)
 	GetWalletUser(ctx context.Context, walletID string) (*model.Wallet, error)
+	GetWalletHistoryByID(ctx context.Context, id string) (*model.WalletHistory, error)
 	GetWalletHistoryByWalletID(ctx context.Context, pgn *pagination.Pagination, walletID string) ([]*body.HistoryWalletResponse, error)
 	GetTotalWalletHistoryByWalletID(ctx context.Context, walletID string) (int64, error)
 	GetSealabsPayUser(ctx context.Context, userID, CardNumber string) (*model.SealabsPay, error)

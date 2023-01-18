@@ -1188,6 +1188,58 @@ func (u *userUC) GetWalletHistory(ctx context.Context, userID string, pgn *pagin
 	return pgn, nil
 }
 
+func (u *userUC) GetDetailWalletHistory(ctx context.Context, walletHistoryID, userID string) (*body.DetailHistoryWalletResponse, error) {
+
+	walletHistory, err := u.userRepo.GetWalletHistoryByID(ctx, walletHistoryID)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, httperror.New(http.StatusBadRequest, response.WalletHistoryNotFound)
+		}
+		return nil, err
+	}
+
+	response := &body.DetailHistoryWalletResponse{
+		ID:          walletHistory.ID.String(),
+		From:        walletHistory.From,
+		To:          walletHistory.To,
+		Description: walletHistory.Description,
+		Amount:      walletHistory.Amount,
+		CreatedAt:   walletHistory.CreatedAt,
+	}
+
+	if walletHistory.WalletID.String() == walletHistory.From {
+		var transactionDetail *body.TransactionDetailResponse
+		transaction, err := u.userRepo.GetTransactionByID(ctx, walletHistory.TransactionID.String())
+		if err != nil {
+			return nil, err
+		}
+
+		transactionDetail = &body.TransactionDetailResponse{
+			ID:                   transaction.ID,
+			VoucherMarketplaceID: transaction.VoucherMarketplaceID,
+			WalletID:             transaction.WalletID,
+			CardNumber:           transaction.CardNumber,
+			Invoice:              transaction.Invoice,
+			TotalPrice:           transaction.TotalPrice,
+			PaidAt:               transaction.PaidAt,
+			CanceledAt:           transaction.CanceledAt,
+			ExpiredAt:            transaction.ExpiredAt,
+			Orders:               []*model.Order{},
+		}
+
+		orders, err := u.userRepo.GetOrdersByTransactionID(ctx, walletHistory.TransactionID.String(), userID)
+		if err != nil {
+			return nil, err
+		}
+
+		transactionDetail.Orders = orders
+
+		response.Transaction = transactionDetail
+	}
+
+	return response, nil
+}
+
 func (u *userUC) WalletStepUp(ctx context.Context, userID string, requestBody body.WalletStepUpRequest) (string, error) {
 	wallet, err := u.userRepo.GetWalletByUserID(ctx, userID)
 	if err != nil {

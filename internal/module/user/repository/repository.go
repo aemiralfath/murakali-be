@@ -548,6 +548,17 @@ func (r *userRepo) GetWalletHistoryByWalletID(ctx context.Context, pgn *paginati
 	return walletHistory, nil
 }
 
+func (r *userRepo) GetWalletHistoryByID(ctx context.Context, id string) (*model.WalletHistory, error) {
+	var walletHistory model.WalletHistory
+	if err := r.PSQL.QueryRowContext(ctx, GetWalletHistoryByIDQuery, id).
+		Scan(&walletHistory.ID, &walletHistory.From, &walletHistory.To,
+			&walletHistory.Amount, &walletHistory.Description, &walletHistory.CreatedAt); err != nil {
+		return nil, err
+	}
+
+	return &walletHistory, nil
+}
+
 func (r *userRepo) GetTotalWalletHistoryByWalletID(ctx context.Context, walletID string) (int64, error) {
 	var total int64
 	if err := r.PSQL.QueryRowContext(ctx, GetTotalWalletHistoryUserQuery, walletID).

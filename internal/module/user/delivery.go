@@ -30,6 +30,7 @@ type Handlers interface {
 	ActivateWallet(c *gin.Context)
 	GetWallet(c *gin.Context)
 	GetWalletHistory(c *gin.Context)
+	GetWalletHistoryByID(c *gin.Context)
 	TopUpWallet(c *gin.Context)
 	WalletStepUp(c *gin.Context)
 	CreateWalletPayment(c *gin.Context)

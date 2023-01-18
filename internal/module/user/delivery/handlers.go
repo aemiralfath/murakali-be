@@ -113,6 +113,31 @@ func (h *userHandlers) GetWalletHistory(c *gin.Context) {
 	response.SuccessResponse(c.Writer, walletHistory, http.StatusOK)
 }
 
+func (h *userHandlers) GetWalletHistoryByID(c *gin.Context) {
+	userID, exist := c.Get("userID")
+	if !exist {
+		response.ErrorResponse(c.Writer, response.UnauthorizedMessage, http.StatusUnauthorized)
+		return
+	}
+
+	walletHistoryID := c.Param("wallet_history_id")
+
+	detailWalletHistory, err := h.userUC.GetDetailWalletHistory(c, walletHistoryID, userID.(string))
+	if err != nil {
+		var e *httperror.Error
+		if !errors.As(err, &e) {
+			h.logger.Errorf("HandlerUser, Error: %s", err)
+			response.ErrorResponse(c.Writer, response.InternalServerErrorMessage, http.StatusInternalServerError)
+			return
+		}
+
+		response.ErrorResponse(c.Writer, e.Err.Error(), e.Status)
+		return
+	}
+
+	response.SuccessResponse(c.Writer, detailWalletHistory, http.StatusOK)
+}
+
 func (h *userHandlers) ValidateQuery(c *gin.Context) *pagination.Pagination {
 	limit := strings.TrimSpace(c.Query("limit"))
 	page := strings.TrimSpace(c.Query("page"))

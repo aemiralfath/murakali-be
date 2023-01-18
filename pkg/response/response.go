@@ -57,6 +57,7 @@ const (
 	OrderNotExistMessage           = "Order not exist."
 	InvalidPasswordMessage         = "Invalid password."
 	TransactionNotFound            = "Transaction not found."
+	WalletHistoryNotFound          = "Wallet history not found."
 )
 
 type JSONResponse struct {
