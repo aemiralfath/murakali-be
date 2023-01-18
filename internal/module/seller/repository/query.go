@@ -123,6 +123,12 @@ const (
 		"v"."created_at", "v"."updated_at",  "v"."deleted_at"
 	FROM "voucher" as "v"
 	INNER JOIN "shop" as "s" ON "s"."id" = "v"."shop_id"
-	WHERE "v"."id"  = $1 AND "v"."shop_id" = $2
+	WHERE "v"."id"  = $1 AND "v"."shop_id" = $2 AND "v"."deleted_at" IS NULL
+	`
+
+	UpdateVoucherSellerQuery = `
+		UPDATE "voucher" SET "quota" = $1, "actived_date" = $2, "expired_date" = $3, "discount_percentage" = $4,
+			"discount_fix_price" = $5, "min_product_price" = $6, "max_discount_price" = $7, "updated_at" = now()
+		WHERE "id" = $8
 	`
 )
