@@ -414,7 +414,7 @@ func (h *productHandlers) ValidateQueryProduct(c *gin.Context) (*pagination.Pagi
 		pgn = &pagination.Pagination{
 			Limit: limitFilter,
 			Page:  pageFilter,
-			Sort:  "unit_sold" + " " + "desc",
+			Sort:  "unit_sold" + " " + sortFilter,
 		}
 	}
 

@@ -273,6 +273,32 @@ func (r *sellerRepo) ChangeOrderStatus(ctx context.Context, requestBody body.Cha
 	return nil
 }
 
+func (r *sellerRepo) GetOrdersOnDelivery(ctx context.Context) ([]*model.OrderModel, error) {
+	orders := make([]*model.OrderModel, 0)
+	res, err := r.PSQL.QueryContext(ctx, GetOrderOnDeliveryQuery, constant.OrderStatusOnDelivery)
+	if err != nil {
+		return orders, err
+	}
+	defer res.Close()
+
+	for res.Next() {
+		var order model.OrderModel
+		if errScan := res.Scan(
+			&order.ID,
+			&order.OrderStatusID,
+			&order.ArrivedAt,
+		); errScan != nil {
+			return orders, err
+		}
+		orders = append(orders, &order)
+	}
+	if res.Err() != nil {
+		return orders, err
+	}
+
+	return orders, err
+}
+
 func (r *sellerRepo) GetCourierSeller(ctx context.Context, userID string) ([]*body.CourierSellerRelationInfo, error) {
 	courierSeller := make([]*body.CourierSellerRelationInfo, 0)
 

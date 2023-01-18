@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"math"
 	"murakali/config"
+	"murakali/internal/constant"
 	"murakali/internal/model"
 	body2 "murakali/internal/module/location/delivery/body"
 	"murakali/internal/module/seller"
@@ -16,7 +17,9 @@ import (
 	"murakali/pkg/postgre"
 	"murakali/pkg/response"
 	"net/http"
+	"strconv"
 	"strings"
+	"time"
 
 	"github.com/google/uuid"
 )
@@ -298,6 +301,23 @@ func (u *sellerUC) UpdateResiNumberInOrderSeller(ctx context.Context, userID, or
 	err = u.sellerRepo.UpdateResiNumberInOrderSeller(ctx, requestBody.NoResi, orderID, shopID, requestBody.EstimateArriveAtTime)
 	if err != nil {
 		return err
+	}
+
+	return nil
+}
+
+func (u *sellerUC) UpdateOnDeliveryOrder(ctx context.Context) error {
+	orders, err := u.sellerRepo.GetOrdersOnDelivery(ctx)
+	if err != nil {
+		return nil
+	}
+
+	for _, order := range orders {
+		if order.OrderStatusID == constant.OrderStatusOnDelivery && order.ArrivedAt.Valid && time.Until(order.ArrivedAt.Time) <= 0 {
+			if err := u.sellerRepo.ChangeOrderStatus(ctx, body.ChangeOrderStatusRequest{OrderID: order.ID.String(), OrderStatusID: strconv.Itoa(constant.OrderStatusDelivered)}); err != nil {
+				return err
+			}
+		}
 	}
 
 	return nil

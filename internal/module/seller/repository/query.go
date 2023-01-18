@@ -63,6 +63,8 @@ const (
 	WHERE "s"."user_id" = $1;
 	`
 
+	GetOrderOnDeliveryQuery = `SELECT "id", "order_status_id", "arrived_at" FROM "order" WHERE "order_status_id" = $1 AND "arrived_at" <= current_timestamp`
+
 	GetAllCourierQuery = `
 	SELECT  "c"."id" as "courier_id","c"."name" as "name", "c"."code" as "code", "c"."service" as "service",
 		"c"."description" as "description"

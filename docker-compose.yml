@@ -16,6 +16,20 @@ services:
       - redis
       - adminer
 
+  cron:
+    container_name: murakali_cron
+    image: golang:1.19
+    restart: "no"
+    volumes:
+      - ./:/murakali-cron
+    working_dir: /murakali-cron
+    command: /bin/bash -c "go run ./cmd/cron/main.go"
+    ports:
+      - "8084:8080"
+    env_file: .env
+    depends_on:
+      - api
+
   adminer:
     container_name: murakali_adminer
     image: adminer:standalone

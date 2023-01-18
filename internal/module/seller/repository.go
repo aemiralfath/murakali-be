@@ -33,6 +33,7 @@ type Repository interface {
 	GetAddressBySellerID(ctx context.Context, userID string) (*model.Address, error)
 	UpdateResiNumberInOrderSeller(ctx context.Context, noResi, orderID, shopID string, arriveAt time.Time) error
 	GetCostRedis(ctx context.Context, key string) (*string, error)
+	GetOrdersOnDelivery(ctx context.Context) ([]*model.OrderModel, error)
 	InsertCostRedis(ctx context.Context, key string, value string) error
 	GetAllVoucherSeller(ctx context.Context, shopID string) ([]*model.Voucher, error)
 	GetTotalVoucherSeller(ctx context.Context, shopID string) (int64, error)
