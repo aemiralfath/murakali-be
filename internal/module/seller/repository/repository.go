@@ -684,3 +684,46 @@ func (r *sellerRepo) CreatePromotionSeller(ctx context.Context, tx postgre.Trans
 	}
 	return nil
 }
+
+func (r *sellerRepo) GetPromotionSellerDetailByID(ctx context.Context,
+	shopProductPromo *body.ShopProductPromo) (*body.PromotionSellerResponse, error) {
+	var promotion body.PromotionSellerResponse
+	if err := r.PSQL.QueryRowContext(ctx, GetPromotionSellerDetailByIDQuery,
+		shopProductPromo.PromotionID, shopProductPromo.ShopID, shopProductPromo.ProductID).Scan(
+		&promotion.ID,
+		&promotion.PromotionName,
+		&promotion.ProductID,
+		&promotion.ProductName,
+		&promotion.ProductThumbnailURL,
+		&promotion.DiscountPercentage,
+		&promotion.DiscountFixPrice,
+		&promotion.MinProductPrice,
+		&promotion.MaxDiscountPrice,
+		&promotion.Quota,
+		&promotion.MaxQuantity,
+		&promotion.ActivedDate,
+		&promotion.ExpiredDate,
+		&promotion.CreatedAt,
+		&promotion.UpdatedAt,
+		&promotion.DeletedAt,
+	); err != nil {
+		return nil, err
+	}
+	return &promotion, nil
+}
+
+func (r *sellerRepo) UpdatePromotionSeller(ctx context.Context, promotion *model.Promotion) error {
+	if _, err := r.PSQL.ExecContext(ctx, UpdatePromotionSellerQuery,
+		promotion.Name,
+		promotion.MaxQuantity,
+		promotion.DiscountPercentage,
+		promotion.DiscountFixPrice,
+		promotion.MinProductPrice,
+		promotion.MaxDiscountPrice,
+		promotion.ActivedDate,
+		promotion.ExpiredDate,
+		promotion.ID); err != nil {
+		return err
+	}
+	return nil
+}

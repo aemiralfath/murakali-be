@@ -170,4 +170,20 @@ const (
 		quota, max_quantity, actived_date, expired_date)
 	VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
 	`
+	GetPromotionSellerDetailByIDQuery = `
+	SELECT "promo"."id", "promo"."name", "p"."id", "p"."title", "p"."thumbnail_url", "promo"."discount_percentage",
+		"promo"."discount_fix_price", "promo"."min_product_price", "promo"."max_discount_price", "promo"."quota", "promo"."max_quantity", 
+		"promo"."actived_date", "promo"."expired_date", "promo"."created_at", "promo"."updated_at", "promo"."deleted_at"
+	FROM "promotion" as "promo"
+	INNER JOIN "product" as "p" ON "p"."id" = "promo"."product_id"
+	INNER JOIN "shop" as "s" ON "s"."id" = "p"."shop_id"
+	WHERE "promo"."id" = $1 AND "s"."id" = $2 AND "p"."id" = $3
+	`
+
+	UpdatePromotionSellerQuery = `
+	UPDATE "promotion" SET "name" = $1, "max_quantity" = $2, "discount_percentage" = $3,
+		"discount_fix_price" = $4, "min_product_price" = $5, "max_discount_price" = $6,
+		"actived_date" = $7, "expired_date" = $8, "updated_at" = now()
+	WHERE "id" = $9
+	`
 )

@@ -1959,6 +1959,26 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/CreatedRowSuccess"
+    put:
+      summary: Update Seller Promotion 
+      description: >-
+        Update Seller Promotion
+      tags:
+        - Seller
+      security:
+        - BEARER: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdatePromotionSellerRequest"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DefaultSuccess"
                 
 components:
   schemas:
@@ -4934,6 +4954,24 @@ components:
         product_ids:
           - b73be319-6598-40ef-a0b3-f5a238a66940
           - 8a185d4b-fd59-4c7b-9b1a-1b626bd91af0
+
+    UpdatePromotionSellerRequest:
+      title: CreatePromotionSellerRequest
+      type: object
+      description: Create promotion seller request data model.
+      properties:
+      example:
+        promotion_id: 3567d424-ea1f-40bc-b568-feb2bd6cd6e5
+        product_id: e883ec05-504e-4207-89f4-bbc9bb7db8fa
+        name: dih promo
+        max_quantity: 2
+        actived_date: 21-12-2022 21:43:56
+        expired_date: 22-02-2023 21:43:56
+        discount_percentage: 19
+        discount_fix_price: 0
+        min_product_price: 5000
+        max_discount_price: 10000
+
 
     CreatedRowSuccess:
       title: CheckUniqueTrueSuccess

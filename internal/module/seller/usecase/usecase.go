@@ -17,6 +17,7 @@ import (
 	"murakali/pkg/response"
 	"net/http"
 	"strings"
+	"time"
 
 	"github.com/google/uuid"
 )
@@ -565,4 +566,74 @@ func (u *sellerUC) CreatePromotionSeller(ctx context.Context, userID string, req
 	}
 
 	return data.(int), nil
+}
+
+func (u *sellerUC) UpdatePromotionSeller(ctx context.Context, userID string, requestBody body.UpdatePromotionRequest) error {
+	shopID, err := u.sellerRepo.GetShopIDByUserID(ctx, userID)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return httperror.New(http.StatusBadRequest, response.UserNotHaveShop)
+		}
+		return err
+	}
+
+	shopProductPromo := &body.ShopProductPromo{
+		ShopID:      shopID,
+		ProductID:   requestBody.ProductID,
+		PromotionID: requestBody.PromotionID,
+	}
+
+	promotionShop, errPromotion := u.sellerRepo.GetPromotionSellerDetailByID(ctx, shopProductPromo)
+	if errPromotion != nil {
+		if errPromotion == sql.ErrNoRows {
+			return httperror.New(http.StatusBadRequest, body.PromotionSellerNotFoundMessage)
+		}
+		return errPromotion
+	}
+	timeNow := time.Now()
+
+	//expired
+	if timeNow.After(promotionShop.ActivedDate) && timeNow.After(promotionShop.ExpiredDate) {
+		return httperror.New(http.StatusBadRequest, body.PromotionExpairedMessage)
+	}
+
+	//ongoing
+	if timeNow.After(promotionShop.ActivedDate) && timeNow.Before(promotionShop.ExpiredDate) {
+		if !promotionShop.ActivedDate.Equal(requestBody.ActiveDateTime) {
+			return httperror.New(http.StatusBadRequest, body.PromotionCannotUpdateActivedMessage)
+		}
+	}
+
+	//incoming
+	if timeNow.Before(promotionShop.ActivedDate) && timeNow.Before(promotionShop.ExpiredDate) {
+		if !requestBody.ActiveDateTime.Before(promotionShop.ActivedDate) {
+			return httperror.New(http.StatusBadRequest, body.PromotionCannotUpdateActivedBeforeMessage)
+		}
+	}
+
+	if requestBody.ExpiredDateTime.After(promotionShop.ExpiredDate) {
+		return httperror.New(http.StatusBadRequest, body.PromotionCannotUpdateExpiredAfterMessage)
+	}
+	if requestBody.ExpiredDateTime.Before(timeNow) {
+		return httperror.New(http.StatusBadRequest, body.PromotionCannotUpdateExpiredBefoferMessage)
+	}
+
+	promotion := &model.Promotion{
+		ID:                 promotionShop.ID,
+		Name:               requestBody.Name,
+		MaxQuantity:        requestBody.MaxQuantity,
+		DiscountPercentage: &requestBody.DiscountPercentage,
+		DiscountFixPrice:   &requestBody.DiscountFixPrice,
+		MinProductPrice:    &requestBody.MinProductPrice,
+		MaxDiscountPrice:   &requestBody.MaxDiscountPrice,
+		ActivedDate:        requestBody.ActiveDateTime,
+		ExpiredDate:        requestBody.ExpiredDateTime,
+	}
+
+	err = u.sellerRepo.UpdatePromotionSeller(ctx, promotion)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

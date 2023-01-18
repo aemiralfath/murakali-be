@@ -45,4 +45,6 @@ type Repository interface {
 	GetTotalPromotionSeller(ctx context.Context, shopID string) (int64, error)
 	GetProductPromotion(ctx context.Context, shopProduct *body.ShopProduct) (*body.ProductPromotion, error)
 	CreatePromotionSeller(ctx context.Context, tx postgre.Transaction, promotionShop *model.Promotion) error
+	GetPromotionSellerDetailByID(ctx context.Context, shopProductPromo *body.ShopProductPromo) (*body.PromotionSellerResponse, error)
+	UpdatePromotionSeller(ctx context.Context, promotion *model.Promotion) error
 }
