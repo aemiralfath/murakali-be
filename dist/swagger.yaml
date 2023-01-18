@@ -765,6 +765,41 @@ paths:
               schema:
                 $ref: "#/components/schemas/InputPinWalletResponse"
 
+  "/api/v1/user/wallet/history":
+    get:
+      summary: Get user wallet history
+      description: >-
+        Get user wallet history
+      tags:
+        - User
+      parameters:
+        - in: query
+          name: page
+          schema:
+            type: integer
+          required: false
+        - in: query
+          name: limit
+          schema:
+            type: integer
+          required: false
+        - in: query
+          name: sort
+          schema:
+            type: string
+          required: false
+          example: "ASC"
+          
+      security:
+        - BEARER: []
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GetWalletResponse"
+
   "/api/v1/user/password":
     post:
       summary: verification password
@@ -2506,6 +2541,65 @@ components:
                 Time: "2023-01-05T10:02:58.493922Z"
                 Valid: true
 
+    GetWalletHistoryResponse:
+      title: GetWalletHistoryResponse
+      type: object
+      properties:
+        message:
+          type: string
+        data:
+          type: object
+          properties:
+            limit:
+              type: integer
+            page:
+              type: integer
+            sort:
+              type: string
+            total_rows:
+              type: integer
+            total_pages:
+              type: integer
+            rows:
+              type: array
+              items:
+                - type: object
+                  properties:
+                    id:
+                      type: string
+                    from:
+                      type: string
+                    to:
+                      type: string
+                    amount:
+                      type: integer
+                    description:
+                      type: string
+                    created_at:
+                      type: string
+                  required:
+                    - id
+                    - from
+                    - to
+                    - amount
+                    - description
+                    - created_at
+      example:
+        message: success
+        data:
+          limit: 10
+          page: 1
+          sort: created_at DESC
+          total_rows: 1
+          total_pages: 1
+          rows:
+            - id: 9e13d61e-397a-4ab7-b1ea-569f4667012c
+              from: SEA BANK
+              to: USER
+              amount: -20000
+              description: TopUp
+              created_at: '2023-01-16T06:01:19.776573Z'
+
     InputPinWalletRequest:
       title: InputPinWalletRequest
       type: object
@@ -4234,65 +4328,300 @@ components:
       properties:
         message:
           type: string
-          example: "success"
         data:
           type: object
           properties:
             order_id:
               type: string
             order_status:
-              type: number
+              type: integer
             total_price:
-              type: number
+              type: integer
             delivery_fee:
-              type: number
+              type: integer
             resi_no:
               type: string
             shop_id:
               type: string
             shop_name:
               type: string
-            voucher_code:
+            seller_name:
               type: string
+            voucher_code:
+              type: "null"
             created_at:
               type: string
+            invoice:
+              type: string
+            courier_name:
+              type: string
+            courier_code:
+              type: string
+            courier_service:
+              type: string
+            courier_description:
+              type: string
+            buyer_name:
+              type: string
+            buyer_phone_number:
+              type: string
+            BuyerAddress:
+              type: object
+              properties:
+                i d:
+                  type: string
+                user_id:
+                  type: string
+                name:
+                  type: string
+                province_id:
+                  type: integer
+                city_id:
+                  type: integer
+                province:
+                  type: string
+                city:
+                  type: string
+                district:
+                  type: string
+                sub_district:
+                  type: string
+                address_detail:
+                  type: string
+                zip_code:
+                  type: string
+                is_default:
+                  type: boolean
+                is_shop_default:
+                  type: boolean
+                created_at:
+                  type: string
+                updated_at:
+                  type: object
+                  properties:
+                    Time:
+                      type: string
+                    Valid:
+                      type: boolean
+                  required:
+                    - Time
+                    - Valid
+                deleted_at:
+                  type: object
+                  properties:
+                    Time:
+                      type: string
+                    Valid:
+                      type: boolean
+                  required:
+                    - Time
+                    - Valid
+              required:
+                - id
+                - user_id
+                - name
+                - province_id
+                - city_id
+                - province
+                - city
+                - district
+                - sub_district
+                - address_detail
+                - zip_code
+                - is_default
+                - is_shop_default
+                - created_at
+                - updated_at
+                - deleted_at
+            SellerAddress:
+              type: object
+              properties:
+                id:
+                  type: string
+                user_id:
+                  type: string
+                name:
+                  type: string
+                province_id:
+                  type: integer
+                city_id:
+                  type: integer
+                province:
+                  type: string
+                city:
+                  type: string
+                district:
+                  type: string
+                sub_district:
+                  type: string
+                address_detail:
+                  type: string
+                zip_code:
+                  type: string
+                is_default:
+                  type: boolean
+                is_shop_default:
+                  type: boolean
+                created_at:
+                  type: string
+                updated_at:
+                  type: object
+                  properties:
+                    Time:
+                      type: string
+                    Valid:
+                      type: boolean
+                  required:
+                    - Time
+                    - Valid
+                deleted_at:
+                  type: object
+                  properties:
+                    Time:
+                      type: string
+                    Valid:
+                      type: boolean
+                  required:
+                    - Time
+                    - Valid
+              required:
+                - id
+                - user_id
+                - name
+                - province_id
+                - city_id
+                - province
+                - city
+                - district
+                - sub_district
+                - address_detail
+                - zip_code
+                - is_default
+                - is_shop_default
+                - created_at
+                - updated_at
+                - deleted_at
             detail:
               type: array
               items:
-                type: object
-                properties:
-                  product_detail_id:
-                    type: string
-                  product_id:
-                    type: string
-                  product_title:
-                    type: string
-                  product_detail_url:
-                    type: string
-                  order_quantity:
-                    type: number
-                  order_item_price:
-                    type: number
-                  order_total_price:
-                    type: number
-          example:
-            order_id: "466844d8-e93b-4835-81d4-a75192e74958"
-            order_status: 1
-            total_price: 250000
-            delivery_fee: 30000
-            resi_no: "1"
-            shop_id: "2829d48b-b1db-4445-937c-a5c90cc1c633"
-            shop_name: "test_shop"
-            voucher_code: "voucher_shop_1"
-            created_at: "2022-12-27T05:24:10.434065Z"
-            detail:
-              - product_detail_id: "450ba9c5-eafc-409f99d3-99f931c9fbf2"
-                product_id: "6f16e578-fd85-4aa3-a321-9195ee38e86c"
-                product_title: "baju zara"
-                product_detail_url: "yahoo.com"
-                order_quantity: 4
-                order_item_price: 2000
-                order_total_price: 8000
+                - type: object
+                  properties:
+                    product_detail_id:
+                      type: string
+                    product_id:
+                      type: string
+                    product_title:
+                      type: string
+                    product_detail_url:
+                      type: string
+                    order_quantity:
+                      type: integer
+                    order_item_price:
+                      type: integer
+                    order_total_price:
+                      type: integer
+                  required:
+                    - product_detail_id
+                    - product_id
+                    - product_title
+                    - product_detail_url
+                    - order_quantity
+                    - order_item_price
+                    - order_total_price
+          required:
+            - order_id
+            - order_status
+            - total_price
+            - delivery_fee
+            - resi_no
+            - shop_id
+            - shop_name
+            - seller_name
+            - voucher_code
+            - created_at
+            - invoice
+            - courier_name
+            - courier_code
+            - courier_service
+            - courier_description
+            - buyer_name
+            - buyer_phone_number
+            - BuyerAddress
+            - SellerAddress
+            - detail
+      required:
+        - message
+        - data
+      example:
+        message: success
+        data:
+          order_id: b574ec07-076f-43c3-9d11-a3e0ca18e446
+          order_status: 3
+          total_price: 20000
+          delivery_fee: 30000
+          resi_no: "1"
+          shop_id: 63bdf138-3058-473f-8928-e390c8124788
+          shop_name: test_shop
+          seller_name: dhQpjPY
+          voucher_code: null
+          created_at: "2023-01-04T05:04:58.292032Z"
+          invoice: "123"
+          courier_name: JNE
+          courier_code: jne
+          courier_service: REG
+          courier_description: Layanan Reguler
+          buyer_name: dhQpjPY
+          buyer_phone_number: "22"
+          BuyerAddress:
+            id: 8e092dd0-1fd1-4d62-80f4-ab469d37cdb6
+            user_id: 0c53ef3d-3682-4359-90e1-814eb6ab5191
+            name: Home
+            province_id: 33
+            city_id: 327
+            province: Sumatera Selatan
+            city: Palembang
+            district: Ilir Timur II
+            sub_district: 2 Ilir
+            address_detail: no 91
+            zip_code: "30118"
+            is_default: true
+            is_shop_default: false
+            created_at: "2022-12-30T10:40:31.532535Z"
+            updated_at:
+              Time: "0001-01-01T00:00:00Z"
+              Valid: false
+            deleted_at:
+              Time: "0001-01-01T00:00:00Z"
+              Valid: false
+          SellerAddress:
+            id: e2668c06-29f2-4eb4-85f3-0c4a1a284c74
+            user_id: 0c53ef3d-3682-4359-90e1-814eb6ab5191
+            name: test
+            province_id: 1
+            city_id: 322
+            province: jakarta
+            city: jakarta barat
+            district: cengkareng
+            sub_district: cengakreng barat
+            address_detail: test
+            zip_code: "11730"
+            is_default: false
+            is_shop_default: true
+            created_at: "2023-01-12T11:08:14.065223Z"
+            updated_at:
+              Time: "0001-01-01T00:00:00Z"
+              Valid: false
+            deleted_at:
+              Time: "0001-01-01T00:00:00Z"
+              Valid: false
+          detail:
+            - product_detail_id: 2674b3d7-7719-44b1-aa2c-24c70f2f25f6
+              product_id: 0e9a5c56-0525-455a-a9a6-d421df2c8197
+              product_title: uRKTJFb
+              product_detail_url: google.com
+              order_quantity: 2
+              order_item_price: 2000
+              order_total_price: 4000
 
     SellerCourierRequest:
       title: SellerCourierRequest

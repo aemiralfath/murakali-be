@@ -59,8 +59,9 @@ const (
 	SetDefaultSealabsPayTransQuery = `UPDATE "sealabs_pay" set is_default = FALSE,updated_at = now() where card_number = $1`
 	PatchSealabsPayQuery           = `UPDATE "sealabs_pay" set is_default = TRUE,updated_at = now() where card_number = $1`
 	SetDefaultSealabsPayQuery      = `UPDATE "sealabs_pay" set is_default = FALSE where card_number <> $1 and user_id = $2`
-	DeleteSealabsPayQuery          = `UPDATE "sealabs_pay" set deleted_at = now() where card_number = $1 and is_default = FALSE`
+	DeleteSealabsPayQuery          = `UPDATE "sealabs_pay" set "deleted_at" = now() where "card_number" = $1 and "is_default" = FALSE`
 	GetUserByIDQuery               = `SELECT "id", "role_id", "email", "username", "phone_no", "fullname", "gender", "birth_date", "is_verify","photo_url" FROM "user" WHERE "id" = $1`
+	GetUserPasswordByIDQuery       = `SELECT "id", "role_id", "email", "password", "username", "phone_no", "fullname", "gender", "birth_date", "is_verify","photo_url" FROM "user" WHERE "id" = $1`
 	GetPasswordByIDQuery           = `SELECT "password" FROM "user" WHERE "id" = $1`
 	CheckEmailHistoryQuery         = `SELECT "id", "email" FROM "email_history" WHERE "email" ILIKE $1`
 	GetUserByUsernameQuery         = `SELECT "id", "email", "username", "is_verify" FROM "user" WHERE "username" ILIKE $1`
@@ -74,8 +75,13 @@ const (
 	UpdateRoleQuery                = `UPDATE "user" SET "role_id" = 2,updated_at = now() where id = $1`
 	UpdateProfileImageQuery        = `UPDATE "user" SET "photo_url" = $1,updated_at = now() where id = $2`
 	UpdatePasswordQuery            = `UPDATE "user" SET "password" = $1 WHERE "id" = $2`
+	UpdateWalletPinQuery           = `UPDATE "wallet" SET "pin" = $1 WHERE "id" = $2`
 
-	GetWalletUserQuery             = `SELECT "id", "user_id", "balance", "attempt_count", "attempt_at", "unlocked_at", "active_date" FROM "wallet" WHERE "id" = $1 AND "deleted_at" IS NULL;`
+	GetWalletUserQuery        = `SELECT "id", "user_id", "balance", "attempt_count", "attempt_at", "unlocked_at", "active_date" FROM "wallet" WHERE "id" = $1 AND "deleted_at" IS NULL;`
+	GetWalletHistoryUserQuery = `SELECT "id", "from", "to", "amount", "description", "created_at" 
+	FROM "wallet_history" 
+	WHERE "wallet_id" = $1`
+	GetTotalWalletHistoryUserQuery = `SELECT count(id) FROM "wallet_history" WHERE "wallet_id" = $1;`
 	GetSealabsPayUserQuery         = `SELECT "card_number", "user_id", "name", "is_default", "active_date" FROM "sealabs_pay" WHERE "user_id" = $1 AND "card_number" = $2 AND "deleted_at" IS NULL;`
 	GetVoucherMarketplaceByIDQuery = `SELECT "id", "shop_id", "code", "quota", "actived_date", "expired_date", "discount_percentage", "discount_fix_price", "min_product_price", "max_discount_price" FROM "voucher"
 		WHERE "id" = $1 AND "shop_id" is NULL AND "deleted_at" IS NULL AND now() BETWEEN "actived_date" AND "expired_date";`
@@ -103,4 +109,9 @@ const (
 	GetOrderByTransactionID       = `SELECT 
 		"id", "transaction_id", "shop_id", "user_id", "courier_id", "voucher_shop_id", "order_status_id", "total_price", "delivery_fee", "resi_no", "created_at", "arrived_at" 
 	FROM "order" WHERE "transaction_id" = $1`
+	CheckUserSealabsPayQuery    = `SELECT count(1) from sealabs_pay where user_id = $1 and deleted_at is null`
+	CheckDeletedSealabsPayQuery = `SELECT count(1) from sealabs_pay where card_number = $1 and deleted_at is not null`
+	UpdateUserSealabsPayQuery   = `UPDATE "sealabs_pay" set user_id = $1, name = $2 ,updated_at = now(),deleted_at = null,is_default = true where card_number = $3`
+	OrderBySomething            = ` 
+	ORDER BY %s LIMIT %d OFFSET %d`
 )

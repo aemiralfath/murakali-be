@@ -13,7 +13,7 @@ CREATE TABLE IF NOT EXISTS "user"
     "email" varchar UNIQUE NOT NULL,
     "phone_no" varchar UNIQUE,
     "fullname" varchar,
-    "password" varchar,
+    "password" varchar NOT NULL DEFAULT '',
     "gender" varchar,
     "birth_date" timestamp,
     "photo_url" varchar,
@@ -614,6 +614,10 @@ CREATE INDEX ON "address" ("user_id");
 CREATE INDEX ON "email_history" ("email");
 
 CREATE INDEX ON "banner" ("title");
+
+CREATE INDEX ON "promotion" ("actived_date", "expired_date");
+
+CREATE INDEX ON "voucher" ("actived_date", "expired_date");
 
 ALTER TABLE "user"
     ADD FOREIGN KEY ("role_id") REFERENCES "role" ("id");

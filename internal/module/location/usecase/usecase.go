@@ -257,7 +257,6 @@ func (u *locationUC) GetShippingCost(ctx context.Context, requestBody body.GetSh
 				}
 			}
 		}
-
 	}
 
 	return resp, nil

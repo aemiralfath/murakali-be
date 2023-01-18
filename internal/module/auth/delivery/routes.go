@@ -18,4 +18,5 @@ func MapAuthRoutes(authGroup *gin.RouterGroup, h auth.Handlers) {
 	authGroup.GET("/refresh", h.RefreshToken)
 	authGroup.GET("/unique/username/:username", h.CheckUniqueUsername)
 	authGroup.GET("/unique/phone-no/:phone_no", h.CheckUniquePhoneNo)
+	authGroup.GET("/google-oauth", h.GoogleAuth)
 }

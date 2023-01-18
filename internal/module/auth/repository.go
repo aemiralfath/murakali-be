@@ -19,4 +19,5 @@ type Repository interface {
 	CreateEmailHistory(ctx context.Context, tx postgre.Transaction, email string) error
 	UpdateUser(ctx context.Context, tx postgre.Transaction, user *model.User) error
 	DeleteOTPValue(ctx context.Context, email string) (int64, error)
+	CreateUserGoogle(ctx context.Context, tx postgre.Transaction, user *model.User) (*model.User, error)
 }

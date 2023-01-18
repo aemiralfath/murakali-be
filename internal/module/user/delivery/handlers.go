@@ -88,6 +88,63 @@ func (h *userHandlers) GetWallet(c *gin.Context) {
 	response.SuccessResponse(c.Writer, wallet, http.StatusOK)
 }
 
+func (h *userHandlers) GetWalletHistory(c *gin.Context) {
+	userID, exist := c.Get("userID")
+	if !exist {
+		response.ErrorResponse(c.Writer, response.UnauthorizedMessage, http.StatusUnauthorized)
+		return
+	}
+
+	pgn := h.ValidateQuery(c)
+
+	walletHistory, err := h.userUC.GetWalletHistory(c, userID.(string), pgn)
+	if err != nil {
+		var e *httperror.Error
+		if !errors.As(err, &e) {
+			h.logger.Errorf("HandlerUser, Error: %s", err)
+			response.ErrorResponse(c.Writer, response.InternalServerErrorMessage, http.StatusInternalServerError)
+			return
+		}
+
+		response.ErrorResponse(c.Writer, e.Err.Error(), e.Status)
+		return
+	}
+
+	response.SuccessResponse(c.Writer, walletHistory, http.StatusOK)
+}
+
+func (h *userHandlers) ValidateQuery(c *gin.Context) *pagination.Pagination {
+	limit := strings.TrimSpace(c.Query("limit"))
+	page := strings.TrimSpace(c.Query("page"))
+	sort := strings.TrimSpace(c.Query("sort"))
+
+	var limitFilter int
+	var pageFilter int
+	sortFilter := "DESC"
+
+	limitFilter, err := strconv.Atoi(limit)
+	if err != nil || limitFilter < 1 {
+		limitFilter = 18
+	}
+
+	pageFilter, err = strconv.Atoi(page)
+	if err != nil || pageFilter < 1 {
+		pageFilter = 1
+	}
+
+	if sort == "ASC" || sort == "asc" {
+		sortFilter = "ASC"
+	}
+
+	pgn := &pagination.Pagination{
+		Limit: limitFilter,
+		Page:  pageFilter,
+		Sort:  "created_at " + sortFilter,
+	}
+
+	return pgn
+}
+
 func (h *userHandlers) TopUpWallet(c *gin.Context) {
 	userID, exist := c.Get("userID")
 	if !exist {
@@ -630,7 +687,6 @@ func (h *userHandlers) PatchSealabsPay(c *gin.Context) {
 
 func (h *userHandlers) DeleteSealabsPay(c *gin.Context) {
 	cardNumber := c.Param("cardNumber")
-
 	var requestBody body.SlpCardRequest
 	requestBody.CardNumber = cardNumber
 
@@ -675,6 +731,7 @@ func (h *userHandlers) GetUserProfile(c *gin.Context) {
 		return
 	}
 
+	profile.ID = userID.(string)
 	response.SuccessResponse(c.Writer, profile, http.StatusOK)
 }
 
@@ -862,6 +919,96 @@ func (h *userHandlers) WalletStepUp(c *gin.Context) {
 
 	c.SetSameSite(http.SameSiteNoneMode)
 	c.SetCookie(constant.WalletTokenCookie, token, h.cfg.JWT.RefreshExpMin*60, "/", h.cfg.Server.Domain, true, true)
+	response.SuccessResponse(c.Writer, nil, http.StatusOK)
+}
+
+func (h *userHandlers) ChangeWalletPinStepUp(c *gin.Context) {
+	userID, exist := c.Get("userID")
+	if !exist {
+		response.ErrorResponse(c.Writer, response.UnauthorizedMessage, http.StatusUnauthorized)
+		return
+	}
+
+	var requestBody body.ChangeWalletPinStepUpRequest
+	if err := c.ShouldBind(&requestBody); err != nil {
+		response.ErrorResponse(c.Writer, response.BadRequestMessage, http.StatusBadRequest)
+		return
+	}
+
+	invalidFields, err := requestBody.Validate()
+	if err != nil {
+		response.ErrorResponseData(c.Writer, invalidFields, response.UnprocessableEntityMessage, http.StatusUnprocessableEntity)
+		return
+	}
+
+	token, err := h.userUC.ChangeWalletPinStepUp(c, userID.(string), requestBody)
+	if err != nil {
+		var e *httperror.Error
+		if !errors.As(err, &e) {
+			h.logger.Errorf("HandlerUser, Error: %s", err)
+			response.ErrorResponse(c.Writer, response.InternalServerErrorMessage, http.StatusInternalServerError)
+			return
+		}
+
+		response.ErrorResponse(c.Writer, e.Err.Error(), e.Status)
+		return
+	}
+
+	c.SetSameSite(http.SameSiteNoneMode)
+	c.SetCookie(constant.ChangeWalletPinTokenCookie, token, h.cfg.JWT.RefreshExpMin*60, "/", h.cfg.Server.Domain, true, true)
+	response.SuccessResponse(c.Writer, nil, http.StatusOK)
+}
+
+func (h *userHandlers) ChangeWalletPin(c *gin.Context) {
+	userID, exist := c.Get("userID")
+	if !exist {
+		response.ErrorResponse(c.Writer, response.UnauthorizedMessage, http.StatusUnauthorized)
+		return
+	}
+
+	walletToken, err := c.Cookie(constant.ChangeWalletPinTokenCookie)
+	if err != nil {
+		response.ErrorResponse(c.Writer, response.ForbiddenMessage, http.StatusForbidden)
+		return
+	}
+
+	claims, err := jwt.ExtractJWT(walletToken, h.cfg.JWT.JwtSecretKey)
+	if err != nil {
+		response.ErrorResponse(c.Writer, response.ForbiddenMessage, http.StatusForbidden)
+		return
+	}
+
+	if claims["scope"].(string) != "level2" {
+		response.ErrorResponse(c.Writer, response.ForbiddenMessage, http.StatusForbidden)
+		return
+	}
+
+	var requestBody body.ChangeWalletPinRequest
+	if errBind := c.ShouldBind(&requestBody); errBind != nil {
+		response.ErrorResponse(c.Writer, response.BadRequestMessage, http.StatusBadRequest)
+		return
+	}
+
+	invalidFields, err := requestBody.Validate()
+	if err != nil {
+		response.ErrorResponseData(c.Writer, invalidFields, response.UnprocessableEntityMessage, http.StatusUnprocessableEntity)
+		return
+	}
+
+	if err := h.userUC.ChangeWalletPin(c, userID.(string), requestBody.Pin); err != nil {
+		var e *httperror.Error
+		if !errors.As(err, &e) {
+			h.logger.Errorf("HandlerUser, Error: %s", err)
+			response.ErrorResponse(c.Writer, response.InternalServerErrorMessage, http.StatusInternalServerError)
+			return
+		}
+
+		response.ErrorResponse(c.Writer, e.Err.Error(), e.Status)
+		return
+	}
+
+	c.SetSameSite(http.SameSiteNoneMode)
+	c.SetCookie(constant.ChangeWalletPinTokenCookie, "", -1, "/", h.cfg.Server.Domain, true, true)
 	response.SuccessResponse(c.Writer, nil, http.StatusOK)
 }
 

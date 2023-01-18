@@ -94,10 +94,10 @@ func GenerateJWTRefreshToken(userID string, cfg *config.Config) (*model.RefreshT
 	return refreshToken, nil
 }
 
-func GenerateJWTWalletToken(userID string, cfg *config.Config) (string, error) {
+func GenerateJWTWalletToken(userID, scope string, cfg *config.Config) (string, error) {
 	claims := &WalletClaims{
 		ID:    userID,
-		Scope: "level1",
+		Scope: scope,
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Duration(cfg.JWT.RefreshExpMin) * time.Minute)),
 			Issuer:    cfg.JWT.JwtIssuer,

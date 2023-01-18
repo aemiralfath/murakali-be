@@ -30,7 +30,8 @@ type Repository interface {
 	CreateFavoriteProduct(ctx context.Context, tx postgre.Transaction, userID, productID string) error
 	DeleteFavoriteProduct(ctx context.Context, tx postgre.Transaction, userID, productID string) error
 	FindFavoriteProduct(ctx context.Context, userID, productID string) (bool, error)
-	GetProductReviews(ctx context.Context, pgn *pagination.Pagination, productID string, query *body.GetReviewQueryRequest) ([]*body.ReviewProduct, error)
+	GetProductReviews(ctx context.Context, pgn *pagination.Pagination, productID string,
+		query *body.GetReviewQueryRequest) ([]*body.ReviewProduct, error)
 	GetTotalAllReviewProduct(ctx context.Context, productID string, query *body.GetReviewQueryRequest) (int64, error)
 	GetTotalReviewRatingByProductID(ctx context.Context, productID string) ([]*body.RatingProduct, error)
 	GetShopIDByUserID(ctx context.Context, userID string) (string, error)

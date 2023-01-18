@@ -19,7 +19,7 @@ const (
 	"address_detail", "zip_code", "is_default", "is_shop_default", "created_at", "updated_at"
 	FROM "address" WHERE "user_id" = $1 AND "deleted_at" IS NULL AND is_shop_default is true`
 
-	GetOrderByOrderID = `SELECT o.id,o.order_status_id,o.total_price,o.delivery_fee,o.resi_no,s.id,s.name,u2.username,v.code,o.created_at,t.invoice
+	GetOrderByOrderID = `SELECT o.id,o.order_status_id,o.total_price,o.delivery_fee,o.resi_no,s.id,s.name,u2.phone_no,u2.username,v.code,o.created_at,t.invoice
 	,c.name,c.code,c.service,c.description,u.username,u.phone_no
 	from "order" o
 	join "shop" s on s.id = o.shop_id
@@ -33,7 +33,7 @@ const (
 
 	GetSellerIDByOrderIDQuery = `SELECT s.user_id from "order" o join shop s on o.shop_id = s.id where o.id = $1`
 
-	GetOrderDetailQuery = `SELECT pd.id,pd.product_id,p.title,
+	GetOrderDetailQuery = `SELECT pd.id,pd.product_id,p.title, pd.weight,
 		(select ph.url from "photo" ph 
 			join product_detail pd on pd.id = ph.product_detail_id 
 			join "order_item" oi on pd.id = oi.product_detail_id limit 1
@@ -41,6 +41,14 @@ const (
 	from  "product_detail" pd 
 	join "order_item" oi on pd.id = oi.product_detail_id 
 	join "product" p on p.id = pd.product_id WHERE oi.order_id = $1 `
+
+	GetOrderDetailProductVariant = `
+		SELECT "vd"."name" as "name", "vd"."type" as "type" 
+		FROM "variant_detail" as "vd"
+		INNER JOIN "variant" as "v" ON "v"."variant_detail_id" = "vd"."id"
+		INNER JOIN "product_detail" as "pd" ON "pd"."id" = "v"."product_detail_id"
+		WHERE "pd"."id" = $1 AND "pd"."deleted_at" IS NULL
+	`
 
 	GetShopIDByUserQuery = `SELECT id from shop where user_id = $1 and deleted_at is null`
 
@@ -68,6 +76,12 @@ const (
 	JOIN "user" u ON u.id = s.user_id
 	WHERE s.id = $1 AND s.deleted_at is null`
 
+	GetShopDetailIDByUserIDQuery = `SELECT s.id, s.user_id, s.name, s.total_product,
+	 s.total_rating, s.rating_avg, s.created_at, u.photo_url 
+	FROM "shop" s 
+	JOIN "user" u ON u.id = s.user_id
+	WHERE s.user_id = $1 AND s.deleted_at is null`
+
 	GetCourierByIDQuery                            = `SELECT id FROM "courier" WHERE id = $1 AND deleted_at IS NULL`
 	GetShopIDByUserIDQuery                         = `SELECT id from "shop" WHERE user_id = $1 AND deleted_at IS NULL `
 	GetCourierSellerNotNullByShopAndCourierIDQuery = `SELECT id from "shop_courier" WHERE shop_id = $1 AND courier_id = $2 `
@@ -89,6 +103,6 @@ const (
 	group by c.id`
 
 	UpdateResiNumberInOrderSellerQuery = `UPDATE
-	 "order" set resi_no = $1 WHERE id = $2 
-	 AND shop_id = $3`
+	 "order" set resi_no = $1, arrived_at = $2, order_status_id = $3 WHERE id = $4 
+	 AND shop_id = $5`
 )

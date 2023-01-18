@@ -10,13 +10,14 @@ const (
 	UnprocessableEntityMessage = "Request field not valid."
 	InternalServerErrorMessage = "Something is wrong, pls try again later."
 	NotFoundMessage            = "Route does not exist, please check again your route path."
-	UnauthorizedMessage        = "Email or password not valid."
+	UnauthorizedMessage        = "Invalid Credentials."
 	ForbiddenMessage           = "Forbidden"
 
 	AddressIsDefaultMessage        = "Address is default."
-	EmailAlreadyExistMessage       = "Email already exist."
+	EmailAlreadyExistMessage       = "User already registered."
+	EmailAlreadyChangedMessage     = "Email already changed."
 	EmailSamePreviousEmailMessage  = "This email same as your current email."
-	EmailNotExistMessage           = "Email not exist."
+	EmailNotExistMessage           = "User not registered."
 	UserNotVerifyMessage           = "User not verify."
 	UserAlreadyExistMessage        = "User already exist."
 	UserNameAlreadyExistMessage    = "Username already exist."
@@ -40,6 +41,7 @@ const (
 	SelectShippingCourier          = "Select shipping Courier"
 	UnknownShop                    = "Unknown shop."
 	CartItemNotExist               = "Cart Item not exist."
+	ProductQuantityNotAvailable    = "Product quantity not available."
 	ShopAddressNotFound            = "Shop address not found."
 	DefaultAddressNotFound         = "Default address not found."
 	ShopCourierNotExist            = "Shop courier not exist."
@@ -52,6 +54,7 @@ const (
 	WalletBalanceNotEnough         = "Insufficient wallet balance, please top up!"
 	InvalidPaymentMethod           = "Invalid payment method."
 	OrderNotExistMessage           = "Order not exist."
+	InvalidPasswordMessage         = "Invalid password."
 )
 
 type JSONResponse struct {

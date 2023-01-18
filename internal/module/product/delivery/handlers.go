@@ -221,7 +221,6 @@ func (h *productHandlers) CreateFavoriteProduct(c *gin.Context) {
 }
 
 func (h *productHandlers) DeleteFavoriteProduct(c *gin.Context) {
-
 	var requestBody body.GetProductRequest
 	if err := c.ShouldBind(&requestBody); err != nil {
 		response.ErrorResponse(c.Writer, response.BadRequestMessage, http.StatusBadRequest)
@@ -344,6 +343,7 @@ func (h *productHandlers) ValidateQueryProduct(c *gin.Context) (*pagination.Pagi
 
 	province := strings.TrimSpace(c.Query("province_ids"))
 
+	var sortFilter string
 	var limitFilter, pageFilter int
 	var minPriceFilter, maxPriceFilter, minRatingFilter, maxRatingFilter float64
 
@@ -365,51 +365,50 @@ func (h *productHandlers) ValidateQueryProduct(c *gin.Context) (*pagination.Pagi
 	} else if limitFilter > 100 {
 		limitFilter = 100
 	}
-	if sortBy == "" {
-		sortBy = "unit_sold"
+
+	switch sort {
+	case constant.ASC:
+		sortFilter = sort
+	default:
+		sortFilter = constant.DESC
 	}
-	if sort == "" {
-		sort = "desc"
-	}
+
 	pageFilter, err = strconv.Atoi(page)
 	if err != nil || pageFilter < 1 {
 		pageFilter = 1
 	}
-	pgn := &pagination.Pagination{
-		Limit: limitFilter,
-		Page:  pageFilter,
-		Sort:  sortBy + " " + sort,
-	}
+
+	var pgn *pagination.Pagination
 	switch sortBy {
 	case "created_at":
 		pgn = &pagination.Pagination{
 			Limit: limitFilter,
 			Page:  pageFilter,
-			Sort:  "p." + sortBy + " " + sort,
+			Sort:  "p." + sortBy + " " + sortFilter,
 		}
 	case "recommended":
 		pgn = &pagination.Pagination{
 			Limit: limitFilter,
 			Page:  pageFilter,
-			Sort:  "view_count " + sort + ", " + "unit_sold " + sort,
+			Sort:  "view_count " + sortFilter + ", " + "unit_sold " + sortFilter,
 		}
 	case "min_price":
 		pgn = &pagination.Pagination{
 			Limit: limitFilter,
 			Page:  pageFilter,
-			Sort:  sortBy + " " + sort,
+			Sort:  sortBy + " " + sortFilter,
 		}
 	case "unit_sold":
 		pgn = &pagination.Pagination{
 			Limit: limitFilter,
 			Page:  pageFilter,
-			Sort:  sortBy + " " + sort,
+			Sort:  sortBy + " " + sortFilter,
 		}
 	case "view_count":
 		pgn = &pagination.Pagination{
 			Limit: limitFilter,
 			Page:  pageFilter,
-			Sort:  sortBy + " " + sort,
+			Sort:  sortBy + " " + sortFilter,
 		}
 	default:
 		pgn = &pagination.Pagination{
@@ -650,7 +649,7 @@ func (h *productHandlers) ValidateQueryReview(c *gin.Context) (*pagination.Pagin
 
 	var limitFilter int
 	var pageFilter int
-	sortFilter := "desc"
+	var sortFilter string
 
 	limitFilter, err := strconv.Atoi(limit)
 	if err != nil || limitFilter < 1 {
@@ -662,8 +661,11 @@ func (h *productHandlers) ValidateQueryReview(c *gin.Context) (*pagination.Pagin
 		pageFilter = 1
 	}
 
-	if sort == "asc" {
-		sortFilter = "asc"
+	switch sort {
+	case "asc":
+		sortFilter = sort
+	default:
+		sortFilter = "desc"
 	}
 
 	pgn := &pagination.Pagination{
@@ -687,13 +689,13 @@ func (h *productHandlers) ValidateQueryReview(c *gin.Context) (*pagination.Pagin
 		ratingFilterInput = strconv.Itoa(ratingFilter)
 	}
 
-	if showComment == "false" {
+	if showComment == constant.FALSE {
 		showCommentFilter = false
 	} else {
 		showCommentFilter = true
 	}
 
-	if showImage == "false" {
+	if showImage == constant.FALSE {
 		showImageFilter = false
 	} else {
 		showImageFilter = true

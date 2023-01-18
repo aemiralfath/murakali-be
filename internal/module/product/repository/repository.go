@@ -296,15 +296,16 @@ func (r *productRepo) GetProductDetail(ctx context.Context, productID string, pr
 		if promo != nil {
 			discountedPrice := 0.0
 			if promo.PromotionDiscountPercentage != nil {
-				discountedPrice = *detail.NormalPrice - *promo.PromotionDiscountFixPrice
-			} else if promo.PromotionDiscountFixPrice != nil {
 				discountedPrice = *detail.NormalPrice - (*detail.NormalPrice * (*promo.PromotionDiscountPercentage / float64(100)))
 			}
+			if promo.PromotionDiscountFixPrice != nil {
+				discountedPrice = *detail.NormalPrice - *promo.PromotionDiscountFixPrice
+			}
 			if *detail.NormalPrice >= *promo.PromotionMinProductPrice {
-				if *promo.PromotionDiscountFixPrice > *promo.PromotionMaxDiscountPrice {
-					discountedPrice = *detail.NormalPrice - *promo.PromotionMaxDiscountPrice
+				if promo.PromotionDiscountFixPrice != nil && *promo.PromotionDiscountFixPrice > *promo.PromotionMaxDiscountPrice {
+					discountedPrice = *detail.NormalPrice - *promo.PromotionDiscountFixPrice
 				} else if discountedPrice > *promo.PromotionMaxDiscountPrice {
-					discountedPrice = *promo.PromotionMaxDiscountPrice
+					discountedPrice = *detail.NormalPrice - *promo.PromotionMaxDiscountPrice
 				}
 				detail.DiscountPrice = &discountedPrice
 			}
@@ -474,6 +475,9 @@ func (r *productRepo) GetProducts(ctx context.Context, pgn *pagination.Paginatio
 			&productData.ShopName,
 			&productData.CategoryName,
 			&productData.ShopProvince,
+			&productData.ListedStatus,
+			&productData.CreatedAt,
+			&productData.UpdatedAt,
 		); errScan != nil {
 			return nil, nil, nil, err
 		}
@@ -648,7 +652,8 @@ func (r *productRepo) FindFavoriteProduct(ctx context.Context, userID, productID
 	return isExist, nil
 }
 
-func (r *productRepo) GetProductReviews(ctx context.Context, pgn *pagination.Pagination, productID string, query *body.GetReviewQueryRequest) ([]*body.ReviewProduct, error) {
+func (r *productRepo) GetProductReviews(ctx context.Context,
+	pgn *pagination.Pagination, productID string, query *body.GetReviewQueryRequest) ([]*body.ReviewProduct, error) {
 	reviews := make([]*body.ReviewProduct, 0)
 
 	q := fmt.Sprintf(GetReviewProductQuery, query.GetValidate(), pgn.GetSort())
