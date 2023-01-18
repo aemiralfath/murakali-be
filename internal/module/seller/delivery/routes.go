@@ -22,4 +22,7 @@ func MapSellerRoutes(sellerGroup *gin.RouterGroup, h seller.Handlers, mw *middle
 	sellerGroup.PATCH("/order-resi/:id", h.UpdateResiNumberInOrderSeller)
 	sellerGroup.GET("/voucher", h.GetAllVoucherSeller)
 	sellerGroup.POST("/voucher", h.CreateVoucherSeller)
+	sellerGroup.PUT("/voucher", h.UpdateVoucherSeller)
+	sellerGroup.GET("/voucher/:id", h.DetailVoucherSeller)
+	sellerGroup.DELETE("/voucher/:id", h.DeleteVoucherSeller)
 }

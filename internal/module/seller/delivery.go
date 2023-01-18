@@ -14,4 +14,7 @@ type Handlers interface {
 	UpdateResiNumberInOrderSeller(c *gin.Context)
 	GetAllVoucherSeller(c *gin.Context)
 	CreateVoucherSeller(c *gin.Context)
+	UpdateVoucherSeller(c *gin.Context)
+	DeleteVoucherSeller(c *gin.Context)
+	DetailVoucherSeller(c *gin.Context)
 }
