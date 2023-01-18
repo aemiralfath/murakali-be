@@ -871,7 +871,6 @@ func (r *productRepo) UpdateListedStatus(ctx context.Context, tx postgre.Transac
 
 func (r *productRepo) UpdateProduct(ctx context.Context, tx postgre.Transaction, requestBody body.UpdateProductInfoForQuery, productID string) error {
 	_, err := tx.ExecContext(ctx, UpdateProductQuery,
-		requestBody.CategoryID,
 		requestBody.Title,
 		requestBody.Description,
 		requestBody.Thumbnail,
@@ -884,6 +883,7 @@ func (r *productRepo) UpdateProduct(ctx context.Context, tx postgre.Transaction,
 	}
 	return nil
 }
+
 func (r *productRepo) UpdateProductDetail(ctx context.Context,
 	tx postgre.Transaction, requestBody body.UpdateProductDetailRequest, productID string) error {
 	_, err := tx.ExecContext(ctx,

@@ -19,7 +19,6 @@ type UpdateProductInfo struct {
 	Title        string `json:"title"`
 	Description  string `json:"description"`
 	Thumbnail    string `json:"thumbnail"`
-	CategoryID   string `json:"category_id"`
 	ListedStatus bool   `json:"listed_status"`
 }
 
@@ -84,12 +83,6 @@ func (r *UpdateProductRequest) ValidateUpdateProduct() (UnprocessableEntity, err
 	if r.ProductInfo.Thumbnail == "" {
 		unprocessableEntity = true
 		entity.Fields["thumbnail"] = FieldCannotBeEmptyMessage
-	}
-
-	r.ProductInfo.CategoryID = strings.TrimSpace(r.ProductInfo.CategoryID)
-	if _, err := uuid.Parse(r.ProductInfo.CategoryID); err != nil {
-		unprocessableEntity = true
-		entity.Fields["category_id"] = FieldCannotBeEmptyMessage
 	}
 
 	totalData := len(r.ProductDetail)

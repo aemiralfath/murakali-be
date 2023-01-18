@@ -667,7 +667,6 @@ func (u *productUC) UpdateProduct(ctx context.Context, requestBody body.UpdatePr
 			Title:        requestBody.ProductInfo.Title,
 			Description:  requestBody.ProductInfo.Description,
 			Thumbnail:    requestBody.ProductInfo.Thumbnail,
-			CategoryID:   requestBody.ProductInfo.CategoryID,
 			ListedStatus: requestBody.ProductInfo.ListedStatus,
 			MinPrice:     rangePrice.MinPrice,
 			MaxPrice:     rangePrice.MaxPrice,

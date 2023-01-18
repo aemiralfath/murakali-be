@@ -294,13 +294,13 @@ const (
 	UpdateListedStatusQuery = `UPDATE "product" SET "listed_status" = $1 WHERE "id" = $2`
 
 	UpdateProductQuery = `UPDATE 
-	"product" SET "category_id" = $1,
-	"title" =$2,"description"=$3,
-	"thumbnail_url"= $4,
-	"min_price"=$5,
-	"max_price"=$6,
-	"listed_status"=$7
-	WHERE "id" = $8`
+	"product" SET 
+	"title" =$1,"description"=$2,
+	"thumbnail_url"= $3,
+	"min_price"=$4,
+	"max_price"=$5,
+	"listed_status"=$6
+	WHERE "id" = $7`
 
 	UpdateProductDetailQuery = `UPDATE 
 	"product_detail" SET 
