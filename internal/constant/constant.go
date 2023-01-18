@@ -39,8 +39,8 @@ const (
 	OrderStatusWaitingForSeller = 2
 	OrderStatusProcessed        = 3
 	OrderStatusOnDelivery       = 4
-	OrderStatusDelivered        = 6
-	OrderStatusReceived         = 5
+	OrderStatusDelivered        = 5
+	OrderStatusReceived         = 6
 	OrderStatusCompleted        = 7
 	OrderStatusCanceled         = 8
 	OrderStatusRefunded         = 9
