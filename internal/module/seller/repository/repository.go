@@ -707,6 +707,8 @@ func (r *sellerRepo) GetTransactionsExpired(ctx context.Context) ([]*model.Trans
 			&transaction.ExpiredAt); errScan != nil {
 			return nil, errScan
 		}
+
+		transactions = append(transactions, &transaction)
 	}
 
 	if res.Err() != nil {
@@ -718,7 +720,32 @@ func (r *sellerRepo) GetTransactionsExpired(ctx context.Context) ([]*model.Trans
 
 func (r *sellerRepo) GetOrderItemsByOrderID(ctx context.Context, tx postgre.Transaction, orderID string) ([]*model.OrderItem, error) {
 	orderItems := make([]*model.OrderItem, 0)
+	res, err := tx.QueryContext(ctx, GetOrderItemsByOrderIDQuery, orderID)
+	if err != nil {
+		return nil, err
+	}
+	defer res.Close()
 
+	for res.Next() {
+		var orderItem model.OrderItem
+		if errScan := res.Scan(
+			&orderItem.ID,
+			&orderItem.OrderID,
+			&orderItem.ProductDetailID,
+			&orderItem.Quantity,
+			&orderItem.ItemPrice,
+			&orderItem.TotalPrice); errScan != nil {
+			return nil, err
+		}
+
+		orderItems = append(orderItems, &orderItem)
+	}
+
+	if res.Err() != nil {
+		return nil, err
+	}
+
+	return orderItems, nil
 }
 
 func (r *sellerRepo) GetProductDetailByID(ctx context.Context, tx postgre.Transaction, productDetailID string) (*model.ProductDetail, error) {

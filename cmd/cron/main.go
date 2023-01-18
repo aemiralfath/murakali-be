@@ -91,5 +91,5 @@ func updateExpiredAt(cfg *config.Config, appLogger logger.Logger) {
 		return
 	}
 
-	appLogger.Infof("update delivery success")
+	appLogger.Infof("update expired success")
 }

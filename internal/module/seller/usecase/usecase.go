@@ -344,7 +344,7 @@ func (u *sellerUC) UpdateExpiredAtOrder(ctx context.Context) error {
 			}
 
 			for _, order := range orders {
-				order.OrderStatusID = constant.OrderStatusWaitingForSeller
+				order.OrderStatusID = constant.OrderStatusCanceled
 				if err := u.sellerRepo.UpdateOrder(ctx, tx, order); err != nil {
 					return err
 				}
