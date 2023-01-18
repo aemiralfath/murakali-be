@@ -685,7 +685,7 @@ func (h *productHandlers) ValidateQueryReview(c *gin.Context) (*pagination.Pagin
 
 	ratingFilter, err = strconv.Atoi(rating)
 
-	if err == nil && ratingFilter > 1 && ratingFilter < 5 {
+	if err == nil && ratingFilter >= 1 && ratingFilter <= 5 {
 		ratingFilterInput = strconv.Itoa(ratingFilter)
 	}
 

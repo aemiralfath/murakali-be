@@ -56,6 +56,7 @@ const (
 	InvalidPaymentMethod           = "Invalid payment method."
 	OrderNotExistMessage           = "Order not exist."
 	InvalidPasswordMessage         = "Invalid password."
+	TransactionNotFound            = "Transaction not found."
 )
 
 type JSONResponse struct {

@@ -477,7 +477,7 @@ func (h *userHandlers) GetTransactionDetailByID(c *gin.Context) {
 		return
 	}
 
-	transactionID := c.Param("trasaction_id")
+	transactionID := c.Param("transaction_id")
 
 	transactionDetail, err := h.userUC.GetTransactionDetailByID(c, transactionID, userID.(string))
 	if err != nil {

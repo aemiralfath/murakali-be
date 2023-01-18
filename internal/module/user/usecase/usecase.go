@@ -249,6 +249,9 @@ func (u *userUC) GetTransactionDetailByID(ctx context.Context, transactionID, us
 	var transactionDetail *body.TransactionDetailResponse
 	transaction, err := u.userRepo.GetTransactionByID(ctx, transactionID)
 	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, httperror.New(http.StatusNotFound, response.TransactionNotFound)
+		}
 		return nil, err
 	}
 
