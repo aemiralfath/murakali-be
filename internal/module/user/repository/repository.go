@@ -397,6 +397,17 @@ func (r *userRepo) GetUserByID(ctx context.Context, id string) (*model.User, err
 	return &userModel, nil
 }
 
+func (r *userRepo) GetUserPasswordByID(ctx context.Context, id string) (*model.User, error) {
+	var userModel model.User
+	if err := r.PSQL.QueryRowContext(ctx, GetUserPasswordByIDQuery, id).
+		Scan(&userModel.ID, &userModel.RoleID, &userModel.Email, &userModel.Password, &userModel.Username, &userModel.PhoneNo,
+			&userModel.FullName, &userModel.Gender, &userModel.BirthDate, &userModel.IsVerify, &userModel.PhotoURL); err != nil {
+		return nil, err
+	}
+
+	return &userModel, nil
+}
+
 func (r *userRepo) GetPasswordByID(ctx context.Context, id string) (string, error) {
 	var password string
 	if err := r.PSQL.QueryRowContext(ctx, GetPasswordByIDQuery, id).
@@ -514,6 +525,15 @@ func (r *userRepo) UpdateUserEmail(ctx context.Context, tx postgre.Transaction, 
 	return nil
 }
 
+func (r *userRepo) UpdateWalletPin(ctx context.Context, wallet *model.Wallet) error {
+	_, err := r.PSQL.ExecContext(ctx, UpdateWalletPinQuery, wallet.PIN, wallet.ID)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func (r *userRepo) CreateWallet(ctx context.Context, wallet *model.Wallet) error {
 	_, err := r.PSQL.ExecContext(ctx, CreateWalletQuery, wallet.UserID, wallet.Balance, wallet.PIN, wallet.AttemptCount, wallet.ActiveDate)
 	if err != nil {
@@ -617,6 +637,26 @@ func (r *userRepo) PatchSealabsPay(ctx context.Context, cardNumber string) error
 	return nil
 }
 
+func (r *userRepo) CheckUserSealabsPay(ctx context.Context, userid string) (int, error) {
+	var temp int
+	if err := r.PSQL.QueryRowContext(ctx, CheckUserSealabsPayQuery, userid).
+		Scan(&temp); err != nil {
+		return 0, err
+	}
+
+	return temp, nil
+}
+
+func (r *userRepo) CheckDeletedSealabsPay(ctx context.Context, cardNumber string) (int, error) {
+	var temp int
+	if err := r.PSQL.QueryRowContext(ctx, CheckDeletedSealabsPayQuery, cardNumber).
+		Scan(&temp); err != nil {
+		return 0, err
+	}
+
+	return temp, nil
+}
+
 func (r *userRepo) DeleteSealabsPay(ctx context.Context, cardNumber string) error {
 	if _, err := r.PSQL.ExecContext(ctx, DeleteSealabsPayQuery, cardNumber); err != nil {
 		return err
@@ -640,9 +680,34 @@ func (r *userRepo) SetDefaultSealabsPay(ctx context.Context, cardNumber, userid 
 	return nil
 }
 
-func (r *userRepo) AddSealabsPay(ctx context.Context, tx postgre.Transaction, request body.AddSealabsPayRequest, userid string) error {
+func (r *userRepo) AddSealabsPayTrans(ctx context.Context, tx postgre.Transaction, request body.AddSealabsPayRequest, userid string) error {
 	if _, err := tx.ExecContext(ctx, CreateSealabsPayQuery, request.CardNumber, userid,
 		request.Name, request.IsDefault, request.ActiveDateTime); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (r *userRepo) UpdateUserSealabsPayTrans(ctx context.Context, tx postgre.Transaction, request body.AddSealabsPayRequest, userid string) error {
+	if _, err := tx.ExecContext(ctx, UpdateUserSealabsPayQuery, userid, request.Name, request.CardNumber); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (r *userRepo) AddSealabsPay(ctx context.Context, request body.AddSealabsPayRequest, userid string) error {
+	if _, err := r.PSQL.ExecContext(ctx, CreateSealabsPayQuery, request.CardNumber, userid,
+		request.Name, request.IsDefault, request.ActiveDateTime); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (r *userRepo) UpdateUserSealabsPay(ctx context.Context, request body.AddSealabsPayRequest, userid string) error {
+	if _, err := r.PSQL.ExecContext(ctx, UpdateUserSealabsPayQuery, userid, request.Name, request.CardNumber); err != nil {
 		return err
 	}
 
@@ -794,9 +859,9 @@ func (r *userRepo) GetCourierShopByID(ctx context.Context, courierID, shopID str
 	return &CourierShop, nil
 }
 
-func (r *userRepo) GetProductDetailByID(ctx context.Context, productDetailID string) (*model.ProductDetail, error) {
+func (r *userRepo) GetProductDetailByID(ctx context.Context, tx postgre.Transaction, productDetailID string) (*model.ProductDetail, error) {
 	var pd model.ProductDetail
-	if err := r.PSQL.QueryRowContext(ctx, GetProductDetailByIDQuery, productDetailID).Scan(
+	if err := tx.QueryRowContext(ctx, GetProductDetailByIDQuery, productDetailID).Scan(
 		&pd.ID,
 		&pd.Price,
 		&pd.Stock,

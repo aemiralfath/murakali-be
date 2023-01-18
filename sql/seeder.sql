@@ -9,17 +9,19 @@ VALUES ('9a4de0f5-0556-491b-ba1b-0873933262da', 'festival hari ibu', 'festival d
         'https://shopee.co.id/m/mall-super-category-day', true);
 
 INSERT INTO "order_status" (name)
-VALUES ('waiting to pay'),
-       ('waiting for seller confirmation'),
-       ('waiting for packing'),
-       ('on delivery'),
-       ('received'),
-       ('completed'),
-       ('cancelled'),
-       ('refund');
+VALUES ('Waiting to Pay'),
+       ('Waiting for Seller'),
+       ('Processed'),
+       ('On Delivery'),
+       ('Delivered'),
+       ('Received'),
+       ('Completed'),
+       ('Canceled'),
+       ('Refunded');
 
 INSERT INTO "sealabs_pay" (card_number, user_id, name, is_default, active_date)
-VALUES ('2787884621261326', '7950eca2-58d5-44f0-b873-22b23d8107da', 'Emir SLP', true, '2024-12-31 23:59:59');
+VALUES ('2787884621261326', '7950eca2-58d5-44f0-b873-22b23d8107da', 'Emir SLP', true, '2024-12-31 23:59:59'),
+       ('2789760285732876', '7950eca2-58d5-44f0-b873-22b23d8107da', 'Sammy SLP', true, '2024-12-31 23:59:59');
 
 INSERT INTO product(id, category_id, shop_id, sku, title, description, view_count, favorite_count, unit_sold,
                     listed_status, thumbnail_url, rating_avg, min_price, max_price, created_at, updated_at, deleted_at)

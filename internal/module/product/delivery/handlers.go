@@ -325,12 +325,18 @@ func (h *productHandlers) ValidateQueryProduct(c *gin.Context) (*pagination.Pagi
 	sort := strings.TrimSpace(c.Query("sort"))
 	sortBy := strings.TrimSpace(c.Query("sort_by"))
 
+	sortBy = strings.ToLower(sortBy)
+	sort = strings.ToLower(sort)
+
 	minPrice := strings.TrimSpace(c.Query("min_price"))
 	maxPrice := strings.TrimSpace(c.Query("max_price"))
 	minRating := strings.TrimSpace(c.Query("min_rating"))
 	maxRating := strings.TrimSpace(c.Query("max_rating"))
 
 	category := strings.TrimSpace(c.Query("category"))
+
+	category = strings.ToLower(category)
+
 	shop := strings.TrimSpace(c.Query("shop_id"))
 
 	listedStatus := strings.TrimSpace(c.Query("listed_status"))
@@ -503,6 +509,33 @@ func (h *productHandlers) UpdateListedStatus(c *gin.Context) {
 	}
 
 	if err := h.productUC.UpdateListedStatus(c, productID.String()); err != nil {
+		var e *httperror.Error
+		if !errors.As(err, &e) {
+			h.logger.Errorf("HandlerUser, Error: %s", err)
+			response.ErrorResponse(c.Writer, response.InternalServerErrorMessage, http.StatusInternalServerError)
+			return
+		}
+		response.ErrorResponse(c.Writer, e.Err.Error(), e.Status)
+		return
+	}
+
+	response.SuccessResponse(c.Writer, nil, http.StatusOK)
+}
+
+func (h *productHandlers) UpdateListedStatusBulk(c *gin.Context) {
+	var requestBody body.UpdateProductListedStatusBulkRequest
+	if err := c.ShouldBind(&requestBody); err != nil {
+		response.ErrorResponse(c.Writer, response.BadRequestMessage, http.StatusBadRequest)
+		return
+	}
+
+	invalidFields, err := requestBody.ValidateUpdateProductListedStatusBulk()
+	if err != nil {
+		response.ErrorResponseData(c.Writer, invalidFields, response.UnprocessableEntityMessage, http.StatusUnprocessableEntity)
+		return
+	}
+
+	if err := h.productUC.UpdateProductListedStatusBulk(c, requestBody); err != nil {
 		var e *httperror.Error
 		if !errors.As(err, &e) {
 			h.logger.Errorf("HandlerUser, Error: %s", err)

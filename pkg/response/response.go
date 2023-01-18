@@ -41,6 +41,7 @@ const (
 	SelectShippingCourier          = "Select shipping Courier"
 	UnknownShop                    = "Unknown shop."
 	CartItemNotExist               = "Cart Item not exist."
+	ProductQuantityNotAvailable    = "Product quantity not available."
 	ShopAddressNotFound            = "Shop address not found."
 	UserNotHaveShop                = "User not register shop"
 	DefaultAddressNotFound         = "Default address not found."
@@ -54,6 +55,7 @@ const (
 	WalletBalanceNotEnough         = "Insufficient wallet balance, please top up!"
 	InvalidPaymentMethod           = "Invalid payment method."
 	OrderNotExistMessage           = "Order not exist."
+	InvalidPasswordMessage         = "Invalid password."
 )
 
 type JSONResponse struct {

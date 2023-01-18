@@ -13,6 +13,7 @@ func MapSellerRoutes(sellerGroup *gin.RouterGroup, h seller.Handlers, mw *middle
 
 	sellerGroup.Use(mw.AuthJWTMiddleware())
 	sellerGroup.Use(mw.SellerJWTMiddleware())
+	sellerGroup.GET("/user/:user_id", h.GetSellerByUserID)
 	sellerGroup.GET("/order", h.GetOrder)
 	sellerGroup.GET("/order/:order_id", h.GetOrderByOrderID)
 	sellerGroup.PATCH("/order-status", h.ChangeOrderStatus)

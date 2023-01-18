@@ -102,7 +102,7 @@ func (f *ProductFaker) GenerateProductDetail(id, productID uuid.UUID, price floa
 		ProductID: productID,
 		Price:     price,
 		Stock:     float64(rand.Intn(20000)),
-		Weight:    float64(rand.Intn(10-1)+1) * 1000,
+		Weight:    float64(rand.Intn(10-1)+1) * 100,
 		Size:      float64(rand.Intn(20000)),
 		Hazardous: false,
 		Condition: "new",
