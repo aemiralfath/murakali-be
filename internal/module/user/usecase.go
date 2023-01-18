@@ -33,6 +33,7 @@ type UseCase interface {
 	UpdateWalletTransaction(ctx context.Context, transactionID string, requestBody body.SLPCallbackRequest) error
 	CreateSLPPayment(ctx context.Context, transactionID string) (string, error)
 	GetOrder(ctx context.Context, userID string, pgn *pagination.Pagination) (*pagination.Pagination, error)
+	GetTransactionDetailByID(ctx context.Context, transactionID, userID string) (*body.TransactionDetailResponse, error)
 	ActivateWallet(ctx context.Context, userID, pin string) error
 	GetWallet(ctx context.Context, userID string) (*model.Wallet, error)
 	GetWalletHistory(ctx context.Context, userID string, pgn *pagination.Pagination) (*pagination.Pagination, error)

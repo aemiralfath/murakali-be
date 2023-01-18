@@ -470,6 +470,31 @@ func (h *userHandlers) GetOrder(c *gin.Context) {
 	response.SuccessResponse(c.Writer, orders, http.StatusOK)
 }
 
+func (h *userHandlers) GetTransactionDetailByID(c *gin.Context) {
+	userID, exist := c.Get("userID")
+	if !exist {
+		response.ErrorResponse(c.Writer, response.UnauthorizedMessage, http.StatusUnauthorized)
+		return
+	}
+
+	transactionID := c.Param("trasaction_id")
+
+	transactionDetail, err := h.userUC.GetTransactionDetailByID(c, transactionID, userID.(string))
+	if err != nil {
+		var e *httperror.Error
+		if !errors.As(err, &e) {
+			h.logger.Errorf("HandlerUser, Error: %s", err)
+			response.ErrorResponse(c.Writer, response.InternalServerErrorMessage, http.StatusInternalServerError)
+			return
+		}
+
+		response.ErrorResponse(c.Writer, e.Err.Error(), e.Status)
+		return
+	}
+
+	response.SuccessResponse(c.Writer, transactionDetail, http.StatusOK)
+}
+
 func (h *userHandlers) ValidateQueryOrder(c *gin.Context, pgn *pagination.Pagination) {
 	limit := strings.TrimSpace(c.Query("limit"))
 	page := strings.TrimSpace(c.Query("page"))

@@ -8,7 +8,6 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
-	"github.com/google/uuid"
 	"math"
 	"murakali/config"
 	"murakali/internal/constant"
@@ -25,6 +24,8 @@ import (
 	"net/http"
 	"strings"
 	"time"
+
+	"github.com/google/uuid"
 
 	"golang.org/x/crypto/bcrypt"
 )
@@ -241,6 +242,37 @@ func (u *userUC) GetOrder(ctx context.Context, userID string, pgn *pagination.Pa
 	}
 	pgn.Rows = orders
 	return pgn, nil
+}
+
+func (u *userUC) GetTransactionDetailByID(ctx context.Context, transactionID, userID string) (*body.TransactionDetailResponse, error) {
+
+	var transactionDetail *body.TransactionDetailResponse
+	transaction, err := u.userRepo.GetTransactionByID(ctx, transactionID)
+	if err != nil {
+		return nil, err
+	}
+
+	transactionDetail = &body.TransactionDetailResponse{
+		ID:                   transaction.ID,
+		VoucherMarketplaceID: transaction.VoucherMarketplaceID,
+		WalletID:             transaction.WalletID,
+		CardNumber:           transaction.CardNumber,
+		Invoice:              transaction.Invoice,
+		TotalPrice:           transaction.TotalPrice,
+		PaidAt:               transaction.PaidAt,
+		CanceledAt:           transaction.CanceledAt,
+		ExpiredAt:            transaction.ExpiredAt,
+		Orders:               []*model.Order{},
+	}
+
+	orders, err := u.userRepo.GetOrdersByTransactionID(ctx, transactionID, userID)
+	if err != nil {
+		return nil, err
+	}
+
+	transactionDetail.Orders = orders
+
+	return transactionDetail, nil
 }
 
 func (u *userUC) GetAddressByID(ctx context.Context, userID, addressID string) (*model.Address, error) {
