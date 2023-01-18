@@ -1821,6 +1821,108 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/DefaultSuccess"
+
+  "/api/v1/seller/voucher":
+    get:
+      summary: Get All Seller Voucher 
+      description: >-
+        Get All Seller Voucher
+      tags:
+        - Seller
+      security:
+        - BEARER: []
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GetAllSellerVoucherResponse"
+    post:
+      summary: Create Voucher Seller 
+      description: >-
+        Create Voucher Seller
+      tags:
+        - Seller
+      security:
+        - BEARER: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateVoucherSellerRequest"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DefaultSuccess"
+    put:
+      summary: Update Voucher Seller 
+      description: >-
+        Update Voucher Seller
+      tags:
+        - Seller
+      security:
+        - BEARER: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateVoucherSellerRequest"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DefaultSuccess"
+
+  "/api/v1/seller/voucher/{id}":
+    get:
+      summary: Get Voucher Detail Seller 
+      description: >-
+        Get Voucher Detail Seller
+      tags:
+        - Seller
+      security:
+        - BEARER: []
+      parameters:
+        - in: path
+          name: id
+          schema:
+            type: string
+          required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GetVoucherDetailSellerResponse"
+    delete:
+      summary: Delete Seller Voucher 
+      description: >-
+        Delete Seller Voucher
+      tags:
+        - Seller
+      security:
+        - BEARER: []
+      parameters:
+        - in: path
+          name: id
+          schema:
+            type: string
+          required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DefaultSuccess"
+                
 components:
   schemas:
     LoginRequest:
@@ -4653,6 +4755,96 @@ components:
         resi_no:
           type: string
           example: "2131231231231232142"
+
+    GetAllSellerVoucherResponse:
+      title: GetAllSellerVoucherResponse
+      type: object
+      description: Get All Seller Voucher Response data model.
+      properties:
+      example:
+        message: success
+        data:
+          limit: 10
+          page: 1
+          total_rows: 1
+          total_pages: 1
+          rows:
+          - id: 59bfcd74-e278-4c70-a889-d9c8515bf71c
+            shop_id: e8854443-c2c7-488e-93d5-b9d93708b8a3
+            code: ASD123
+            quota: 11
+            actived_date: '2022-12-22T21:43:56.202214Z'
+            expired_date: '2023-02-01T21:43:56.202214Z'
+            discount_percentage: 0
+            discount_fix_price: 5000
+            min_product_price: 5000
+            max_discount_price: 100000
+            max_quantity: 0
+            created_at: '2022-12-23T02:34:38.854025Z'
+            updated_at:
+              Time: '0001-01-01T00:00:00Z'
+              Valid: false
+            deleted_at:
+              Time: '0001-01-01T00:00:00Z'
+              Valid: false
+
+    CreateVoucherSellerRequest:
+      title: CreateVoucherSellerRequest
+      type: object
+      description: Create voucher seller request data model.
+      properties:
+      example:
+        shop_id: e8854443-c2c7-488e-93d5-b9d93708b8a3
+        code: QWE1233
+        quota: 5
+        actived_date: 22-12-2022 21:43:56
+        expired_date: 22-02-2023 21:43:56
+        discount_percentage: 0
+        discount_fix_price: 1000
+        min_product_price: 5000
+        max_discount_price: 10000
+
+    UpdateVoucherSellerRequest:
+      title: UpdateVoucherSellerRequest
+      type: object
+      description: Update voucher seller request data model.
+      properties:
+      example:
+        voucher_id: e8854443-c2c7-488e-93d5-b9d93708b8a3
+        quota: 5
+        actived_date: 22-12-2022 21:43:56
+        expired_date: 22-02-2023 21:43:56
+        discount_percentage: 0
+        discount_fix_price: 1000
+        min_product_price: 5000
+        max_discount_price: 10000
+    
+    GetVoucherDetailSellerResponse:
+      title: UpdateVoucherSellerRequest
+      type: object
+      description: Update voucher seller request data model.
+      properties:
+      example:
+        message: success
+        data:
+          id: 59bfcd74-e278-4c70-a889-d9c8515bf71c
+          shop_id: e8854443-c2c7-488e-93d5-b9d93708b8a3
+          code: ASD123
+          quota: 10
+          actived_date: '2022-12-22T21:43:56Z'
+          expired_date: '2023-02-22T21:43:56Z'
+          discount_percentage: 0
+          discount_fix_price: 10000
+          min_product_price: 5000
+          max_discount_price: 10000
+          created_at: '2022-12-23T02:34:38.854025Z'
+          updated_at:
+            Time: '2023-01-17T12:08:57.917015Z'
+            Valid: true
+          deleted_at:
+            Time: '0001-01-01T00:00:00Z'
+            Valid: false
+
 
     CheckUniqueTrueSuccess:
       title: CheckUniqueTrueSuccess

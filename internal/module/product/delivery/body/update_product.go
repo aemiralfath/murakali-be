@@ -52,6 +52,11 @@ type UpdateVariant struct {
 	VariantDetailID string `json:"variant_detail_id"`
 }
 
+type RangePrice struct {
+	MinPrice float64
+	MaxPrice float64
+}
+
 func (r *UpdateProductRequest) ValidateUpdateProduct() (UnprocessableEntity, error) {
 	unprocessableEntity := false
 	entity := UnprocessableEntity{

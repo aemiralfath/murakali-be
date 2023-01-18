@@ -34,4 +34,10 @@ type Repository interface {
 	UpdateResiNumberInOrderSeller(ctx context.Context, noResi, orderID, shopID string, arriveAt time.Time) error
 	GetCostRedis(ctx context.Context, key string) (*string, error)
 	InsertCostRedis(ctx context.Context, key string, value string) error
+	GetAllVoucherSeller(ctx context.Context, shopID string) ([]*model.Voucher, error)
+	GetTotalVoucherSeller(ctx context.Context, shopID string) (int64, error)
+	CreateVoucherSeller(ctx context.Context, voucherShop *model.Voucher) error
+	UpdateVoucherSeller(ctx context.Context, voucherShop *model.Voucher) error
+	DeleteVoucherSeller(ctx context.Context, voucherIDShopID *body.VoucherIDShopID) error
+	GetAllVoucherSellerByIDandShopID(ctx context.Context, voucherIDShopID *body.VoucherIDShopID) (*model.Voucher, error)
 }

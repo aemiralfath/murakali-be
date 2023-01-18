@@ -43,6 +43,7 @@ const (
 	CartItemNotExist               = "Cart Item not exist."
 	ProductQuantityNotAvailable    = "Product quantity not available."
 	ShopAddressNotFound            = "Shop address not found."
+	UserNotHaveShop                = "User not register shop"
 	DefaultAddressNotFound         = "Default address not found."
 	ShopCourierNotExist            = "Shop courier not exist."
 	WalletAlreadyActivated         = "Wallet already activated."

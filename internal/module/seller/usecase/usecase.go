@@ -17,6 +17,8 @@ import (
 	"murakali/pkg/response"
 	"net/http"
 	"strings"
+
+	"github.com/google/uuid"
 )
 
 type sellerUC struct {
@@ -326,4 +328,153 @@ func (u *sellerUC) GetCostRajaOngkir(origin, destination, weight int, code strin
 	}
 
 	return &responseCost, nil
+}
+
+func (u *sellerUC) GetAllVoucherSeller(ctx context.Context, userID string, pgn *pagination.Pagination) (*pagination.Pagination, error) {
+	shopID, err := u.sellerRepo.GetShopIDByUserID(ctx, userID)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, httperror.New(http.StatusBadRequest, response.UserNotHaveShop)
+		}
+		return nil, err
+	}
+
+	totalRows, err := u.sellerRepo.GetTotalVoucherSeller(ctx, shopID)
+	if err != nil {
+		return nil, err
+	}
+
+	totalPages := int(math.Ceil(float64(totalRows) / float64(pgn.Limit)))
+	pgn.TotalRows = totalRows
+	pgn.TotalPages = totalPages
+
+	ShopVouchers, err := u.sellerRepo.GetAllVoucherSeller(ctx, shopID)
+	if err != nil {
+		return nil, err
+	}
+
+	pgn.Rows = ShopVouchers
+
+	return pgn, nil
+}
+
+func (u *sellerUC) CreateVoucherSeller(ctx context.Context, userID string, requestBody body.CreateVoucherRequest) error {
+	id, err := u.sellerRepo.GetShopIDByUserID(ctx, userID)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return httperror.New(http.StatusBadRequest, response.UserNotHaveShop)
+		}
+		return err
+	}
+
+	shopID, err := uuid.Parse(id)
+	if err != nil {
+		return err
+	}
+
+	voucherShop := &model.Voucher{
+		ShopID:             shopID,
+		Code:               requestBody.Code,
+		Quota:              requestBody.Quota,
+		ActivedDate:        requestBody.ActiveDateTime,
+		ExpiredDate:        requestBody.ExpiredDateTime,
+		DiscountPercentage: &requestBody.DiscountPercentage,
+		DiscountFixPrice:   &requestBody.DiscountFixPrice,
+		MinProductPrice:    &requestBody.MinProductPrice,
+		MaxDiscountPrice:   &requestBody.MaxDiscountPrice,
+	}
+
+	err = u.sellerRepo.CreateVoucherSeller(ctx, voucherShop)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (u *sellerUC) UpdateVoucherSeller(ctx context.Context, userID string, requestBody body.UpdateVoucherRequest) error {
+	shopID, err := u.sellerRepo.GetShopIDByUserID(ctx, userID)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return httperror.New(http.StatusBadRequest, response.UserNotHaveShop)
+		}
+		return err
+	}
+
+	voucherIDShopID := &body.VoucherIDShopID{
+		ShopID:    shopID,
+		VoucherID: requestBody.VoucherID,
+	}
+
+	voucherShop, errVoucher := u.sellerRepo.GetAllVoucherSellerByIDandShopID(ctx, voucherIDShopID)
+	if errVoucher != nil {
+		if errVoucher == sql.ErrNoRows {
+			return httperror.New(http.StatusBadRequest, body.VoucherSellerNotFoundMessage)
+		}
+
+		return errVoucher
+	}
+
+	voucherShop.Quota = requestBody.Quota
+	voucherShop.ActivedDate = requestBody.ActiveDateTime
+	voucherShop.ExpiredDate = requestBody.ExpiredDateTime
+	voucherShop.DiscountPercentage = &requestBody.DiscountPercentage
+	voucherShop.DiscountFixPrice = &requestBody.DiscountFixPrice
+	voucherShop.MinProductPrice = &requestBody.MinProductPrice
+	voucherShop.MaxDiscountPrice = &requestBody.MaxDiscountPrice
+
+	err = u.sellerRepo.UpdateVoucherSeller(ctx, voucherShop)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (u *sellerUC) GetDetailVoucherSeller(ctx context.Context, voucherIDShopID *body.VoucherIDShopID) (*model.Voucher, error) {
+	shopID, err := u.sellerRepo.GetShopIDByUserID(ctx, voucherIDShopID.UserID)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, httperror.New(http.StatusBadRequest, response.UserNotHaveShop)
+		}
+		return nil, err
+	}
+	voucherIDShopID.ShopID = shopID
+
+	voucherShop, errVoucher := u.sellerRepo.GetAllVoucherSellerByIDandShopID(ctx, voucherIDShopID)
+	if errVoucher != nil {
+		if errVoucher == sql.ErrNoRows {
+			return nil, httperror.New(http.StatusBadRequest, body.VoucherSellerNotFoundMessage)
+		}
+
+		return nil, errVoucher
+	}
+
+	return voucherShop, nil
+}
+
+func (u *sellerUC) DeleteVoucherSeller(ctx context.Context, voucherIDShopID *body.VoucherIDShopID) error {
+	shopID, err := u.sellerRepo.GetShopIDByUserID(ctx, voucherIDShopID.UserID)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return httperror.New(http.StatusBadRequest, response.UserNotHaveShop)
+		}
+		return err
+	}
+	voucherIDShopID.ShopID = shopID
+
+	_, errVoucher := u.sellerRepo.GetAllVoucherSellerByIDandShopID(ctx, voucherIDShopID)
+	if errVoucher != nil {
+		if errVoucher == sql.ErrNoRows {
+			return httperror.New(http.StatusBadRequest, body.VoucherSellerNotFoundMessage)
+		}
+
+		return errVoucher
+	}
+
+	if err := u.sellerRepo.DeleteVoucherSeller(ctx, voucherIDShopID); err != nil {
+		return err
+	}
+
+	return nil
 }
