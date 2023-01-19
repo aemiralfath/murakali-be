@@ -463,7 +463,7 @@ func (u *userUC) GetSealabsPay(ctx context.Context, userid string) ([]*model.Sea
 }
 
 func (u *userUC) AddSealabsPay(ctx context.Context, request body.AddSealabsPayRequest, userid string) error {
-	slpCount, err := u.userRepo.CheckUserSealabsPay(ctx, userid) // check user punya slp
+	slpCount, err := u.userRepo.CheckUserSealabsPay(ctx, userid)
 	if err != nil {
 		return err
 	}
