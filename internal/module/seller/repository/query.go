@@ -103,6 +103,38 @@ const (
 	group by c.id`
 
 	UpdateResiNumberInOrderSellerQuery = `UPDATE
-	 "order" set resi_no = $1, arrived_at = $2, order_status_id = $3 WHERE id = $4 
-	 AND shop_id = $5`
+	"order" set resi_no = $1, arrived_at = $2, order_status_id = $3 WHERE id = $4 
+	AND shop_id = $5`
+
+	GetTotalVoucherSellerQuery = `
+	SELECT count(id) FROM "voucher" WHERE "shop_id" = $1
+	`
+	GetAllVoucherSellerQuery = `
+	SELECT "v"."id", "v"."shop_id", "v"."code", "v"."quota", "v"."actived_date", "v"."expired_date",
+		"v"."discount_percentage", "v"."discount_fix_price", "v"."min_product_price", "v"."max_discount_price",
+		"v"."created_at", "v"."updated_at",  "v"."deleted_at"
+	FROM "voucher" as "v"
+	INNER JOIN "shop" as "s" ON "s"."id" = "v"."shop_id"
+	WHERE "v"."shop_id" = $1
+	`
+	CreateVoucherSellerQuery = `INSERT INTO "voucher" 
+    	(shop_id, code, quota, actived_date, expired_date, discount_percentage, discount_fix_price, min_product_price, max_discount_price)
+    	VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+	`
+	DeleteVoucherSellerQuery = `UPDATE "voucher" set deleted_at = now() WHERE "id" = $1 AND "shop_id" = $2 AND "deleted_at" IS NULL`
+
+	GetAllVoucherSellerByIDandShopIDQuery = `
+	SELECT "v"."id", "v"."shop_id", "v"."code", "v"."quota", "v"."actived_date", "v"."expired_date",
+		"v"."discount_percentage", "v"."discount_fix_price", "v"."min_product_price", "v"."max_discount_price",
+		"v"."created_at", "v"."updated_at",  "v"."deleted_at"
+	FROM "voucher" as "v"
+	INNER JOIN "shop" as "s" ON "s"."id" = "v"."shop_id"
+	WHERE "v"."id"  = $1 AND "v"."shop_id" = $2 AND "v"."deleted_at" IS NULL
+	`
+
+	UpdateVoucherSellerQuery = `
+		UPDATE "voucher" SET "quota" = $1, "actived_date" = $2, "expired_date" = $3, "discount_percentage" = $4,
+			"discount_fix_price" = $5, "min_product_price" = $6, "max_discount_price" = $7, "updated_at" = now()
+		WHERE "id" = $8
+	`
 )
