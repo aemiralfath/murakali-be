@@ -637,3 +637,80 @@ func (u *sellerUC) UpdatePromotionSeller(ctx context.Context, userID string, req
 
 	return nil
 }
+
+func (u *sellerUC) GetDetailPromotionSellerByID(ctx context.Context,
+	shopProductPromo *body.ShopProductPromo) (*body.PromotionDetailSeller, error) {
+
+	shopID, err := u.sellerRepo.GetShopIDByUserID(ctx, shopProductPromo.UserID)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, httperror.New(http.StatusBadRequest, response.UserNotHaveShop)
+		}
+		return nil, err
+	}
+	shopProductPromo.ShopID = shopID
+
+	promotionShop, errPromotion := u.sellerRepo.GetDetailPromotionSellerByID(ctx, shopProductPromo)
+	if errPromotion != nil {
+		if errPromotion == sql.ErrNoRows {
+			return nil, httperror.New(http.StatusBadRequest, body.PromotionSellerNotFoundMessage)
+		}
+		return nil, errPromotion
+	}
+
+	promotionShop = u.CalculateDiscountPromotionProduct(ctx, promotionShop)
+
+	return promotionShop, nil
+}
+
+func (u *sellerUC) CalculateDiscountPromotionProduct(ctx context.Context, p *body.PromotionDetailSeller) *body.PromotionDetailSeller {
+
+	var maxDiscountPrice float64
+	var minProductPrice float64
+	var discountPercentage float64
+	var discountFixPrice float64
+	var resultMinPriceDiscount float64
+	var resultMaxPriceDiscount float64
+
+	if p.MinProductPrice != nil {
+		minProductPrice = *p.MinProductPrice
+	}
+
+	maxDiscountPrice = *p.MaxDiscountPrice
+	if p.DiscountPercentage != nil {
+		discountPercentage = *p.DiscountPercentage
+		if p.MinPrice >= minProductPrice && discountPercentage > 0 {
+			resultMinPriceDiscount = math.Min(maxDiscountPrice,
+				p.MinPrice*(discountPercentage/100.00))
+		}
+		if p.MaxPrice >= minProductPrice && discountPercentage > 0 {
+			resultMaxPriceDiscount = math.Min(maxDiscountPrice,
+				p.MaxPrice*(discountPercentage/100.00))
+		}
+	}
+
+	if p.DiscountFixPrice != nil {
+		discountFixPrice = *p.DiscountFixPrice
+		if p.MinPrice >= minProductPrice && discountFixPrice > 0 {
+			resultMinPriceDiscount = math.Max(resultMinPriceDiscount, discountFixPrice)
+			resultMinPriceDiscount = math.Min(resultMinPriceDiscount, maxDiscountPrice)
+		}
+		if p.MaxPrice >= minProductPrice && discountFixPrice > 0 {
+			resultMaxPriceDiscount = math.Max(resultMaxPriceDiscount, discountFixPrice)
+			resultMaxPriceDiscount = math.Min(resultMaxPriceDiscount, maxDiscountPrice)
+		}
+	}
+
+	if resultMinPriceDiscount > 0 {
+		p.ProductMinDiscountPrice = resultMinPriceDiscount
+		p.ProductSubMinPrice = p.MinPrice - p.ProductMinDiscountPrice
+	}
+
+	if resultMaxPriceDiscount > 0 {
+		p.ProductMaxDiscountPrice = resultMaxPriceDiscount
+		p.ProductSubMaxPrice = p.MaxPrice - p.ProductMaxDiscountPrice
+	}
+
+	return p
+
+}

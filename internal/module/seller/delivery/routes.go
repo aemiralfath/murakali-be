@@ -29,4 +29,5 @@ func MapSellerRoutes(sellerGroup *gin.RouterGroup, h seller.Handlers, mw *middle
 	sellerGroup.GET("/promotion", h.GetAllPromotionSeller)
 	sellerGroup.POST("/promotion", h.CreatePromotionSeller)
 	sellerGroup.PUT("/promotion", h.UpdatePromotionSeller)
+	sellerGroup.GET("/promotion/:id", h.GetDetailPromotionSellerByID)
 }

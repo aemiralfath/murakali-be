@@ -186,4 +186,14 @@ const (
 		"actived_date" = $7, "expired_date" = $8, "updated_at" = now()
 	WHERE "id" = $9
 	`
+
+	GetDetailPromotionSellerByIDQuery = `
+	SELECT "promo"."id", "promo"."name", "p"."id", "p"."title", "p"."min_price", "p"."max_price" ,"p"."thumbnail_url", "promo"."discount_percentage",
+		"promo"."discount_fix_price", "promo"."min_product_price", "promo"."max_discount_price", "promo"."quota", "promo"."max_quantity", 
+		"promo"."actived_date", "promo"."expired_date", "promo"."created_at", "promo"."updated_at", "promo"."deleted_at"
+	FROM "promotion" as "promo"
+	INNER JOIN "product" as "p" ON "p"."id" = "promo"."product_id"
+	INNER JOIN "shop" as "s" ON "s"."id" = "p"."shop_id"
+	WHERE "promo"."id" = $1 AND "s"."id" = $2
+	`
 )

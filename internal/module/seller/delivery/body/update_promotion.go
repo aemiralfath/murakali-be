@@ -25,6 +25,7 @@ type UpdatePromotionRequest struct {
 }
 
 type ShopProductPromo struct {
+	UserID      string
 	ShopID      string
 	PromotionID string
 	ProductID   string
