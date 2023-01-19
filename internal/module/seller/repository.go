@@ -5,6 +5,7 @@ import (
 	"murakali/internal/model"
 	"murakali/internal/module/seller/delivery/body"
 	"murakali/pkg/pagination"
+	"murakali/pkg/postgre"
 	"time"
 )
 
@@ -42,4 +43,9 @@ type Repository interface {
 	GetAllVoucherSellerByIDandShopID(ctx context.Context, voucherIDShopID *body.VoucherIDShopID) (*model.Voucher, error)
 	GetAllPromotionSeller(ctx context.Context, shopID string) ([]*body.PromotionSellerResponse, error)
 	GetTotalPromotionSeller(ctx context.Context, shopID string) (int64, error)
+	GetProductPromotion(ctx context.Context, shopProduct *body.ShopProduct) (*body.ProductPromotion, error)
+	CreatePromotionSeller(ctx context.Context, tx postgre.Transaction, promotionShop *model.Promotion) error
+	GetPromotionSellerDetailByID(ctx context.Context, shopProductPromo *body.ShopProductPromo) (*body.PromotionSellerResponse, error)
+	UpdatePromotionSeller(ctx context.Context, promotion *model.Promotion) error
+	GetDetailPromotionSellerByID(ctx context.Context, shopProductPromo *body.ShopProductPromo) (*body.PromotionDetailSeller, error)
 }
