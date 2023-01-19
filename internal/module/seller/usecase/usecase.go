@@ -17,6 +17,7 @@ import (
 	"murakali/pkg/response"
 	"net/http"
 	"strings"
+	"time"
 
 	"github.com/google/uuid"
 )
@@ -565,4 +566,151 @@ func (u *sellerUC) CreatePromotionSeller(ctx context.Context, userID string, req
 	}
 
 	return data.(int), nil
+}
+
+func (u *sellerUC) UpdatePromotionSeller(ctx context.Context, userID string, requestBody body.UpdatePromotionRequest) error {
+	shopID, err := u.sellerRepo.GetShopIDByUserID(ctx, userID)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return httperror.New(http.StatusBadRequest, response.UserNotHaveShop)
+		}
+		return err
+	}
+
+	shopProductPromo := &body.ShopProductPromo{
+		ShopID:      shopID,
+		ProductID:   requestBody.ProductID,
+		PromotionID: requestBody.PromotionID,
+	}
+
+	promotionShop, errPromotion := u.sellerRepo.GetPromotionSellerDetailByID(ctx, shopProductPromo)
+	if errPromotion != nil {
+		if errPromotion == sql.ErrNoRows {
+			return httperror.New(http.StatusBadRequest, body.PromotionSellerNotFoundMessage)
+		}
+		return errPromotion
+	}
+	timeNow := time.Now()
+
+	//expired
+	if timeNow.After(promotionShop.ActivedDate) && timeNow.After(promotionShop.ExpiredDate) {
+		return httperror.New(http.StatusBadRequest, body.PromotionExpairedMessage)
+	}
+
+	//ongoing
+	if timeNow.After(promotionShop.ActivedDate) && timeNow.Before(promotionShop.ExpiredDate) {
+		if !promotionShop.ActivedDate.Equal(requestBody.ActiveDateTime) {
+			return httperror.New(http.StatusBadRequest, body.PromotionCannotUpdateActivedMessage)
+		}
+	}
+
+	//incoming
+	if timeNow.Before(promotionShop.ActivedDate) && timeNow.Before(promotionShop.ExpiredDate) {
+		if !requestBody.ActiveDateTime.Before(promotionShop.ActivedDate) {
+			return httperror.New(http.StatusBadRequest, body.PromotionCannotUpdateActivedBeforeMessage)
+		}
+	}
+
+	if requestBody.ExpiredDateTime.After(promotionShop.ExpiredDate) {
+		return httperror.New(http.StatusBadRequest, body.PromotionCannotUpdateExpiredAfterMessage)
+	}
+	if requestBody.ExpiredDateTime.Before(timeNow) {
+		return httperror.New(http.StatusBadRequest, body.PromotionCannotUpdateExpiredBefoferMessage)
+	}
+
+	promotion := &model.Promotion{
+		ID:                 promotionShop.ID,
+		Name:               requestBody.Name,
+		MaxQuantity:        requestBody.MaxQuantity,
+		DiscountPercentage: &requestBody.DiscountPercentage,
+		DiscountFixPrice:   &requestBody.DiscountFixPrice,
+		MinProductPrice:    &requestBody.MinProductPrice,
+		MaxDiscountPrice:   &requestBody.MaxDiscountPrice,
+		ActivedDate:        requestBody.ActiveDateTime,
+		ExpiredDate:        requestBody.ExpiredDateTime,
+	}
+
+	err = u.sellerRepo.UpdatePromotionSeller(ctx, promotion)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (u *sellerUC) GetDetailPromotionSellerByID(ctx context.Context,
+	shopProductPromo *body.ShopProductPromo) (*body.PromotionDetailSeller, error) {
+
+	shopID, err := u.sellerRepo.GetShopIDByUserID(ctx, shopProductPromo.UserID)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, httperror.New(http.StatusBadRequest, response.UserNotHaveShop)
+		}
+		return nil, err
+	}
+	shopProductPromo.ShopID = shopID
+
+	promotionShop, errPromotion := u.sellerRepo.GetDetailPromotionSellerByID(ctx, shopProductPromo)
+	if errPromotion != nil {
+		if errPromotion == sql.ErrNoRows {
+			return nil, httperror.New(http.StatusBadRequest, body.PromotionSellerNotFoundMessage)
+		}
+		return nil, errPromotion
+	}
+
+	promotionShop = u.CalculateDiscountPromotionProduct(ctx, promotionShop)
+
+	return promotionShop, nil
+}
+
+func (u *sellerUC) CalculateDiscountPromotionProduct(ctx context.Context, p *body.PromotionDetailSeller) *body.PromotionDetailSeller {
+
+	var maxDiscountPrice float64
+	var minProductPrice float64
+	var discountPercentage float64
+	var discountFixPrice float64
+	var resultMinPriceDiscount float64
+	var resultMaxPriceDiscount float64
+
+	if p.MinProductPrice != nil {
+		minProductPrice = *p.MinProductPrice
+	}
+
+	maxDiscountPrice = *p.MaxDiscountPrice
+	if p.DiscountPercentage != nil {
+		discountPercentage = *p.DiscountPercentage
+		if p.MinPrice >= minProductPrice && discountPercentage > 0 {
+			resultMinPriceDiscount = math.Min(maxDiscountPrice,
+				p.MinPrice*(discountPercentage/100.00))
+		}
+		if p.MaxPrice >= minProductPrice && discountPercentage > 0 {
+			resultMaxPriceDiscount = math.Min(maxDiscountPrice,
+				p.MaxPrice*(discountPercentage/100.00))
+		}
+	}
+
+	if p.DiscountFixPrice != nil {
+		discountFixPrice = *p.DiscountFixPrice
+		if p.MinPrice >= minProductPrice && discountFixPrice > 0 {
+			resultMinPriceDiscount = math.Max(resultMinPriceDiscount, discountFixPrice)
+			resultMinPriceDiscount = math.Min(resultMinPriceDiscount, maxDiscountPrice)
+		}
+		if p.MaxPrice >= minProductPrice && discountFixPrice > 0 {
+			resultMaxPriceDiscount = math.Max(resultMaxPriceDiscount, discountFixPrice)
+			resultMaxPriceDiscount = math.Min(resultMaxPriceDiscount, maxDiscountPrice)
+		}
+	}
+
+	if resultMinPriceDiscount > 0 {
+		p.ProductMinDiscountPrice = resultMinPriceDiscount
+		p.ProductSubMinPrice = p.MinPrice - p.ProductMinDiscountPrice
+	}
+
+	if resultMaxPriceDiscount > 0 {
+		p.ProductMaxDiscountPrice = resultMaxPriceDiscount
+		p.ProductSubMaxPrice = p.MaxPrice - p.ProductMaxDiscountPrice
+	}
+
+	return p
+
 }
