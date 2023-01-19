@@ -274,6 +274,32 @@ func (r *sellerRepo) ChangeOrderStatus(ctx context.Context, requestBody body.Cha
 	return nil
 }
 
+func (r *sellerRepo) GetOrdersOnDelivery(ctx context.Context) ([]*model.OrderModel, error) {
+	orders := make([]*model.OrderModel, 0)
+	res, err := r.PSQL.QueryContext(ctx, GetOrderOnDeliveryQuery, constant.OrderStatusOnDelivery)
+	if err != nil {
+		return orders, err
+	}
+	defer res.Close()
+
+	for res.Next() {
+		var order model.OrderModel
+		if errScan := res.Scan(
+			&order.ID,
+			&order.OrderStatusID,
+			&order.ArrivedAt,
+		); errScan != nil {
+			return orders, err
+		}
+		orders = append(orders, &order)
+	}
+	if res.Err() != nil {
+		return orders, err
+	}
+
+	return orders, err
+}
+
 func (r *sellerRepo) GetCourierSeller(ctx context.Context, userID string) ([]*body.CourierSellerRelationInfo, error) {
 	courierSeller := make([]*body.CourierSellerRelationInfo, 0)
 
@@ -582,7 +608,7 @@ func (r *sellerRepo) DeleteVoucherSeller(ctx context.Context, voucherIDShopID *b
 	return nil
 }
 
-func (r *sellerRepo) GetAllVoucherSellerByIDandShopID(ctx context.Context, voucherIDShopID *body.VoucherIDShopID) (*model.Voucher, error) {
+func (r *sellerRepo) GetAllVoucherSellerByIDAndShopID(ctx context.Context, voucherIDShopID *body.VoucherIDShopID) (*model.Voucher, error) {
 	var voucher model.Voucher
 	if err := r.PSQL.QueryRowContext(ctx, GetAllVoucherSellerByIDandShopIDQuery, voucherIDShopID.VoucherID, voucherIDShopID.ShopID).Scan(
 		&voucher.ID,
@@ -755,4 +781,148 @@ func (r *sellerRepo) GetDetailPromotionSellerByID(ctx context.Context,
 		return nil, err
 	}
 	return &promotion, nil
+}
+
+func (r *sellerRepo) UpdateOrder(ctx context.Context, tx postgre.Transaction, orderData *model.OrderModel) error {
+	_, err := tx.ExecContext(ctx, UpdateOrderByID, orderData.OrderStatusID, orderData.ID)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (r *sellerRepo) UpdateTransaction(ctx context.Context, tx postgre.Transaction, transactionData *model.Transaction) error {
+	_, err := tx.ExecContext(ctx, UpdateTransactionByID, transactionData.PaidAt, transactionData.CanceledAt, transactionData.ID)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (r *sellerRepo) GetOrderByTransactionID(ctx context.Context, tx postgre.Transaction, transactionID string) ([]*model.OrderModel, error) {
+	orders := make([]*model.OrderModel, 0)
+	res, err := tx.QueryContext(ctx, GetOrderByTransactionID, transactionID)
+	if err != nil {
+		return nil, err
+	}
+	defer res.Close()
+
+	for res.Next() {
+		var order model.OrderModel
+		if errScan := res.Scan(
+			&order.ID,
+			&order.TransactionID,
+			&order.UserID,
+			&order.ShopID,
+			&order.CourierID,
+			&order.VoucherShopID,
+			&order.OrderStatusID,
+			&order.TotalPrice,
+			&order.DeliveryFee,
+			&order.ResiNo,
+			&order.CreatedAt,
+			&order.ArrivedAt); errScan != nil {
+			return nil, errScan
+		}
+
+		orders = append(orders, &order)
+	}
+
+	if res.Err() != nil {
+		return nil, res.Err()
+	}
+
+	return orders, nil
+}
+
+func (r *sellerRepo) GetTransactionsExpired(ctx context.Context) ([]*model.Transaction, error) {
+	transactions := make([]*model.Transaction, 0)
+	res, err := r.PSQL.QueryContext(ctx, GetTransactionsExpiredQuery)
+	if err != nil {
+		return nil, err
+	}
+	defer res.Close()
+
+	for res.Next() {
+		var transaction model.Transaction
+		if errScan := res.Scan(
+			&transaction.ID,
+			&transaction.VoucherMarketplaceID,
+			&transaction.WalletID,
+			&transaction.CardNumber,
+			&transaction.Invoice,
+			&transaction.TotalPrice,
+			&transaction.PaidAt,
+			&transaction.CanceledAt,
+			&transaction.ExpiredAt); errScan != nil {
+			return nil, errScan
+		}
+
+		transactions = append(transactions, &transaction)
+	}
+
+	if res.Err() != nil {
+		return nil, res.Err()
+	}
+
+	return transactions, nil
+}
+
+func (r *sellerRepo) GetOrderItemsByOrderID(ctx context.Context, tx postgre.Transaction, orderID string) ([]*model.OrderItem, error) {
+	orderItems := make([]*model.OrderItem, 0)
+	res, err := tx.QueryContext(ctx, GetOrderItemsByOrderIDQuery, orderID)
+	if err != nil {
+		return nil, err
+	}
+	defer res.Close()
+
+	for res.Next() {
+		var orderItem model.OrderItem
+		if errScan := res.Scan(
+			&orderItem.ID,
+			&orderItem.OrderID,
+			&orderItem.ProductDetailID,
+			&orderItem.Quantity,
+			&orderItem.ItemPrice,
+			&orderItem.TotalPrice); errScan != nil {
+			return nil, err
+		}
+
+		orderItems = append(orderItems, &orderItem)
+	}
+
+	if res.Err() != nil {
+		return nil, err
+	}
+
+	return orderItems, nil
+}
+
+func (r *sellerRepo) GetProductDetailByID(ctx context.Context, tx postgre.Transaction, productDetailID string) (*model.ProductDetail, error) {
+	var pd model.ProductDetail
+	if err := tx.QueryRowContext(ctx, GetProductDetailByIDQuery, productDetailID).Scan(
+		&pd.ID,
+		&pd.Price,
+		&pd.Stock,
+		&pd.Size,
+		&pd.Weight,
+		&pd.Hazardous,
+		&pd.Condition,
+		&pd.BulkPrice); err != nil {
+		return nil, err
+	}
+
+	return &pd, nil
+}
+
+func (r *sellerRepo) UpdateProductDetailStock(ctx context.Context, tx postgre.Transaction,
+	productDetailData *model.ProductDetail) error {
+	_, err := tx.ExecContext(ctx, UpdateProductDetailStockQuery, productDetailData.Stock, productDetailData.ID)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

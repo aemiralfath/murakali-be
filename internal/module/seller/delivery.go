@@ -22,4 +22,6 @@ type Handlers interface {
 	CreatePromotionSeller(c *gin.Context)
 	UpdatePromotionSeller(c *gin.Context)
 	GetDetailPromotionSellerByID(c *gin.Context)
+	UpdateOnDeliveryOrder(c *gin.Context)
+	UpdateExpiredAtOrder(c *gin.Context)
 }

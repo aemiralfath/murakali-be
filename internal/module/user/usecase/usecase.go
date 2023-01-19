@@ -945,7 +945,7 @@ func (u *userUC) GetRedirectURL(transaction *model.Transaction, sign string) (st
 			return "", err
 		}
 
-		return "", httperror.New(res.StatusCode, responseSLP.Message)
+		return "", httperror.New(http.StatusBadRequest, responseSLP.Message)
 	}
 
 	return res.Header.Get("Location"), nil
@@ -1222,12 +1222,12 @@ func (u *userUC) ChangeWalletPinStepUp(ctx context.Context, userID string, reque
 		return "", err
 	}
 
-	user, err := u.userRepo.GetUserPasswordByID(ctx, wallet.UserID.String())
+	userModel, err := u.userRepo.GetUserPasswordByID(ctx, wallet.UserID.String())
 	if err != nil {
 		return "", err
 	}
 
-	if bcrypt.CompareHashAndPassword([]byte(*user.Password), []byte(requestBody.Password)) != nil {
+	if bcrypt.CompareHashAndPassword([]byte(*userModel.Password), []byte(requestBody.Password)) != nil {
 		return "", httperror.New(http.StatusBadRequest, response.InvalidPasswordMessage)
 	}
 

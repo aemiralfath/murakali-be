@@ -34,13 +34,21 @@ type Repository interface {
 	GetAddressBySellerID(ctx context.Context, userID string) (*model.Address, error)
 	UpdateResiNumberInOrderSeller(ctx context.Context, noResi, orderID, shopID string, arriveAt time.Time) error
 	GetCostRedis(ctx context.Context, key string) (*string, error)
+	GetOrdersOnDelivery(ctx context.Context) ([]*model.OrderModel, error)
 	InsertCostRedis(ctx context.Context, key string, value string) error
 	GetAllVoucherSeller(ctx context.Context, shopID string) ([]*model.Voucher, error)
 	GetTotalVoucherSeller(ctx context.Context, shopID string) (int64, error)
 	CreateVoucherSeller(ctx context.Context, voucherShop *model.Voucher) error
 	UpdateVoucherSeller(ctx context.Context, voucherShop *model.Voucher) error
 	DeleteVoucherSeller(ctx context.Context, voucherIDShopID *body.VoucherIDShopID) error
-	GetAllVoucherSellerByIDandShopID(ctx context.Context, voucherIDShopID *body.VoucherIDShopID) (*model.Voucher, error)
+	GetAllVoucherSellerByIDAndShopID(ctx context.Context, voucherIDShopID *body.VoucherIDShopID) (*model.Voucher, error)
+	UpdateOrder(ctx context.Context, tx postgre.Transaction, orderData *model.OrderModel) error
+	UpdateTransaction(ctx context.Context, tx postgre.Transaction, transactionData *model.Transaction) error
+	GetOrderByTransactionID(ctx context.Context, tx postgre.Transaction, transactionID string) ([]*model.OrderModel, error)
+	GetTransactionsExpired(ctx context.Context) ([]*model.Transaction, error)
+	GetOrderItemsByOrderID(ctx context.Context, tx postgre.Transaction, orderID string) ([]*model.OrderItem, error)
+	GetProductDetailByID(ctx context.Context, tx postgre.Transaction, productDetailID string) (*model.ProductDetail, error)
+	UpdateProductDetailStock(ctx context.Context, tx postgre.Transaction, productDetailData *model.ProductDetail) error
 	GetAllPromotionSeller(ctx context.Context, shopID string) ([]*body.PromotionSellerResponse, error)
 	GetTotalPromotionSeller(ctx context.Context, shopID string) (int64, error)
 	GetProductPromotion(ctx context.Context, shopProduct *body.ShopProduct) (*body.ProductPromotion, error)
