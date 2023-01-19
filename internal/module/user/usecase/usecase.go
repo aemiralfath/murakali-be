@@ -1233,7 +1233,6 @@ func (u *userUC) GetDetailWalletHistory(ctx context.Context, walletHistoryID, us
 		}
 
 		transactionDetail.Orders = orders
-
 		response.Transaction = transactionDetail
 	}
 

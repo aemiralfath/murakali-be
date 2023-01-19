@@ -40,7 +40,7 @@ const (
 	GetOrdersByTransactionIDQuery = `SELECT o.id,o.order_status_id,o.total_price,o.delivery_fee,o.resi_no,s.id,s.name,v.code,o.created_at
 	from "order" o
 	join "shop" s on s.id = o.shop_id
-	join "voucher" v on v.id = o.voucher_shop_id WHERE o.transaction_id = $1
+	left join "voucher" v on v.id = o.voucher_shop_id WHERE o.transaction_id = $1
 	`
 
 	GetOrderDetailQuery = `SELECT pd.id,pd.product_id,p.title,ph.url,oi.quantity,oi.item_price,oi.total_price
@@ -87,7 +87,7 @@ const (
 	GetWalletHistoryUserQuery = `SELECT "id", "from", "to", "amount", "description", "created_at" 
 	FROM "wallet_history" 
 	WHERE "wallet_id" = $1`
-	GetWalletHistoryByIDQuery = `SELECT "id", "from", "to", "amount", "description", "created_at" 
+	GetWalletHistoryByIDQuery = `SELECT "id", "transaction_id", "wallet_id", "from", "to", "amount", "description", "created_at" 
 	FROM "wallet_history" 
 	WHERE "id" = $1`
 	GetTotalWalletHistoryUserQuery = `SELECT count(id) FROM "wallet_history" WHERE "wallet_id" = $1;`
