@@ -97,7 +97,7 @@ func (r *UpdateProductRequest) ValidateUpdateProduct() (UnprocessableEntity, err
 			unprocessableEntity = true
 			entity.Fields["price"] = FieldCannotBeEmptyMessage
 		}
-		if r.ProductDetail[i].Stock == 0 {
+		if r.ProductDetail[i].Stock < 0 {
 			unprocessableEntity = true
 			entity.Fields["stock"] = FieldCannotBeEmptyMessage
 		}

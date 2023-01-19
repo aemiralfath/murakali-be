@@ -396,25 +396,25 @@ func (h *productHandlers) ValidateQueryProduct(c *gin.Context) (*pagination.Pagi
 		pgn = &pagination.Pagination{
 			Limit: limitFilter,
 			Page:  pageFilter,
-			Sort:  sortBy + " " + sortFilter,
+			Sort:  "min_price" + " " + sortFilter,
 		}
 	case "unit_sold":
 		pgn = &pagination.Pagination{
 			Limit: limitFilter,
 			Page:  pageFilter,
-			Sort:  sortBy + " " + sortFilter,
+			Sort:  "unit_sold" + " " + sortFilter,
 		}
 	case "view_count":
 		pgn = &pagination.Pagination{
 			Limit: limitFilter,
 			Page:  pageFilter,
-			Sort:  sortBy + " " + sortFilter,
+			Sort:  "view_count" + " " + sortFilter,
 		}
 	default:
 		pgn = &pagination.Pagination{
 			Limit: limitFilter,
 			Page:  pageFilter,
-			Sort:  "unit_sold" + " " + "desc",
+			Sort:  "p.created_at" + " " + sortFilter,
 		}
 	}
 

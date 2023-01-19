@@ -944,7 +944,7 @@ func (u *userUC) GetRedirectURL(transaction *model.Transaction, sign string) (st
 			return "", err
 		}
 
-		return "", httperror.New(res.StatusCode, responseSLP.Message)
+		return "", httperror.New(http.StatusBadRequest, responseSLP.Message)
 	}
 
 	return res.Header.Get("Location"), nil

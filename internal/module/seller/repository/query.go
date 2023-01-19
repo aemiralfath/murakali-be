@@ -63,6 +63,8 @@ const (
 	WHERE "s"."user_id" = $1;
 	`
 
+	GetOrderOnDeliveryQuery = `SELECT "id", "order_status_id", "arrived_at" FROM "order" WHERE "order_status_id" = $1 AND "arrived_at" <= current_timestamp`
+
 	GetAllCourierQuery = `
 	SELECT  "c"."id" as "courier_id","c"."name" as "name", "c"."code" as "code", "c"."service" as "service",
 		"c"."description" as "description"
@@ -116,6 +118,7 @@ const (
 	FROM "voucher" as "v"
 	INNER JOIN "shop" as "s" ON "s"."id" = "v"."shop_id"
 	WHERE "v"."shop_id" = $1
+	AND "v"."deleted_at" IS NULL
 	`
 	CreateVoucherSellerQuery = `INSERT INTO "voucher" 
     	(shop_id, code, quota, actived_date, expired_date, discount_percentage, discount_fix_price, min_product_price, max_discount_price)
@@ -137,4 +140,14 @@ const (
 			"discount_fix_price" = $5, "min_product_price" = $6, "max_discount_price" = $7, "updated_at" = now()
 		WHERE "id" = $8
 	`
+
+	UpdateOrderByID               = `UPDATE "order" SET "order_status_id" = $1 WHERE "id" = $2`
+	UpdateTransactionByID         = `UPDATE "transaction" SET "paid_at" = $1, "canceled_at" = $2 WHERE "id" = $3`
+	GetProductDetailByIDQuery     = `SELECT "id", "price", "stock", "weight", "size", "hazardous", "condition", "bulk_price" FROM "product_detail" WHERE "id" = $1 AND "deleted_at" IS NULL;`
+	GetTransactionsExpiredQuery   = `SELECT "id", "voucher_marketplace_id", "wallet_id", "card_number", "invoice", "total_price", "paid_at", "canceled_at", "expired_at" FROM "transaction" WHERE "paid_at" IS NULL AND "canceled_at" IS NULL AND "expired_at" < current_timestamp`
+	GetOrderItemsByOrderIDQuery   = `SELECT "id", "order_id", "product_detail_id", "quantity", "item_price", "total_price" FROM "order_item" WHERE "order_id" = $1`
+	UpdateProductDetailStockQuery = `UPDATE "product_detail" SET "stock" = $1, "updated_at" = now() WHERE "id" = $2;`
+	GetOrderByTransactionID       = `SELECT 
+		"id", "transaction_id", "shop_id", "user_id", "courier_id", "voucher_shop_id", "order_status_id", "total_price", "delivery_fee", "resi_no", "created_at", "arrived_at" 
+	FROM "order" WHERE "transaction_id" = $1`
 )
