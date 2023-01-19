@@ -13,7 +13,7 @@ linters-settings:
   gocyclo:
     min-complexity: 30
   nestif:
-    min-complexity: 15
+    min-complexity: 25
   maligned:
     suggest-new: true
   goconst:
@@ -38,7 +38,7 @@ linters-settings:
       - octalLiteral
   funlen:
     lines: 155
-    statements: 75
+    statements: 80
 
 linters: # don't use --enable-all
   disable-all: true

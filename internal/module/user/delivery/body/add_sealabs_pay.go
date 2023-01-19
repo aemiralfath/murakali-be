@@ -39,6 +39,11 @@ func (r *AddSealabsPayRequest) Validate() (UnprocessableEntity, error) {
 		entity.Fields["name"] = FieldCannotBeEmptyMessage
 	}
 
+	if !r.IsDefault {
+		unprocessableEntity = true
+		entity.Fields["is_default"] = InvalidIsDefault
+	}
+
 	r.ActiveDate = strings.TrimSpace(r.ActiveDate)
 	if r.ActiveDate == "" {
 		unprocessableEntity = true

@@ -4,6 +4,7 @@ import (
 	"crypto/rand"
 	"mime/multipart"
 	"murakali/config"
+
 	"unicode"
 
 	"github.com/cloudinary/cloudinary-go/v2"
@@ -22,6 +23,22 @@ func GenerateOTP(length int) (string, error) {
 	otpCharsLength := len(otpChars)
 	for i := 0; i < length; i++ {
 		buffer[i] = otpChars[int(buffer[i])%otpCharsLength]
+	}
+
+	return string(buffer), nil
+}
+
+func GenerateRandomAlpaNumeric(length int) (string, error) {
+	const alphaNum = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+	buffer := make([]byte, length)
+	_, err := rand.Read(buffer)
+	if err != nil {
+		return "", err
+	}
+
+	charsLength := len(alphaNum)
+	for i := 0; i < length; i++ {
+		buffer[i] = alphaNum[int(buffer[i])%charsLength]
 	}
 
 	return string(buffer), nil
@@ -58,4 +75,20 @@ func UploadImageToCloudinary(c *gin.Context, cfg *config.Config, file multipart.
 	cldService, _ := cloudinary.NewFromURL(cfg.External.CloudinaryURL)
 	response, _ := cldService.Upload.Upload(c, file, uploader.UploadParams{})
 	return response.SecureURL
+}
+
+func SKUGenerator(productName string) string {
+	const otpChars = "1234567890"
+	buffer := make([]byte, 8)
+	_, err := rand.Read(buffer)
+	if err != nil {
+		return ""
+	}
+
+	otpCharsLength := len(otpChars)
+	for i := 0; i < 8; i++ {
+		buffer[i] = otpChars[int(buffer[i])%otpCharsLength]
+	}
+
+	return productName + "-" + string(buffer)
 }

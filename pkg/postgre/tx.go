@@ -3,6 +3,10 @@ package postgre
 import (
 	"context"
 	"database/sql"
+	"errors"
+	"fmt"
+	"murakali/pkg/httperror"
+	"murakali/pkg/response"
 )
 
 type Transaction interface {
@@ -30,17 +34,31 @@ func (tr *TxRepo) WithTransactionReturnData(fn TxFnData) (data interface{}, err 
 	}
 
 	defer func() {
+		var errTx error
 		if p := recover(); p != nil {
-			err = tx.Rollback()
+			errTx = tx.Rollback()
+			if errTx != nil {
+				fmt.Println(errTx.Error())
+			}
 			panic(p)
 		} else if err != nil {
-			err = tx.Rollback()
+			var e *httperror.Error
+			errors.As(err, &e)
+			if e.Error() != response.ProductQuantityNotAvailable {
+				errTx = tx.Rollback()
+			} else {
+				errTx = tx.Commit()
+			}
 		} else {
-			err = tx.Commit()
+			errTx = tx.Commit()
+		}
+		if errTx != nil {
+			fmt.Println(errTx.Error())
 		}
 	}()
 
 	data, err = fn(tx)
+	fmt.Println("here test 1")
 	return data, err
 }
 
@@ -51,13 +69,20 @@ func (tr *TxRepo) WithTransaction(fn TxFn) (err error) {
 	}
 
 	defer func() {
+		var errTx error
 		if p := recover(); p != nil {
-			err = tx.Rollback()
+			errTx = tx.Rollback()
+			if errTx != nil {
+				fmt.Println(errTx.Error())
+			}
 			panic(p)
 		} else if err != nil {
-			err = tx.Rollback()
+			errTx = tx.Rollback()
 		} else {
-			err = tx.Commit()
+			errTx = tx.Commit()
+		}
+		if errTx != nil {
+			fmt.Println(errTx.Error())
 		}
 	}()
 

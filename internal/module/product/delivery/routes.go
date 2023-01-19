@@ -15,10 +15,20 @@ func MapProductRoutes(productGroup *gin.RouterGroup, h product.Handlers, mw *mid
 	productGroup.GET("/category/:name_lvl_one/:name_lvl_two/:name_lvl_three", h.GetCategoriesByNameLevelThree)
 	productGroup.GET("/recommended", h.GetRecommendedProducts)
 	productGroup.GET("/:product_id", h.GetProductDetail)
+	productGroup.GET("/:product_id/picture", h.GetAllProductImage)
 	productGroup.GET("/:product_id/review", h.GetProductReviews)
 	productGroup.GET("/:product_id/review/rating", h.GetTotalReviewRatingByProductID)
 	productGroup.GET("/", h.GetProducts)
-	productUserGroup := productGroup.Group("/favorite")
-	productUserGroup.Use(mw.AuthJWTMiddleware())
-	productUserGroup.GET("/", h.GetFavoriteProducts)
+	
+	productGroup.Use(mw.AuthJWTMiddleware())
+	productGroup.GET("/favorite", h.GetFavoriteProducts)
+	productGroup.POST("/favorite", h.CreateFavoriteProduct)
+	productGroup.DELETE("/favorite", h.DeleteFavoriteProduct)
+
+	productGroup.Use(mw.SellerJWTMiddleware())
+	productGroup.POST("/", h.CreateProduct)
+	productGroup.POST("/picture", h.UploadProductPicture)
+	productGroup.PUT("/status/:id", h.UpdateListedStatus)
+	productGroup.PATCH("/bulk-status", h.UpdateListedStatusBulk)
+	productGroup.PUT("/:id", h.UpdateProduct)
 }

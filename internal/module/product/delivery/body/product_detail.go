@@ -24,6 +24,7 @@ type ProductInfo struct {
 	RatingAVG     *float64 `json:"rating_avg"`
 	MinPrice      *float64 `json:"min_price"`
 	MaxPrice      *float64 `json:"max_price"`
+	ShopID        string   `json:"shop_id"`
 	CategoryName  string   `json:"category_name"`
 	CategoryURL   string   `json:"category_url"`
 }
@@ -48,13 +49,25 @@ type ProductDetail struct {
 	Weight          *float64          `json:"weight"`
 	Size            *float64          `json:"size"`
 	Hazardous       bool              `json:"hazardous"`
-	Condition       string            `json:"condition"`
+	Condition       *string           `json:"condition"`
 	BulkPrice       bool              `json:"bulk_price"`
-	ProductURL      string            `json:"product_url"`
+	ShopID          string            `json:"shop_id"`
+	ProductURL      []string          `json:"product_url"`
 	Variant         map[string]string `json:"variant"`
+	VariantInfos    []VariantInfo     `json:"variant_info"`
 }
 
 type VariantDetail struct {
 	Name string `json:"name"`
 	Type string `json:"type"`
+}
+
+type URL struct {
+	URL string `json:"url"`
+}
+
+type VariantInfo struct {
+	VariantID       string `json:"variant_id"`
+	VariantDetailID string `json:"variant_detail_id"`
+	Name            string `json:"variant_name"`
 }
