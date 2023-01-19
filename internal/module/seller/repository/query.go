@@ -139,6 +139,65 @@ const (
 			"discount_fix_price" = $5, "min_product_price" = $6, "max_discount_price" = $7, "updated_at" = now()
 		WHERE "id" = $8
 	`
+	GetAllPromotionSellerQuery = `
+	SELECT "promo"."id", "promo"."name", "p"."id", "p"."title", "p"."thumbnail_url", "promo"."discount_percentage",
+		"promo"."discount_fix_price", "promo"."min_product_price", "promo"."max_discount_price", "promo"."quota", "promo"."max_quantity", 
+		"promo"."actived_date", "promo"."expired_date", "promo"."created_at", "promo"."updated_at", "promo"."deleted_at"
+	FROM "promotion" as "promo"
+	INNER JOIN "product" as "p" ON "p"."id" = "promo"."product_id"
+	INNER JOIN "shop" as "s" ON "s"."id" = "p"."shop_id"
+	WHERE "s"."id" = $1
+	`
+
+	GetTotalPromotionSellerQuery = `
+	SELECT count("promo"."id") FROM "promotion" as "promo" 
+	INNER JOIN "product" as "p" ON "p"."id" = "promo"."product_id"
+	INNER JOIN "shop" as "s" ON "s"."id" = "p"."shop_id"
+	WHERE "s"."id" = $1
+	`
+
+	GetProductPromotionQuery = `
+	SELECT "p"."id", "promo"."id"
+	FROM "product" as "p"
+	INNER JOIN "shop" as "s" ON "s"."id" = "p"."shop_id"
+	LEFT JOIN (
+		SELECT "promotion"."id", "promotion"."actived_date", "promotion"."expired_date", "promotion"."product_id"
+		FROM "promotion" WHERE now() BETWEEN "promotion"."actived_date" AND "promotion"."expired_date"
+	) as "promo" ON "promo"."product_id" = "p"."id"
+	WHERE "s"."id" = $1 AND "p"."id" = $2;
+	`
+	CreatePromotionSellerQuery = `
+	INSERT INTO "promotion"
+		(name, product_id, discount_percentage, discount_fix_price, min_product_price, max_discount_price,
+		quota, max_quantity, actived_date, expired_date)
+	VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+	`
+	GetPromotionSellerDetailByIDQuery = `
+	SELECT "promo"."id", "promo"."name", "p"."id", "p"."title", "p"."thumbnail_url", "promo"."discount_percentage",
+		"promo"."discount_fix_price", "promo"."min_product_price", "promo"."max_discount_price", "promo"."quota", "promo"."max_quantity", 
+		"promo"."actived_date", "promo"."expired_date", "promo"."created_at", "promo"."updated_at", "promo"."deleted_at"
+	FROM "promotion" as "promo"
+	INNER JOIN "product" as "p" ON "p"."id" = "promo"."product_id"
+	INNER JOIN "shop" as "s" ON "s"."id" = "p"."shop_id"
+	WHERE "promo"."id" = $1 AND "s"."id" = $2 AND "p"."id" = $3
+	`
+
+	UpdatePromotionSellerQuery = `
+	UPDATE "promotion" SET "name" = $1, "max_quantity" = $2, "discount_percentage" = $3,
+		"discount_fix_price" = $4, "min_product_price" = $5, "max_discount_price" = $6,
+		"actived_date" = $7, "expired_date" = $8, "updated_at" = now()
+	WHERE "id" = $9
+	`
+
+	GetDetailPromotionSellerByIDQuery = `
+	SELECT "promo"."id", "promo"."name", "p"."id", "p"."title", "p"."min_price", "p"."max_price" ,"p"."thumbnail_url", "promo"."discount_percentage",
+		"promo"."discount_fix_price", "promo"."min_product_price", "promo"."max_discount_price", "promo"."quota", "promo"."max_quantity", 
+		"promo"."actived_date", "promo"."expired_date", "promo"."created_at", "promo"."updated_at", "promo"."deleted_at"
+	FROM "promotion" as "promo"
+	INNER JOIN "product" as "p" ON "p"."id" = "promo"."product_id"
+	INNER JOIN "shop" as "s" ON "s"."id" = "p"."shop_id"
+	WHERE "promo"."id" = $1 AND "s"."id" = $2
+	`
 
 	UpdateOrderByID               = `UPDATE "order" SET "order_status_id" = $1 WHERE "id" = $2`
 	UpdateTransactionByID         = `UPDATE "transaction" SET "paid_at" = $1, "canceled_at" = $2 WHERE "id" = $3`

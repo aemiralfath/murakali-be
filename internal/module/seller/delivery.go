@@ -18,6 +18,10 @@ type Handlers interface {
 	UpdateVoucherSeller(c *gin.Context)
 	DeleteVoucherSeller(c *gin.Context)
 	DetailVoucherSeller(c *gin.Context)
+	GetAllPromotionSeller(c *gin.Context)
+	CreatePromotionSeller(c *gin.Context)
+	UpdatePromotionSeller(c *gin.Context)
+	GetDetailPromotionSellerByID(c *gin.Context)
 	UpdateOnDeliveryOrder(c *gin.Context)
 	UpdateExpiredAtOrder(c *gin.Context)
 }

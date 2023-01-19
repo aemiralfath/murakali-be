@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"github.com/robfig/cron/v3"
 	"log"
 	"murakali/config"
 	"murakali/pkg/logger"
@@ -10,6 +9,8 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
+
+	"github.com/robfig/cron/v3"
 )
 
 func main() {
@@ -32,13 +33,19 @@ func main() {
 	cronJob := cron.New()
 	defer cronJob.Stop()
 
-	cronJob.AddFunc("@every 1m", func() {
+	_, err = cronJob.AddFunc("@every 1m", func() {
 		updateOnDelivery(cfg, appLogger)
 	})
+	if err != nil {
+		log.Fatalf("FatalConfig: %v", err)
+	}
 
-	cronJob.AddFunc("@every 1m", func() {
+	_, err = cronJob.AddFunc("@every 1m", func() {
 		updateExpiredAt(cfg, appLogger)
 	})
+	if err != nil {
+		log.Fatalf("FatalConfig: %v", err)
+	}
 
 	go cronJob.Start()
 

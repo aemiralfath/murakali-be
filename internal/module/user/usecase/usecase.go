@@ -8,7 +8,6 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
-	"github.com/google/uuid"
 	"math"
 	"murakali/config"
 	"murakali/internal/constant"
@@ -25,6 +24,8 @@ import (
 	"net/http"
 	"strings"
 	"time"
+
+	"github.com/google/uuid"
 
 	"golang.org/x/crypto/bcrypt"
 )
@@ -1221,12 +1222,12 @@ func (u *userUC) ChangeWalletPinStepUp(ctx context.Context, userID string, reque
 		return "", err
 	}
 
-	user, err := u.userRepo.GetUserPasswordByID(ctx, wallet.UserID.String())
+	userModel, err := u.userRepo.GetUserPasswordByID(ctx, wallet.UserID.String())
 	if err != nil {
 		return "", err
 	}
 
-	if bcrypt.CompareHashAndPassword([]byte(*user.Password), []byte(requestBody.Password)) != nil {
+	if bcrypt.CompareHashAndPassword([]byte(*userModel.Password), []byte(requestBody.Password)) != nil {
 		return "", httperror.New(http.StatusBadRequest, response.InvalidPasswordMessage)
 	}
 
