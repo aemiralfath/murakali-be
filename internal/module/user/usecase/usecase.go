@@ -471,9 +471,8 @@ func (u *userUC) AddSealabsPay(ctx context.Context, request body.AddSealabsPayRe
 	if slpCount == 0 {
 		err = u.userRepo.AddSealabsPay(ctx, request, userid)
 		if err != nil {
-			return err
+			return httperror.New(http.StatusBadRequest, response.SealabsCardAlreadyExist)
 		}
-
 	} else {
 		cardNumber, err := u.userRepo.CheckDefaultSealabsPay(ctx, userid)
 		if err != nil && err != sql.ErrNoRows {
