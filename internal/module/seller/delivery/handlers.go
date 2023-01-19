@@ -619,3 +619,37 @@ func (h *sellerHandlers) UpdatePromotionSeller(c *gin.Context) {
 
 	response.SuccessResponse(c.Writer, nil, http.StatusOK)
 }
+
+func (h *sellerHandlers) GetDetailPromotionSellerByID(c *gin.Context) {
+	userID, exist := c.Get("userID")
+	if !exist {
+		response.ErrorResponse(c.Writer, response.UnauthorizedMessage, http.StatusUnauthorized)
+		return
+	}
+
+	id := c.Param("id")
+	promotionShopID, err := uuid.Parse(id)
+	if err != nil {
+		response.ErrorResponse(c.Writer, response.BadRequestMessage, http.StatusBadRequest)
+		return
+	}
+	shopProductPromo := &body.ShopProductPromo{
+		UserID:      userID.(string),
+		ShopID:      "",
+		PromotionID: promotionShopID.String(),
+	}
+	promotionShop, err := h.sellerUC.GetDetailPromotionSellerByID(c, shopProductPromo)
+	if err != nil {
+		var e *httperror.Error
+		if !errors.As(err, &e) {
+			h.logger.Errorf("HandlerSeller, Error: %s", err)
+			response.ErrorResponse(c.Writer, response.InternalServerErrorMessage, http.StatusInternalServerError)
+			return
+		}
+
+		response.ErrorResponse(c.Writer, e.Err.Error(), e.Status)
+		return
+	}
+
+	response.SuccessResponse(c.Writer, promotionShop, http.StatusOK)
+}

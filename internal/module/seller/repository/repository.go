@@ -727,3 +727,32 @@ func (r *sellerRepo) UpdatePromotionSeller(ctx context.Context, promotion *model
 	}
 	return nil
 }
+
+func (r *sellerRepo) GetDetailPromotionSellerByID(ctx context.Context,
+	shopProductPromo *body.ShopProductPromo) (*body.PromotionDetailSeller, error) {
+	var promotion body.PromotionDetailSeller
+	if err := r.PSQL.QueryRowContext(ctx, GetDetailPromotionSellerByIDQuery,
+		shopProductPromo.PromotionID, shopProductPromo.ShopID).Scan(
+		&promotion.PromotionID,
+		&promotion.PromotionName,
+		&promotion.ProductID,
+		&promotion.ProductName,
+		&promotion.MinPrice,
+		&promotion.MaxPrice,
+		&promotion.ProductThumbnailURL,
+		&promotion.DiscountPercentage,
+		&promotion.DiscountFixPrice,
+		&promotion.MinProductPrice,
+		&promotion.MaxDiscountPrice,
+		&promotion.Quota,
+		&promotion.MaxQuantity,
+		&promotion.ActivedDate,
+		&promotion.ExpiredDate,
+		&promotion.CreatedAt,
+		&promotion.UpdatedAt,
+		&promotion.DeletedAt,
+	); err != nil {
+		return nil, err
+	}
+	return &promotion, nil
+}

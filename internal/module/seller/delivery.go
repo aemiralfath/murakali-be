@@ -21,4 +21,5 @@ type Handlers interface {
 	GetAllPromotionSeller(c *gin.Context)
 	CreatePromotionSeller(c *gin.Context)
 	UpdatePromotionSeller(c *gin.Context)
+	GetDetailPromotionSellerByID(c *gin.Context)
 }
