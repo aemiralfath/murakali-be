@@ -966,14 +966,23 @@ func (u *userUC) GetTransactionByUserID(ctx context.Context, UserID string, pgn 
 	pgn.TotalRows = totalRows
 	pgn.TotalPages = totalPages
 
-	transactionsRes := make([]*body.GetTransactionByUserIDResponse, 0)
+	transactionsRes := make([]*body.GetTransactionByIDResponse, 0)
 	transactions, err := u.userRepo.GetTransactionByUserID(ctx, UserID, pgn)
 	if err != nil {
 		return nil, err
 	}
 
 	for _, transaction := range transactions {
-		res := &body.GetTransactionByUserIDResponse{
+		// res := &body.GetTransactionByUserIDResponse{
+		// 	ID:         transaction.ID,
+		// 	WalletID:   transaction.WalletID,
+		// 	CardNumber: transaction.CardNumber,
+		// 	Invoice:    transaction.Invoice,
+		// 	TotalPrice: transaction.TotalPrice,
+		// 	ExpiredAt:  transaction.ExpiredAt,
+		// }
+
+		res := &body.GetTransactionByIDResponse{
 			ID:         transaction.ID,
 			WalletID:   transaction.WalletID,
 			CardNumber: transaction.CardNumber,
@@ -982,10 +991,12 @@ func (u *userUC) GetTransactionByUserID(ctx context.Context, UserID string, pgn 
 			ExpiredAt:  transaction.ExpiredAt,
 		}
 
-		orders, err := u.userRepo.GetOrderByTransactionID(ctx, res.ID.String())
-		if err != nil {
-			return nil, err
-		}
+		res.Orders, err = u.userRepo.GetOrderDetailByTransactionID(ctx, res.ID.String())
+
+		// orders, err := u.userRepo.GetOrderByTransactionID(ctx, res.ID.String())
+		// if err != nil {
+		// 	return nil, err
+		// }
 
 		res.VoucherMarketplace, err = u.userRepo.GetVoucherMarketplaceByID(ctx, res.ID.String())
 		if err != nil {
@@ -994,25 +1005,25 @@ func (u *userUC) GetTransactionByUserID(ctx context.Context, UserID string, pgn 
 			}
 		}
 
-		res.Orders = make([]*model.OrderModel, 0)
-		for _, order := range orders {
-			orderRes := &model.OrderModel{
-				ID:            order.ID,
-				TransactionID: order.TransactionID,
-				ShopID:        order.ShopID,
-				UserID:        order.UserID,
-				CourierID:     order.CourierID,
-				VoucherShopID: order.VoucherShopID,
-				OrderStatusID: order.OrderStatusID,
-				TotalPrice:    order.TotalPrice,
-				DeliveryFee:   order.DeliveryFee,
-				ResiNo:        order.ResiNo,
-				CreatedAt:     order.CreatedAt,
-				ArrivedAt:     order.ArrivedAt,
-			}
+		// res.Orders = make([]*model.OrderModel, 0)
+		// for _, order := range orders {
+		// 	orderRes := &model.OrderModel{
+		// 		ID:            order.ID,
+		// 		TransactionID: order.TransactionID,
+		// 		ShopID:        order.ShopID,
+		// 		UserID:        order.UserID,
+		// 		CourierID:     order.CourierID,
+		// 		VoucherShopID: order.VoucherShopID,
+		// 		OrderStatusID: order.OrderStatusID,
+		// 		TotalPrice:    order.TotalPrice,
+		// 		DeliveryFee:   order.DeliveryFee,
+		// 		ResiNo:        order.ResiNo,
+		// 		CreatedAt:     order.CreatedAt,
+		// 		ArrivedAt:     order.ArrivedAt,
+		// 	}
 
-			res.Orders = append(res.Orders, orderRes)
-		}
+		// 	res.Orders = append(res.Orders, orderRes)
+		// }
 
 		transactionsRes = append(transactionsRes, res)
 	}
