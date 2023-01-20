@@ -382,9 +382,9 @@ func (r *sellerRepo) GetSellerBySellerID(ctx context.Context, sellerID string) (
 	return &sellerData, nil
 }
 
-func (r *sellerRepo) GetSellerByUserID(ctx context.Context, sellerID string) (*body.SellerResponse, error) {
+func (r *sellerRepo) GetSellerByUserID(ctx context.Context, userID string) (*body.SellerResponse, error) {
 	var sellerData body.SellerResponse
-	if err := r.PSQL.QueryRowContext(ctx, GetShopDetailIDByUserIDQuery, sellerID).Scan(
+	if err := r.PSQL.QueryRowContext(ctx, GetShopDetailIDByUserIDQuery, userID).Scan(
 		&sellerData.ID,
 		&sellerData.UserID,
 		&sellerData.Name,

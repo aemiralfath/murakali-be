@@ -120,6 +120,15 @@ const (
 	WHERE "v"."shop_id" = $1
 	AND "v"."deleted_at" IS NULL
 	`
+	WhereVoucherOngoing = `
+	AND (now() BETWEEN "v"."actived_date" AND "v"."expired_date")" `
+
+	WhereVoucherWillCome = `
+	AND now() < "v"."actived_date" " `
+
+	WhereVoucherHasEnded = `
+	AND now() > "v"."expired_date" " `
+
 	CreateVoucherSellerQuery = `INSERT INTO "voucher" 
     	(shop_id, code, quota, actived_date, expired_date, discount_percentage, discount_fix_price, min_product_price, max_discount_price)
     	VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)

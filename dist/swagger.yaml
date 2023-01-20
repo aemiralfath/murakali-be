@@ -789,7 +789,7 @@ paths:
             type: string
           required: false
           example: "ASC"
-          
+
       security:
         - BEARER: []
       responses:
@@ -1734,6 +1734,23 @@ paths:
               schema:
                 $ref: "#/components/schemas/GetSellerCategoryResponse"
 
+  "/api/v1/seller/information":
+    get:
+      summary: Get Seller Information
+      description: >-
+        Get Seller Information Order
+      tags:
+        - Seller
+      security:
+        - BEARER: []
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GetSellerInformationResponse"
+
   "/api/v1/seller/order":
     get:
       summary: Get Seller Order
@@ -1824,7 +1841,7 @@ paths:
 
   "/api/v1/seller/voucher":
     get:
-      summary: Get All Seller Voucher 
+      summary: Get All Seller Voucher
       description: >-
         Get All Seller Voucher
       tags:
@@ -1839,7 +1856,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/GetAllSellerVoucherResponse"
     post:
-      summary: Create Voucher Seller 
+      summary: Create Voucher Seller
       description: >-
         Create Voucher Seller
       tags:
@@ -1859,7 +1876,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/DefaultSuccess"
     put:
-      summary: Update Voucher Seller 
+      summary: Update Voucher Seller
       description: >-
         Update Voucher Seller
       tags:
@@ -1881,7 +1898,7 @@ paths:
 
   "/api/v1/seller/voucher/{id}":
     get:
-      summary: Get Voucher Detail Seller 
+      summary: Get Voucher Detail Seller
       description: >-
         Get Voucher Detail Seller
       tags:
@@ -1902,7 +1919,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/GetVoucherDetailSellerResponse"
     delete:
-      summary: Delete Seller Voucher 
+      summary: Delete Seller Voucher
       description: >-
         Delete Seller Voucher
       tags:
@@ -1922,7 +1939,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/DefaultSuccess"
-                
+
 components:
   schemas:
     LoginRequest:
@@ -2700,7 +2717,7 @@ components:
               to: USER
               amount: -20000
               description: TopUp
-              created_at: '2023-01-16T06:01:19.776573Z'
+              created_at: "2023-01-16T06:01:19.776573Z"
 
     InputPinWalletRequest:
       title: InputPinWalletRequest
@@ -4338,6 +4355,80 @@ components:
           - id: d92a0995-78cd-4eba-a855-dfc096ffec5b
             name: laptop
 
+    GetSellerInformationResponse:
+      title: GetSellerInformationResponse
+      type: object
+      description: Get Seller Information response data model.
+      properties:
+        message:
+          type: string
+          example: "success"
+        data:
+          type: object
+          properties:
+            id:
+              type: string
+            name:
+              type: string
+            total_product:
+              type: number
+            total_rating:
+              type: number
+            rating_avg:
+              type: number
+            photo_url:
+              type: string
+            created_at:
+              type : string
+            
+          example:
+            limit: 10
+            page: 1
+            total_rows: 2
+            total_pages: 1
+            rows:
+              - order_id: "466844d8-e93b-4835-81d4-a75192e74958"
+                order_status: 1
+                total_price: 250000
+                delivery_fee: 30000
+                resi_no: "1"
+                shop_id: "2829d48b-b1db-4445-937c-a5c90cc1c633"
+                shop_name: "test_shop"
+                voucher_code: "voucher_shop_1"
+                created_at: "2022-12-27T05:24:10.434065Z"
+                detail:
+                  - product_detail_id: "450ba9c5-eafc-409f99d3-99f931c9fbf2"
+                    product_id: "6f16e578-fd85-4aa3-a321-9195ee38e86c"
+                    product_title: "baju zara"
+                    product_detail_url: "yahoo.com"
+                    order_quantity: 4
+                    order_item_price: 2000
+                    order_total_price: 8000                    items:
+                      type: object
+                      properties:
+                        product_detail_id:
+                          type: string
+                        product_id:
+                          type: string
+                        product_title:
+                          type: string
+                        product_detail_url:
+                          type: string
+                        order_quantity:
+                          type: number
+                        order_item_price:
+                          type: number
+                        order_total_price:
+                          type: number
+          example:
+            id: 'e8854443-c2c7-488e-93d5-b9d93708b8a3'
+            name: 'Laptop Shop'
+            total_product: 2
+            total_rating: 4
+            rating_avg: 2
+            photo_url : "https://res.cloudinary.com/dhpao1zxi/image/upload/v1671705602/ldtzmxqeyb4nwu5p6y76.jpg"
+            created_at: "2023-01-18T02:16:59.267852Z"
+            
     GetSellerOrderResponse:
       title: GetSellerOrderResponse
       type: object
@@ -4373,16 +4464,45 @@ components:
                   resi_no:
                     type: string
                   shop_id:
-                    type: string
-                  shop_name:
-                    type: string
-                  voucher_code:
-                    type: string
-                  created_at:
-                    type: string
-                  detail:
-                    type: array
-                    items:
+                      type: object
+                      properties:
+                        product_detail_id:
+                          type: string
+                        product_id:
+                          type: string
+                        product_title:
+                          type: string
+                        product_detail_url:
+                          type: string
+                        order_quantity:
+                          type: number
+                        order_item_price:
+                          type: number
+                        order_total_price:
+                          type: number
+          example:
+            limit: 10
+            page: 1
+            total_rows: 2
+            total_pages: 1
+            rows:
+              - order_id: "466844d8-e93b-4835-81d4-a75192e74958"
+                order_status: 1
+                total_price: 250000
+                delivery_fee: 30000
+                resi_no: "1"
+                shop_id: "2829d48b-b1db-4445-937c-a5c90cc1c633"
+                shop_name: "test_shop"
+                voucher_code: "voucher_shop_1"
+                created_at: "2022-12-27T05:24:10.434065Z"
+                detail:
+                  - product_detail_id: "450ba9c5-eafc-409f99d3-99f931c9fbf2"
+                    product_id: "6f16e578-fd85-4aa3-a321-9195ee38e86c"
+                    product_title: "baju zara"
+                    product_detail_url: "yahoo.com"
+                    order_quantity: 4
+                    order_item_price: 2000
+                    order_total_price: 8000                    items:
                       type: object
                       properties:
                         product_detail_id:
@@ -4768,24 +4888,24 @@ components:
           total_rows: 1
           total_pages: 1
           rows:
-          - id: 59bfcd74-e278-4c70-a889-d9c8515bf71c
-            shop_id: e8854443-c2c7-488e-93d5-b9d93708b8a3
-            code: ASD123
-            quota: 11
-            actived_date: '2022-12-22T21:43:56.202214Z'
-            expired_date: '2023-02-01T21:43:56.202214Z'
-            discount_percentage: 0
-            discount_fix_price: 5000
-            min_product_price: 5000
-            max_discount_price: 100000
-            max_quantity: 0
-            created_at: '2022-12-23T02:34:38.854025Z'
-            updated_at:
-              Time: '0001-01-01T00:00:00Z'
-              Valid: false
-            deleted_at:
-              Time: '0001-01-01T00:00:00Z'
-              Valid: false
+            - id: 59bfcd74-e278-4c70-a889-d9c8515bf71c
+              shop_id: e8854443-c2c7-488e-93d5-b9d93708b8a3
+              code: ASD123
+              quota: 11
+              actived_date: "2022-12-22T21:43:56.202214Z"
+              expired_date: "2023-02-01T21:43:56.202214Z"
+              discount_percentage: 0
+              discount_fix_price: 5000
+              min_product_price: 5000
+              max_discount_price: 100000
+              max_quantity: 0
+              created_at: "2022-12-23T02:34:38.854025Z"
+              updated_at:
+                Time: "0001-01-01T00:00:00Z"
+                Valid: false
+              deleted_at:
+                Time: "0001-01-01T00:00:00Z"
+                Valid: false
 
     CreateVoucherSellerRequest:
       title: CreateVoucherSellerRequest
@@ -4817,7 +4937,7 @@ components:
         discount_fix_price: 1000
         min_product_price: 5000
         max_discount_price: 10000
-    
+
     GetVoucherDetailSellerResponse:
       title: UpdateVoucherSellerRequest
       type: object
@@ -4830,20 +4950,19 @@ components:
           shop_id: e8854443-c2c7-488e-93d5-b9d93708b8a3
           code: ASD123
           quota: 10
-          actived_date: '2022-12-22T21:43:56Z'
-          expired_date: '2023-02-22T21:43:56Z'
+          actived_date: "2022-12-22T21:43:56Z"
+          expired_date: "2023-02-22T21:43:56Z"
           discount_percentage: 0
           discount_fix_price: 10000
           min_product_price: 5000
           max_discount_price: 10000
-          created_at: '2022-12-23T02:34:38.854025Z'
+          created_at: "2022-12-23T02:34:38.854025Z"
           updated_at:
-            Time: '2023-01-17T12:08:57.917015Z'
+            Time: "2023-01-17T12:08:57.917015Z"
             Valid: true
           deleted_at:
-            Time: '0001-01-01T00:00:00Z'
+            Time: "0001-01-01T00:00:00Z"
             Valid: false
-
 
     CheckUniqueTrueSuccess:
       title: CheckUniqueTrueSuccess
