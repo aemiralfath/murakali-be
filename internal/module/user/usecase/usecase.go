@@ -12,6 +12,7 @@ import (
 	"murakali/config"
 	"murakali/internal/constant"
 	"murakali/internal/model"
+	body2 "murakali/internal/module/location/delivery/body"
 	"murakali/internal/module/user"
 	"murakali/internal/module/user/delivery/body"
 	"murakali/internal/util"
@@ -243,6 +244,105 @@ func (u *userUC) GetOrder(ctx context.Context, userID, orderStatusID string, pgn
 
 	pgn.Rows = orders
 	return pgn, nil
+}
+
+func (u *userUC) GetOrderByOrderID(ctx context.Context, orderID string) (*model.Order, error) {
+	order, err := u.userRepo.GetOrderByOrderID(ctx, orderID)
+	if err != nil {
+		return nil, err
+	}
+
+	buyerID, err := u.userRepo.GetBuyerIDByOrderID(ctx, orderID)
+	if err != nil {
+		return nil, err
+	}
+
+	sellerID, err := u.userRepo.GetSellerIDByOrderID(ctx, orderID)
+	if err != nil {
+		return nil, err
+	}
+
+	buyerAddress, err := u.userRepo.GetAddressByBuyerID(ctx, buyerID)
+	if err != nil {
+		return nil, err
+	}
+
+	sellerAddress, err := u.userRepo.GetAddressBySellerID(ctx, sellerID)
+	if err != nil {
+		return nil, err
+	}
+
+	order.BuyerAddress = buyerAddress
+	order.SellerAddress = sellerAddress
+
+	totalWeight := 0
+	for _, detail := range order.Detail {
+		totalWeight += int(detail.ProductWeight) * detail.OrderQuantity
+	}
+
+	var costRedis *string
+	key := fmt.Sprintf("%d:%d:%d:%s", sellerAddress.CityID, buyerAddress.CityID, totalWeight, order.CourierCode)
+	costRedis, err = u.userRepo.GetCostRedis(ctx, key)
+	if err != nil {
+		res, err := u.GetCostRajaOngkir(sellerAddress.CityID, buyerAddress.CityID, totalWeight, order.CourierCode)
+		if err != nil {
+			return nil, err
+		}
+
+		redisValue, err := json.Marshal(res)
+		if err != nil {
+			return nil, err
+		}
+
+		if errInsert := u.userRepo.InsertCostRedis(ctx, key, string(redisValue)); errInsert != nil {
+			return nil, errInsert
+		}
+
+		value := string(redisValue)
+		costRedis = &value
+	}
+
+	var costResp body2.RajaOngkirCostResponse
+	if err := json.Unmarshal([]byte(*costRedis), &costResp); err != nil {
+		return nil, err
+	}
+
+	if len(costResp.Rajaongkir.Results) > 0 {
+		for _, cost := range costResp.Rajaongkir.Results[0].Costs {
+			if cost.Service == order.CourierService {
+				order.CourierETD = cost.Cost[0].Etd
+			}
+		}
+	}
+
+	return order, nil
+}
+
+func (u *userUC) GetCostRajaOngkir(origin, destination, weight int, code string) (*body2.RajaOngkirCostResponse, error) {
+	var responseCost body2.RajaOngkirCostResponse
+	url := fmt.Sprintf("%s/cost", u.cfg.External.OngkirAPIURL)
+	payload := fmt.Sprintf(
+		"origin=%d&destination=%d&weight=%d&courier=%s", origin, destination, weight, code)
+
+	req, err := http.NewRequest("POST", url, strings.NewReader(payload))
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("key", u.cfg.External.OngkirAPIKey)
+	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
+	res, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer res.Body.Close()
+
+	readErr := json.NewDecoder(res.Body).Decode(&responseCost)
+	if readErr != nil {
+		return nil, err
+	}
+
+	return &responseCost, nil
 }
 
 func (u *userUC) GetTransactionDetailByID(ctx context.Context, transactionID, userID string) (*body.TransactionDetailResponse, error) {

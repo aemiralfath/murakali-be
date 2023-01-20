@@ -314,6 +314,169 @@ func (r *userRepo) GetAllAddresses(ctx context.Context, userID, name string, pgn
 	return addresses, nil
 }
 
+func (r *userRepo) GetOrderByOrderID(ctx context.Context, orderID string) (*model.Order, error) {
+	var order model.Order
+	if err := r.PSQL.QueryRowContext(ctx, GetOrderByOrderID, orderID).Scan(
+		&order.OrderID,
+		&order.OrderStatus,
+		&order.TotalPrice,
+		&order.DeliveryFee,
+		&order.ResiNumber,
+		&order.ShopID,
+		&order.ShopName,
+		&order.ShopPhoneNumber,
+		&order.SellerName,
+		&order.VoucherCode,
+		&order.CreatedAt,
+		&order.Invoice,
+		&order.CourierName,
+		&order.CourierCode,
+		&order.CourierService,
+		&order.CourierDescription,
+		&order.BuyerUsername,
+		&order.BuyerPhoneNumber,
+	); err != nil {
+		return nil, err
+	}
+	orderDetail := make([]*model.OrderDetail, 0)
+
+	res, err := r.PSQL.QueryContext(
+		ctx, GetOrderDetailQuery2, order.OrderID)
+
+	if err != nil {
+		return nil, err
+	}
+	for res.Next() {
+		var detail model.OrderDetail
+		if errScan := res.Scan(
+			&detail.ProductDetailID,
+			&detail.ProductID,
+			&detail.ProductTitle,
+			&detail.ProductWeight,
+			&detail.ProductDetailURL,
+			&detail.OrderQuantity,
+			&detail.ItemPrice,
+			&detail.TotalPrice,
+		); errScan != nil {
+			return nil, errScan
+		}
+		variant := make(map[string]string, 0)
+		variantResult, errVariant := r.PSQL.QueryContext(ctx, GetOrderDetailProductVariant, detail.ProductDetailID)
+		if errVariant != nil {
+			if errVariant != sql.ErrNoRows {
+				return nil, err
+			}
+		}
+		for variantResult.Next() {
+			var varName string
+			var varType string
+			if errScanVariant := variantResult.Scan(
+				&varName,
+				&varType,
+			); errScanVariant != nil {
+				return nil, errScanVariant
+			}
+			variant[varName] = varType
+		}
+
+		detail.Variant = variant
+		orderDetail = append(orderDetail, &detail)
+	}
+
+	order.Detail = orderDetail
+	return &order, nil
+}
+
+func (r *userRepo) GetBuyerIDByOrderID(ctx context.Context, orderID string) (string, error) {
+	var buyerID string
+	if err := r.PSQL.QueryRowContext(ctx, GetBuyerIDByOrderIDQuery, orderID).Scan(
+		&buyerID); err != nil {
+		return "", err
+	}
+
+	return buyerID, nil
+}
+
+func (r *userRepo) GetSellerIDByOrderID(ctx context.Context, orderID string) (string, error) {
+	var sellerID string
+	if err := r.PSQL.QueryRowContext(ctx, GetSellerIDByOrderIDQuery, orderID).Scan(
+		&sellerID); err != nil {
+		return "", err
+	}
+
+	return sellerID, nil
+}
+
+func (r *userRepo) GetAddressByBuyerID(ctx context.Context, userID string) (*model.Address, error) {
+	var address model.Address
+	if err := r.PSQL.QueryRowContext(ctx, GetAddressByBuyerIDQuery, userID).Scan(
+		&address.ID,
+		&address.UserID,
+		&address.Name,
+		&address.ProvinceID,
+		&address.CityID,
+		&address.Province,
+		&address.City,
+		&address.District,
+		&address.SubDistrict,
+		&address.AddressDetail,
+		&address.ZipCode,
+		&address.IsDefault,
+		&address.IsShopDefault,
+		&address.CreatedAt,
+		&address.UpdatedAt); err != nil {
+		return nil, err
+	}
+
+	return &address, nil
+}
+
+func (r *userRepo) GetAddressBySellerID(ctx context.Context, userID string) (*model.Address, error) {
+	var address model.Address
+	if err := r.PSQL.QueryRowContext(ctx, GetAddressBySellerIDQuery, userID).Scan(
+		&address.ID,
+		&address.UserID,
+		&address.Name,
+		&address.ProvinceID,
+		&address.CityID,
+		&address.Province,
+		&address.City,
+		&address.District,
+		&address.SubDistrict,
+		&address.AddressDetail,
+		&address.ZipCode,
+		&address.IsDefault,
+		&address.IsShopDefault,
+		&address.CreatedAt,
+		&address.UpdatedAt); err != nil {
+		return nil, err
+	}
+
+	return &address, nil
+}
+
+func (r *userRepo) GetCostRedis(ctx context.Context, key string) (*string, error) {
+	res := r.RedisClient.Get(ctx, key)
+	if res.Err() != nil {
+		return nil, res.Err()
+	}
+
+	value, err := res.Result()
+	if err != nil {
+		return nil, err
+	}
+
+	return &value, nil
+}
+
+func (r *userRepo) InsertCostRedis(ctx context.Context, key, value string) error {
+	if err := r.RedisClient.Set(ctx, key, value, 0); err.Err() != nil {
+		return err.Err()
+	}
+
+	return nil
+}
+
 func (r *userRepo) GetOrders(ctx context.Context, userID, orderStatusID string, pgn *pagination.Pagination) ([]*model.Order, error) {
 	orders := make([]*model.Order, 0)
 
