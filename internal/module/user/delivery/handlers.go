@@ -503,6 +503,30 @@ func (h *userHandlers) GetOrder(c *gin.Context) {
 	response.SuccessResponse(c.Writer, orders, http.StatusOK)
 }
 
+func (h *userHandlers) GetOrderByOrderID(c *gin.Context) {
+	id := c.Param("order_id")
+	orderID, err := uuid.Parse(id)
+	if err != nil {
+		response.ErrorResponse(c.Writer, response.BadRequestMessage, http.StatusBadRequest)
+		return
+	}
+
+	data, err := h.userUC.GetOrderByOrderID(c, orderID.String())
+	if err != nil {
+		var e *httperror.Error
+		if !errors.As(err, &e) {
+			h.logger.Errorf("HandlerSeller, Error: %s", err)
+			response.ErrorResponse(c.Writer, response.InternalServerErrorMessage, http.StatusInternalServerError)
+			return
+		}
+
+		response.ErrorResponse(c.Writer, e.Err.Error(), e.Status)
+		return
+	}
+
+	response.SuccessResponse(c.Writer, data, http.StatusOK)
+}
+
 func (h *userHandlers) GetTransactionDetailByID(c *gin.Context) {
 	userID, exist := c.Get("userID")
 	if !exist {

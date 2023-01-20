@@ -54,6 +54,14 @@ type Repository interface {
 	GetOrdersByTransactionID(ctx context.Context, transactionID, userID string) ([]*model.Order, error)
 	GetTotalOrder(ctx context.Context, userID, orderStatusID string) (int64, error)
 	GetOrders(ctx context.Context, userID, orderStatusID string, pgn *pagination.Pagination) ([]*model.Order, error)
+	GetOrderByOrderID(ctx context.Context, OrderID string) (*model.Order, error)
+	GetSellerIDByOrderID(ctx context.Context, orderID string) (string, error)
+	GetAddressByBuyerID(ctx context.Context, userID string) (*model.Address, error)
+	GetAddressBySellerID(ctx context.Context, userID string) (*model.Address, error)
+	GetBuyerIDByOrderID(ctx context.Context, orderID string) (string, error)
+	GetCostRedis(ctx context.Context, key string) (*string, error)
+	InsertCostRedis(ctx context.Context, key string, value string) error
+
 	GetWalletUser(ctx context.Context, walletID string) (*model.Wallet, error)
 	GetWalletHistoryByID(ctx context.Context, id string) (*model.WalletHistory, error)
 	GetWalletHistoryByWalletID(ctx context.Context, pgn *pagination.Pagination, walletID string) ([]*body.HistoryWalletResponse, error)
