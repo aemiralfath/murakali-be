@@ -314,7 +314,8 @@ func (u *sellerUC) UpdateOnDeliveryOrder(ctx context.Context) error {
 
 	for _, order := range orders {
 		if order.OrderStatusID == constant.OrderStatusOnDelivery && order.ArrivedAt.Valid && time.Until(order.ArrivedAt.Time) <= 0 {
-			if err := u.sellerRepo.ChangeOrderStatus(ctx, body.ChangeOrderStatusRequest{OrderID: order.ID.String(), OrderStatusID: strconv.Itoa(constant.OrderStatusDelivered)}); err != nil {
+			if err := u.sellerRepo.ChangeOrderStatus(ctx, body.ChangeOrderStatusRequest{OrderID: order.ID.String(),
+				OrderStatusID: strconv.Itoa(constant.OrderStatusDelivered)}); err != nil {
 				return err
 			}
 		}
@@ -406,7 +407,7 @@ func (u *sellerUC) GetCostRajaOngkir(origin, destination, weight int, code strin
 	return &responseCost, nil
 }
 
-func (u *sellerUC) GetAllVoucherSeller(ctx context.Context, userID string, pgn *pagination.Pagination) (*pagination.Pagination, error) {
+func (u *sellerUC) GetAllVoucherSeller(ctx context.Context, userID, voucherStatusID string, pgn *pagination.Pagination) (*pagination.Pagination, error) {
 	shopID, err := u.sellerRepo.GetShopIDByUserID(ctx, userID)
 	if err != nil {
 		if err == sql.ErrNoRows {
@@ -415,7 +416,7 @@ func (u *sellerUC) GetAllVoucherSeller(ctx context.Context, userID string, pgn *
 		return nil, err
 	}
 
-	totalRows, err := u.sellerRepo.GetTotalVoucherSeller(ctx, shopID)
+	totalRows, err := u.sellerRepo.GetTotalVoucherSeller(ctx, shopID, voucherStatusID)
 	if err != nil {
 		return nil, err
 	}
@@ -424,7 +425,7 @@ func (u *sellerUC) GetAllVoucherSeller(ctx context.Context, userID string, pgn *
 	pgn.TotalRows = totalRows
 	pgn.TotalPages = totalPages
 
-	ShopVouchers, err := u.sellerRepo.GetAllVoucherSeller(ctx, shopID)
+	ShopVouchers, err := u.sellerRepo.GetAllVoucherSeller(ctx, shopID, voucherStatusID)
 	if err != nil {
 		return nil, err
 	}
@@ -553,4 +554,233 @@ func (u *sellerUC) DeleteVoucherSeller(ctx context.Context, voucherIDShopID *bod
 	}
 
 	return nil
+}
+
+func (u *sellerUC) GetAllPromotionSeller(ctx context.Context, userID string, promoStatusID string, pgn *pagination.Pagination) (*pagination.Pagination, error) {
+	shopID, err := u.sellerRepo.GetShopIDByUserID(ctx, userID)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, httperror.New(http.StatusBadRequest, response.UserNotHaveShop)
+		}
+		return nil, err
+	}
+
+	totalRows, err := u.sellerRepo.GetTotalPromotionSeller(ctx, shopID, promoStatusID)
+	if err != nil {
+		return nil, err
+	}
+
+	totalPages := int(math.Ceil(float64(totalRows) / float64(pgn.Limit)))
+	pgn.TotalRows = totalRows
+	pgn.TotalPages = totalPages
+
+	ShopVouchers, err := u.sellerRepo.GetAllPromotionSeller(ctx, shopID, promoStatusID)
+	if err != nil {
+		return nil, err
+	}
+
+	pgn.Rows = ShopVouchers
+
+	return pgn, nil
+}
+
+func (u *sellerUC) CreatePromotionSeller(ctx context.Context, userID string, requestBody body.CreatePromotionRequest) (int, error) {
+	shopID, err := u.sellerRepo.GetShopIDByUserID(ctx, userID)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return -1, httperror.New(http.StatusBadRequest, response.UserNotHaveShop)
+		}
+		return -1, err
+	}
+
+	data, errTx := u.txRepo.WithTransactionReturnData(func(tx postgre.Transaction) (interface{}, error) {
+		countProduct := 0
+		for _, productID := range requestBody.ProductIDs {
+			shopProduct := &body.ShopProduct{ShopID: shopID, ProductID: productID}
+
+			productPromo, errProductPromo := u.sellerRepo.GetProductPromotion(ctx, shopProduct)
+			if errProductPromo != nil {
+				if errProductPromo == sql.ErrNoRows {
+					return nil, httperror.New(http.StatusBadRequest, response.ProductNotExistMessage)
+				}
+				return nil, errProductPromo
+			}
+
+			if productPromo.PromotionID != nil {
+				return nil, httperror.New(http.StatusBadRequest, response.ProductAlreadyHasPromoMessage)
+			}
+
+			PID, err := uuid.Parse(productID)
+			if err != nil {
+				return nil, err
+			}
+
+			promotionShop := &model.Promotion{
+				Name:               requestBody.Name,
+				ProductID:          PID,
+				DiscountPercentage: &requestBody.DiscountPercentage,
+				DiscountFixPrice:   &requestBody.DiscountFixPrice,
+				MinProductPrice:    &requestBody.MinProductPrice,
+				MaxDiscountPrice:   &requestBody.MaxDiscountPrice,
+				Quota:              requestBody.Quota,
+				MaxQuantity:        requestBody.MaxQuantity,
+				ActivedDate:        requestBody.ActiveDateTime,
+				ExpiredDate:        requestBody.ExpiredDateTime,
+			}
+
+			err = u.sellerRepo.CreatePromotionSeller(ctx, tx, promotionShop)
+			if err != nil {
+				return nil, err
+			}
+			countProduct++
+		}
+		return countProduct, nil
+	})
+
+	if errTx != nil {
+		return -1, errTx
+	}
+
+	return data.(int), nil
+}
+
+func (u *sellerUC) UpdatePromotionSeller(ctx context.Context, userID string, requestBody body.UpdatePromotionRequest) error {
+	shopID, err := u.sellerRepo.GetShopIDByUserID(ctx, userID)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return httperror.New(http.StatusBadRequest, response.UserNotHaveShop)
+		}
+		return err
+	}
+
+	shopProductPromo := &body.ShopProductPromo{
+		ShopID:      shopID,
+		ProductID:   requestBody.ProductID,
+		PromotionID: requestBody.PromotionID,
+	}
+
+	promotionShop, errPromotion := u.sellerRepo.GetPromotionSellerDetailByID(ctx, shopProductPromo)
+	if errPromotion != nil {
+		if errPromotion == sql.ErrNoRows {
+			return httperror.New(http.StatusBadRequest, body.PromotionSellerNotFoundMessage)
+		}
+		return errPromotion
+	}
+	timeNow := time.Now()
+
+	if timeNow.After(promotionShop.ActivedDate) && timeNow.After(promotionShop.ExpiredDate) {
+		return httperror.New(http.StatusBadRequest, body.PromotionExpairedMessage)
+	}
+
+	if timeNow.After(promotionShop.ActivedDate) && timeNow.Before(promotionShop.ExpiredDate) {
+		if !promotionShop.ActivedDate.Equal(requestBody.ActiveDateTime) {
+			return httperror.New(http.StatusBadRequest, body.PromotionCannotUpdateActivedMessage)
+		}
+	}
+
+	if timeNow.Before(promotionShop.ActivedDate) && timeNow.Before(promotionShop.ExpiredDate) {
+		if requestBody.ActiveDateTime.After(promotionShop.ActivedDate) {
+			return httperror.New(http.StatusBadRequest, body.PromotionCannotUpdateActivedBeforeMessage)
+		}
+	}
+
+	if requestBody.ExpiredDateTime.After(promotionShop.ExpiredDate) {
+		return httperror.New(http.StatusBadRequest, body.PromotionCannotUpdateExpiredAfterMessage)
+	}
+	if requestBody.ExpiredDateTime.Before(timeNow) {
+		return httperror.New(http.StatusBadRequest, body.PromotionCannotUpdateExpiredBefoferMessage)
+	}
+
+	promotion := &model.Promotion{
+		ID:                 promotionShop.ID,
+		Name:               requestBody.Name,
+		MaxQuantity:        requestBody.MaxQuantity,
+		DiscountPercentage: &requestBody.DiscountPercentage,
+		DiscountFixPrice:   &requestBody.DiscountFixPrice,
+		MinProductPrice:    &requestBody.MinProductPrice,
+		MaxDiscountPrice:   &requestBody.MaxDiscountPrice,
+		ActivedDate:        requestBody.ActiveDateTime,
+		ExpiredDate:        requestBody.ExpiredDateTime,
+	}
+
+	err = u.sellerRepo.UpdatePromotionSeller(ctx, promotion)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (u *sellerUC) GetDetailPromotionSellerByID(ctx context.Context,
+	shopProductPromo *body.ShopProductPromo) (*body.PromotionDetailSeller, error) {
+	shopID, err := u.sellerRepo.GetShopIDByUserID(ctx, shopProductPromo.UserID)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, httperror.New(http.StatusBadRequest, response.UserNotHaveShop)
+		}
+		return nil, err
+	}
+	shopProductPromo.ShopID = shopID
+
+	promotionShop, errPromotion := u.sellerRepo.GetDetailPromotionSellerByID(ctx, shopProductPromo)
+	if errPromotion != nil {
+		if errPromotion == sql.ErrNoRows {
+			return nil, httperror.New(http.StatusBadRequest, body.PromotionSellerNotFoundMessage)
+		}
+		return nil, errPromotion
+	}
+
+	promotionShop = u.CalculateDiscountPromotionProduct(ctx, promotionShop)
+
+	return promotionShop, nil
+}
+
+func (u *sellerUC) CalculateDiscountPromotionProduct(ctx context.Context, p *body.PromotionDetailSeller) *body.PromotionDetailSeller {
+	var maxDiscountPrice float64
+	var minProductPrice float64
+	var discountPercentage float64
+	var discountFixPrice float64
+	var resultMinPriceDiscount float64
+	var resultMaxPriceDiscount float64
+
+	if p.MinProductPrice != nil {
+		minProductPrice = *p.MinProductPrice
+	}
+
+	maxDiscountPrice = *p.MaxDiscountPrice
+	if p.DiscountPercentage != nil {
+		discountPercentage = *p.DiscountPercentage
+		if p.MinPrice >= minProductPrice && discountPercentage > 0 {
+			resultMinPriceDiscount = math.Min(maxDiscountPrice,
+				p.MinPrice*(discountPercentage/100.00))
+		}
+		if p.MaxPrice >= minProductPrice && discountPercentage > 0 {
+			resultMaxPriceDiscount = math.Min(maxDiscountPrice,
+				p.MaxPrice*(discountPercentage/100.00))
+		}
+	}
+
+	if p.DiscountFixPrice != nil {
+		discountFixPrice = *p.DiscountFixPrice
+		if p.MinPrice >= minProductPrice && discountFixPrice > 0 {
+			resultMinPriceDiscount = math.Max(resultMinPriceDiscount, discountFixPrice)
+			resultMinPriceDiscount = math.Min(resultMinPriceDiscount, maxDiscountPrice)
+		}
+		if p.MaxPrice >= minProductPrice && discountFixPrice > 0 {
+			resultMaxPriceDiscount = math.Max(resultMaxPriceDiscount, discountFixPrice)
+			resultMaxPriceDiscount = math.Min(resultMaxPriceDiscount, maxDiscountPrice)
+		}
+	}
+
+	if resultMinPriceDiscount > 0 {
+		p.ProductMinDiscountPrice = resultMinPriceDiscount
+		p.ProductSubMinPrice = p.MinPrice - p.ProductMinDiscountPrice
+	}
+
+	if resultMaxPriceDiscount > 0 {
+		p.ProductMaxDiscountPrice = resultMaxPriceDiscount
+		p.ProductSubMaxPrice = p.MaxPrice - p.ProductMaxDiscountPrice
+	}
+
+	return p
 }

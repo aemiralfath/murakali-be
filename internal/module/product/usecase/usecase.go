@@ -582,10 +582,10 @@ func (u *productUC) UpdateListedStatus(ctx context.Context, productID string) er
 	return nil
 }
 
-func (u *productUC) UpdateProductListedStatusBulk(ctx context.Context, product body.UpdateProductListedStatusBulkRequest) error {
+func (u *productUC) UpdateProductListedStatusBulk(ctx context.Context, productRequest body.UpdateProductListedStatusBulkRequest) error {
 	errTx := u.txRepo.WithTransaction(func(tx postgre.Transaction) error {
-		for i := 0; i < len(product.ProductIDS); i++ {
-			if err := u.productRepo.UpdateListedStatus(ctx, tx, product.ListedStatus, product.ProductIDS[i]); err != nil {
+		for i := 0; i < len(productRequest.ProductIDS); i++ {
+			if err := u.productRepo.UpdateListedStatus(ctx, tx, productRequest.ListedStatus, productRequest.ProductIDS[i]); err != nil {
 				if err == sql.ErrNoRows {
 					return httperror.New(http.StatusNotFound, body.UpdateProductFailed)
 				}
@@ -593,7 +593,6 @@ func (u *productUC) UpdateProductListedStatusBulk(ctx context.Context, product b
 			}
 		}
 		return nil
-
 	})
 
 	if errTx != nil {

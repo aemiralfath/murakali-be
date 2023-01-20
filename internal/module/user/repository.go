@@ -12,6 +12,8 @@ import (
 
 type Repository interface {
 	GetTransactionByID(ctx context.Context, transactionID string) (*model.Transaction, error)
+	GetTransactionByUserID(ctx context.Context, userID string, pgn *pagination.Pagination) ([]*model.Transaction, error)
+	GetTotalTransactionByUserID(ctx context.Context, userID string) (int64, error)
 	GetUserByID(ctx context.Context, id string) (*model.User, error)
 	GetUserPasswordByID(ctx context.Context, id string) (*model.User, error)
 	GetTotalAddress(ctx context.Context, userID, name string) (int64, error)
@@ -49,9 +51,11 @@ type Repository interface {
 	UpdateProfileImage(ctx context.Context, imgURL, userID string) error
 	UpdatePasswordByID(ctx context.Context, userID, newPassword string) error
 	GetPasswordByID(ctx context.Context, id string) (string, error)
-	GetTotalOrder(ctx context.Context, userID string) (int64, error)
-	GetOrders(ctx context.Context, userID string, pgn *pagination.Pagination) ([]*model.Order, error)
+	GetOrdersByTransactionID(ctx context.Context, transactionID, userID string) ([]*model.Order, error)
+	GetTotalOrder(ctx context.Context, userID, orderStatusID string) (int64, error)
+	GetOrders(ctx context.Context, userID, orderStatusID string, pgn *pagination.Pagination) ([]*model.Order, error)
 	GetWalletUser(ctx context.Context, walletID string) (*model.Wallet, error)
+	GetWalletHistoryByID(ctx context.Context, id string) (*model.WalletHistory, error)
 	GetWalletHistoryByWalletID(ctx context.Context, pgn *pagination.Pagination, walletID string) ([]*body.HistoryWalletResponse, error)
 	GetTotalWalletHistoryByWalletID(ctx context.Context, walletID string) (int64, error)
 	GetSealabsPayUser(ctx context.Context, userID, CardNumber string) (*model.SealabsPay, error)
@@ -68,6 +72,7 @@ type Repository interface {
 	UpdateProductDetailStock(ctx context.Context, tx postgre.Transaction, productDetailData *model.ProductDetail) error
 	DeleteCartItemByID(ctx context.Context, tx postgre.Transaction, cartItemData *model.CartItem) error
 	GetOrderByTransactionID(ctx context.Context, transactionID string) ([]*model.OrderModel, error)
+	GetOrderDetailByTransactionID(ctx context.Context, TransactionID string) ([]*model.Order, error)
 	UpdateOrder(ctx context.Context, tx postgre.Transaction, orderData *model.OrderModel) error
 	CreateWallet(ctx context.Context, walletData *model.Wallet) error
 	GetWalletByUserID(ctx context.Context, userID string) (*model.Wallet, error)

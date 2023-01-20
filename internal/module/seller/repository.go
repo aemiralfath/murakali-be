@@ -36,8 +36,8 @@ type Repository interface {
 	GetCostRedis(ctx context.Context, key string) (*string, error)
 	GetOrdersOnDelivery(ctx context.Context) ([]*model.OrderModel, error)
 	InsertCostRedis(ctx context.Context, key string, value string) error
-	GetAllVoucherSeller(ctx context.Context, shopID string) ([]*model.Voucher, error)
-	GetTotalVoucherSeller(ctx context.Context, shopID string) (int64, error)
+	GetAllVoucherSeller(ctx context.Context, shopID, voucherStatusID string) ([]*model.Voucher, error)
+	GetTotalVoucherSeller(ctx context.Context, shopID, voucherStatusID string) (int64, error)
 	CreateVoucherSeller(ctx context.Context, voucherShop *model.Voucher) error
 	UpdateVoucherSeller(ctx context.Context, voucherShop *model.Voucher) error
 	DeleteVoucherSeller(ctx context.Context, voucherIDShopID *body.VoucherIDShopID) error
@@ -49,4 +49,11 @@ type Repository interface {
 	GetOrderItemsByOrderID(ctx context.Context, tx postgre.Transaction, orderID string) ([]*model.OrderItem, error)
 	GetProductDetailByID(ctx context.Context, tx postgre.Transaction, productDetailID string) (*model.ProductDetail, error)
 	UpdateProductDetailStock(ctx context.Context, tx postgre.Transaction, productDetailData *model.ProductDetail) error
+	GetAllPromotionSeller(ctx context.Context, shopID string, promoStatusID string) ([]*body.PromotionSellerResponse, error)
+	GetTotalPromotionSeller(ctx context.Context, shopID string, promoStatusID string) (int64, error)
+	GetProductPromotion(ctx context.Context, shopProduct *body.ShopProduct) (*body.ProductPromotion, error)
+	CreatePromotionSeller(ctx context.Context, tx postgre.Transaction, promotionShop *model.Promotion) error
+	GetPromotionSellerDetailByID(ctx context.Context, shopProductPromo *body.ShopProductPromo) (*body.PromotionSellerResponse, error)
+	UpdatePromotionSeller(ctx context.Context, promotion *model.Promotion) error
+	GetDetailPromotionSellerByID(ctx context.Context, shopProductPromo *body.ShopProductPromo) (*body.PromotionDetailSeller, error)
 }

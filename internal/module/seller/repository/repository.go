@@ -522,18 +522,48 @@ func (r *sellerRepo) InsertCostRedis(ctx context.Context, key, value string) err
 	return nil
 }
 
-func (r *sellerRepo) GetTotalVoucherSeller(ctx context.Context, shopID string) (int64, error) {
+func (r *sellerRepo) GetTotalVoucherSeller(ctx context.Context, shopID, voucherStatusID string) (int64, error) {
 	var total int64
-	if err := r.PSQL.QueryRowContext(ctx, GetTotalVoucherSellerQuery, shopID).Scan(&total); err != nil {
+
+	q := GetTotalVoucherSellerQuery
+	switch voucherStatusID {
+	case "1":
+		q = q
+	case "2":
+		q = q + FilterVoucherWillCome
+	case "3":
+		q = q + FilterVoucherOngoing
+	case "4":
+		q = q + FilterVoucherHasEnded
+	default:
+		q = q
+	}
+
+	if err := r.PSQL.QueryRowContext(ctx, q, shopID).Scan(&total); err != nil {
 		return -1, err
 	}
 
 	return total, nil
 }
 
-func (r *sellerRepo) GetAllVoucherSeller(ctx context.Context, shopID string) ([]*model.Voucher, error) {
+func (r *sellerRepo) GetAllVoucherSeller(ctx context.Context, shopID, voucherStatusID string) ([]*model.Voucher, error) {
 	var shopVouchers []*model.Voucher
-	res, err := r.PSQL.QueryContext(ctx, GetAllVoucherSellerQuery, shopID)
+
+	q := GetAllVoucherSellerQuery
+	switch voucherStatusID {
+	case "1":
+		q = q
+	case "2":
+		q = q + FilterVoucherWillCome
+	case "3":
+		q = q + FilterVoucherOngoing
+	case "4":
+		q = q + FilterVoucherHasEnded
+	default:
+		q = q
+	}
+
+	res, err := r.PSQL.QueryContext(ctx, q, shopID)
 	if err != nil {
 		return nil, err
 	}
@@ -629,6 +659,180 @@ func (r *sellerRepo) GetAllVoucherSellerByIDAndShopID(ctx context.Context, vouch
 	}
 
 	return &voucher, nil
+}
+
+func (r *sellerRepo) GetAllPromotionSeller(ctx context.Context, shopID string, promoStatusID string) ([]*body.PromotionSellerResponse, error) {
+	var promotionSeller []*body.PromotionSellerResponse
+
+	q := GetAllPromotionSellerQuery
+	switch promoStatusID {
+	case "2":
+		q = q + FilterWillComeQuery
+	case "3":
+		q = q + FilterOngoingQuery
+	case "4":
+		q = q + FilterHasEndedQuery
+	}
+
+	res, err := r.PSQL.QueryContext(ctx, q, shopID)
+	if err != nil {
+		return nil, err
+	}
+	defer res.Close()
+
+	for res.Next() {
+		var promotion body.PromotionSellerResponse
+
+		if errScan := res.Scan(
+			&promotion.ID,
+			&promotion.PromotionName,
+			&promotion.ProductID,
+			&promotion.ProductName,
+			&promotion.ProductThumbnailURL,
+			&promotion.DiscountPercentage,
+			&promotion.DiscountFixPrice,
+			&promotion.MinProductPrice,
+			&promotion.MaxDiscountPrice,
+			&promotion.Quota,
+			&promotion.MaxQuantity,
+			&promotion.ActivedDate,
+			&promotion.ExpiredDate,
+			&promotion.CreatedAt,
+			&promotion.UpdatedAt,
+			&promotion.DeletedAt,
+		); errScan != nil {
+			return nil, err
+		}
+
+		promotionSeller = append(promotionSeller, &promotion)
+	}
+
+	if res.Err() != nil {
+		return nil, err
+	}
+
+	return promotionSeller, nil
+}
+
+func (r *sellerRepo) GetTotalPromotionSeller(ctx context.Context, shopID string, promoStatusID string) (int64, error) {
+	var total int64
+
+	q := GetTotalPromotionSellerQuery
+	switch promoStatusID {
+	case "2":
+		q = q + FilterWillComeQuery
+	case "3":
+		q = q + FilterOngoingQuery
+	case "4":
+		q = q + FilterHasEndedQuery
+	}
+
+	if err := r.PSQL.QueryRowContext(ctx, q, shopID).Scan(&total); err != nil {
+		return -1, err
+	}
+
+	return total, nil
+}
+
+func (r *sellerRepo) GetProductPromotion(ctx context.Context, shopProduct *body.ShopProduct) (*body.ProductPromotion, error) {
+	var productPromo body.ProductPromotion
+	if err := r.PSQL.QueryRowContext(ctx, GetProductPromotionQuery,
+		shopProduct.ShopID, shopProduct.ProductID).Scan(
+		&productPromo.ProductID,
+		&productPromo.PromotionID); err != nil {
+		return nil, err
+	}
+	return &productPromo, nil
+}
+
+func (r *sellerRepo) CreatePromotionSeller(ctx context.Context, tx postgre.Transaction, promotionShop *model.Promotion) error {
+	if _, err := r.PSQL.ExecContext(ctx, CreatePromotionSellerQuery,
+		promotionShop.Name,
+		promotionShop.ProductID,
+		promotionShop.DiscountPercentage,
+		promotionShop.DiscountFixPrice,
+		promotionShop.MinProductPrice,
+		promotionShop.MaxDiscountPrice,
+		promotionShop.Quota,
+		promotionShop.MaxQuantity,
+		promotionShop.ActivedDate,
+		promotionShop.ExpiredDate,
+	); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (r *sellerRepo) GetPromotionSellerDetailByID(ctx context.Context,
+	shopProductPromo *body.ShopProductPromo) (*body.PromotionSellerResponse, error) {
+	var promotion body.PromotionSellerResponse
+	if err := r.PSQL.QueryRowContext(ctx, GetPromotionSellerDetailByIDQuery,
+		shopProductPromo.PromotionID, shopProductPromo.ShopID, shopProductPromo.ProductID).Scan(
+		&promotion.ID,
+		&promotion.PromotionName,
+		&promotion.ProductID,
+		&promotion.ProductName,
+		&promotion.ProductThumbnailURL,
+		&promotion.DiscountPercentage,
+		&promotion.DiscountFixPrice,
+		&promotion.MinProductPrice,
+		&promotion.MaxDiscountPrice,
+		&promotion.Quota,
+		&promotion.MaxQuantity,
+		&promotion.ActivedDate,
+		&promotion.ExpiredDate,
+		&promotion.CreatedAt,
+		&promotion.UpdatedAt,
+		&promotion.DeletedAt,
+	); err != nil {
+		return nil, err
+	}
+	return &promotion, nil
+}
+
+func (r *sellerRepo) UpdatePromotionSeller(ctx context.Context, promotion *model.Promotion) error {
+	if _, err := r.PSQL.ExecContext(ctx, UpdatePromotionSellerQuery,
+		promotion.Name,
+		promotion.MaxQuantity,
+		promotion.DiscountPercentage,
+		promotion.DiscountFixPrice,
+		promotion.MinProductPrice,
+		promotion.MaxDiscountPrice,
+		promotion.ActivedDate,
+		promotion.ExpiredDate,
+		promotion.ID); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (r *sellerRepo) GetDetailPromotionSellerByID(ctx context.Context,
+	shopProductPromo *body.ShopProductPromo) (*body.PromotionDetailSeller, error) {
+	var promotion body.PromotionDetailSeller
+	if err := r.PSQL.QueryRowContext(ctx, GetDetailPromotionSellerByIDQuery,
+		shopProductPromo.PromotionID, shopProductPromo.ShopID).Scan(
+		&promotion.PromotionID,
+		&promotion.PromotionName,
+		&promotion.ProductID,
+		&promotion.ProductName,
+		&promotion.MinPrice,
+		&promotion.MaxPrice,
+		&promotion.ProductThumbnailURL,
+		&promotion.DiscountPercentage,
+		&promotion.DiscountFixPrice,
+		&promotion.MinProductPrice,
+		&promotion.MaxDiscountPrice,
+		&promotion.Quota,
+		&promotion.MaxQuantity,
+		&promotion.ActivedDate,
+		&promotion.ExpiredDate,
+		&promotion.CreatedAt,
+		&promotion.UpdatedAt,
+		&promotion.DeletedAt,
+	); err != nil {
+		return nil, err
+	}
+	return &promotion, nil
 }
 
 func (r *sellerRepo) UpdateOrder(ctx context.Context, tx postgre.Transaction, orderData *model.OrderModel) error {

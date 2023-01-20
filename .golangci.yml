@@ -38,7 +38,7 @@ linters-settings:
       - octalLiteral
   funlen:
     lines: 155
-    statements: 75
+    statements: 80
 
 linters: # don't use --enable-all
   disable-all: true

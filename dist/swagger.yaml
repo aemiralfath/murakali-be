@@ -859,7 +859,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/GetOrdersResponse"
+                $ref: "#/components/schemas/GetSellerOrderResponse"
 
   "/api/v1/user/transaction":
     post:
@@ -1734,23 +1734,6 @@ paths:
               schema:
                 $ref: "#/components/schemas/GetSellerCategoryResponse"
 
-  "/api/v1/seller/information":
-    get:
-      summary: Get Seller Information
-      description: >-
-        Get Seller Information Order
-      tags:
-        - Seller
-      security:
-        - BEARER: []
-      responses:
-        "200":
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/GetSellerInformationResponse"
-
   "/api/v1/seller/order":
     get:
       summary: Get Seller Order
@@ -1767,7 +1750,23 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/GetSellerOrderResponse"
+  "/api/v1/seller/information":
+    get:
+      summary: Get Seller information
+      description: >-
+        Get Seller information
+      tags:
+        - Seller
+      security:
+        - BEARER: []
 
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GetSellerInformationResponse"
   "/api/v1/seller/order/{order_id}":
     get:
       summary: Get Seller Orders
@@ -1848,6 +1847,13 @@ paths:
         - Seller
       security:
         - BEARER: []
+      parameters:
+        - in: query
+          name: promo_status
+          description: (1 All, 2 Will Come, 3 On Going, 4 HasEnded)
+          schema:
+            type: string
+            enum: [1, 2, 3, 4]
       responses:
         "200":
           description: OK
@@ -1939,6 +1945,92 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/DefaultSuccess"
+
+  "/api/v1/seller/promotion":
+    get:
+      summary: Get All Seller Promotion
+      description: >-
+        Get All Seller Promotion
+      tags:
+        - Seller
+      security:
+        - BEARER: []
+      parameters:
+        - in: query
+          name: promo_status
+          description: (1 All, 2 Will Come, 3 On Going, 4 HasEnded)
+          schema:
+            type: string
+            enum: [1, 2, 3, 4]
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GetAllPromotionSellerResponse"
+    post:
+      summary: Create Seller Promotion
+      description: >-
+        Create Seller Promotion
+      tags:
+        - Seller
+      security:
+        - BEARER: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreatePromotionSellerRequest"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CreatedRowSuccess"
+    put:
+      summary: Update Seller Promotion
+      description: >-
+        Update Seller Promotion
+      tags:
+        - Seller
+      security:
+        - BEARER: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdatePromotionSellerRequest"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DefaultSuccess"
+  "/api/v1/seller/promotion/{id}":
+    get:
+      summary: Get Promotion Detail Seller
+      description: >-
+        Get Promotion Detail Seller
+      tags:
+        - Seller
+      security:
+        - BEARER: []
+      parameters:
+        - in: path
+          name: id
+          schema:
+            type: string
+          required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GetPromotionDetailSellerResponse"
 
 components:
   schemas:
@@ -4362,73 +4454,36 @@ components:
       properties:
         message:
           type: string
-          example: "success"
         data:
-          type: object
-          properties:
-            id:
-              type: string
-            name:
-              type: string
-            total_product:
-              type: number
-            total_rating:
-              type: number
-            rating_avg:
-              type: number
-            photo_url:
-              type: string
-            created_at:
-              type : string
-            
-          example:
-            limit: 10
-            page: 1
-            total_rows: 2
-            total_pages: 1
-            rows:
-              - order_id: "466844d8-e93b-4835-81d4-a75192e74958"
-                order_status: 1
-                total_price: 250000
-                delivery_fee: 30000
-                resi_no: "1"
-                shop_id: "2829d48b-b1db-4445-937c-a5c90cc1c633"
-                shop_name: "test_shop"
-                voucher_code: "voucher_shop_1"
-                created_at: "2022-12-27T05:24:10.434065Z"
-                detail:
-                  - product_detail_id: "450ba9c5-eafc-409f99d3-99f931c9fbf2"
-                    product_id: "6f16e578-fd85-4aa3-a321-9195ee38e86c"
-                    product_title: "baju zara"
-                    product_detail_url: "yahoo.com"
-                    order_quantity: 4
-                    order_item_price: 2000
-                    order_total_price: 8000                    items:
-                      type: object
-                      properties:
-                        product_detail_id:
-                          type: string
-                        product_id:
-                          type: string
-                        product_title:
-                          type: string
-                        product_detail_url:
-                          type: string
-                        order_quantity:
-                          type: number
-                        order_item_price:
-                          type: number
-                        order_total_price:
-                          type: number
-          example:
-            id: 'e8854443-c2c7-488e-93d5-b9d93708b8a3'
-            name: 'Laptop Shop'
-            total_product: 2
-            total_rating: 4
-            rating_avg: 2
-            photo_url : "https://res.cloudinary.com/dhpao1zxi/image/upload/v1671705602/ldtzmxqeyb4nwu5p6y76.jpg"
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+              name:
+                type: string
+              total_product:
+                type: number
+              rating_avg:
+                type: number
+              total_rating:
+                type: number
+              photo_url:
+                type: string
+              created_at:
+                type: string
+      example:
+        message: success
+        data:
+          - id: d92a0995-78cd-4eba-a855-dfc096ffec5b
+            name: laptop
+            total_product: 500
+            rating_avg: 5
+            total_rating: 5
+            photo_url: "https://res.cloudinary.com/dhpao1zxi/image/upload/v1671705602/ldtzmxqeyb4nwu5p6y76.jpg"
             created_at: "2023-01-18T02:16:59.267852Z"
-            
+
     GetSellerOrderResponse:
       title: GetSellerOrderResponse
       type: object
@@ -4464,45 +4519,16 @@ components:
                   resi_no:
                     type: string
                   shop_id:
-                      type: object
-                      properties:
-                        product_detail_id:
-                          type: string
-                        product_id:
-                          type: string
-                        product_title:
-                          type: string
-                        product_detail_url:
-                          type: string
-                        order_quantity:
-                          type: number
-                        order_item_price:
-                          type: number
-                        order_total_price:
-                          type: number
-          example:
-            limit: 10
-            page: 1
-            total_rows: 2
-            total_pages: 1
-            rows:
-              - order_id: "466844d8-e93b-4835-81d4-a75192e74958"
-                order_status: 1
-                total_price: 250000
-                delivery_fee: 30000
-                resi_no: "1"
-                shop_id: "2829d48b-b1db-4445-937c-a5c90cc1c633"
-                shop_name: "test_shop"
-                voucher_code: "voucher_shop_1"
-                created_at: "2022-12-27T05:24:10.434065Z"
-                detail:
-                  - product_detail_id: "450ba9c5-eafc-409f99d3-99f931c9fbf2"
-                    product_id: "6f16e578-fd85-4aa3-a321-9195ee38e86c"
-                    product_title: "baju zara"
-                    product_detail_url: "yahoo.com"
-                    order_quantity: 4
-                    order_item_price: 2000
-                    order_total_price: 8000                    items:
+                    type: string
+                  shop_name:
+                    type: string
+                  voucher_code:
+                    type: string
+                  created_at:
+                    type: string
+                  detail:
+                    type: array
+                    items:
                       type: object
                       properties:
                         product_detail_id:
@@ -4963,6 +4989,126 @@ components:
           deleted_at:
             Time: "0001-01-01T00:00:00Z"
             Valid: false
+
+    GetAllPromotionSellerResponse:
+      title: UpdateVoucherSellerRequest
+      type: object
+      description: Update voucher seller request data model.
+      properties:
+      example:
+        message: success
+        data:
+          limit: 10
+          page: 1
+          total_rows: 1
+          total_pages: 1
+          rows:
+            - id: a8f690aa-8838-4a2d-ba60-cf25f9d943cf
+              promotion_name: promo murah
+              product_id: 53874e1e-3c1e-4f46-84fd-2863efb15bcb
+              product_name: PAxYvNY
+              product_thumbnail_url: https://cf.shopee.co.id/file/76a0969b7d64065bc13493bf55df1849_tn
+              discount_percentage: 25
+              discount_fix_price: 0
+              min_product_price: 50000
+              max_discount_price: 30000
+              quota: 10
+              max_quantity: 1
+              actived_date: "2022-12-21T07:00:00Z"
+              expired_date: "2023-02-01T07:00:00Z"
+              created_at: "2023-01-16T12:36:27.068087Z"
+              updated_at:
+                Time: "0001-01-01T00:00:00Z"
+                Valid: false
+              deleted_at:
+                Time: "0001-01-01T00:00:00Z"
+                Valid: false
+
+    CreatePromotionSellerRequest:
+      title: CreatePromotionSellerRequest
+      type: object
+      description: Create promotion seller request data model.
+      properties:
+      example:
+        name: dih promo
+        shop_id: e8854443-c2c7-488e-93d5-b9d93708b8a3
+        quota: 5
+        max_quantity: 2
+        actived_date: 22-12-2022 21:43:56
+        expired_date: 22-02-2023 21:43:56
+        discount_percentage: 19
+        discount_fix_price: 0
+        min_product_price: 5000
+        max_discount_price: 10000
+        product_ids:
+          - b73be319-6598-40ef-a0b3-f5a238a66940
+          - 8a185d4b-fd59-4c7b-9b1a-1b626bd91af0
+
+    UpdatePromotionSellerRequest:
+      title: CreatePromotionSellerRequest
+      type: object
+      description: Create promotion seller request data model.
+      properties:
+      example:
+        promotion_id: 3567d424-ea1f-40bc-b568-feb2bd6cd6e5
+        product_id: e883ec05-504e-4207-89f4-bbc9bb7db8fa
+        name: dih promo
+        max_quantity: 2
+        actived_date: 21-12-2022 21:43:56
+        expired_date: 22-02-2023 21:43:56
+        discount_percentage: 19
+        discount_fix_price: 0
+        min_product_price: 5000
+        max_discount_price: 10000
+
+    GetPromotionDetailSellerResponse:
+      title: CreatePromotionSellerRequest
+      type: object
+      description: Create promotion seller request data model.
+      properties:
+      example:
+        message: success
+        data:
+          promotion_id: 3567d424-ea1f-40bc-b568-feb2bd6cd6e5
+          promotion_name: dih promo
+          product_id: e883ec05-504e-4207-89f4-bbc9bb7db8fa
+          product_name: RTVjOyk
+          min_price: 625000
+          max_price: 625000
+          product_thumbnail_url: https://cf.shopee.co.id/file/76a0969b7d64065bc13493bf55df1849_tn
+          discount_percentage: 19
+          discount_fix_price: 0
+          min_product_price: 5000
+          max_discount_price: 10000
+          quota: 5
+          max_quantity: 2
+          product_sub_min_price: 615000
+          product_sub_max_price: 615000
+          product_min_discount_price: 10000
+          product_max_discount_price: 10000
+          actived_date: "2022-12-22T21:43:56Z"
+          expired_date: "2023-01-22T21:43:56Z"
+          created_at: "2023-01-18T08:01:53.334458Z"
+          updated_at:
+            Time: "2023-01-18T10:19:03.927297Z"
+            Valid: true
+          deleted_at:
+            Time: "0001-01-01T00:00:00Z"
+            Valid: false
+
+    CreatedRowSuccess:
+      title: CheckUniqueTrueSuccess
+      type: object
+      description: Check Unique True Success.
+      properties:
+        message:
+          type: string
+          example: success
+          description: Success message from server.
+        data:
+          type: number
+          example: 2
+          description: number of created row effected
 
     CheckUniqueTrueSuccess:
       title: CheckUniqueTrueSuccess

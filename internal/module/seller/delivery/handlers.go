@@ -377,7 +377,22 @@ func (h *sellerHandlers) GetAllVoucherSeller(c *gin.Context) {
 	pgn := &pagination.Pagination{}
 	h.ValidateQueryPagination(c, pgn)
 
-	shopVouchers, err := h.sellerUC.GetAllVoucherSeller(c, userID.(string), pgn)
+	voucherStatusID := c.DefaultQuery("voucher_status", "")
+	switch voucherStatusID {
+	case "1":
+		voucherStatusID = "1"
+	case "2":
+		voucherStatusID = "2"
+	case "3":
+		voucherStatusID = "3"
+	case "4":
+		voucherStatusID = "4"
+	default:
+		voucherStatusID = "1"
+	}
+	h.ValidateQueryPagination(c, pgn)
+
+	shopVouchers, err := h.sellerUC.GetAllVoucherSeller(c, userID.(string), voucherStatusID, pgn)
 	if err != nil {
 		var e *httperror.Error
 		if !errors.As(err, &e) {
@@ -579,4 +594,146 @@ func (h *sellerHandlers) ValidateQueryPagination(c *gin.Context, pgn *pagination
 
 	pgn.Limit = limitFilter
 	pgn.Page = pageFilter
+}
+
+func (h *sellerHandlers) GetAllPromotionSeller(c *gin.Context) {
+	userID, exist := c.Get("userID")
+	if !exist {
+		response.ErrorResponse(c.Writer, response.UnauthorizedMessage, http.StatusUnauthorized)
+		return
+	}
+
+	pgn := &pagination.Pagination{}
+	promoStatusID := c.DefaultQuery("promo_status", "")
+	switch promoStatusID {
+	case "1":
+		promoStatusID = "1"
+	case "2":
+		promoStatusID = "2"
+	case "3":
+		promoStatusID = "3"
+	case "4":
+		promoStatusID = "4"
+
+	default:
+		promoStatusID = "1"
+	}
+	h.ValidateQueryPagination(c, pgn)
+
+	promotionSeller, err := h.sellerUC.GetAllPromotionSeller(c, userID.(string), promoStatusID, pgn)
+	if err != nil {
+		var e *httperror.Error
+		if !errors.As(err, &e) {
+			h.logger.Errorf("HandlerSeller, Error: %s", err)
+			response.ErrorResponse(c.Writer, response.InternalServerErrorMessage, http.StatusInternalServerError)
+			return
+		}
+
+		response.ErrorResponse(c.Writer, e.Err.Error(), e.Status)
+		return
+	}
+
+	response.SuccessResponse(c.Writer, promotionSeller, http.StatusOK)
+}
+
+func (h *sellerHandlers) CreatePromotionSeller(c *gin.Context) {
+	userID, exist := c.Get("userID")
+	if !exist {
+		response.ErrorResponse(c.Writer, response.UnauthorizedMessage, http.StatusUnauthorized)
+		return
+	}
+
+	var requestBody body.CreatePromotionRequest
+	if err := c.ShouldBind(&requestBody); err != nil {
+		response.ErrorResponse(c.Writer, response.BadRequestMessage, http.StatusBadRequest)
+		return
+	}
+
+	invalidFields, err := requestBody.Validate()
+	if err != nil {
+		response.ErrorResponseData(c.Writer, invalidFields, response.UnprocessableEntityMessage, http.StatusUnprocessableEntity)
+		return
+	}
+
+	rowEffected, err := h.sellerUC.CreatePromotionSeller(c, userID.(string), requestBody)
+	if err != nil {
+		var e *httperror.Error
+		if !errors.As(err, &e) {
+			h.logger.Errorf("HandlerSeller, Error: %s", err)
+			response.ErrorResponse(c.Writer, response.InternalServerErrorMessage, http.StatusInternalServerError)
+			return
+		}
+
+		response.ErrorResponse(c.Writer, e.Err.Error(), e.Status)
+		return
+	}
+
+	response.SuccessResponse(c.Writer, rowEffected, http.StatusOK)
+}
+func (h *sellerHandlers) UpdatePromotionSeller(c *gin.Context) {
+	userID, exist := c.Get("userID")
+	if !exist {
+		response.ErrorResponse(c.Writer, response.UnauthorizedMessage, http.StatusUnauthorized)
+		return
+	}
+
+	var requestBody body.UpdatePromotionRequest
+	if err := c.ShouldBind(&requestBody); err != nil {
+		response.ErrorResponse(c.Writer, response.BadRequestMessage, http.StatusBadRequest)
+		return
+	}
+
+	invalidFields, err := requestBody.Validate()
+	if err != nil {
+		response.ErrorResponseData(c.Writer, invalidFields, response.UnprocessableEntityMessage, http.StatusUnprocessableEntity)
+		return
+	}
+
+	if err := h.sellerUC.UpdatePromotionSeller(c, userID.(string), requestBody); err != nil {
+		var e *httperror.Error
+		if !errors.As(err, &e) {
+			h.logger.Errorf("HandlerSeller, Error: %s", err)
+			response.ErrorResponse(c.Writer, response.InternalServerErrorMessage, http.StatusInternalServerError)
+			return
+		}
+
+		response.ErrorResponse(c.Writer, e.Err.Error(), e.Status)
+		return
+	}
+
+	response.SuccessResponse(c.Writer, nil, http.StatusOK)
+}
+
+func (h *sellerHandlers) GetDetailPromotionSellerByID(c *gin.Context) {
+	userID, exist := c.Get("userID")
+	if !exist {
+		response.ErrorResponse(c.Writer, response.UnauthorizedMessage, http.StatusUnauthorized)
+		return
+	}
+
+	id := c.Param("id")
+	promotionShopID, err := uuid.Parse(id)
+	if err != nil {
+		response.ErrorResponse(c.Writer, response.BadRequestMessage, http.StatusBadRequest)
+		return
+	}
+	shopProductPromo := &body.ShopProductPromo{
+		UserID:      userID.(string),
+		ShopID:      "",
+		PromotionID: promotionShopID.String(),
+	}
+	promotionShop, err := h.sellerUC.GetDetailPromotionSellerByID(c, shopProductPromo)
+	if err != nil {
+		var e *httperror.Error
+		if !errors.As(err, &e) {
+			h.logger.Errorf("HandlerSeller, Error: %s", err)
+			response.ErrorResponse(c.Writer, response.InternalServerErrorMessage, http.StatusInternalServerError)
+			return
+		}
+
+		response.ErrorResponse(c.Writer, e.Err.Error(), e.Status)
+		return
+	}
+
+	response.SuccessResponse(c.Writer, promotionShop, http.StatusOK)
 }

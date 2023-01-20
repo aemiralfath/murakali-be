@@ -719,7 +719,12 @@ func (r *productRepo) GetTotalAllReviewProduct(ctx context.Context, productID st
 }
 
 func (r *productRepo) GetTotalReviewRatingByProductID(ctx context.Context, productID string) ([]*body.RatingProduct, error) {
-	reviewRating := make([]*body.RatingProduct, 0)
+	reviewRating := make([]*body.RatingProduct, 5)
+	reviewRating[0] = &body.RatingProduct{Rating: 5, Count: 0}
+	reviewRating[1] = &body.RatingProduct{Rating: 4, Count: 0}
+	reviewRating[2] = &body.RatingProduct{Rating: 3, Count: 0}
+	reviewRating[3] = &body.RatingProduct{Rating: 2, Count: 0}
+	reviewRating[4] = &body.RatingProduct{Rating: 1, Count: 0}
 
 	res, err := r.PSQL.QueryContext(
 		ctx, GetTotalReviewRatingByProductIDQuery,
@@ -740,7 +745,7 @@ func (r *productRepo) GetTotalReviewRatingByProductID(ctx context.Context, produ
 			return nil, err
 		}
 
-		reviewRating = append(reviewRating, &reviewRatingData)
+		reviewRating[reviewRatingData.Rating-1] = &reviewRatingData
 	}
 
 	if res.Err() != nil {
