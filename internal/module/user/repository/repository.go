@@ -402,7 +402,7 @@ func (r *userRepo) GetOrderDetailByTransactionID(ctx context.Context, Transactio
 			&order.VoucherCode,
 			&order.CreatedAt,
 		); errScan != nil {
-			return nil, err
+			return nil, errScan
 		}
 
 		orderDetail := make([]*model.OrderDetail, 0)
@@ -448,6 +448,10 @@ func (r *userRepo) GetOrderDetailByTransactionID(ctx context.Context, Transactio
 
 			detail.Variant = variant
 			orderDetail = append(orderDetail, &detail)
+		}
+
+		if res2.Err() != nil {
+			return nil, res2.Err()
 		}
 
 		order.Detail = orderDetail
@@ -686,7 +690,7 @@ func (r *userRepo) GetWalletHistoryByWalletID(ctx context.Context, pgn *paginati
 func (r *userRepo) GetWalletHistoryByID(ctx context.Context, id string) (*model.WalletHistory, error) {
 	var walletHistory model.WalletHistory
 	if err := r.PSQL.QueryRowContext(ctx, GetWalletHistoryByIDQuery, id).
-		Scan(&walletHistory.ID, &walletHistory.From, &walletHistory.To,
+		Scan(&walletHistory.ID, &walletHistory.TransactionID, &walletHistory.WalletID, &walletHistory.From, &walletHistory.To,
 			&walletHistory.Amount, &walletHistory.Description, &walletHistory.CreatedAt); err != nil {
 		return nil, err
 	}
