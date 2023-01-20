@@ -382,7 +382,7 @@ func (r *userRepo) GetOrders(ctx context.Context, userID, orderStatusID string, 
 func (r *userRepo) GetOrderDetailByTransactionID(ctx context.Context, TransactionID string) ([]*model.Order, error) {
 	orders := make([]*model.Order, 0)
 
-	res, err := r.PSQL.QueryContext(ctx, GetOrderByTransactionID, TransactionID)
+	res, err := r.PSQL.QueryContext(ctx, GetOrdersByTransactionIDQuery, TransactionID)
 
 	if err != nil {
 		return nil, err
