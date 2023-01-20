@@ -31,10 +31,37 @@ const (
     	"address_detail", "zip_code", "is_default", "is_shop_default", "created_at", "updated_at" 
 	FROM "address" WHERE "user_id" = $1 AND "name" ILIKE $2 AND "deleted_at" IS NULL ORDER BY $3 LIMIT $4 OFFSET $5`
 
+	GetTotalOrderQuery = `SELECT count(id) FROM "order" WHERE "user_id" = $1 and "order_status_id"::text LIKE $2`
+
 	GetOrdersQuery = `SELECT o.id,o.order_status_id,o.total_price,o.delivery_fee,o.resi_no,s.id,s.name,v.code,o.created_at
 	from "order" o
 	join "shop" s on s.id = o.shop_id
-	join "voucher" v on v.id = o.voucher_shop_id WHERE o.user_id = $1 ORDER BY o.created_at asc LIMIT $2 OFFSET $3
+	left join "voucher" v on v.id = o.voucher_shop_id 
+	WHERE o.user_id = $1 
+	and "order_status_id"::text LIKE $2 
+	ORDER BY o.created_at asc LIMIT $3 OFFSET $4
+	`
+
+	GetOrderDetailProductVariant = `
+		SELECT "vd"."name" as "name", "vd"."type" as "type" 
+		FROM "variant_detail" as "vd"
+		INNER JOIN "variant" as "v" ON "v"."variant_detail_id" = "vd"."id"
+		INNER JOIN "product_detail" as "pd" ON "pd"."id" = "v"."product_detail_id"
+		WHERE "pd"."id" = $1 AND "pd"."deleted_at" IS NULL
+	`
+
+	GetTotalTransactionByUserIDQuery = `SELECT count(t.id) FROM "transaction" t, "order" o
+	WHERE t.id = o.transaction_id
+	AND o.user_id = $1
+	GROUP BY o.user_id`
+
+	GetTransactionByUserIDQuery = `
+	SELECT t.id,t.voucher_marketplace_id,t.wallet_id,t.card_number,t.invoice,t.total_price,t.paid_at,t.canceled_at,t.expired_at
+	from "transaction" t, "order" o
+	WHERE t.id = o.transaction_id
+	AND o.user_id = $1
+	GROUP BY t.id
+	ORDER BY t.expired_at DESC LIMIT $2 OFFSET $3
 	`
 
 	GetOrderDetailQuery = `SELECT pd.id,pd.product_id,p.title,ph.url,oi.quantity,oi.item_price,oi.total_price
@@ -52,7 +79,6 @@ const (
 		"sub_district" = $7, "address_detail" = $8, "zip_code" = $9, "is_default" = $10, "is_shop_default" = $11, "updated_at" = $12
 	WHERE "id" = $13`
 
-	GetTotalOrderQuery             = `SELECT count(id) FROM "order" WHERE "user_id" = $1`
 	GetSealabsPayByIdQuery         = `SELECT * from sealabs_pay where user_id = $1 and deleted_at is null`
 	CreateSealabsPayQuery          = `INSERT INTO "sealabs_pay" (card_number, user_id, name, is_default,active_date) VALUES ($1, $2, $3, $4, $5)`
 	CheckDefaultSealabsPayQuery    = `SELECT card_number from "sealabs_pay" where user_id = $1 and is_default is true and deleted_at is null`

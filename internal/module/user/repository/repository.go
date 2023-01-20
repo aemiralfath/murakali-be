@@ -148,9 +148,21 @@ func (r *userRepo) GetTotalAddressDefault(ctx context.Context, userID, name stri
 	return total, nil
 }
 
-func (r *userRepo) GetTotalOrder(ctx context.Context, userID string) (int64, error) {
+func (r *userRepo) GetTotalOrder(ctx context.Context, userID, orderStatusID string) (int64, error) {
 	var total int64
-	if err := r.PSQL.QueryRowContext(ctx, GetTotalOrderQuery, userID).Scan(&total); err != nil {
+	if err := r.PSQL.QueryRowContext(ctx, GetTotalOrderQuery, userID, fmt.Sprintf("%%%s%%", orderStatusID)).Scan(&total); err != nil {
+		return 0, err
+	}
+
+	return total, nil
+}
+
+func (r *userRepo) GetTotalTransactionByUserID(ctx context.Context, userID string) (int64, error) {
+	var total int64
+	if err := r.PSQL.QueryRowContext(ctx, GetTotalTransactionByUserIDQuery, userID).Scan(&total); err != nil {
+		if err == sql.ErrNoRows {
+			return 0, nil
+		}
 		return 0, err
 	}
 
@@ -302,11 +314,13 @@ func (r *userRepo) GetAllAddresses(ctx context.Context, userID, name string, pgn
 	return addresses, nil
 }
 
-func (r *userRepo) GetOrders(ctx context.Context, userID string, pgn *pagination.Pagination) ([]*model.Order, error) {
+func (r *userRepo) GetOrders(ctx context.Context, userID, orderStatusID string, pgn *pagination.Pagination) ([]*model.Order, error) {
 	orders := make([]*model.Order, 0)
+
 	res, err := r.PSQL.QueryContext(
 		ctx, GetOrdersQuery,
 		userID,
+		fmt.Sprintf("%%%s%%", orderStatusID),
 		pgn.GetLimit(),
 		pgn.GetOffset())
 
@@ -357,14 +371,131 @@ func (r *userRepo) GetOrders(ctx context.Context, userID string, pgn *pagination
 		}
 
 		order.Detail = orderDetail
-
 		orders = append(orders, &order)
 	}
-
 	if res.Err() != nil {
 		return nil, err
 	}
 	return orders, nil
+}
+
+func (r *userRepo) GetOrderDetailByTransactionID(ctx context.Context, TransactionID string) ([]*model.Order, error) {
+	orders := make([]*model.Order, 0)
+
+	res, err := r.PSQL.QueryContext(ctx, GetOrderByTransactionID, TransactionID)
+
+	if err != nil {
+		return nil, err
+	}
+	defer res.Close()
+
+	for res.Next() {
+		var order model.Order
+		if errScan := res.Scan(
+			&order.OrderID,
+			&order.OrderStatus,
+			&order.TotalPrice,
+			&order.DeliveryFee,
+			&order.ResiNumber,
+			&order.ShopID,
+			&order.ShopName,
+			&order.VoucherCode,
+			&order.CreatedAt,
+		); errScan != nil {
+			return nil, err
+		}
+
+		orderDetail := make([]*model.OrderDetail, 0)
+
+		res2, err2 := r.PSQL.QueryContext(
+			ctx, GetOrderDetailQuery, order.OrderID)
+
+		if err2 != nil {
+			return nil, err2
+		}
+
+		for res2.Next() {
+			var detail model.OrderDetail
+			if errScan := res2.Scan(
+				&detail.ProductDetailID,
+				&detail.ProductID,
+				&detail.ProductTitle,
+				&detail.ProductDetailURL,
+				&detail.OrderQuantity,
+				&detail.ItemPrice,
+				&detail.TotalPrice,
+			); errScan != nil {
+				return nil, err
+			}
+			variant := make(map[string]string, 0)
+			variantResult, errVariant := r.PSQL.QueryContext(ctx, GetOrderDetailProductVariant, detail.ProductDetailID)
+			if errVariant != nil {
+				if errVariant != sql.ErrNoRows {
+					return nil, err
+				}
+			}
+			for variantResult.Next() {
+				var varName string
+				var varType string
+				if errScanVariant := variantResult.Scan(
+					&varName,
+					&varType,
+				); errScanVariant != nil {
+					return nil, errScanVariant
+				}
+				variant[varName] = varType
+			}
+
+			detail.Variant = variant
+			orderDetail = append(orderDetail, &detail)
+		}
+
+		order.Detail = orderDetail
+		orders = append(orders, &order)
+	}
+	if res.Err() != nil {
+		return nil, err
+	}
+	return orders, nil
+}
+
+func (r *userRepo) GetTransactionByUserID(ctx context.Context, userID string, pgn *pagination.Pagination) ([]*model.Transaction, error) {
+	transactions := make([]*model.Transaction, 0)
+
+	res, err := r.PSQL.QueryContext(
+		ctx, GetTransactionByUserIDQuery,
+		userID,
+		pgn.GetLimit(),
+		pgn.GetOffset())
+
+	if err != nil {
+		return nil, err
+	}
+	defer res.Close()
+
+	for res.Next() {
+		var transaction model.Transaction
+		if errScan := res.Scan(
+			&transaction.ID,
+			&transaction.VoucherMarketplaceID,
+			&transaction.WalletID,
+			&transaction.CardNumber,
+			&transaction.Invoice,
+			&transaction.TotalPrice,
+			&transaction.PaidAt,
+			&transaction.CanceledAt,
+			&transaction.ExpiredAt); errScan != nil {
+			return nil, err
+		}
+
+		transactions = append(transactions, &transaction)
+	}
+
+	if res.Err() != nil {
+		return nil, res.Err()
+	}
+
+	return transactions, nil
 }
 
 func (r *userRepo) GetTransactionByID(ctx context.Context, transactionID string) (*model.Transaction, error) {
