@@ -143,7 +143,9 @@ CREATE TABLE IF NOT EXISTS "order_item"
     "product_detail_id" UUID,
     "quantity" int,
     "item_price" float,
-    "total_price" float
+    "total_price" float,
+    "note" varchar NOT NULL DEFAULT '',
+    "is_review" boolean NOT NULL DEFAULT FALSE
     );
 
 CREATE TABLE IF NOT EXISTS "order"
@@ -160,6 +162,11 @@ CREATE TABLE IF NOT EXISTS "order"
     "total_price" float,
     "delivery_fee" float,
     "resi_no" varchar,
+    "buyer_address" varchar NOT NULL DEFAULT '',
+    "shop_address" varchar NOT NULL DEFAULT '',
+    "cancel_notes" varchar NOT NULL DEFAULT '',
+    "is_withdraw" boolean NOT NULL DEFAULT FALSE,
+    "is_refund" boolean NOT NULL DEFAULT FALSE,
     "created_at" timestamptz NOT NULL DEFAULT
 (
     NOW
@@ -509,6 +516,40 @@ CREATE TABLE IF NOT EXISTS "banner"
     "is_active" boolean DEFAULT false
     );
 
+CREATE TABLE IF NOT EXISTS "refund"
+(
+    "id" UUID PRIMARY KEY DEFAULT uuid_generate_v4
+(
+),
+    "order_id" UUID,
+    "is_seller_refund" boolean DEFAULT false,
+    "is_buyer_refund" boolean DEFAULT false,
+    "reason" varchar NOT NULL DEFAULT '',
+    "image" varchar NOT NULL DEFAULT '',
+    "accepted_at" timestamptz,
+    "rejected_at" timestamptz,
+    "refunded_at" timestamptz
+    );
+
+CREATE TABLE IF NOT EXISTS "refund_thread"
+(
+    "id" UUID PRIMARY KEY DEFAULT uuid_generate_v4
+(
+),
+    "refund_id" UUID,
+    "user_id" UUID,
+    "is_seller" boolean DEFAULT false,
+    "is_buyer" boolean DEFAULT false,
+    "text" varchar NOT NULL DEFAULT '',
+    "created_at" timestamptz
+    );
+
+CREATE INDEX ON "refund_thread" ("refund_id");
+
+CREATE INDEX ON "refund_thread" ("user_id");
+
+CREATE INDEX ON "refund" ("order_id");
+
 CREATE INDEX ON "user" ("email");
 
 CREATE INDEX ON "user" ("phone_no");
@@ -645,6 +686,15 @@ ALTER TABLE "cart_item"
 
 ALTER TABLE "order_item"
     ADD FOREIGN KEY ("order_id") REFERENCES "order" ("id");
+
+ALTER TABLE "refund"
+    ADD FOREIGN KEY ("order_id") REFERENCES "order" ("id");
+
+ALTER TABLE "refund_thread"
+    ADD FOREIGN KEY ("refund_id") REFERENCES "refund" ("id");
+
+ALTER TABLE "refund_thread"
+    ADD FOREIGN KEY ("user_id") REFERENCES "user" ("id");
 
 ALTER TABLE "order_item"
     ADD FOREIGN KEY ("product_detail_id") REFERENCES "product_detail" ("id");
