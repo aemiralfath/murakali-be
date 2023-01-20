@@ -245,6 +245,40 @@ func (u *userUC) GetOrder(ctx context.Context, userID, orderStatusID string, pgn
 	return pgn, nil
 }
 
+func (u *userUC) GetTransactionDetailByID(ctx context.Context, transactionID, userID string) (*body.TransactionDetailResponse, error) {
+
+	var transactionDetail *body.TransactionDetailResponse
+	transaction, err := u.userRepo.GetTransactionByID(ctx, transactionID)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, httperror.New(http.StatusNotFound, response.TransactionNotFound)
+		}
+		return nil, err
+	}
+
+	transactionDetail = &body.TransactionDetailResponse{
+		ID:                   transaction.ID,
+		VoucherMarketplaceID: transaction.VoucherMarketplaceID,
+		WalletID:             transaction.WalletID,
+		CardNumber:           transaction.CardNumber,
+		Invoice:              transaction.Invoice,
+		TotalPrice:           transaction.TotalPrice,
+		PaidAt:               transaction.PaidAt,
+		CanceledAt:           transaction.CanceledAt,
+		ExpiredAt:            transaction.ExpiredAt,
+		Orders:               []*model.Order{},
+	}
+
+	orders, err := u.userRepo.GetOrdersByTransactionID(ctx, transactionID, userID)
+	if err != nil {
+		return nil, err
+	}
+
+	transactionDetail.Orders = orders
+
+	return transactionDetail, nil
+}
+
 func (u *userUC) GetAddressByID(ctx context.Context, userID, addressID string) (*model.Address, error) {
 	userModel, err := u.userRepo.GetUserByID(ctx, userID)
 	if err != nil {
@@ -1216,6 +1250,57 @@ func (u *userUC) GetWalletHistory(ctx context.Context, userID string, pgn *pagin
 	pgn.Rows = walletHistory
 
 	return pgn, nil
+}
+
+func (u *userUC) GetDetailWalletHistory(ctx context.Context, walletHistoryID, userID string) (*body.DetailHistoryWalletResponse, error) {
+
+	walletHistory, err := u.userRepo.GetWalletHistoryByID(ctx, walletHistoryID)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, httperror.New(http.StatusBadRequest, response.WalletHistoryNotFound)
+		}
+		return nil, err
+	}
+
+	response := &body.DetailHistoryWalletResponse{
+		ID:          walletHistory.ID.String(),
+		From:        walletHistory.From,
+		To:          walletHistory.To,
+		Description: walletHistory.Description,
+		Amount:      walletHistory.Amount,
+		CreatedAt:   walletHistory.CreatedAt,
+	}
+
+	if walletHistory.WalletID.String() == walletHistory.From {
+		var transactionDetail *body.TransactionDetailResponse
+		transaction, err := u.userRepo.GetTransactionByID(ctx, walletHistory.TransactionID.String())
+		if err != nil {
+			return nil, err
+		}
+
+		transactionDetail = &body.TransactionDetailResponse{
+			ID:                   transaction.ID,
+			VoucherMarketplaceID: transaction.VoucherMarketplaceID,
+			WalletID:             transaction.WalletID,
+			CardNumber:           transaction.CardNumber,
+			Invoice:              transaction.Invoice,
+			TotalPrice:           transaction.TotalPrice,
+			PaidAt:               transaction.PaidAt,
+			CanceledAt:           transaction.CanceledAt,
+			ExpiredAt:            transaction.ExpiredAt,
+			Orders:               []*model.Order{},
+		}
+
+		orders, err := u.userRepo.GetOrdersByTransactionID(ctx, walletHistory.TransactionID.String(), userID)
+		if err != nil {
+			return nil, err
+		}
+
+		transactionDetail.Orders = orders
+		response.Transaction = transactionDetail
+	}
+
+	return response, nil
 }
 
 func (u *userUC) WalletStepUp(ctx context.Context, userID string, requestBody body.WalletStepUpRequest) (string, error) {

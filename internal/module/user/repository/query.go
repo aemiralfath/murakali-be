@@ -64,6 +64,12 @@ const (
 	ORDER BY t.expired_at DESC LIMIT $2 OFFSET $3
 	`
 
+	GetOrdersByTransactionIDQuery = `SELECT o.id,o.order_status_id,o.total_price,o.delivery_fee,o.resi_no,s.id,s.name,v.code,o.created_at
+	from "order" o
+	join "shop" s on s.id = o.shop_id
+	left join "voucher" v on v.id = o.voucher_shop_id WHERE o.transaction_id = $1
+	`
+
 	GetOrderDetailQuery = `SELECT pd.id,pd.product_id,p.title,ph.url,oi.quantity,oi.item_price,oi.total_price
 	from  "product_detail" pd 
 	join "photo" ph on pd.id = ph.product_detail_id join "order_item" oi on pd.id = oi.product_detail_id 
@@ -107,6 +113,9 @@ const (
 	GetWalletHistoryUserQuery = `SELECT "id", "from", "to", "amount", "description", "created_at" 
 	FROM "wallet_history" 
 	WHERE "wallet_id" = $1`
+	GetWalletHistoryByIDQuery = `SELECT "id", "transaction_id", "wallet_id", "from", "to", "amount", "description", "created_at" 
+	FROM "wallet_history" 
+	WHERE "id" = $1`
 	GetTotalWalletHistoryUserQuery = `SELECT count(id) FROM "wallet_history" WHERE "wallet_id" = $1;`
 	GetSealabsPayUserQuery         = `SELECT "card_number", "user_id", "name", "is_default", "active_date" FROM "sealabs_pay" WHERE "user_id" = $1 AND "card_number" = $2 AND "deleted_at" IS NULL;`
 	GetVoucherMarketplaceByIDQuery = `SELECT "id", "shop_id", "code", "quota", "actived_date", "expired_date", "discount_percentage", "discount_fix_price", "min_product_price", "max_discount_price" FROM "voucher"
@@ -134,7 +143,8 @@ const (
 	UpdateOrderByID               = `UPDATE "order" SET "order_status_id" = $1 WHERE "id" = $2`
 	GetOrderByTransactionID       = `SELECT 
 		"id", "transaction_id", "shop_id", "user_id", "courier_id", "voucher_shop_id", "order_status_id", "total_price", "delivery_fee", "resi_no", "created_at", "arrived_at" 
-	FROM "order" WHERE "transaction_id" = $1`
+	FROM "order" WHERE "transaction_id" = $1
+	AND "user_id" = $2`
 	CheckUserSealabsPayQuery    = `SELECT count(1) from sealabs_pay where user_id = $1 and deleted_at is null`
 	CheckDeletedSealabsPayQuery = `SELECT count(1) from sealabs_pay where card_number = $1 and deleted_at is not null`
 	UpdateUserSealabsPayQuery   = `UPDATE "sealabs_pay" set user_id = $1, name = $2 ,updated_at = now(),deleted_at = null,is_default = true where card_number = $3`
