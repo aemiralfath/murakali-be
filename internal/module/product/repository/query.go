@@ -124,7 +124,7 @@ const (
 	`
 
 	OrderBySomething = ` 
-	ORDER BY %s LIMIT %d OFFSET %d`
+	ORDER BY %s, "p"."updated_at" DESC  LIMIT %d OFFSET %d`
 
 	WhereShopIds = ` 
 		AND "s"."id" = '%s'
