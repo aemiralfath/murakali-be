@@ -49,8 +49,8 @@ type Repository interface {
 	GetOrderItemsByOrderID(ctx context.Context, tx postgre.Transaction, orderID string) ([]*model.OrderItem, error)
 	GetProductDetailByID(ctx context.Context, tx postgre.Transaction, productDetailID string) (*model.ProductDetail, error)
 	UpdateProductDetailStock(ctx context.Context, tx postgre.Transaction, productDetailData *model.ProductDetail) error
-	GetAllPromotionSeller(ctx context.Context, shopID string) ([]*body.PromotionSellerResponse, error)
-	GetTotalPromotionSeller(ctx context.Context, shopID string) (int64, error)
+	GetAllPromotionSeller(ctx context.Context, shopID string, promoStatusID string) ([]*body.PromotionSellerResponse, error)
+	GetTotalPromotionSeller(ctx context.Context, shopID string, promoStatusID string) (int64, error)
 	GetProductPromotion(ctx context.Context, shopProduct *body.ShopProduct) (*body.ProductPromotion, error)
 	CreatePromotionSeller(ctx context.Context, tx postgre.Transaction, promotionShop *model.Promotion) error
 	GetPromotionSellerDetailByID(ctx context.Context, shopProductPromo *body.ShopProductPromo) (*body.PromotionSellerResponse, error)

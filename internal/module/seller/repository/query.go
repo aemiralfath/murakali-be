@@ -160,6 +160,10 @@ const (
 	WHERE "s"."id" = $1
 	`
 
+	FilterWillComeQuery = ` AND ("promo"."actived_date" > now() AND "promo"."expired_date" > now())`
+	FilterOngoingQuery  = ` AND ("promo"."actived_date" < now() AND "promo"."expired_date" > now())`
+	FilterHasEndedQuery = ` AND ("promo"."actived_date" < now() AND "promo"."expired_date" < now())`
+
 	GetProductPromotionQuery = `
 	SELECT "p"."id", "promo"."id"
 	FROM "product" as "p"

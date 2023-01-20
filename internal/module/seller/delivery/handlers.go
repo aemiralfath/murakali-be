@@ -566,9 +566,23 @@ func (h *sellerHandlers) GetAllPromotionSeller(c *gin.Context) {
 	}
 
 	pgn := &pagination.Pagination{}
+	promoStatusID := c.DefaultQuery("promo_status", "")
+	switch promoStatusID {
+	case "1":
+		promoStatusID = "1"
+	case "2":
+		promoStatusID = "2"
+	case "3":
+		promoStatusID = "3"
+	case "4":
+		promoStatusID = "4"
+
+	default:
+		promoStatusID = "1"
+	}
 	h.ValidateQueryPagination(c, pgn)
 
-	promotionSeller, err := h.sellerUC.GetAllPromotionSeller(c, userID.(string), pgn)
+	promotionSeller, err := h.sellerUC.GetAllPromotionSeller(c, userID.(string), promoStatusID, pgn)
 	if err != nil {
 		var e *httperror.Error
 		if !errors.As(err, &e) {

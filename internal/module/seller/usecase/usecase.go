@@ -556,7 +556,7 @@ func (u *sellerUC) DeleteVoucherSeller(ctx context.Context, voucherIDShopID *bod
 	return nil
 }
 
-func (u *sellerUC) GetAllPromotionSeller(ctx context.Context, userID string, pgn *pagination.Pagination) (*pagination.Pagination, error) {
+func (u *sellerUC) GetAllPromotionSeller(ctx context.Context, userID string, promoStatusID string, pgn *pagination.Pagination) (*pagination.Pagination, error) {
 	shopID, err := u.sellerRepo.GetShopIDByUserID(ctx, userID)
 	if err != nil {
 		if err == sql.ErrNoRows {
@@ -565,7 +565,7 @@ func (u *sellerUC) GetAllPromotionSeller(ctx context.Context, userID string, pgn
 		return nil, err
 	}
 
-	totalRows, err := u.sellerRepo.GetTotalPromotionSeller(ctx, shopID)
+	totalRows, err := u.sellerRepo.GetTotalPromotionSeller(ctx, shopID, promoStatusID)
 	if err != nil {
 		return nil, err
 	}
@@ -574,7 +574,7 @@ func (u *sellerUC) GetAllPromotionSeller(ctx context.Context, userID string, pgn
 	pgn.TotalRows = totalRows
 	pgn.TotalPages = totalPages
 
-	ShopVouchers, err := u.sellerRepo.GetAllPromotionSeller(ctx, shopID)
+	ShopVouchers, err := u.sellerRepo.GetAllPromotionSeller(ctx, shopID, promoStatusID)
 	if err != nil {
 		return nil, err
 	}
