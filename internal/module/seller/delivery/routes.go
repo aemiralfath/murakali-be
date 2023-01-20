@@ -10,6 +10,8 @@ import (
 func MapSellerRoutes(sellerGroup *gin.RouterGroup, h seller.Handlers, mw *middleware.MWManager) {
 	sellerGroup.GET("/:seller_id", h.GetSellerBySellerID)
 	sellerGroup.GET("/:seller_id/category", h.GetCategoryBySellerID)
+	sellerGroup.POST("/delivery", h.UpdateOnDeliveryOrder)
+	sellerGroup.POST("/expired", h.UpdateExpiredAtOrder)
 
 	sellerGroup.Use(mw.AuthJWTMiddleware())
 	sellerGroup.Use(mw.SellerJWTMiddleware())
@@ -26,4 +28,8 @@ func MapSellerRoutes(sellerGroup *gin.RouterGroup, h seller.Handlers, mw *middle
 	sellerGroup.PUT("/voucher", h.UpdateVoucherSeller)
 	sellerGroup.GET("/voucher/:id", h.DetailVoucherSeller)
 	sellerGroup.DELETE("/voucher/:id", h.DeleteVoucherSeller)
+	sellerGroup.GET("/promotion", h.GetAllPromotionSeller)
+	sellerGroup.POST("/promotion", h.CreatePromotionSeller)
+	sellerGroup.PUT("/promotion", h.UpdatePromotionSeller)
+	sellerGroup.GET("/promotion/:id", h.GetDetailPromotionSellerByID)
 }

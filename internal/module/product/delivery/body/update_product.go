@@ -56,6 +56,11 @@ type RangePrice struct {
 	MaxPrice float64
 }
 
+type UpdateProductListedStatusBulkRequest struct {
+	ProductIDS   []string `json:"products_ids"`
+	ListedStatus bool     `json:"listed_status"`
+}
+
 func (r *UpdateProductRequest) ValidateUpdateProduct() (UnprocessableEntity, error) {
 	unprocessableEntity := false
 	entity := UnprocessableEntity{
@@ -97,7 +102,7 @@ func (r *UpdateProductRequest) ValidateUpdateProduct() (UnprocessableEntity, err
 			unprocessableEntity = true
 			entity.Fields["price"] = FieldCannotBeEmptyMessage
 		}
-		if r.ProductDetail[i].Stock == 0 {
+		if r.ProductDetail[i].Stock < 0 {
 			unprocessableEntity = true
 			entity.Fields["stock"] = FieldCannotBeEmptyMessage
 		}
@@ -168,7 +173,6 @@ func (r *UpdateProductListedStatusBulkRequest) ValidateUpdateProductListedStatus
 				unprocessableEntity = true
 				entity.Fields["products_ids"] = FieldCannotBeEmptyMessage
 			}
-
 		}
 	}
 
@@ -180,9 +184,4 @@ func (r *UpdateProductListedStatusBulkRequest) ValidateUpdateProductListedStatus
 	}
 
 	return entity, nil
-}
-
-type UpdateProductListedStatusBulkRequest struct {
-	ProductIDS   []string `json:"products_ids"`
-	ListedStatus bool     `json:"listed_status"`
 }

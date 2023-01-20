@@ -226,8 +226,8 @@ func (u *userUC) GetAddress(ctx context.Context, userID string, pgn *pagination.
 	return pgn, nil
 }
 
-func (u *userUC) GetOrder(ctx context.Context, userID string, pgn *pagination.Pagination) (*pagination.Pagination, error) {
-	totalRows, err := u.userRepo.GetTotalOrder(ctx, userID)
+func (u *userUC) GetOrder(ctx context.Context, userID, orderStatusID string, pgn *pagination.Pagination) (*pagination.Pagination, error) {
+	totalRows, err := u.userRepo.GetTotalOrder(ctx, userID, orderStatusID)
 	if err != nil {
 		return nil, err
 	}
@@ -236,10 +236,11 @@ func (u *userUC) GetOrder(ctx context.Context, userID string, pgn *pagination.Pa
 	pgn.TotalRows = totalRows
 	pgn.TotalPages = totalPages
 
-	orders, err := u.userRepo.GetOrders(ctx, userID, pgn)
+	orders, err := u.userRepo.GetOrders(ctx, userID, orderStatusID, pgn)
 	if err != nil {
 		return nil, err
 	}
+
 	pgn.Rows = orders
 	return pgn, nil
 }
@@ -501,22 +502,11 @@ func (u *userUC) AddSealabsPay(ctx context.Context, request body.AddSealabsPayRe
 	if err != nil {
 		return err
 	}
-	cardCount, err := u.userRepo.CheckDeletedSealabsPay(ctx, request.CardNumber)
-	if err != nil {
-		return err
-	}
 
 	if slpCount == 0 {
-		if cardCount == 0 {
-			err = u.userRepo.AddSealabsPay(ctx, request, userid)
-			if err != nil {
-				return err
-			}
-		} else {
-			err = u.userRepo.UpdateUserSealabsPay(ctx, request, userid)
-			if err != nil {
-				return err
-			}
+		err = u.userRepo.AddSealabsPay(ctx, request, userid)
+		if err != nil {
+			return httperror.New(http.StatusBadRequest, response.SealabsCardAlreadyExist)
 		}
 	} else {
 		cardNumber, err := u.userRepo.CheckDefaultSealabsPay(ctx, userid)
@@ -526,37 +516,18 @@ func (u *userUC) AddSealabsPay(ctx context.Context, request body.AddSealabsPayRe
 		if *cardNumber == request.CardNumber {
 			return httperror.New(http.StatusBadRequest, response.SealabsCardAlreadyExist)
 		}
-
-		if cardCount == 0 {
-			err = u.txRepo.WithTransaction(func(tx postgre.Transaction) error {
-				if u.userRepo.SetDefaultSealabsPayTrans(ctx, tx, cardNumber) != nil {
-					return err
-				}
-
-				err = u.userRepo.AddSealabsPayTrans(ctx, tx, request, userid)
-				if err != nil {
-					return err
-				}
-				return nil
-			})
-			if err != nil {
-				return httperror.New(http.StatusBadRequest, response.SealabsCardAlreadyExist)
+		err = u.txRepo.WithTransaction(func(tx postgre.Transaction) error {
+			if u.userRepo.SetDefaultSealabsPayTrans(ctx, tx, cardNumber) != nil {
+				return err
 			}
-		} else {
-			err = u.txRepo.WithTransaction(func(tx postgre.Transaction) error {
-				if u.userRepo.SetDefaultSealabsPayTrans(ctx, tx, cardNumber) != nil {
-					return err
-				}
-
-				err = u.userRepo.UpdateUserSealabsPayTrans(ctx, tx, request, userid)
-				if err != nil {
-					return err
-				}
-				return nil
-			})
+			err = u.userRepo.AddSealabsPayTrans(ctx, tx, request, userid)
 			if err != nil {
 				return err
 			}
+			return nil
+		})
+		if err != nil {
+			return httperror.New(http.StatusBadRequest, response.SealabsCardAlreadyExist)
 		}
 	}
 	return nil
@@ -979,10 +950,103 @@ func (u *userUC) GetRedirectURL(transaction *model.Transaction, sign string) (st
 			return "", err
 		}
 
-		return "", httperror.New(res.StatusCode, responseSLP.Message)
+		return "", httperror.New(http.StatusBadRequest, responseSLP.Message)
 	}
 
 	return res.Header.Get("Location"), nil
+}
+
+func (u *userUC) GetTransactionByUserID(ctx context.Context, UserID string, pgn *pagination.Pagination) (*pagination.Pagination, error) {
+	totalRows, err := u.userRepo.GetTotalTransactionByUserID(ctx, UserID)
+	if err != nil {
+		return nil, err
+	}
+
+	totalPages := int(math.Ceil(float64(totalRows) / float64(pgn.Limit)))
+	pgn.TotalRows = totalRows
+	pgn.TotalPages = totalPages
+
+	transactionsRes := make([]*body.GetTransactionByUserIDResponse, 0)
+	transactions, err := u.userRepo.GetTransactionByUserID(ctx, UserID, pgn)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, transaction := range transactions {
+		res := &body.GetTransactionByUserIDResponse{
+			ID:         transaction.ID,
+			WalletID:   transaction.WalletID,
+			CardNumber: transaction.CardNumber,
+			Invoice:    transaction.Invoice,
+			TotalPrice: transaction.TotalPrice,
+			ExpiredAt:  transaction.ExpiredAt,
+		}
+
+		orders, err := u.userRepo.GetOrderByTransactionID(ctx, res.ID.String())
+		if err != nil {
+			return nil, err
+		}
+
+		res.VoucherMarketplace, err = u.userRepo.GetVoucherMarketplaceByID(ctx, res.ID.String())
+		if err != nil {
+			if err != sql.ErrNoRows {
+				return nil, err
+			}
+		}
+
+		res.Orders = make([]*model.OrderModel, 0)
+		for _, order := range orders {
+			orderRes := &model.OrderModel{
+				ID:            order.ID,
+				TransactionID: order.TransactionID,
+				ShopID:        order.ShopID,
+				UserID:        order.UserID,
+				CourierID:     order.CourierID,
+				VoucherShopID: order.VoucherShopID,
+				OrderStatusID: order.OrderStatusID,
+				TotalPrice:    order.TotalPrice,
+				DeliveryFee:   order.DeliveryFee,
+				ResiNo:        order.ResiNo,
+				CreatedAt:     order.CreatedAt,
+				ArrivedAt:     order.ArrivedAt,
+			}
+
+			res.Orders = append(res.Orders, orderRes)
+		}
+
+		transactionsRes = append(transactionsRes, res)
+	}
+
+	pgn.Rows = transactionsRes
+
+	return pgn, nil
+}
+
+func (u *userUC) GetTransactionByID(ctx context.Context, transactionID string) (*body.GetTransactionByIDResponse, error) {
+	transaction, err := u.userRepo.GetTransactionByID(ctx, transactionID)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, httperror.New(http.StatusBadRequest, response.TransactionIDNotExist)
+		}
+		return nil, err
+	}
+
+	res := &body.GetTransactionByIDResponse{
+		ID:         transaction.ID,
+		WalletID:   transaction.WalletID,
+		CardNumber: transaction.CardNumber,
+		Invoice:    transaction.Invoice,
+		TotalPrice: transaction.TotalPrice,
+		ExpiredAt:  transaction.ExpiredAt,
+	}
+
+	res.Orders, err = u.userRepo.GetOrderDetailByTransactionID(ctx, res.ID.String())
+
+	if err != nil {
+		return nil, err
+	}
+
+	return res, nil
 }
 
 func (u *userUC) UpdateTransaction(ctx context.Context, transactionID string, requestBody body.SLPCallbackRequest) error {
@@ -1308,12 +1372,12 @@ func (u *userUC) ChangeWalletPinStepUp(ctx context.Context, userID string, reque
 		return "", err
 	}
 
-	user, err := u.userRepo.GetUserPasswordByID(ctx, wallet.UserID.String())
+	userModel, err := u.userRepo.GetUserPasswordByID(ctx, wallet.UserID.String())
 	if err != nil {
 		return "", err
 	}
 
-	if bcrypt.CompareHashAndPassword([]byte(*user.Password), []byte(requestBody.Password)) != nil {
+	if bcrypt.CompareHashAndPassword([]byte(*userModel.Password), []byte(requestBody.Password)) != nil {
 		return "", httperror.New(http.StatusBadRequest, response.InvalidPasswordMessage)
 	}
 

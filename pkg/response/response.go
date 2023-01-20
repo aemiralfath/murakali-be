@@ -33,6 +33,7 @@ const (
 	QuantityReachedMaximum         = "Quantity has reached the maximum limit!"
 	ProductDetailNotExistMessage   = "Product Detail not exist."
 	ProductNotExistMessage         = "Product not exist."
+	ProductAlreadyHasPromoMessage  = "Product Already has Promotion"
 	ProductAlreadyInFavMessage     = "Product already in favorite."
 	PictureSizeTooBig              = "Picture size too big"
 	TransactionIDNotExist          = "Transaction not exist."
