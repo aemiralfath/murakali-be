@@ -631,9 +631,20 @@ func (r *sellerRepo) GetAllVoucherSellerByIDAndShopID(ctx context.Context, vouch
 	return &voucher, nil
 }
 
-func (r *sellerRepo) GetAllPromotionSeller(ctx context.Context, shopID string) ([]*body.PromotionSellerResponse, error) {
+func (r *sellerRepo) GetAllPromotionSeller(ctx context.Context, shopID string, promoStatusID string) ([]*body.PromotionSellerResponse, error) {
 	var promotionSeller []*body.PromotionSellerResponse
-	res, err := r.PSQL.QueryContext(ctx, GetAllPromotionSellerQuery, shopID)
+
+	q := GetAllPromotionSellerQuery
+	switch promoStatusID {
+	case "2":
+		q = q + FilterWillComeQuery
+	case "3":
+		q = q + FilterOngoingQuery
+	case "4":
+		q = q + FilterHasEndedQuery
+	}
+
+	res, err := r.PSQL.QueryContext(ctx, q, shopID)
 	if err != nil {
 		return nil, err
 	}
@@ -673,9 +684,20 @@ func (r *sellerRepo) GetAllPromotionSeller(ctx context.Context, shopID string) (
 	return promotionSeller, nil
 }
 
-func (r *sellerRepo) GetTotalPromotionSeller(ctx context.Context, shopID string) (int64, error) {
+func (r *sellerRepo) GetTotalPromotionSeller(ctx context.Context, shopID string, promoStatusID string) (int64, error) {
 	var total int64
-	if err := r.PSQL.QueryRowContext(ctx, GetTotalPromotionSellerQuery, shopID).Scan(&total); err != nil {
+
+	q := GetTotalPromotionSellerQuery
+	switch promoStatusID {
+	case "2":
+		q = q + FilterWillComeQuery
+	case "3":
+		q = q + FilterOngoingQuery
+	case "4":
+		q = q + FilterHasEndedQuery
+	}
+
+	if err := r.PSQL.QueryRowContext(ctx, q, shopID).Scan(&total); err != nil {
 		return -1, err
 	}
 
