@@ -789,7 +789,7 @@ paths:
             type: string
           required: false
           example: "ASC"
-          
+
       security:
         - BEARER: []
       responses:
@@ -1750,7 +1750,23 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/GetSellerOrderResponse"
+  "/api/v1/seller/information":
+    get:
+      summary: Get Seller information
+      description: >-
+        Get Seller information
+      tags:
+        - Seller
+      security:
+        - BEARER: []
 
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GetSellerInformationResponse"
   "/api/v1/seller/order/{order_id}":
     get:
       summary: Get Seller Orders
@@ -1824,13 +1840,20 @@ paths:
 
   "/api/v1/seller/voucher":
     get:
-      summary: Get All Seller Voucher 
+      summary: Get All Seller Voucher
       description: >-
         Get All Seller Voucher
       tags:
         - Seller
       security:
         - BEARER: []
+      parameters:
+        - in: query
+          name: promo_status
+          description: (1 All, 2 Will Come, 3 On Going, 4 HasEnded)
+          schema:
+            type: string
+            enum: [1, 2, 3, 4]
       responses:
         "200":
           description: OK
@@ -1839,7 +1862,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/GetAllSellerVoucherResponse"
     post:
-      summary: Create Voucher Seller 
+      summary: Create Voucher Seller
       description: >-
         Create Voucher Seller
       tags:
@@ -1859,7 +1882,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/DefaultSuccess"
     put:
-      summary: Update Voucher Seller 
+      summary: Update Voucher Seller
       description: >-
         Update Voucher Seller
       tags:
@@ -1881,7 +1904,7 @@ paths:
 
   "/api/v1/seller/voucher/{id}":
     get:
-      summary: Get Voucher Detail Seller 
+      summary: Get Voucher Detail Seller
       description: >-
         Get Voucher Detail Seller
       tags:
@@ -1902,7 +1925,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/GetVoucherDetailSellerResponse"
     delete:
-      summary: Delete Seller Voucher 
+      summary: Delete Seller Voucher
       description: >-
         Delete Seller Voucher
       tags:
@@ -1925,13 +1948,20 @@ paths:
 
   "/api/v1/seller/promotion":
     get:
-      summary: Get All Seller Promotion 
+      summary: Get All Seller Promotion
       description: >-
         Get All Seller Promotion
       tags:
         - Seller
       security:
         - BEARER: []
+      parameters:
+        - in: query
+          name: promo_status
+          description: (1 All, 2 Will Come, 3 On Going, 4 HasEnded)
+          schema:
+            type: string
+            enum: [1, 2, 3, 4]
       responses:
         "200":
           description: OK
@@ -1940,7 +1970,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/GetAllPromotionSellerResponse"
     post:
-      summary: Create Seller Promotion 
+      summary: Create Seller Promotion
       description: >-
         Create Seller Promotion
       tags:
@@ -1960,7 +1990,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/CreatedRowSuccess"
     put:
-      summary: Update Seller Promotion 
+      summary: Update Seller Promotion
       description: >-
         Update Seller Promotion
       tags:
@@ -1981,7 +2011,7 @@ paths:
                 $ref: "#/components/schemas/DefaultSuccess"
   "/api/v1/seller/promotion/{id}":
     get:
-      summary: Get Promotion Detail Seller 
+      summary: Get Promotion Detail Seller
       description: >-
         Get Promotion Detail Seller
       tags:
@@ -2001,7 +2031,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/GetPromotionDetailSellerResponse"
-                
+
 components:
   schemas:
     LoginRequest:
@@ -2779,7 +2809,7 @@ components:
               to: USER
               amount: -20000
               description: TopUp
-              created_at: '2023-01-16T06:01:19.776573Z'
+              created_at: "2023-01-16T06:01:19.776573Z"
 
     InputPinWalletRequest:
       title: InputPinWalletRequest
@@ -4417,6 +4447,43 @@ components:
           - id: d92a0995-78cd-4eba-a855-dfc096ffec5b
             name: laptop
 
+    GetSellerInformationResponse:
+      title: GetSellerInformationResponse
+      type: object
+      description: Get Seller Information response data model.
+      properties:
+        message:
+          type: string
+        data:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+              name:
+                type: string
+              total_product:
+                type: number
+              rating_avg:
+                type: number
+              total_rating:
+                type: number
+              photo_url:
+                type: string
+              created_at:
+                type: string
+      example:
+        message: success
+        data:
+          - id: d92a0995-78cd-4eba-a855-dfc096ffec5b
+            name: laptop
+            total_product: 500
+            rating_avg: 5
+            total_rating: 5
+            photo_url: "https://res.cloudinary.com/dhpao1zxi/image/upload/v1671705602/ldtzmxqeyb4nwu5p6y76.jpg"
+            created_at: "2023-01-18T02:16:59.267852Z"
+
     GetSellerOrderResponse:
       title: GetSellerOrderResponse
       type: object
@@ -4847,24 +4914,24 @@ components:
           total_rows: 1
           total_pages: 1
           rows:
-          - id: 59bfcd74-e278-4c70-a889-d9c8515bf71c
-            shop_id: e8854443-c2c7-488e-93d5-b9d93708b8a3
-            code: ASD123
-            quota: 11
-            actived_date: '2022-12-22T21:43:56.202214Z'
-            expired_date: '2023-02-01T21:43:56.202214Z'
-            discount_percentage: 0
-            discount_fix_price: 5000
-            min_product_price: 5000
-            max_discount_price: 100000
-            max_quantity: 0
-            created_at: '2022-12-23T02:34:38.854025Z'
-            updated_at:
-              Time: '0001-01-01T00:00:00Z'
-              Valid: false
-            deleted_at:
-              Time: '0001-01-01T00:00:00Z'
-              Valid: false
+            - id: 59bfcd74-e278-4c70-a889-d9c8515bf71c
+              shop_id: e8854443-c2c7-488e-93d5-b9d93708b8a3
+              code: ASD123
+              quota: 11
+              actived_date: "2022-12-22T21:43:56.202214Z"
+              expired_date: "2023-02-01T21:43:56.202214Z"
+              discount_percentage: 0
+              discount_fix_price: 5000
+              min_product_price: 5000
+              max_discount_price: 100000
+              max_quantity: 0
+              created_at: "2022-12-23T02:34:38.854025Z"
+              updated_at:
+                Time: "0001-01-01T00:00:00Z"
+                Valid: false
+              deleted_at:
+                Time: "0001-01-01T00:00:00Z"
+                Valid: false
 
     CreateVoucherSellerRequest:
       title: CreateVoucherSellerRequest
@@ -4896,7 +4963,7 @@ components:
         discount_fix_price: 1000
         min_product_price: 5000
         max_discount_price: 10000
-    
+
     GetVoucherDetailSellerResponse:
       title: UpdateVoucherSellerRequest
       type: object
@@ -4909,18 +4976,18 @@ components:
           shop_id: e8854443-c2c7-488e-93d5-b9d93708b8a3
           code: ASD123
           quota: 10
-          actived_date: '2022-12-22T21:43:56Z'
-          expired_date: '2023-02-22T21:43:56Z'
+          actived_date: "2022-12-22T21:43:56Z"
+          expired_date: "2023-02-22T21:43:56Z"
           discount_percentage: 0
           discount_fix_price: 10000
           min_product_price: 5000
           max_discount_price: 10000
-          created_at: '2022-12-23T02:34:38.854025Z'
+          created_at: "2022-12-23T02:34:38.854025Z"
           updated_at:
-            Time: '2023-01-17T12:08:57.917015Z'
+            Time: "2023-01-17T12:08:57.917015Z"
             Valid: true
           deleted_at:
-            Time: '0001-01-01T00:00:00Z'
+            Time: "0001-01-01T00:00:00Z"
             Valid: false
 
     GetAllPromotionSellerResponse:
@@ -4936,26 +5003,26 @@ components:
           total_rows: 1
           total_pages: 1
           rows:
-          - id: a8f690aa-8838-4a2d-ba60-cf25f9d943cf
-            promotion_name: promo murah
-            product_id: 53874e1e-3c1e-4f46-84fd-2863efb15bcb
-            product_name: PAxYvNY
-            product_thumbnail_url: https://cf.shopee.co.id/file/76a0969b7d64065bc13493bf55df1849_tn
-            discount_percentage: 25
-            discount_fix_price: 0
-            min_product_price: 50000
-            max_discount_price: 30000
-            quota: 10
-            max_quantity: 1
-            actived_date: '2022-12-21T07:00:00Z'
-            expired_date: '2023-02-01T07:00:00Z'
-            created_at: '2023-01-16T12:36:27.068087Z'
-            updated_at:
-              Time: '0001-01-01T00:00:00Z'
-              Valid: false
-            deleted_at:
-              Time: '0001-01-01T00:00:00Z'
-              Valid: false
+            - id: a8f690aa-8838-4a2d-ba60-cf25f9d943cf
+              promotion_name: promo murah
+              product_id: 53874e1e-3c1e-4f46-84fd-2863efb15bcb
+              product_name: PAxYvNY
+              product_thumbnail_url: https://cf.shopee.co.id/file/76a0969b7d64065bc13493bf55df1849_tn
+              discount_percentage: 25
+              discount_fix_price: 0
+              min_product_price: 50000
+              max_discount_price: 30000
+              quota: 10
+              max_quantity: 1
+              actived_date: "2022-12-21T07:00:00Z"
+              expired_date: "2023-02-01T07:00:00Z"
+              created_at: "2023-01-16T12:36:27.068087Z"
+              updated_at:
+                Time: "0001-01-01T00:00:00Z"
+                Valid: false
+              deleted_at:
+                Time: "0001-01-01T00:00:00Z"
+                Valid: false
 
     CreatePromotionSellerRequest:
       title: CreatePromotionSellerRequest
@@ -4993,7 +5060,7 @@ components:
         discount_fix_price: 0
         min_product_price: 5000
         max_discount_price: 10000
-    
+
     GetPromotionDetailSellerResponse:
       title: CreatePromotionSellerRequest
       type: object
@@ -5019,16 +5086,15 @@ components:
           product_sub_max_price: 615000
           product_min_discount_price: 10000
           product_max_discount_price: 10000
-          actived_date: '2022-12-22T21:43:56Z'
-          expired_date: '2023-01-22T21:43:56Z'
-          created_at: '2023-01-18T08:01:53.334458Z'
+          actived_date: "2022-12-22T21:43:56Z"
+          expired_date: "2023-01-22T21:43:56Z"
+          created_at: "2023-01-18T08:01:53.334458Z"
           updated_at:
-            Time: '2023-01-18T10:19:03.927297Z'
+            Time: "2023-01-18T10:19:03.927297Z"
             Valid: true
           deleted_at:
-            Time: '0001-01-01T00:00:00Z'
+            Time: "0001-01-01T00:00:00Z"
             Valid: false
-
 
     CreatedRowSuccess:
       title: CheckUniqueTrueSuccess

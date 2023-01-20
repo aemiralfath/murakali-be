@@ -382,9 +382,9 @@ func (r *sellerRepo) GetSellerBySellerID(ctx context.Context, sellerID string) (
 	return &sellerData, nil
 }
 
-func (r *sellerRepo) GetSellerByUserID(ctx context.Context, sellerID string) (*body.SellerResponse, error) {
+func (r *sellerRepo) GetSellerByUserID(ctx context.Context, userID string) (*body.SellerResponse, error) {
 	var sellerData body.SellerResponse
-	if err := r.PSQL.QueryRowContext(ctx, GetShopDetailIDByUserIDQuery, sellerID).Scan(
+	if err := r.PSQL.QueryRowContext(ctx, GetShopDetailIDByUserIDQuery, userID).Scan(
 		&sellerData.ID,
 		&sellerData.UserID,
 		&sellerData.Name,
@@ -522,18 +522,48 @@ func (r *sellerRepo) InsertCostRedis(ctx context.Context, key, value string) err
 	return nil
 }
 
-func (r *sellerRepo) GetTotalVoucherSeller(ctx context.Context, shopID string) (int64, error) {
+func (r *sellerRepo) GetTotalVoucherSeller(ctx context.Context, shopID, voucherStatusID string) (int64, error) {
 	var total int64
-	if err := r.PSQL.QueryRowContext(ctx, GetTotalVoucherSellerQuery, shopID).Scan(&total); err != nil {
+
+	q := GetTotalVoucherSellerQuery
+	switch voucherStatusID {
+	case "1":
+		q = q
+	case "2":
+		q = q + FilterVoucherWillCome
+	case "3":
+		q = q + FilterVoucherOngoing
+	case "4":
+		q = q + FilterVoucherHasEnded
+	default:
+		q = q
+	}
+
+	if err := r.PSQL.QueryRowContext(ctx, q, shopID).Scan(&total); err != nil {
 		return -1, err
 	}
 
 	return total, nil
 }
 
-func (r *sellerRepo) GetAllVoucherSeller(ctx context.Context, shopID string) ([]*model.Voucher, error) {
+func (r *sellerRepo) GetAllVoucherSeller(ctx context.Context, shopID, voucherStatusID string) ([]*model.Voucher, error) {
 	var shopVouchers []*model.Voucher
-	res, err := r.PSQL.QueryContext(ctx, GetAllVoucherSellerQuery, shopID)
+
+	q := GetAllVoucherSellerQuery
+	switch voucherStatusID {
+	case "1":
+		q = q
+	case "2":
+		q = q + FilterVoucherWillCome
+	case "3":
+		q = q + FilterVoucherOngoing
+	case "4":
+		q = q + FilterVoucherHasEnded
+	default:
+		q = q
+	}
+
+	res, err := r.PSQL.QueryContext(ctx, q, shopID)
 	if err != nil {
 		return nil, err
 	}

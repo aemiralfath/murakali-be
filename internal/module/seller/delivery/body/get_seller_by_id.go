@@ -16,7 +16,7 @@ type SellerByIDRequest struct {
 
 type SellerResponse struct {
 	ID           uuid.UUID `json:"id"`
-	UserID       uuid.UUID `json:"user_id"`
+	UserID       uuid.UUID `json:"-"`
 	Name         string    `json:"name"`
 	TotalProduct int       `json:"total_product"`
 	TotalRating  float64   `json:"total_rating"`

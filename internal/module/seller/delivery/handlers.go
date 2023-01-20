@@ -200,6 +200,29 @@ func (h *sellerHandlers) GetSellerByUserID(c *gin.Context) {
 	response.SuccessResponse(c.Writer, data, http.StatusOK)
 }
 
+func (h *sellerHandlers) GetSellerDetailInformation(c *gin.Context) {
+	userID, exist := c.Get("userID")
+	if !exist {
+		response.ErrorResponse(c.Writer, response.UnauthorizedMessage, http.StatusUnauthorized)
+		return
+	}
+
+	data, err := h.sellerUC.GetSellerByUserID(c, userID.(string))
+	if err != nil {
+		var e *httperror.Error
+		if !errors.As(err, &e) {
+			h.logger.Errorf("HandlerSeller, Error: %s", err)
+			response.ErrorResponse(c.Writer, response.InternalServerErrorMessage, http.StatusInternalServerError)
+			return
+		}
+
+		response.ErrorResponse(c.Writer, e.Err.Error(), e.Status)
+		return
+	}
+
+	response.SuccessResponse(c.Writer, data, http.StatusOK)
+}
+
 func (h *sellerHandlers) GetCategoryBySellerID(c *gin.Context) {
 	id := c.Param("seller_id")
 	sellerID, err := uuid.Parse(id)
@@ -354,7 +377,22 @@ func (h *sellerHandlers) GetAllVoucherSeller(c *gin.Context) {
 	pgn := &pagination.Pagination{}
 	h.ValidateQueryPagination(c, pgn)
 
-	shopVouchers, err := h.sellerUC.GetAllVoucherSeller(c, userID.(string), pgn)
+	voucherStatusID := c.DefaultQuery("voucher_status", "")
+	switch voucherStatusID {
+	case "1":
+		voucherStatusID = "1"
+	case "2":
+		voucherStatusID = "2"
+	case "3":
+		voucherStatusID = "3"
+	case "4":
+		voucherStatusID = "4"
+	default:
+		voucherStatusID = "1"
+	}
+	h.ValidateQueryPagination(c, pgn)
+
+	shopVouchers, err := h.sellerUC.GetAllVoucherSeller(c, userID.(string), voucherStatusID, pgn)
 	if err != nil {
 		var e *httperror.Error
 		if !errors.As(err, &e) {

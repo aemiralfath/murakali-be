@@ -407,7 +407,7 @@ func (u *sellerUC) GetCostRajaOngkir(origin, destination, weight int, code strin
 	return &responseCost, nil
 }
 
-func (u *sellerUC) GetAllVoucherSeller(ctx context.Context, userID string, pgn *pagination.Pagination) (*pagination.Pagination, error) {
+func (u *sellerUC) GetAllVoucherSeller(ctx context.Context, userID, voucherStatusID string, pgn *pagination.Pagination) (*pagination.Pagination, error) {
 	shopID, err := u.sellerRepo.GetShopIDByUserID(ctx, userID)
 	if err != nil {
 		if err == sql.ErrNoRows {
@@ -416,7 +416,7 @@ func (u *sellerUC) GetAllVoucherSeller(ctx context.Context, userID string, pgn *
 		return nil, err
 	}
 
-	totalRows, err := u.sellerRepo.GetTotalVoucherSeller(ctx, shopID)
+	totalRows, err := u.sellerRepo.GetTotalVoucherSeller(ctx, shopID, voucherStatusID)
 	if err != nil {
 		return nil, err
 	}
@@ -425,7 +425,7 @@ func (u *sellerUC) GetAllVoucherSeller(ctx context.Context, userID string, pgn *
 	pgn.TotalRows = totalRows
 	pgn.TotalPages = totalPages
 
-	ShopVouchers, err := u.sellerRepo.GetAllVoucherSeller(ctx, shopID)
+	ShopVouchers, err := u.sellerRepo.GetAllVoucherSeller(ctx, shopID, voucherStatusID)
 	if err != nil {
 		return nil, err
 	}
