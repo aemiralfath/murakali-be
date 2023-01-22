@@ -45,9 +45,10 @@ func (h *sellerHandlers) GetOrder(c *gin.Context) {
 
 	pgn := &pagination.Pagination{}
 	orderStatusID := c.DefaultQuery("order_status", "")
+	voucherShopID := c.DefaultQuery("voucher_shop", "")
 	h.ValidateQueryOrder(c, pgn)
 
-	orders, err := h.sellerUC.GetOrder(c, userID.(string), orderStatusID, pgn)
+	orders, err := h.sellerUC.GetOrder(c, userID.(string), orderStatusID, voucherShopID, pgn)
 	if err != nil {
 		var e *httperror.Error
 		if !errors.As(err, &e) {
@@ -220,7 +221,17 @@ func (h *sellerHandlers) GetSellerDetailInformation(c *gin.Context) {
 		return
 	}
 
-	response.SuccessResponse(c.Writer, data, http.StatusOK)
+	var newData = body.SellerInformationResponse{
+		ID:           data.ID,
+		Name:         data.Name,
+		TotalProduct: data.TotalProduct,
+		TotalRating:  data.TotalRating,
+		RatingAVG:    data.RatingAVG,
+		PhotoURL:     data.PhotoURL,
+		CreatedAt:    data.CreatedAt,
+	}
+
+	response.SuccessResponse(c.Writer, newData, http.StatusOK)
 }
 
 func (h *sellerHandlers) GetCategoryBySellerID(c *gin.Context) {

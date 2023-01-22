@@ -34,13 +34,13 @@ func NewSellerUseCase(cfg *config.Config, txRepo *postgre.TxRepo, sellerRepo sel
 	return &sellerUC{cfg: cfg, txRepo: txRepo, sellerRepo: sellerRepo}
 }
 
-func (u *sellerUC) GetOrder(ctx context.Context, userID, orderStatusID string, pgn *pagination.Pagination) (*pagination.Pagination, error) {
+func (u *sellerUC) GetOrder(ctx context.Context, userID, orderStatusID, voucherShopID string, pgn *pagination.Pagination) (*pagination.Pagination, error) {
 	shopID, err := u.sellerRepo.GetShopIDByUser(ctx, userID)
 	if err != nil {
 		return nil, err
 	}
 
-	totalRows, err := u.sellerRepo.GetTotalOrder(ctx, shopID, orderStatusID)
+	totalRows, err := u.sellerRepo.GetTotalOrder(ctx, shopID, orderStatusID, voucherShopID)
 	if err != nil {
 		return nil, err
 	}
@@ -49,7 +49,7 @@ func (u *sellerUC) GetOrder(ctx context.Context, userID, orderStatusID string, p
 	pgn.TotalRows = totalRows
 	pgn.TotalPages = totalPages
 
-	orders, err := u.sellerRepo.GetOrders(ctx, shopID, orderStatusID, pgn)
+	orders, err := u.sellerRepo.GetOrders(ctx, shopID, orderStatusID, voucherShopID, pgn)
 	if err != nil {
 		return nil, err
 	}
@@ -425,7 +425,7 @@ func (u *sellerUC) GetAllVoucherSeller(ctx context.Context, userID, voucherStatu
 	pgn.TotalRows = totalRows
 	pgn.TotalPages = totalPages
 
-	ShopVouchers, err := u.sellerRepo.GetAllVoucherSeller(ctx, shopID, voucherStatusID)
+	ShopVouchers, err := u.sellerRepo.GetAllVoucherSeller(ctx, shopID, voucherStatusID, pgn)
 	if err != nil {
 		return nil, err
 	}

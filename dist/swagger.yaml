@@ -1849,7 +1849,7 @@ paths:
         - BEARER: []
       parameters:
         - in: query
-          name: promo_status
+          name: voucher_status
           description: (1 All, 2 Will Come, 3 On Going, 4 HasEnded)
           schema:
             type: string
