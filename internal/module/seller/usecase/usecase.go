@@ -34,7 +34,8 @@ func NewSellerUseCase(cfg *config.Config, txRepo *postgre.TxRepo, sellerRepo sel
 	return &sellerUC{cfg: cfg, txRepo: txRepo, sellerRepo: sellerRepo}
 }
 
-func (u *sellerUC) GetOrder(ctx context.Context, userID, orderStatusID, voucherShopID string, pgn *pagination.Pagination) (*pagination.Pagination, error) {
+func (u *sellerUC) GetOrder(ctx context.Context, userID, orderStatusID, voucherShopID string,
+	pgn *pagination.Pagination) (*pagination.Pagination, error) {
 	shopID, err := u.sellerRepo.GetShopIDByUser(ctx, userID)
 	if err != nil {
 		return nil, err
@@ -407,7 +408,8 @@ func (u *sellerUC) GetCostRajaOngkir(origin, destination, weight int, code strin
 	return &responseCost, nil
 }
 
-func (u *sellerUC) GetAllVoucherSeller(ctx context.Context, userID, voucherStatusID string, pgn *pagination.Pagination) (*pagination.Pagination, error) {
+func (u *sellerUC) GetAllVoucherSeller(ctx context.Context, userID, voucherStatusID string,
+	pgn *pagination.Pagination) (*pagination.Pagination, error) {
 	shopID, err := u.sellerRepo.GetShopIDByUserID(ctx, userID)
 	if err != nil {
 		if err == sql.ErrNoRows {
@@ -556,7 +558,8 @@ func (u *sellerUC) DeleteVoucherSeller(ctx context.Context, voucherIDShopID *bod
 	return nil
 }
 
-func (u *sellerUC) GetAllPromotionSeller(ctx context.Context, userID string, promoStatusID string, pgn *pagination.Pagination) (*pagination.Pagination, error) {
+func (u *sellerUC) GetAllPromotionSeller(ctx context.Context, userID, promoStatusID string,
+	pgn *pagination.Pagination) (*pagination.Pagination, error) {
 	shopID, err := u.sellerRepo.GetShopIDByUserID(ctx, userID)
 	if err != nil {
 		if err == sql.ErrNoRows {

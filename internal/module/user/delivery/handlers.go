@@ -1267,7 +1267,6 @@ func (h *userHandlers) GetTransactions(c *gin.Context) {
 }
 
 func (h *userHandlers) GetTransaction(c *gin.Context) {
-
 	_, exist := c.Get("userID")
 	if !exist {
 		response.ErrorResponse(c.Writer, response.UnauthorizedMessage, http.StatusUnauthorized)
