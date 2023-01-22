@@ -346,7 +346,6 @@ func (u *userUC) GetCostRajaOngkir(origin, destination, weight int, code string)
 }
 
 func (u *userUC) GetTransactionDetailByID(ctx context.Context, transactionID, userID string) (*body.TransactionDetailResponse, error) {
-
 	var transactionDetail *body.TransactionDetailResponse
 	transaction, err := u.userRepo.GetTransactionByID(ctx, transactionID)
 	if err != nil {
@@ -729,27 +728,47 @@ func (u *userUC) RegisterMerchant(ctx context.Context, userID, shopName string) 
 }
 
 func (u *userUC) GetUserProfile(ctx context.Context, userID string) (*body.ProfileResponse, error) {
-	userModel, err := u.userRepo.GetUserByID(ctx, userID)
+	profile := &body.ProfileResponse{}
+	key := fmt.Sprintf("profile:%s", userID)
+	profileRedis, err := u.userRepo.GetProfileRedis(ctx, key)
 	if err != nil {
-		if err == sql.ErrNoRows {
-			return nil, httperror.New(http.StatusBadRequest, response.UserNotExistMessage)
+		userModel, err := u.userRepo.GetUserByID(ctx, userID)
+		if err != nil {
+			if err == sql.ErrNoRows {
+				return nil, httperror.New(http.StatusBadRequest, response.UserNotExistMessage)
+			}
+			return nil, err
 		}
+
+		profileInfo := &body.ProfileResponse{
+			Role:        userModel.RoleID,
+			UserName:    userModel.Username,
+			Email:       userModel.Email,
+			PhoneNumber: userModel.PhoneNo,
+			FullName:    userModel.FullName,
+			Gender:      userModel.Gender,
+			BirthDate:   userModel.BirthDate.Time,
+			PhotoURL:    userModel.PhotoURL,
+			IsVerify:    userModel.IsVerify,
+		}
+
+		redisValue, err := json.Marshal(profileInfo)
+		if err != nil {
+			return nil, err
+		}
+
+		if err := u.userRepo.InsertProfileRedis(ctx, key, string(redisValue)); err != nil {
+			return nil, err
+		}
+
+		return profileInfo, nil
+	}
+
+	if err := json.Unmarshal([]byte(*profileRedis), profile); err != nil {
 		return nil, err
 	}
 
-	profileInfo := &body.ProfileResponse{
-		Role:        userModel.RoleID,
-		UserName:    userModel.Username,
-		Email:       userModel.Email,
-		PhoneNumber: userModel.PhoneNo,
-		FullName:    userModel.FullName,
-		Gender:      userModel.Gender,
-		BirthDate:   userModel.BirthDate.Time,
-		PhotoURL:    userModel.PhotoURL,
-		IsVerify:    userModel.IsVerify,
-	}
-
-	return profileInfo, nil
+	return profile, nil
 }
 
 func (u *userUC) UploadProfilePicture(ctx context.Context, imgURL, userID string) error {
@@ -1056,8 +1075,8 @@ func (u *userUC) GetRedirectURL(transaction *model.Transaction, sign string) (st
 	return res.Header.Get("Location"), nil
 }
 
-func (u *userUC) GetTransactionByUserID(ctx context.Context, UserID string, pgn *pagination.Pagination) (*pagination.Pagination, error) {
-	totalRows, err := u.userRepo.GetTotalTransactionByUserID(ctx, UserID)
+func (u *userUC) GetTransactionByUserID(ctx context.Context, userID string, pgn *pagination.Pagination) (*pagination.Pagination, error) {
+	totalRows, err := u.userRepo.GetTotalTransactionByUserID(ctx, userID)
 	if err != nil {
 		return nil, err
 	}
@@ -1067,21 +1086,12 @@ func (u *userUC) GetTransactionByUserID(ctx context.Context, UserID string, pgn 
 	pgn.TotalPages = totalPages
 
 	transactionsRes := make([]*body.GetTransactionByIDResponse, 0)
-	transactions, err := u.userRepo.GetTransactionByUserID(ctx, UserID, pgn)
+	transactions, err := u.userRepo.GetTransactionByUserID(ctx, userID, pgn)
 	if err != nil {
 		return nil, err
 	}
 
 	for _, transaction := range transactions {
-		// res := &body.GetTransactionByUserIDResponse{
-		// 	ID:         transaction.ID,
-		// 	WalletID:   transaction.WalletID,
-		// 	CardNumber: transaction.CardNumber,
-		// 	Invoice:    transaction.Invoice,
-		// 	TotalPrice: transaction.TotalPrice,
-		// 	ExpiredAt:  transaction.ExpiredAt,
-		// }
-
 		res := &body.GetTransactionByIDResponse{
 			ID:         transaction.ID,
 			WalletID:   transaction.WalletID,
@@ -1092,11 +1102,9 @@ func (u *userUC) GetTransactionByUserID(ctx context.Context, UserID string, pgn 
 		}
 
 		res.Orders, err = u.userRepo.GetOrderDetailByTransactionID(ctx, res.ID.String())
-
-		// orders, err := u.userRepo.GetOrderByTransactionID(ctx, res.ID.String())
-		// if err != nil {
-		// 	return nil, err
-		// }
+		if err != nil {
+			return nil, err
+		}
 
 		res.VoucherMarketplace, err = u.userRepo.GetVoucherMarketplaceByID(ctx, res.ID.String())
 		if err != nil {
@@ -1104,26 +1112,6 @@ func (u *userUC) GetTransactionByUserID(ctx context.Context, UserID string, pgn 
 				return nil, err
 			}
 		}
-
-		// res.Orders = make([]*model.OrderModel, 0)
-		// for _, order := range orders {
-		// 	orderRes := &model.OrderModel{
-		// 		ID:            order.ID,
-		// 		TransactionID: order.TransactionID,
-		// 		ShopID:        order.ShopID,
-		// 		UserID:        order.UserID,
-		// 		CourierID:     order.CourierID,
-		// 		VoucherShopID: order.VoucherShopID,
-		// 		OrderStatusID: order.OrderStatusID,
-		// 		TotalPrice:    order.TotalPrice,
-		// 		DeliveryFee:   order.DeliveryFee,
-		// 		ResiNo:        order.ResiNo,
-		// 		CreatedAt:     order.CreatedAt,
-		// 		ArrivedAt:     order.ArrivedAt,
-		// 	}
-
-		// 	res.Orders = append(res.Orders, orderRes)
-		// }
 
 		transactionsRes = append(transactionsRes, res)
 	}
@@ -1364,7 +1352,6 @@ func (u *userUC) GetWalletHistory(ctx context.Context, userID string, pgn *pagin
 }
 
 func (u *userUC) GetDetailWalletHistory(ctx context.Context, walletHistoryID, userID string) (*body.DetailHistoryWalletResponse, error) {
-
 	walletHistory, err := u.userRepo.GetWalletHistoryByID(ctx, walletHistoryID)
 	if err != nil {
 		if err == sql.ErrNoRows {
@@ -1373,7 +1360,7 @@ func (u *userUC) GetDetailWalletHistory(ctx context.Context, walletHistoryID, us
 		return nil, err
 	}
 
-	response := &body.DetailHistoryWalletResponse{
+	responseWallet := &body.DetailHistoryWalletResponse{
 		ID:          walletHistory.ID.String(),
 		From:        walletHistory.From,
 		To:          walletHistory.To,
@@ -1408,10 +1395,10 @@ func (u *userUC) GetDetailWalletHistory(ctx context.Context, walletHistoryID, us
 		}
 
 		transactionDetail.Orders = orders
-		response.Transaction = transactionDetail
+		responseWallet.Transaction = transactionDetail
 	}
 
-	return response, nil
+	return responseWallet, nil
 }
 
 func (u *userUC) WalletStepUp(ctx context.Context, userID string, requestBody body.WalletStepUpRequest) (string, error) {

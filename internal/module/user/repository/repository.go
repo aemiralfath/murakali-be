@@ -469,8 +469,30 @@ func (r *userRepo) GetCostRedis(ctx context.Context, key string) (*string, error
 	return &value, nil
 }
 
+func (r *userRepo) GetProfileRedis(ctx context.Context, key string) (*string, error) {
+	res := r.RedisClient.Get(ctx, key)
+	if res.Err() != nil {
+		return nil, res.Err()
+	}
+
+	value, err := res.Result()
+	if err != nil {
+		return nil, err
+	}
+
+	return &value, nil
+}
+
 func (r *userRepo) InsertCostRedis(ctx context.Context, key, value string) error {
 	if err := r.RedisClient.Set(ctx, key, value, 0); err.Err() != nil {
+		return err.Err()
+	}
+
+	return nil
+}
+
+func (r *userRepo) InsertProfileRedis(ctx context.Context, key, value string) error {
+	if err := r.RedisClient.Set(ctx, key, value, time.Minute*5); err.Err() != nil {
 		return err.Err()
 	}
 
@@ -542,10 +564,10 @@ func (r *userRepo) GetOrders(ctx context.Context, userID, orderStatusID string, 
 	return orders, nil
 }
 
-func (r *userRepo) GetOrderDetailByTransactionID(ctx context.Context, TransactionID string) ([]*model.Order, error) {
+func (r *userRepo) GetOrderDetailByTransactionID(ctx context.Context, transactionID string) ([]*model.Order, error) {
 	orders := make([]*model.Order, 0)
 
-	res, err := r.PSQL.QueryContext(ctx, GetOrdersByTransactionIDQuery, TransactionID)
+	res, err := r.PSQL.QueryContext(ctx, GetOrdersByTransactionIDQuery, transactionID)
 
 	if err != nil {
 		return nil, err

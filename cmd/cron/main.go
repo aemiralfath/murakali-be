@@ -37,14 +37,14 @@ func main() {
 		updateOnDelivery(cfg, appLogger)
 	})
 	if err != nil {
-		log.Fatalf("FatalConfig: %v", err)
+		appLogger.Warn("FatalConfig: %v", err)
 	}
 
 	_, err = cronJob.AddFunc("@every 1m", func() {
 		updateExpiredAt(cfg, appLogger)
 	})
 	if err != nil {
-		log.Fatalf("FatalConfig: %v", err)
+		appLogger.Warn("FatalConfig: %v", err)
 	}
 
 	go cronJob.Start()
@@ -69,6 +69,7 @@ func updateOnDelivery(cfg *config.Config, appLogger logger.Logger) {
 		appLogger.Warn("response error: ", err.Error())
 		return
 	}
+	defer res.Body.Close()
 
 	if res.StatusCode != http.StatusOK {
 		appLogger.Warn("status code error: ", res.StatusCode)
@@ -92,6 +93,7 @@ func updateExpiredAt(cfg *config.Config, appLogger logger.Logger) {
 		appLogger.Warn("response error: ", err.Error())
 		return
 	}
+	defer res.Body.Close()
 
 	if res.StatusCode != http.StatusOK {
 		appLogger.Warn("status code error: ", res.StatusCode)
