@@ -256,5 +256,5 @@ const (
 		WHERE "p"."shop_id" = $1 AND ("promo"."id" is NULL OR
 		("promo"."actived_date" < now() AND "promo"."expired_date" < now()))
 		LIMIT $2 OFFSET $3;
-		`
+	`
 )
