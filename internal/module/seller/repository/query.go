@@ -1,7 +1,11 @@
 package repository
 
 const (
-	GetTotalOrderQuery = `SELECT count(id) FROM "order" WHERE "shop_id" = $1 and "order_status_id"::text LIKE $2`
+	GetTotalOrderQuery = `SELECT count(id) FROM "order" as "o" WHERE "o"."shop_id" = $1 and "o"."order_status_id"::text LIKE $2`
+
+	GetTotalOrderWithVoucherIDQuery = `SELECT count(id) FROM "order" as "o" WHERE "o"."shop_id" = $1 and "o"."order_status_id"::text LIKE $2 
+	AND "o"."voucher_shop_id" = $3
+	`
 
 	GetOrdersQuery = `SELECT o.id,o.order_status_id,o.total_price,o.delivery_fee,o.resi_no,s.id,s.name,v.code,o.created_at
 	from "order" o
@@ -10,6 +14,16 @@ const (
 	WHERE o.shop_id = $1 
 	and "order_status_id"::text LIKE $2 
 	ORDER BY o.created_at asc LIMIT $3 OFFSET $4
+	`
+
+	GetOrdersWithVoucherIDQuery = `SELECT o.id,o.order_status_id,o.total_price,o.delivery_fee,o.resi_no,s.id,s.name,v.code,o.created_at
+	from "order" o
+	join "shop" s on s.id = o.shop_id
+	left join "voucher" v on v.id = o.voucher_shop_id 
+	WHERE o.shop_id = $1 
+	and "order_status_id"::text LIKE $2 
+	AND "o"."voucher_shop_id" = $3
+	ORDER BY o.created_at asc LIMIT $4 OFFSET $5
 	`
 
 	GetAddressByBuyerIDQuery = `SELECT
@@ -122,6 +136,9 @@ const (
 	INNER JOIN "shop" as "s" ON "s"."id" = "v"."shop_id"
 	WHERE "v"."shop_id" = $1
 	AND "v"."deleted_at" IS NULL
+	ORDER BY "v"."created_at" DESC
+	LIMIT $2 OFFSET $3
+	
 	`
 	FilterVoucherOngoing = `
 	 AND  ("v"."actived_date" <= now() AND "v"."expired_date" >= now())`

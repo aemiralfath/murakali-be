@@ -30,10 +30,17 @@ func NewSellerRepository(psql *sql.DB, client *redis.Client) seller.Repository {
 	}
 }
 
-func (r *sellerRepo) GetTotalOrder(ctx context.Context, shopID, orderStatusID string) (int64, error) {
+func (r *sellerRepo) GetTotalOrder(ctx context.Context, shopID, orderStatusID, voucherShopID string) (int64, error) {
 	var total int64
-	if err := r.PSQL.QueryRowContext(ctx, GetTotalOrderQuery, shopID, fmt.Sprintf("%%%s%%", orderStatusID)).Scan(&total); err != nil {
-		return 0, err
+
+	if voucherShopID == "" {
+		if err := r.PSQL.QueryRowContext(ctx, GetTotalOrderQuery, shopID, fmt.Sprintf("%%%s%%", orderStatusID)).Scan(&total); err != nil {
+			return 0, err
+		}
+	} else {
+		if err := r.PSQL.QueryRowContext(ctx, GetTotalOrderWithVoucherIDQuery, shopID, fmt.Sprintf("%%%s%%", orderStatusID), voucherShopID).Scan(&total); err != nil {
+			return 0, err
+		}
 	}
 
 	return total, nil
@@ -198,19 +205,36 @@ func (r *sellerRepo) GetOrderByOrderID(ctx context.Context, orderID string) (*mo
 	return &order, nil
 }
 
-func (r *sellerRepo) GetOrders(ctx context.Context, shopID, orderStatusID string, pgn *pagination.Pagination) ([]*model.Order, error) {
+func (r *sellerRepo) GetOrders(ctx context.Context, shopID, orderStatusID, voucherShopID string, pgn *pagination.Pagination) ([]*model.Order, error) {
 	orders := make([]*model.Order, 0)
 
-	res, err := r.PSQL.QueryContext(
-		ctx, GetOrdersQuery,
-		shopID,
-		fmt.Sprintf("%%%s%%", orderStatusID),
-		pgn.GetLimit(),
-		pgn.GetOffset())
+	var res *sql.Rows
+	var err error
+	if voucherShopID == "" {
+		res, err = r.PSQL.QueryContext(
+			ctx, GetOrdersQuery,
+			shopID,
+			fmt.Sprintf("%%%s%%", orderStatusID),
+			pgn.GetLimit(),
+			pgn.GetOffset())
 
-	if err != nil {
-		return nil, err
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		res, err = r.PSQL.QueryContext(
+			ctx, GetOrdersWithVoucherIDQuery,
+			shopID,
+			fmt.Sprintf("%%%s%%", orderStatusID),
+			voucherShopID,
+			pgn.GetLimit(),
+			pgn.GetOffset())
+
+		if err != nil {
+			return nil, err
+		}
 	}
+
 	defer res.Close()
 
 	for res.Next() {
@@ -546,7 +570,7 @@ func (r *sellerRepo) GetTotalVoucherSeller(ctx context.Context, shopID, voucherS
 	return total, nil
 }
 
-func (r *sellerRepo) GetAllVoucherSeller(ctx context.Context, shopID, voucherStatusID string) ([]*model.Voucher, error) {
+func (r *sellerRepo) GetAllVoucherSeller(ctx context.Context, shopID, voucherStatusID string, pgn *pagination.Pagination) ([]*model.Voucher, error) {
 	var shopVouchers []*model.Voucher
 
 	q := GetAllVoucherSellerQuery
@@ -563,7 +587,8 @@ func (r *sellerRepo) GetAllVoucherSeller(ctx context.Context, shopID, voucherSta
 		q = q
 	}
 
-	res, err := r.PSQL.QueryContext(ctx, q, shopID)
+	res, err := r.PSQL.QueryContext(ctx, q, shopID, pgn.GetLimit(),
+		pgn.GetOffset())
 	if err != nil {
 		return nil, err
 	}

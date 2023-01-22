@@ -10,8 +10,8 @@ import (
 )
 
 type Repository interface {
-	GetTotalOrder(ctx context.Context, userID, orderStatusID string) (int64, error)
-	GetOrders(ctx context.Context, userID, orderStatusID string, pgn *pagination.Pagination) ([]*model.Order, error)
+	GetTotalOrder(ctx context.Context, userID, orderStatusID, voucherShopID string) (int64, error)
+	GetOrders(ctx context.Context, userID, orderStatusID, voucherShopID string, pgn *pagination.Pagination) ([]*model.Order, error)
 	GetShopIDByUser(ctx context.Context, userID string) (string, error)
 	GetShopIDByOrder(ctx context.Context, OrderID string) (string, error)
 	ChangeOrderStatus(ctx context.Context, requestBody body.ChangeOrderStatusRequest) error
@@ -36,7 +36,7 @@ type Repository interface {
 	GetCostRedis(ctx context.Context, key string) (*string, error)
 	GetOrdersOnDelivery(ctx context.Context) ([]*model.OrderModel, error)
 	InsertCostRedis(ctx context.Context, key string, value string) error
-	GetAllVoucherSeller(ctx context.Context, shopID, voucherStatusID string) ([]*model.Voucher, error)
+	GetAllVoucherSeller(ctx context.Context, shopID, voucherStatusID string, pgn *pagination.Pagination) ([]*model.Voucher, error)
 	GetTotalVoucherSeller(ctx context.Context, shopID, voucherStatusID string) (int64, error)
 	CreateVoucherSeller(ctx context.Context, voucherShop *model.Voucher) error
 	UpdateVoucherSeller(ctx context.Context, voucherShop *model.Voucher) error
