@@ -25,4 +25,5 @@ type Handlers interface {
 	GetDetailPromotionSellerByID(c *gin.Context)
 	UpdateOnDeliveryOrder(c *gin.Context)
 	UpdateExpiredAtOrder(c *gin.Context)
+	GetProductWithoutPromotionSeller(c *gin.Context)
 }

@@ -1000,3 +1000,46 @@ func (r *sellerRepo) UpdateProductDetailStock(ctx context.Context, tx postgre.Tr
 
 	return nil
 }
+
+func (r *sellerRepo) GetTotalProductWithoutPromotionSeller(ctx context.Context, shopID string) (int64, error){
+	var total int64
+	if err := r.PSQL.QueryRowContext(ctx, GetTotalProductWithoutPromotionQuery, shopID).Scan(&total); err != nil {
+		return -1, err
+	}
+
+	return total, nil
+
+}
+func (r *sellerRepo) GetProductWithoutPromotionSeller(ctx context.Context, shopID string, pgn *pagination.Pagination) ([]*body.GetProductWithoutPromotion, error) {
+	var productWoutPromos []*body.GetProductWithoutPromotion
+
+	res, err := r.PSQL.QueryContext(ctx, GetProductWithoutPromotionQuery, shopID, pgn.Limit, pgn.GetOffset())
+	if err != nil {
+		return nil, err
+	}
+	defer res.Close()
+
+	for res.Next() {
+		var productNoPromo body.GetProductWithoutPromotion
+
+		if errScan := res.Scan(
+			&productNoPromo.ProductID,
+			&productNoPromo.ProductName,
+			&productNoPromo.Price,
+			&productNoPromo.CategoryName,
+			&productNoPromo.ProductThumbnailURL,
+			&productNoPromo.UnitSold,
+			&productNoPromo.Rating,
+		); errScan != nil {
+			return nil, errScan
+		}
+
+		productWoutPromos = append(productWoutPromos, &productNoPromo)
+	}
+
+	if res.Err() != nil {
+		return nil, err
+	}
+
+	return productWoutPromos, nil
+}

@@ -738,6 +738,34 @@ func (u *sellerUC) GetDetailPromotionSellerByID(ctx context.Context,
 	return promotionShop, nil
 }
 
+func (u sellerUC) GetProductWithoutPromotionSeller(ctx context.Context, userID string, pgn *pagination.Pagination) (*pagination.Pagination, error) {
+	shopID, err := u.sellerRepo.GetShopIDByUserID(ctx, userID)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, httperror.New(http.StatusBadRequest, response.UserNotHaveShop)
+		}
+		return nil, err
+	}
+
+	totalRows, err := u.sellerRepo.GetTotalProductWithoutPromotionSeller(ctx, shopID)
+	if err != nil {
+		return nil, err
+	}
+
+	totalPages := int(math.Ceil(float64(totalRows) / float64(pgn.Limit)))
+	pgn.TotalRows = totalRows
+	pgn.TotalPages = totalPages
+
+	ProductWoutPromotion, err := u.sellerRepo.GetProductWithoutPromotionSeller(ctx, shopID, pgn)
+	if err != nil {
+		return nil, err
+	}
+
+	pgn.Rows = ProductWoutPromotion
+
+	return pgn, nil
+}
+
 func (u *sellerUC) CalculateDiscountPromotionProduct(ctx context.Context, p *body.PromotionDetailSeller) *body.PromotionDetailSeller {
 	var maxDiscountPrice float64
 	var minProductPrice float64

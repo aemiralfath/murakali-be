@@ -29,4 +29,5 @@ type UseCase interface {
 	CreatePromotionSeller(ctx context.Context, userID string, requestBody body.CreatePromotionRequest) (int, error)
 	UpdatePromotionSeller(ctx context.Context, userID string, requestBody body.UpdatePromotionRequest) error
 	GetDetailPromotionSellerByID(ctx context.Context, shopProductPromo *body.ShopProductPromo) (*body.PromotionDetailSeller, error)
+	GetProductWithoutPromotionSeller(ctx context.Context, userID string, pgn *pagination.Pagination) (*pagination.Pagination, error)
 }

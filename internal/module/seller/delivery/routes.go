@@ -29,6 +29,7 @@ func MapSellerRoutes(sellerGroup *gin.RouterGroup, h seller.Handlers, mw *middle
 	sellerGroup.PUT("/voucher", h.UpdateVoucherSeller)
 	sellerGroup.GET("/voucher/:id", h.DetailVoucherSeller)
 	sellerGroup.DELETE("/voucher/:id", h.DeleteVoucherSeller)
+	sellerGroup.GET("/product/without-promotion", h.GetProductWithoutPromotionSeller)
 	sellerGroup.GET("/promotion", h.GetAllPromotionSeller)
 	sellerGroup.POST("/promotion", h.CreatePromotionSeller)
 	sellerGroup.PUT("/promotion", h.UpdatePromotionSeller)

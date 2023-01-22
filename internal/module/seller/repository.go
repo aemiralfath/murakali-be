@@ -56,4 +56,6 @@ type Repository interface {
 	GetPromotionSellerDetailByID(ctx context.Context, shopProductPromo *body.ShopProductPromo) (*body.PromotionSellerResponse, error)
 	UpdatePromotionSeller(ctx context.Context, promotion *model.Promotion) error
 	GetDetailPromotionSellerByID(ctx context.Context, shopProductPromo *body.ShopProductPromo) (*body.PromotionDetailSeller, error)
+	GetTotalProductWithoutPromotionSeller(ctx context.Context, shopID string) (int64, error)
+	GetProductWithoutPromotionSeller(ctx context.Context, shopID string, pgn *pagination.Pagination) ([]*body.GetProductWithoutPromotion, error)
 }
