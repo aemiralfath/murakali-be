@@ -8,7 +8,6 @@ import (
 )
 
 func MapSellerRoutes(sellerGroup *gin.RouterGroup, h seller.Handlers, mw *middleware.MWManager) {
-
 	sellerGroup.GET("/:seller_id", h.GetSellerBySellerID)
 	sellerGroup.GET("/:seller_id/category", h.GetCategoryBySellerID)
 	sellerGroup.POST("/delivery", h.UpdateOnDeliveryOrder)
@@ -17,11 +16,12 @@ func MapSellerRoutes(sellerGroup *gin.RouterGroup, h seller.Handlers, mw *middle
 	sellerGroup.Use(mw.AuthJWTMiddleware())
 	sellerGroup.Use(mw.SellerJWTMiddleware())
 	sellerGroup.GET("/information", h.GetSellerDetailInformation)
-
+	sellerGroup.PATCH("/information", h.UpdateSellerInformation)
 	sellerGroup.GET("/user/:user_id", h.GetSellerByUserID)
 	sellerGroup.GET("/order", h.GetOrder)
 	sellerGroup.GET("/order/:order_id", h.GetOrderByOrderID)
 	sellerGroup.PATCH("/order-status", h.ChangeOrderStatus)
+	sellerGroup.PATCH("/order-cancel", h.CancelOrderStatus)
 	sellerGroup.GET("/courier", h.GetCourierSeller)
 	sellerGroup.POST("/courier", h.CreateCourierSeller)
 	sellerGroup.DELETE("/courier/:id", h.DeleteCourierSellerByID)

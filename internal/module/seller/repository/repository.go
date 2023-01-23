@@ -38,7 +38,8 @@ func (r *sellerRepo) GetTotalOrder(ctx context.Context, shopID, orderStatusID, v
 			return 0, err
 		}
 	} else {
-		if err := r.PSQL.QueryRowContext(ctx, GetTotalOrderWithVoucherIDQuery, shopID, fmt.Sprintf("%%%s%%", orderStatusID), voucherShopID).Scan(&total); err != nil {
+		if err := r.PSQL.QueryRowContext(ctx, GetTotalOrderWithVoucherIDQuery, shopID,
+			fmt.Sprintf("%%%s%%", orderStatusID), voucherShopID).Scan(&total); err != nil {
 			return 0, err
 		}
 	}
@@ -298,6 +299,26 @@ func (r *sellerRepo) ChangeOrderStatus(ctx context.Context, requestBody body.Cha
 	return nil
 }
 
+func (r *sellerRepo) CancelOrderStatus(ctx context.Context, tx postgre.Transaction, requestBody body.CancelOrderStatus) error {
+	_, err := tx.ExecContext(
+		ctx, CancelOrderStatusQuery, constant.OrderStatusCanceled, requestBody.CancelNotes, true, requestBody.OrderID)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (r *sellerRepo) CreateRefundSeller(ctx context.Context, tx postgre.Transaction, requestBody body.CancelOrderStatus) error {
+	_, err := tx.ExecContext(
+		ctx, CreateRefundSellerQuery, requestBody.OrderID, true, requestBody.CancelNotes, time.Now())
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func (r *sellerRepo) GetOrdersOnDelivery(ctx context.Context) ([]*model.OrderModel, error) {
 	orders := make([]*model.OrderModel, 0)
 	res, err := r.PSQL.QueryContext(ctx, GetOrderOnDeliveryQuery, constant.OrderStatusOnDelivery)
@@ -422,6 +443,16 @@ func (r *sellerRepo) GetSellerByUserID(ctx context.Context, userID string) (*bod
 	}
 
 	return &sellerData, nil
+}
+
+func (r *sellerRepo) UpdateSellerInformationByUserID(ctx context.Context, shopName, userID string) error {
+	_, err := r.PSQL.ExecContext(
+		ctx, UpdateShopInformationByUserIDQuery, shopName, userID)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func (r *sellerRepo) GetCategoryBySellerID(ctx context.Context, shopID string) ([]*body.CategoryResponse, error) {
@@ -554,11 +585,11 @@ func (r *sellerRepo) GetTotalVoucherSeller(ctx context.Context, shopID, voucherS
 	case "1":
 		q = GetTotalVoucherSellerQuery
 	case "2":
-		q = q + FilterVoucherWillCome
+		q += FilterVoucherWillCome
 	case "3":
-		q = q + FilterVoucherOngoing
+		q += FilterVoucherOngoing
 	case "4":
-		q = q + FilterVoucherHasEnded
+		q += FilterVoucherHasEnded
 	default:
 		q = GetTotalVoucherSellerQuery
 	}
@@ -575,14 +606,12 @@ func (r *sellerRepo) GetAllVoucherSeller(ctx context.Context, shopID, voucherSta
 
 	q := GetAllVoucherSellerQuery
 	switch voucherStatusID {
-	case "1":
-		q = GetAllVoucherSellerQuery
 	case "2":
-		q = q + FilterVoucherWillCome
+		q += FilterVoucherWillCome
 	case "3":
-		q = q + FilterVoucherOngoing
+		q += FilterVoucherOngoing
 	case "4":
-		q = q + FilterVoucherHasEnded
+		q += FilterVoucherHasEnded
 	default:
 		q = GetAllVoucherSellerQuery
 	}
@@ -686,17 +715,17 @@ func (r *sellerRepo) GetAllVoucherSellerByIDAndShopID(ctx context.Context, vouch
 	return &voucher, nil
 }
 
-func (r *sellerRepo) GetAllPromotionSeller(ctx context.Context, shopID string, promoStatusID string) ([]*body.PromotionSellerResponse, error) {
+func (r *sellerRepo) GetAllPromotionSeller(ctx context.Context, shopID, promoStatusID string) ([]*body.PromotionSellerResponse, error) {
 	var promotionSeller []*body.PromotionSellerResponse
 
 	q := GetAllPromotionSellerQuery
 	switch promoStatusID {
 	case "2":
-		q = q + FilterWillComeQuery
+		q += FilterWillComeQuery
 	case "3":
-		q = q + FilterOngoingQuery
+		q += FilterOngoingQuery
 	case "4":
-		q = q + FilterHasEndedQuery
+		q += FilterHasEndedQuery
 	}
 
 	res, err := r.PSQL.QueryContext(ctx, q, shopID)
@@ -739,17 +768,17 @@ func (r *sellerRepo) GetAllPromotionSeller(ctx context.Context, shopID string, p
 	return promotionSeller, nil
 }
 
-func (r *sellerRepo) GetTotalPromotionSeller(ctx context.Context, shopID string, promoStatusID string) (int64, error) {
+func (r *sellerRepo) GetTotalPromotionSeller(ctx context.Context, shopID, promoStatusID string) (int64, error) {
 	var total int64
 
 	q := GetTotalPromotionSellerQuery
 	switch promoStatusID {
 	case "2":
-		q = q + FilterWillComeQuery
+		q += FilterWillComeQuery
 	case "3":
-		q = q + FilterOngoingQuery
+		q += FilterOngoingQuery
 	case "4":
-		q = q + FilterHasEndedQuery
+		q += FilterHasEndedQuery
 	}
 
 	if err := r.PSQL.QueryRowContext(ctx, q, shopID).Scan(&total); err != nil {

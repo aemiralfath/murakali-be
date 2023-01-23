@@ -10,6 +10,7 @@ type Handlers interface {
 	GetSellerBySellerID(c *gin.Context)
 	GetSellerByUserID(c *gin.Context)
 	GetSellerDetailInformation(c *gin.Context)
+	UpdateSellerInformation(c *gin.Context)
 	CreateCourierSeller(c *gin.Context)
 	DeleteCourierSellerByID(c *gin.Context)
 	GetCategoryBySellerID(c *gin.Context)
@@ -25,4 +26,5 @@ type Handlers interface {
 	GetDetailPromotionSellerByID(c *gin.Context)
 	UpdateOnDeliveryOrder(c *gin.Context)
 	UpdateExpiredAtOrder(c *gin.Context)
+	CancelOrderStatus(c *gin.Context)
 }

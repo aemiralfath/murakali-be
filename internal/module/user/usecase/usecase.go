@@ -12,6 +12,7 @@ import (
 	"murakali/config"
 	"murakali/internal/constant"
 	"murakali/internal/model"
+	body2 "murakali/internal/module/location/delivery/body"
 	"murakali/internal/module/user"
 	"murakali/internal/module/user/delivery/body"
 	"murakali/internal/util"
@@ -245,8 +246,106 @@ func (u *userUC) GetOrder(ctx context.Context, userID, orderStatusID string, pgn
 	return pgn, nil
 }
 
-func (u *userUC) GetTransactionDetailByID(ctx context.Context, transactionID, userID string) (*body.TransactionDetailResponse, error) {
+func (u *userUC) GetOrderByOrderID(ctx context.Context, orderID string) (*model.Order, error) {
+	order, err := u.userRepo.GetOrderByOrderID(ctx, orderID)
+	if err != nil {
+		return nil, err
+	}
 
+	buyerID, err := u.userRepo.GetBuyerIDByOrderID(ctx, orderID)
+	if err != nil {
+		return nil, err
+	}
+
+	sellerID, err := u.userRepo.GetSellerIDByOrderID(ctx, orderID)
+	if err != nil {
+		return nil, err
+	}
+
+	buyerAddress, err := u.userRepo.GetAddressByBuyerID(ctx, buyerID)
+	if err != nil {
+		return nil, err
+	}
+
+	sellerAddress, err := u.userRepo.GetAddressBySellerID(ctx, sellerID)
+	if err != nil {
+		return nil, err
+	}
+
+	order.BuyerAddress = buyerAddress
+	order.SellerAddress = sellerAddress
+
+	totalWeight := 0
+	for _, detail := range order.Detail {
+		totalWeight += int(detail.ProductWeight) * detail.OrderQuantity
+	}
+
+	var costRedis *string
+	key := fmt.Sprintf("%d:%d:%d:%s", sellerAddress.CityID, buyerAddress.CityID, totalWeight, order.CourierCode)
+	costRedis, err = u.userRepo.GetCostRedis(ctx, key)
+	if err != nil {
+		res, err := u.GetCostRajaOngkir(sellerAddress.CityID, buyerAddress.CityID, totalWeight, order.CourierCode)
+		if err != nil {
+			return nil, err
+		}
+
+		redisValue, err := json.Marshal(res)
+		if err != nil {
+			return nil, err
+		}
+
+		if errInsert := u.userRepo.InsertCostRedis(ctx, key, string(redisValue)); errInsert != nil {
+			return nil, errInsert
+		}
+
+		value := string(redisValue)
+		costRedis = &value
+	}
+
+	var costResp body2.RajaOngkirCostResponse
+	if err := json.Unmarshal([]byte(*costRedis), &costResp); err != nil {
+		return nil, err
+	}
+
+	if len(costResp.Rajaongkir.Results) > 0 {
+		for _, cost := range costResp.Rajaongkir.Results[0].Costs {
+			if cost.Service == order.CourierService {
+				order.CourierETD = cost.Cost[0].Etd
+			}
+		}
+	}
+
+	return order, nil
+}
+
+func (u *userUC) GetCostRajaOngkir(origin, destination, weight int, code string) (*body2.RajaOngkirCostResponse, error) {
+	var responseCost body2.RajaOngkirCostResponse
+	url := fmt.Sprintf("%s/cost", u.cfg.External.OngkirAPIURL)
+	payload := fmt.Sprintf(
+		"origin=%d&destination=%d&weight=%d&courier=%s", origin, destination, weight, code)
+
+	req, err := http.NewRequest("POST", url, strings.NewReader(payload))
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("key", u.cfg.External.OngkirAPIKey)
+	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
+	res, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer res.Body.Close()
+
+	readErr := json.NewDecoder(res.Body).Decode(&responseCost)
+	if readErr != nil {
+		return nil, err
+	}
+
+	return &responseCost, nil
+}
+
+func (u *userUC) GetTransactionDetailByID(ctx context.Context, transactionID, userID string) (*body.TransactionDetailResponse, error) {
 	var transactionDetail *body.TransactionDetailResponse
 	transaction, err := u.userRepo.GetTransactionByID(ctx, transactionID)
 	if err != nil {
@@ -629,27 +728,47 @@ func (u *userUC) RegisterMerchant(ctx context.Context, userID, shopName string) 
 }
 
 func (u *userUC) GetUserProfile(ctx context.Context, userID string) (*body.ProfileResponse, error) {
-	userModel, err := u.userRepo.GetUserByID(ctx, userID)
+	profile := &body.ProfileResponse{}
+	key := fmt.Sprintf("profile:%s", userID)
+	profileRedis, err := u.userRepo.GetProfileRedis(ctx, key)
 	if err != nil {
-		if err == sql.ErrNoRows {
-			return nil, httperror.New(http.StatusBadRequest, response.UserNotExistMessage)
+		userModel, err := u.userRepo.GetUserByID(ctx, userID)
+		if err != nil {
+			if err == sql.ErrNoRows {
+				return nil, httperror.New(http.StatusBadRequest, response.UserNotExistMessage)
+			}
+			return nil, err
 		}
+
+		profileInfo := &body.ProfileResponse{
+			Role:        userModel.RoleID,
+			UserName:    userModel.Username,
+			Email:       userModel.Email,
+			PhoneNumber: userModel.PhoneNo,
+			FullName:    userModel.FullName,
+			Gender:      userModel.Gender,
+			BirthDate:   userModel.BirthDate.Time,
+			PhotoURL:    userModel.PhotoURL,
+			IsVerify:    userModel.IsVerify,
+		}
+
+		redisValue, err := json.Marshal(profileInfo)
+		if err != nil {
+			return nil, err
+		}
+
+		if err := u.userRepo.InsertProfileRedis(ctx, key, string(redisValue)); err != nil {
+			return nil, err
+		}
+
+		return profileInfo, nil
+	}
+
+	if err := json.Unmarshal([]byte(*profileRedis), profile); err != nil {
 		return nil, err
 	}
 
-	profileInfo := &body.ProfileResponse{
-		Role:        userModel.RoleID,
-		UserName:    userModel.Username,
-		Email:       userModel.Email,
-		PhoneNumber: userModel.PhoneNo,
-		FullName:    userModel.FullName,
-		Gender:      userModel.Gender,
-		BirthDate:   userModel.BirthDate.Time,
-		PhotoURL:    userModel.PhotoURL,
-		IsVerify:    userModel.IsVerify,
-	}
-
-	return profileInfo, nil
+	return profile, nil
 }
 
 func (u *userUC) UploadProfilePicture(ctx context.Context, imgURL, userID string) error {
@@ -956,8 +1075,8 @@ func (u *userUC) GetRedirectURL(transaction *model.Transaction, sign string) (st
 	return res.Header.Get("Location"), nil
 }
 
-func (u *userUC) GetTransactionByUserID(ctx context.Context, UserID string, pgn *pagination.Pagination) (*pagination.Pagination, error) {
-	totalRows, err := u.userRepo.GetTotalTransactionByUserID(ctx, UserID)
+func (u *userUC) GetTransactionByUserID(ctx context.Context, userID string, status int, pgn *pagination.Pagination) (*pagination.Pagination, error) {
+	totalRows, err := u.userRepo.GetTotalTransactionByUserID(ctx, userID)
 	if err != nil {
 		return nil, err
 	}
@@ -966,14 +1085,14 @@ func (u *userUC) GetTransactionByUserID(ctx context.Context, UserID string, pgn 
 	pgn.TotalRows = totalRows
 	pgn.TotalPages = totalPages
 
-	transactionsRes := make([]*body.GetTransactionByUserIDResponse, 0)
-	transactions, err := u.userRepo.GetTransactionByUserID(ctx, UserID, pgn)
+	transactionsRes := make([]*body.GetTransactionByIDResponse, 0)
+	transactions, err := u.userRepo.GetTransactionByUserID(ctx, userID, status, pgn)
 	if err != nil {
 		return nil, err
 	}
 
 	for _, transaction := range transactions {
-		res := &body.GetTransactionByUserIDResponse{
+		res := &body.GetTransactionByIDResponse{
 			ID:         transaction.ID,
 			WalletID:   transaction.WalletID,
 			CardNumber: transaction.CardNumber,
@@ -982,7 +1101,7 @@ func (u *userUC) GetTransactionByUserID(ctx context.Context, UserID string, pgn 
 			ExpiredAt:  transaction.ExpiredAt,
 		}
 
-		orders, err := u.userRepo.GetOrderByTransactionID(ctx, res.ID.String())
+		res.Orders, err = u.userRepo.GetOrderDetailByTransactionID(ctx, res.ID.String())
 		if err != nil {
 			return nil, err
 		}
@@ -992,26 +1111,6 @@ func (u *userUC) GetTransactionByUserID(ctx context.Context, UserID string, pgn 
 			if err != sql.ErrNoRows {
 				return nil, err
 			}
-		}
-
-		res.Orders = make([]*model.OrderModel, 0)
-		for _, order := range orders {
-			orderRes := &model.OrderModel{
-				ID:            order.ID,
-				TransactionID: order.TransactionID,
-				ShopID:        order.ShopID,
-				UserID:        order.UserID,
-				CourierID:     order.CourierID,
-				VoucherShopID: order.VoucherShopID,
-				OrderStatusID: order.OrderStatusID,
-				TotalPrice:    order.TotalPrice,
-				DeliveryFee:   order.DeliveryFee,
-				ResiNo:        order.ResiNo,
-				CreatedAt:     order.CreatedAt,
-				ArrivedAt:     order.ArrivedAt,
-			}
-
-			res.Orders = append(res.Orders, orderRes)
 		}
 
 		transactionsRes = append(transactionsRes, res)
@@ -1253,7 +1352,6 @@ func (u *userUC) GetWalletHistory(ctx context.Context, userID string, pgn *pagin
 }
 
 func (u *userUC) GetDetailWalletHistory(ctx context.Context, walletHistoryID, userID string) (*body.DetailHistoryWalletResponse, error) {
-
 	walletHistory, err := u.userRepo.GetWalletHistoryByID(ctx, walletHistoryID)
 	if err != nil {
 		if err == sql.ErrNoRows {
@@ -1262,7 +1360,7 @@ func (u *userUC) GetDetailWalletHistory(ctx context.Context, walletHistoryID, us
 		return nil, err
 	}
 
-	response := &body.DetailHistoryWalletResponse{
+	responseWallet := &body.DetailHistoryWalletResponse{
 		ID:          walletHistory.ID.String(),
 		From:        walletHistory.From,
 		To:          walletHistory.To,
@@ -1297,10 +1395,10 @@ func (u *userUC) GetDetailWalletHistory(ctx context.Context, walletHistoryID, us
 		}
 
 		transactionDetail.Orders = orders
-		response.Transaction = transactionDetail
+		responseWallet.Transaction = transactionDetail
 	}
 
-	return response, nil
+	return responseWallet, nil
 }
 
 func (u *userUC) WalletStepUp(ctx context.Context, userID string, requestBody body.WalletStepUpRequest) (string, error) {

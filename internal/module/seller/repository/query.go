@@ -72,6 +72,7 @@ const (
 	GetShopIDByOrderQuery = `SELECT shop_id from "order" where id = $1 `
 
 	ChangeOrderStatusQuery = `UPDATE "order" SET "order_status_id" = $1 WHERE "id" = $2`
+	CancelOrderStatusQuery = `UPDATE "order" SET "order_status_id" = $1, "cancel_notes" = $2, "is_refund" = $3 WHERE "id" = $4`
 
 	GetCourierSellerQuery = `
 	SELECT "sp"."id" as "shop_courier_id",	"sp"."courier_id" as "courier_id", "sp"."deleted_at" as "deleted_at"
@@ -100,6 +101,8 @@ const (
 	FROM "shop" s 
 	JOIN "user" u ON u.id = s.user_id
 	WHERE s.user_id = $1 AND s.deleted_at is null`
+
+	UpdateShopInformationByUserIDQuery = `UPDATE "shop" SET "name" = $1 WHERE "user_id" = $2`
 
 	GetCourierByIDQuery                            = `SELECT id FROM "courier" WHERE id = $1 AND deleted_at IS NULL`
 	GetShopIDByUserIDQuery                         = `SELECT id from "shop" WHERE user_id = $1 AND deleted_at IS NULL `
@@ -154,6 +157,8 @@ const (
     	VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
 	`
 	DeleteVoucherSellerQuery = `UPDATE "voucher" set deleted_at = now() WHERE "id" = $1 AND "shop_id" = $2 AND "deleted_at" IS NULL`
+
+	CreateRefundSellerQuery = `INSERT INTO "refund" (order_id, is_seller_refund, reason, accepted_at) VALUES($1, $2, $3, $4)`
 
 	GetAllVoucherSellerByIDandShopIDQuery = `
 	SELECT "v"."id", "v"."shop_id", "v"."code", "v"."quota", "v"."actived_date", "v"."expired_date",
