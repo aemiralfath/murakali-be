@@ -25,6 +25,7 @@ type Handlers interface {
 	GetTransactions(c *gin.Context)
 	CreateTransaction(c *gin.Context)
 	GetTransactionDetailByID(c *gin.Context)
+	ChangeTransactionPaymentMethod(c *gin.Context)
 	CreateSLPPayment(c *gin.Context)
 	SLPPaymentCallback(c *gin.Context)
 	WalletPaymentCallback(c *gin.Context)

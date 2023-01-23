@@ -1197,6 +1197,37 @@ func (u *userUC) UpdateTransaction(ctx context.Context, transactionID string, re
 	return nil
 }
 
+func (u *userUC) UpdateTransactionPaymentMethod(ctx context.Context, transactionID, cardNumber string) error {
+	transaction, err := u.userRepo.GetTransactionByID(ctx, transactionID)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return httperror.New(http.StatusBadRequest, response.TransactionIDNotExist)
+		}
+
+		return err
+	}
+
+	if transaction.PaidAt.Valid || transaction.CanceledAt.Valid {
+		return httperror.New(http.StatusBadRequest, response.TransactionAlreadyFinished)
+	}
+
+	if cardNumber != "" {
+		err := u.txRepo.WithTransaction(func(tx postgre.Transaction) error {
+			transaction.CardNumber = &cardNumber
+			if err := u.userRepo.UpdateTransaction(ctx, tx, transaction); err != nil {
+				return err
+			}
+			return nil
+		})
+
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
 func (u *userUC) UpdateWalletTransaction(ctx context.Context, transactionID string, requestBody body.SLPCallbackRequest) error {
 	transaction, err := u.userRepo.GetTransactionByID(ctx, transactionID)
 	if err != nil {
