@@ -8,10 +8,10 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func (mw *MWManager) SellerJWTMiddleware() gin.HandlerFunc {
+func (mw *MWManager) AdminJWTMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		roleID, exist := c.Get("roleID")
-		if !exist || roleID.(float64) != constant.RoleSeller {
+		if !exist || roleID.(float64) != constant.RoleAdmin {
 			response.ErrorResponse(c.Writer, response.ForbiddenMessage, http.StatusForbidden)
 			c.Abort()
 			return

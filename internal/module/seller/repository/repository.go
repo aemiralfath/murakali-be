@@ -299,6 +299,26 @@ func (r *sellerRepo) ChangeOrderStatus(ctx context.Context, requestBody body.Cha
 	return nil
 }
 
+func (r *sellerRepo) CancelOrderStatus(ctx context.Context, tx postgre.Transaction, requestBody body.CancelOrderStatus) error {
+	_, err := tx.ExecContext(
+		ctx, CancelOrderStatusQuery, constant.OrderStatusCanceled, requestBody.CancelNotes, true, requestBody.OrderID)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (r *sellerRepo) CreateRefundSeller(ctx context.Context, tx postgre.Transaction, requestBody body.CancelOrderStatus) error {
+	_, err := tx.ExecContext(
+		ctx, CreateRefundSellerQuery, requestBody.OrderID, true, requestBody.CancelNotes, time.Now())
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func (r *sellerRepo) GetOrdersOnDelivery(ctx context.Context) ([]*model.OrderModel, error) {
 	orders := make([]*model.OrderModel, 0)
 	res, err := r.PSQL.QueryContext(ctx, GetOrderOnDeliveryQuery, constant.OrderStatusOnDelivery)
@@ -423,6 +443,16 @@ func (r *sellerRepo) GetSellerByUserID(ctx context.Context, userID string) (*bod
 	}
 
 	return &sellerData, nil
+}
+
+func (r *sellerRepo) UpdateSellerInformationByUserID(ctx context.Context, shopName, userID string) error {
+	_, err := r.PSQL.ExecContext(
+		ctx, UpdateShopInformationByUserIDQuery, shopName, userID)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func (r *sellerRepo) GetCategoryBySellerID(ctx context.Context, shopID string) ([]*body.CategoryResponse, error) {
@@ -552,6 +582,8 @@ func (r *sellerRepo) GetTotalVoucherSeller(ctx context.Context, shopID, voucherS
 
 	q := GetTotalVoucherSellerQuery
 	switch voucherStatusID {
+	case "1":
+		q = GetTotalVoucherSellerQuery
 	case "2":
 		q += FilterVoucherWillCome
 	case "3":
@@ -559,7 +591,7 @@ func (r *sellerRepo) GetTotalVoucherSeller(ctx context.Context, shopID, voucherS
 	case "4":
 		q += FilterVoucherHasEnded
 	default:
-		q = GetAllVoucherSellerQuery
+		q = GetTotalVoucherSellerQuery
 	}
 
 	if err := r.PSQL.QueryRowContext(ctx, q, shopID).Scan(&total); err != nil {
@@ -569,7 +601,17 @@ func (r *sellerRepo) GetTotalVoucherSeller(ctx context.Context, shopID, voucherS
 	return total, nil
 }
 
-func (r *sellerRepo) GetAllVoucherSeller(ctx context.Context, shopID, voucherStatusID string, pgn *pagination.Pagination) ([]*model.Voucher, error) {
+func (r *sellerRepo) CountCodeVoucher(ctx context.Context, code string) (int64, error) {
+	var total int64
+
+	if err := r.PSQL.QueryRowContext(ctx, CountCodeVoucher, code).Scan(&total); err != nil {
+		return -1, err
+	}
+
+	return total, nil
+}
+
+func (r *sellerRepo) GetAllVoucherSeller(ctx context.Context, shopID, voucherStatusID, sortFilter string, pgn *pagination.Pagination) ([]*model.Voucher, error) {
 	var shopVouchers []*model.Voucher
 
 	q := GetAllVoucherSellerQuery
@@ -583,9 +625,9 @@ func (r *sellerRepo) GetAllVoucherSeller(ctx context.Context, shopID, voucherSta
 	default:
 		q = GetAllVoucherSellerQuery
 	}
-
-	res, err := r.PSQL.QueryContext(ctx, q, shopID, pgn.GetLimit(),
+	queryOrderBySomething := fmt.Sprintf(OrderBySomething, sortFilter, pgn.GetLimit(),
 		pgn.GetOffset())
+	res, err := r.PSQL.QueryContext(ctx, q+queryOrderBySomething, shopID)
 	if err != nil {
 		return nil, err
 	}

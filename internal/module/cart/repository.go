@@ -18,4 +18,8 @@ type Repository interface {
 	GetCartHoverHome(ctx context.Context, userID string, limit int) ([]*body.CartHome, error)
 	GetCartItems(ctx context.Context, userID string, pgn *pagination.Pagination) ([]*body.CartItemsResponse,
 		[]*body.ProductDetailResponse, []*body.PromoResponse, error)
+	GetTotalVoucherShop(ctx context.Context, shopID string) (int64, error)
+	GetVoucherShop(ctx context.Context, shopID string, pgn *pagination.Pagination) ([]*model.Voucher, error)
+	GetTotalVoucherMarketplace(ctx context.Context) (int64, error)
+	GetVoucherMarketplace(ctx context.Context, pgn *pagination.Pagination) ([]*model.Voucher, error)
 }

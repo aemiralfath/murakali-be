@@ -218,6 +218,23 @@ func (u *sellerUC) GetSellerByUserID(ctx context.Context, userID string) (*body.
 	return sellerData, nil
 }
 
+func (u *sellerUC) UpdateSellerInformationByUserID(ctx context.Context, shopName, userID string) error {
+	_, err := u.sellerRepo.GetSellerByUserID(ctx, userID)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return httperror.New(http.StatusBadRequest, body.SellerNotFoundMessage)
+		}
+		return err
+	}
+
+	err = u.sellerRepo.UpdateSellerInformationByUserID(ctx, shopName, userID)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func (u *sellerUC) CreateCourierSeller(ctx context.Context, userID, courierID string) error {
 	_, err := u.sellerRepo.GetCourierByID(ctx, courierID)
 	if err != nil {
@@ -326,7 +343,6 @@ func (u *sellerUC) UpdateOnDeliveryOrder(ctx context.Context) error {
 }
 
 func (u *sellerUC) UpdateExpiredAtOrder(ctx context.Context) error {
-	// TODO: Add voucher promotion stock & validation
 	transactions, err := u.sellerRepo.GetTransactionsExpired(ctx)
 	if err != nil {
 		return nil
@@ -408,8 +424,7 @@ func (u *sellerUC) GetCostRajaOngkir(origin, destination, weight int, code strin
 	return &responseCost, nil
 }
 
-func (u *sellerUC) GetAllVoucherSeller(ctx context.Context, userID, voucherStatusID string,
-	pgn *pagination.Pagination) (*pagination.Pagination, error) {
+func (u *sellerUC) GetAllVoucherSeller(ctx context.Context, userID, voucherStatusID, sortFilter string, pgn *pagination.Pagination) (*pagination.Pagination, error) {
 	shopID, err := u.sellerRepo.GetShopIDByUserID(ctx, userID)
 	if err != nil {
 		if err == sql.ErrNoRows {
@@ -427,7 +442,7 @@ func (u *sellerUC) GetAllVoucherSeller(ctx context.Context, userID, voucherStatu
 	pgn.TotalRows = totalRows
 	pgn.TotalPages = totalPages
 
-	ShopVouchers, err := u.sellerRepo.GetAllVoucherSeller(ctx, shopID, voucherStatusID, pgn)
+	ShopVouchers, err := u.sellerRepo.GetAllVoucherSeller(ctx, shopID, voucherStatusID, sortFilter, pgn)
 	if err != nil {
 		return nil, err
 	}
@@ -438,6 +453,11 @@ func (u *sellerUC) GetAllVoucherSeller(ctx context.Context, userID, voucherStatu
 }
 
 func (u *sellerUC) CreateVoucherSeller(ctx context.Context, userID string, requestBody body.CreateVoucherRequest) error {
+	count, _ := u.sellerRepo.CountCodeVoucher(ctx, requestBody.Code)
+	if count > 0 {
+		return httperror.New(http.StatusBadRequest, body.CodeVoucherAlreadyExist)
+	}
+
 	id, err := u.sellerRepo.GetShopIDByUserID(ctx, userID)
 	if err != nil {
 		if err == sql.ErrNoRows {
@@ -553,6 +573,43 @@ func (u *sellerUC) DeleteVoucherSeller(ctx context.Context, voucherIDShopID *bod
 
 	if err := u.sellerRepo.DeleteVoucherSeller(ctx, voucherIDShopID); err != nil {
 		return err
+	}
+
+	return nil
+}
+
+func (u *sellerUC) CancelOrderStatus(ctx context.Context, userID string, requestBody body.CancelOrderStatus) error {
+	shopIDFromUser, err := u.sellerRepo.GetShopIDByUser(ctx, userID)
+	if err != nil {
+		return err
+	}
+
+	order, err := u.sellerRepo.GetOrderByOrderID(ctx, requestBody.OrderID)
+	if err != nil {
+		return err
+	}
+
+	if shopIDFromUser != order.ShopID {
+		return httperror.New(http.StatusUnauthorized, response.UnauthorizedMessage)
+	}
+
+	if order.OrderStatus != constant.OrderStatusWaitingForSeller {
+		return httperror.New(http.StatusBadRequest, response.OrderNotWaitingForSeller)
+	}
+
+	errTx := u.txRepo.WithTransaction(func(tx postgre.Transaction) error {
+		if err := u.sellerRepo.CancelOrderStatus(ctx, tx, requestBody); err != nil {
+			return err
+		}
+
+		if err := u.sellerRepo.CreateRefundSeller(ctx, tx, requestBody); err != nil {
+			return err
+		}
+
+		return nil
+	})
+	if errTx != nil {
+		return errTx
 	}
 
 	return nil

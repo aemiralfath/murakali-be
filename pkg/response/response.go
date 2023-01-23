@@ -58,7 +58,11 @@ const (
 	OrderNotExistMessage           = "Order not exist."
 	InvalidPasswordMessage         = "Invalid password."
 	TransactionNotFound            = "Transaction not found."
+	RefundNotFound                 = "Refund not found."
+	RefundAlreadyFinished          = "Refund already finished."
+	RefundRejected                 = "Refund is rejected."
 	WalletHistoryNotFound          = "Wallet history not found."
+	OrderNotWaitingForSeller       = "Order not waiting for seller"
 )
 
 type JSONResponse struct {

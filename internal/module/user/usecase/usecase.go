@@ -1075,7 +1075,7 @@ func (u *userUC) GetRedirectURL(transaction *model.Transaction, sign string) (st
 	return res.Header.Get("Location"), nil
 }
 
-func (u *userUC) GetTransactionByUserID(ctx context.Context, userID string, pgn *pagination.Pagination) (*pagination.Pagination, error) {
+func (u *userUC) GetTransactionByUserID(ctx context.Context, userID string, status int, pgn *pagination.Pagination) (*pagination.Pagination, error) {
 	totalRows, err := u.userRepo.GetTotalTransactionByUserID(ctx, userID)
 	if err != nil {
 		return nil, err
@@ -1086,7 +1086,7 @@ func (u *userUC) GetTransactionByUserID(ctx context.Context, userID string, pgn 
 	pgn.TotalPages = totalPages
 
 	transactionsRes := make([]*body.GetTransactionByIDResponse, 0)
-	transactions, err := u.userRepo.GetTransactionByUserID(ctx, userID, pgn)
+	transactions, err := u.userRepo.GetTransactionByUserID(ctx, userID, status, pgn)
 	if err != nil {
 		return nil, err
 	}
@@ -1186,6 +1186,37 @@ func (u *userUC) UpdateTransaction(ctx context.Context, transactionID string, re
 				return err
 			}
 
+			return nil
+		})
+
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (u *userUC) UpdateTransactionPaymentMethod(ctx context.Context, transactionID, cardNumber string) error {
+	transaction, err := u.userRepo.GetTransactionByID(ctx, transactionID)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return httperror.New(http.StatusBadRequest, response.TransactionIDNotExist)
+		}
+
+		return err
+	}
+
+	if transaction.PaidAt.Valid || transaction.CanceledAt.Valid {
+		return httperror.New(http.StatusBadRequest, response.TransactionAlreadyFinished)
+	}
+
+	if cardNumber != "" {
+		err := u.txRepo.WithTransaction(func(tx postgre.Transaction) error {
+			transaction.CardNumber = &cardNumber
+			if err := u.userRepo.UpdateTransaction(ctx, tx, transaction); err != nil {
+				return err
+			}
 			return nil
 		})
 

@@ -277,3 +277,43 @@ func (u *cartUC) CalculateDiscountProduct(p *body.ProductDetailResponse) *body.P
 
 	return p
 }
+
+func (u *cartUC) GetVoucherShop(ctx context.Context, shopID string, pgn *pagination.Pagination) (*pagination.Pagination, error) {
+	totalRows, err := u.cartRepo.GetTotalVoucherShop(ctx, shopID)
+	if err != nil {
+		return nil, err
+	}
+
+	totalPages := int(math.Ceil(float64(totalRows) / float64(pgn.Limit)))
+	pgn.TotalRows = totalRows
+	pgn.TotalPages = totalPages
+
+	ShopVouchers, err := u.cartRepo.GetVoucherShop(ctx, shopID, pgn)
+	if err != nil {
+		return nil, err
+	}
+
+	pgn.Rows = ShopVouchers
+
+	return pgn, nil
+}
+
+func (u *cartUC) GetVoucherMarketplace(ctx context.Context, pgn *pagination.Pagination) (*pagination.Pagination, error) {
+	totalRows, err := u.cartRepo.GetTotalVoucherMarketplace(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	totalPages := int(math.Ceil(float64(totalRows) / float64(pgn.Limit)))
+	pgn.TotalRows = totalRows
+	pgn.TotalPages = totalPages
+
+	MarketplaceVouchers, err := u.cartRepo.GetVoucherMarketplace(ctx, pgn)
+	if err != nil {
+		return nil, err
+	}
+
+	pgn.Rows = MarketplaceVouchers
+
+	return pgn, nil
+}

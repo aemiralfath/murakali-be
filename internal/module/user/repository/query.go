@@ -64,6 +64,16 @@ const (
 	ORDER BY t.expired_at DESC LIMIT $2 OFFSET $3
 	`
 
+	GetTransactionByUserIDNotPaidQuery = `
+	SELECT t.id,t.voucher_marketplace_id,t.wallet_id,t.card_number,t.invoice,t.total_price,t.paid_at,t.canceled_at,t.expired_at
+	from "transaction" t, "order" o
+	WHERE t.id = o.transaction_id
+	AND o.user_id = $1
+	AND t.paid_at IS NULL AND t.canceled_at IS NULL
+	GROUP BY t.id
+	ORDER BY t.expired_at DESC LIMIT $2 OFFSET $3
+	`
+
 	GetOrdersByTransactionIDQuery = `SELECT o.id,o.order_status_id,o.total_price,o.delivery_fee,o.resi_no,s.id,s.name,v.code,o.created_at
 	from "order" o
 	join "shop" s on s.id = o.shop_id
@@ -139,7 +149,7 @@ const (
 	UpdateProductDetailStockQuery = `UPDATE "product_detail" SET "stock" = $1, "updated_at" = now() WHERE "id" = $2;`
 	DeleteCartItemByIDQuery       = `DELETE FROM "cart_item" WHERE "id" = $1`
 	GetTransactionByIDQuery       = `SELECT "id", "voucher_marketplace_id", "wallet_id", "card_number", "invoice", "total_price", "paid_at", "canceled_at", "expired_at" FROM "transaction" WHERE "id" = $1;`
-	UpdateTransactionByID         = `UPDATE "transaction" SET "paid_at" = $1, "canceled_at" = $2 WHERE "id" = $3`
+	UpdateTransactionByID         = `UPDATE "transaction" SET "paid_at" = $1, "canceled_at" = $2, "card_number" = $3 WHERE "id" = $4`
 	UpdateOrderByID               = `UPDATE "order" SET "order_status_id" = $1 WHERE "id" = $2`
 	GetOrderByTransactionID       = `SELECT 
 		"id", "transaction_id", "shop_id", "user_id", "courier_id", "voucher_shop_id", "order_status_id", "total_price", "delivery_fee", "resi_no", "created_at", "arrived_at" 

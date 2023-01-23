@@ -20,6 +20,7 @@ const (
 
 	RoleUser   = 1
 	RoleSeller = 2
+	RoleAdmin  = 3
 
 	ImgMaxSize = 500000
 
@@ -28,6 +29,7 @@ const (
 	SLPStatusCanceled  = "TXN_FAILED"
 	SLPMessageCanceled = "Transaction Canceled by user"
 
+	TRUE  = "true"
 	FALSE = "false"
 	ASC   = "asc"
 	DESC  = "desc"
