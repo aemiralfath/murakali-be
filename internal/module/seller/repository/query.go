@@ -128,6 +128,10 @@ const (
 	"order" set resi_no = $1, arrived_at = $2, order_status_id = $3 WHERE id = $4 
 	AND shop_id = $5`
 
+	CountCodeVoucher = `
+	SELECT count(code) FROM "voucher" as "v" WHERE "v"."code" = $1  AND "v"."deleted_at" IS NULL
+	`
+
 	GetTotalVoucherSellerQuery = `
 	SELECT count(id) FROM "voucher" as "v" WHERE "v"."shop_id" = $1 AND "v"."deleted_at" IS NULL
 	`

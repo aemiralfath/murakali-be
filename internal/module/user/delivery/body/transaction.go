@@ -3,6 +3,10 @@ package body
 import (
 	"database/sql"
 	"murakali/internal/model"
+	"murakali/pkg/httperror"
+	"murakali/pkg/response"
+	"net/http"
+	"strings"
 
 	"github.com/google/uuid"
 )
@@ -44,4 +48,41 @@ type GetTransactionByIDResponse struct {
 
 type GetTransactionByIDRequest struct {
 	TransactionID string `uri:"transaction_id" binding:"required"`
+}
+
+type ChangeTransactionPaymentMethodReq struct {
+	TransactionID string `json:"transaction_id"`
+	CardNumber    string `json:"card_number"`
+}
+
+func (r *ChangeTransactionPaymentMethodReq) Validate() (UnprocessableEntity, error) {
+	unprocessableEntity := false
+	entity := UnprocessableEntity{
+		Fields: map[string]string{
+			"transaction_id": "",
+			"card_number":    "",
+		},
+	}
+
+	r.TransactionID = strings.TrimSpace(r.TransactionID)
+	r.CardNumber = strings.TrimSpace(r.CardNumber)
+
+	if r.TransactionID == "" {
+		unprocessableEntity = true
+		entity.Fields["transaction_id"] = FieldCannotBeEmptyMessage
+	}
+
+	if r.CardNumber == "" {
+		unprocessableEntity = true
+		entity.Fields["card_number"] = FieldCannotBeEmptyMessage
+	}
+
+	if unprocessableEntity {
+		return entity, httperror.New(
+			http.StatusUnprocessableEntity,
+			response.UnprocessableEntityMessage,
+		)
+	}
+
+	return entity, nil
 }

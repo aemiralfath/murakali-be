@@ -24,6 +24,7 @@ const (
 	PromotionCannotUpdateExpiredBefoferMessage = "Promotion Expired Date cannot be update before current time."
 	CategoryNotFoundMessage                    = "Category not found."
 	ShopNotFoundMessage                        = "Shop not found."
+	CodeVoucherAlreadyExist                    = "Code Voucher Already Exist"
 )
 
 type UnprocessableEntity struct {

@@ -8,6 +8,7 @@ import (
 )
 
 type Repository interface {
+	CountCodeVoucher(ctx context.Context, code string) (int64, error)
 	GetTotalVoucher(ctx context.Context, voucherStatusID string) (int64, error)
 	GetTotalRefunds(ctx context.Context) (int64, error)
 	GetVoucherByID(ctx context.Context, voucherID string) (*model.Voucher, error)

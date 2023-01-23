@@ -424,8 +424,7 @@ func (u *sellerUC) GetCostRajaOngkir(origin, destination, weight int, code strin
 	return &responseCost, nil
 }
 
-func (u *sellerUC) GetAllVoucherSeller(ctx context.Context, userID, voucherStatusID, sortFilter string,
-	pgn *pagination.Pagination) (*pagination.Pagination, error) {
+func (u *sellerUC) GetAllVoucherSeller(ctx context.Context, userID, voucherStatusID, sortFilter string, pgn *pagination.Pagination) (*pagination.Pagination, error) {
 	shopID, err := u.sellerRepo.GetShopIDByUserID(ctx, userID)
 	if err != nil {
 		if err == sql.ErrNoRows {
@@ -454,6 +453,11 @@ func (u *sellerUC) GetAllVoucherSeller(ctx context.Context, userID, voucherStatu
 }
 
 func (u *sellerUC) CreateVoucherSeller(ctx context.Context, userID string, requestBody body.CreateVoucherRequest) error {
+	count, _ := u.sellerRepo.CountCodeVoucher(ctx, requestBody.Code)
+	if count > 0 {
+		return httperror.New(http.StatusBadRequest, body.CodeVoucherAlreadyExist)
+	}
+
 	id, err := u.sellerRepo.GetShopIDByUserID(ctx, userID)
 	if err != nil {
 		if err == sql.ErrNoRows {

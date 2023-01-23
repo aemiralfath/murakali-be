@@ -1416,7 +1416,7 @@ func (r *userRepo) GetOrderByTransactionID(ctx context.Context, transactionID st
 }
 
 func (r *userRepo) UpdateTransaction(ctx context.Context, tx postgre.Transaction, transactionData *model.Transaction) error {
-	_, err := tx.ExecContext(ctx, UpdateTransactionByID, transactionData.PaidAt, transactionData.CanceledAt, transactionData.ID)
+	_, err := tx.ExecContext(ctx, UpdateTransactionByID, transactionData.PaidAt, transactionData.CanceledAt, transactionData.CardNumber, transactionData.ID)
 	if err != nil {
 		return err
 	}
