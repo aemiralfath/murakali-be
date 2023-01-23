@@ -12,5 +12,6 @@ type UseCase interface {
 	AddCartItems(ctx context.Context, userID string, requestBody body.AddCartItemRequest) error
 	UpdateCartItems(ctx context.Context, userID string, requestBody body.CartItemRequest) error
 	DeleteCartItems(ctx context.Context, userID, productDetailID string) error
-	GetAllVoucher(ctx context.Context, shopID string, pgn *pagination.Pagination) (*pagination.Pagination, error)
+	GetVoucherShop(ctx context.Context, shopID string, pgn *pagination.Pagination) (*pagination.Pagination, error)
+	GetVoucherMarketplace(ctx context.Context, pgn *pagination.Pagination) (*pagination.Pagination, error)
 }

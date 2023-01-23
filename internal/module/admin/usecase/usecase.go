@@ -45,6 +45,11 @@ func (u *adminUC) GetAllVoucher(ctx context.Context, voucherStatusID, sortFilter
 }
 
 func (u *adminUC) CreateVoucher(ctx context.Context, requestBody body.CreateVoucherRequest) error {
+	count, _ := u.adminRepo.CountCodeVoucher(ctx, requestBody.Code)
+	if count > 0 {
+		return httperror.New(http.StatusBadRequest, body.CodeVoucherAlreadyExist)
+	}
+
 	voucherShop := &model.Voucher{
 		Code:               requestBody.Code,
 		Quota:              requestBody.Quota,

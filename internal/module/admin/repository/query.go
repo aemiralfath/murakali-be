@@ -1,6 +1,9 @@
 package repository
 
 const (
+	CountCodeVoucher = `
+	SELECT count(code) FROM "voucher" as "v" WHERE "v"."code" = $1  AND "v"."deleted_at" IS NULL
+	`
 	GetTotalVoucherQuery = `
 	SELECT count(id) FROM "voucher" as "v" WHERE "v"."shop_id" IS NULL  AND "v"."deleted_at" IS NULL
 	`
@@ -12,6 +15,7 @@ const (
 	WHERE "v"."shop_id"  IS NULL 
 	AND "v"."deleted_at" IS NULL
 	`
+
 	OrderBySomething = ` 
 	ORDER BY %s LIMIT %d OFFSET %d`
 

@@ -8,5 +8,6 @@ type Handlers interface {
 	AddCartItems(c *gin.Context)
 	UpdateCartItems(c *gin.Context)
 	DeleteCartItems(c *gin.Context)
-	GetAllVoucher(c *gin.Context)
+	GetVoucherShop(c *gin.Context)
+	GetVoucherMarketplace(c *gin.Context)
 }

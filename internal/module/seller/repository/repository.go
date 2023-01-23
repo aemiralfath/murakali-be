@@ -601,6 +601,16 @@ func (r *sellerRepo) GetTotalVoucherSeller(ctx context.Context, shopID, voucherS
 	return total, nil
 }
 
+func (r *sellerRepo) CountCodeVoucher(ctx context.Context, code string) (int64, error) {
+	var total int64
+
+	if err := r.PSQL.QueryRowContext(ctx, CountCodeVoucher, code).Scan(&total); err != nil {
+		return -1, err
+	}
+
+	return total, nil
+}
+
 func (r *sellerRepo) GetAllVoucherSeller(ctx context.Context, shopID, voucherStatusID, sortFilter string, pgn *pagination.Pagination) ([]*model.Voucher, error) {
 	var shopVouchers []*model.Voucher
 

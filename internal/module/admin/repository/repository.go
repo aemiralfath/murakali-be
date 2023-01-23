@@ -23,6 +23,16 @@ func NewAdminRepository(psql *sql.DB, client *redis.Client) admin.Repository {
 	}
 }
 
+func (r *adminRepo) CountCodeVoucher(ctx context.Context, code string) (int64, error) {
+	var total int64
+
+	if err := r.PSQL.QueryRowContext(ctx, CountCodeVoucher, code).Scan(&total); err != nil {
+		return -1, err
+	}
+
+	return total, nil
+}
+
 func (r *adminRepo) GetTotalVoucher(ctx context.Context, voucherStatusID string) (int64, error) {
 	var total int64
 
