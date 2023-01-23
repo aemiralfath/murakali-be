@@ -454,6 +454,11 @@ func (u *sellerUC) GetAllVoucherSeller(ctx context.Context, userID, voucherStatu
 }
 
 func (u *sellerUC) CreateVoucherSeller(ctx context.Context, userID string, requestBody body.CreateVoucherRequest) error {
+	count, _ := u.sellerRepo.CountCodeVoucher(ctx, requestBody.Code)
+	if count > 0 {
+		return httperror.New(http.StatusBadRequest, body.CodeVoucherAlreadyExist)
+	}
+
 	id, err := u.sellerRepo.GetShopIDByUserID(ctx, userID)
 	if err != nil {
 		if err == sql.ErrNoRows {
