@@ -76,6 +76,14 @@ func (u *adminUC) RefundOrder(ctx context.Context, refundID string) error {
 		return err
 	}
 
+	if refund.RejectedAt.Valid {
+		return httperror.New(http.StatusBadRequest, response.RefundRejected)
+	}
+
+	if refund.RefundedAt.Valid {
+		return httperror.New(http.StatusBadRequest, response.RefundAlreadyFinished)
+	}
+
 	order, err := u.adminRepo.GetOrderByID(ctx, refund.OrderID.String())
 	if err != nil {
 		return err
