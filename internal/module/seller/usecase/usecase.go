@@ -444,7 +444,7 @@ func (u *sellerUC) GetAllVoucherSeller(ctx context.Context, userID, voucherStatu
 	pgn.TotalRows = totalRows
 	pgn.TotalPages = totalPages
 
-	ShopVouchers, err := u.sellerRepo.GetAllVoucherSeller(ctx, shopID, voucherStatusID, pgn)
+	ShopVouchers, err := u.sellerRepo.GetAllVoucherSeller(ctx, shopID, voucherStatusID, sortFilter, pgn)
 	if err != nil {
 		return nil, err
 	}

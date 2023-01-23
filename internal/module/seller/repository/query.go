@@ -129,7 +129,7 @@ const (
 	AND shop_id = $5`
 
 	GetTotalVoucherSellerQuery = `
-	SELECT count(id) FROM "voucher" as "v" WHERE "v"."shop_id" = $1
+	SELECT count(id) FROM "voucher" as "v" WHERE "v"."shop_id" = $1 AND "v"."deleted_at" IS NULL
 	`
 	GetAllVoucherSellerQuery = `
 	SELECT "v"."id", "v"."shop_id", "v"."code", "v"."quota", "v"."actived_date", "v"."expired_date",
@@ -139,10 +139,10 @@ const (
 	INNER JOIN "shop" as "s" ON "s"."id" = "v"."shop_id"
 	WHERE "v"."shop_id" = $1
 	AND "v"."deleted_at" IS NULL
-	ORDER BY "v"."created_at" DESC
-	LIMIT $2 OFFSET $3
-	
 	`
+	OrderBySomething = ` 
+	ORDER BY %s LIMIT %d OFFSET %d`
+
 	FilterVoucherOngoing = `
 	 AND  ("v"."actived_date" <= now() AND "v"."expired_date" >= now())`
 

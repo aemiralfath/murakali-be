@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"murakali/config"
+	"murakali/internal/constant"
 	"murakali/internal/module/seller"
 	"murakali/internal/module/seller/delivery/body"
 	"murakali/pkg/httperror"
@@ -458,6 +459,16 @@ func (h *sellerHandlers) GetAllVoucherSeller(c *gin.Context) {
 	pgn := &pagination.Pagination{}
 	h.ValidateQueryPagination(c, pgn)
 
+	sort := c.DefaultQuery("sort", "")
+	sort = strings.ToLower(sort)
+	var sortFilter string
+	switch sort {
+	case constant.ASC:
+		sortFilter = sort
+	default:
+		sortFilter = constant.DESC
+	}
+
 	voucherStatusID := c.DefaultQuery("voucher_status", "")
 	switch voucherStatusID {
 	case "1":
@@ -473,7 +484,8 @@ func (h *sellerHandlers) GetAllVoucherSeller(c *gin.Context) {
 	}
 	h.ValidateQueryPagination(c, pgn)
 
-	shopVouchers, err := h.sellerUC.GetAllVoucherSeller(c, userID.(string), voucherStatusID, pgn)
+	sortFilter = "v." + "created_at " + sortFilter
+	shopVouchers, err := h.sellerUC.GetAllVoucherSeller(c, userID.(string), voucherStatusID, sortFilter, pgn)
 	if err != nil {
 		var e *httperror.Error
 		if !errors.As(err, &e) {

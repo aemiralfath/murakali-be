@@ -20,6 +20,7 @@ const (
 
 	RoleUser   = 1
 	RoleSeller = 2
+	RoleAdmin  = 3
 
 	ImgMaxSize = 500000
 
