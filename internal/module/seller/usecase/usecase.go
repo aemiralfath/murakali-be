@@ -695,8 +695,8 @@ func (u *sellerUC) UpdatePromotionSeller(ctx context.Context, userID string, req
 	}
 
 	promotion := &model.Promotion{
-		ID:                 promotionShop.ID,
-		Name:               requestBody.Name,
+		ID:                 promotionShop.PromotionID,
+		Name:               requestBody.PromotionName,
 		MaxQuantity:        requestBody.MaxQuantity,
 		DiscountPercentage: &requestBody.DiscountPercentage,
 		DiscountFixPrice:   &requestBody.DiscountFixPrice,

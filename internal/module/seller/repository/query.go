@@ -176,7 +176,7 @@ const (
 	FROM "promotion" as "promo"
 	INNER JOIN "product" as "p" ON "p"."id" = "promo"."product_id"
 	INNER JOIN "shop" as "s" ON "s"."id" = "p"."shop_id"
-	WHERE "s"."id" = $1
+	WHERE "s"."id" = $1 ORDER BY "promo"."created_at" DESC
 	`
 
 	GetTotalPromotionSellerQuery = `

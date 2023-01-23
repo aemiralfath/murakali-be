@@ -8,7 +8,7 @@ import (
 )
 
 type PromotionSellerResponse struct {
-	ID                  uuid.UUID    `json:"id" `
+	PromotionID         uuid.UUID    `json:"promotion_id"`
 	PromotionName       string       `json:"promotion_name"`
 	ProductID           uuid.UUID    `json:"product_id"`
 	ProductName         string       `json:"product_name"`

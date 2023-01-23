@@ -706,7 +706,7 @@ func (r *sellerRepo) GetAllPromotionSeller(ctx context.Context, shopID, promoSta
 		var promotion body.PromotionSellerResponse
 
 		if errScan := res.Scan(
-			&promotion.ID,
+			&promotion.PromotionID,
 			&promotion.PromotionName,
 			&promotion.ProductID,
 			&promotion.ProductName,
@@ -790,7 +790,7 @@ func (r *sellerRepo) GetPromotionSellerDetailByID(ctx context.Context,
 	var promotion body.PromotionSellerResponse
 	if err := r.PSQL.QueryRowContext(ctx, GetPromotionSellerDetailByIDQuery,
 		shopProductPromo.PromotionID, shopProductPromo.ShopID, shopProductPromo.ProductID).Scan(
-		&promotion.ID,
+		&promotion.PromotionID,
 		&promotion.PromotionName,
 		&promotion.ProductID,
 		&promotion.ProductName,
