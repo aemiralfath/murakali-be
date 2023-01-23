@@ -234,6 +234,42 @@ func (h *sellerHandlers) GetSellerDetailInformation(c *gin.Context) {
 	response.SuccessResponse(c.Writer, newData, http.StatusOK)
 }
 
+func (h *sellerHandlers) UpdateSellerInformation(c *gin.Context) {
+	userID, exist := c.Get("userID")
+	if !exist {
+		response.ErrorResponse(c.Writer, response.UnauthorizedMessage, http.StatusUnauthorized)
+		return
+	}
+
+	var requestBody body.UpdateSellerInformationRequest
+
+	if err := c.ShouldBindJSON(&requestBody); err != nil {
+		response.ErrorResponse(c.Writer, response.BadRequestMessage, http.StatusBadRequest)
+		return
+	}
+
+	invalidFields, err := requestBody.Validate()
+	if err != nil {
+		response.ErrorResponseData(c.Writer, invalidFields, response.UnprocessableEntityMessage, http.StatusUnprocessableEntity)
+		return
+	}
+
+	err = h.sellerUC.UpdateSellerInformationByUserID(c, requestBody.ShopName, userID.(string))
+	if err != nil {
+		var e *httperror.Error
+		if !errors.As(err, &e) {
+			h.logger.Errorf("HandlerSeller, Error: %s", err)
+			response.ErrorResponse(c.Writer, response.InternalServerErrorMessage, http.StatusInternalServerError)
+			return
+		}
+
+		response.ErrorResponse(c.Writer, e.Err.Error(), e.Status)
+		return
+	}
+
+	response.SuccessResponse(c.Writer, nil, http.StatusOK)
+}
+
 func (h *sellerHandlers) GetCategoryBySellerID(c *gin.Context) {
 	id := c.Param("seller_id")
 	sellerID, err := uuid.Parse(id)
