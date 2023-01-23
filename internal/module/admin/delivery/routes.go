@@ -18,4 +18,6 @@ func MapAdminRoutes(adminGroup *gin.RouterGroup, h admin.Handlers, mw *middlewar
 	adminGroup.GET("/voucher/:id", h.GetDetailVoucher)
 	adminGroup.DELETE("/voucher/:id", h.DeleteVoucher)
 
+	adminGroup.GET("/refund", h.GetRefunds)
+	adminGroup.POST("/refund/:id", h.RefundOrder)
 }
