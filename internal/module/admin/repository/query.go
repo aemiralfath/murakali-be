@@ -4,6 +4,16 @@ const (
 	GetTotalVoucherQuery = `
 	SELECT count(id) FROM "voucher" as "v" WHERE "v"."shop_id" IS NULL  AND "v"."deleted_at" IS NULL
 	`
+	GetTotalRefundsQuery = `SELECT count(id) FROM "refund" WHERE "accepted_at" IS NOT NULL AND "rejected_at" IS NULL AND "refunded_at" IS NULL`
+	GetRefundsQuery      = `SELECT 
+	"r"."id", "r"."order_id", "r"."is_seller_refund", "r"."is_buyer_refund", "r"."reason", "r"."image", 
+	"r"."accepted_at", "r"."rejected_at", "r"."refunded_at", "o"."id", "o"."transaction_id", "o"."shop_id", "o"."user_id", 
+	"o"."courier_id", "o"."voucher_shop_id", "o"."order_status_id", "o"."total_price", "o"."delivery_fee", "o"."resi_no", 
+	"o"."created_at", "o"."arrived_at" 
+	FROM "refund" as "r"
+	INNER JOIN "order" as "o" on "r"."order_id" = "o"."id"
+	WHERE "accepted_at" IS NOT NULL AND "rejected_at" IS NULL AND "refunded_at" IS NULL`
+
 	GetAllVoucherQuery = `
 	SELECT "v"."id", "v"."code", "v"."quota", "v"."actived_date", "v"."expired_date",
 		"v"."discount_percentage", "v"."discount_fix_price", "v"."min_product_price", "v"."max_discount_price",

@@ -47,6 +47,15 @@ func (r *adminRepo) GetTotalVoucher(ctx context.Context, voucherStatusID string)
 	return total, nil
 }
 
+func (r *adminRepo) GetTotalRefunds(ctx context.Context) (int64, error) {
+	var total int64
+	if err := r.PSQL.QueryRowContext(ctx, GetTotalRefundsQuery).Scan(&total); err != nil {
+		return -1, err
+	}
+
+	return total, nil
+}
+
 func (r *adminRepo) GetAllVoucher(ctx context.Context, voucherStatusID, sortFilter string, pgn *pagination.Pagination) ([]*model.Voucher, error) {
 	var vouchers []*model.Voucher
 
@@ -98,6 +107,53 @@ func (r *adminRepo) GetAllVoucher(ctx context.Context, voucherStatusID, sortFilt
 	}
 
 	return vouchers, nil
+}
+
+func (r *adminRepo) GetRefunds(ctx context.Context, sortFilter string, pgn *pagination.Pagination) ([]*model.RefundOrder, error) {
+	refunds := make([]*model.RefundOrder, 0)
+
+	queryOrderBySomething := fmt.Sprintf(OrderBySomething, sortFilter, pgn.GetLimit(), pgn.GetOffset())
+	res, err := r.PSQL.QueryContext(ctx, GetRefundsQuery+queryOrderBySomething)
+	if err != nil {
+		return nil, err
+	}
+	defer res.Close()
+
+	for res.Next() {
+		refund := model.RefundOrder{}
+		refund.Order = &model.OrderModel{}
+		if errScan := res.Scan(
+			&refund.ID,
+			&refund.OrderID,
+			&refund.IsSellerRefund,
+			&refund.IsBuyerRefund,
+			&refund.Reason,
+			&refund.Image,
+			&refund.AcceptedAt,
+			&refund.RejectedAt,
+			&refund.RefundedAt,
+			&refund.Order.ID,
+			&refund.Order.TransactionID,
+			&refund.Order.ShopID,
+			&refund.Order.UserID,
+			&refund.Order.CourierID,
+			&refund.Order.VoucherShopID,
+			&refund.Order.OrderStatusID,
+			&refund.Order.TotalPrice,
+			&refund.Order.DeliveryFee,
+			&refund.Order.ResiNo,
+			&refund.Order.CreatedAt,
+			&refund.Order.ArrivedAt); errScan != nil {
+			return nil, errScan
+		}
+
+		refunds = append(refunds, &refund)
+	}
+	if res.Err() != nil {
+		return nil, err
+	}
+
+	return refunds, nil
 }
 
 func (r *adminRepo) GetVoucherByID(ctx context.Context, voucherID string) (*model.Voucher, error) {

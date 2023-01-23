@@ -44,6 +44,25 @@ func (u *adminUC) GetAllVoucher(ctx context.Context, voucherStatusID, sortFilter
 	return pgn, nil
 }
 
+func (u *adminUC) GetRefunds(ctx context.Context, sortFilter string, pgn *pagination.Pagination) (*pagination.Pagination, error) {
+	totalRows, err := u.adminRepo.GetTotalRefunds(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	totalPages := int(math.Ceil(float64(totalRows) / float64(pgn.Limit)))
+	pgn.TotalRows = totalRows
+	pgn.TotalPages = totalPages
+
+	refunds, err := u.adminRepo.GetRefunds(ctx, sortFilter, pgn)
+	if err != nil {
+		return nil, err
+	}
+
+	pgn.Rows = refunds
+	return pgn, nil
+}
+
 func (u *adminUC) CreateVoucher(ctx context.Context, requestBody body.CreateVoucherRequest) error {
 	voucherShop := &model.Voucher{
 		Code:               requestBody.Code,

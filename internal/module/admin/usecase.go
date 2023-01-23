@@ -13,4 +13,5 @@ type UseCase interface {
 	UpdateVoucher(ctx context.Context, requestBody body.UpdateVoucherRequest) error
 	GetDetailVoucher(ctx context.Context, voucherID string) (*model.Voucher, error)
 	DeleteVoucher(ctx context.Context, voucherID string) error
+	GetRefunds(ctx context.Context, sortFilter string, pgn *pagination.Pagination) (*pagination.Pagination, error)
 }

@@ -74,6 +74,37 @@ func (h *adminHandlers) GetAllVoucher(c *gin.Context) {
 	response.SuccessResponse(c.Writer, shopVouchers, http.StatusOK)
 }
 
+func (h *adminHandlers) GetRefunds(c *gin.Context) {
+	pgn := &pagination.Pagination{}
+	h.ValidateQueryPagination(c, pgn)
+
+	sort := c.DefaultQuery("sort", "")
+	sort = strings.ToLower(sort)
+	var sortFilter string
+	switch sort {
+	case constant.ASC:
+		sortFilter = sort
+	default:
+		sortFilter = constant.DESC
+	}
+
+	sortFilter = "accepted_at " + sortFilter
+	refunds, err := h.adminUC.GetRefunds(c, sortFilter, pgn)
+	if err != nil {
+		var e *httperror.Error
+		if !errors.As(err, &e) {
+			h.logger.Errorf("HandlerAdmin, Error: %s", err)
+			response.ErrorResponse(c.Writer, response.InternalServerErrorMessage, http.StatusInternalServerError)
+			return
+		}
+
+		response.ErrorResponse(c.Writer, e.Err.Error(), e.Status)
+		return
+	}
+
+	response.SuccessResponse(c.Writer, refunds, http.StatusOK)
+}
+
 func (h *adminHandlers) CreateVoucher(c *gin.Context) {
 	var requestBody body.CreateVoucherRequest
 	if err := c.ShouldBind(&requestBody); err != nil {
