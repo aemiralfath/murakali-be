@@ -15,6 +15,8 @@ type Repository interface {
 	GetShopIDByUser(ctx context.Context, userID string) (string, error)
 	GetShopIDByOrder(ctx context.Context, OrderID string) (string, error)
 	ChangeOrderStatus(ctx context.Context, requestBody body.ChangeOrderStatusRequest) error
+	CancelOrderStatus(ctx context.Context, tx postgre.Transaction, requestBody body.CancelOrderStatus) error
+	CreateRefundSeller(ctx context.Context, tx postgre.Transaction, requestBody body.CancelOrderStatus) error
 	GetOrderByOrderID(ctx context.Context, OrderID string) (*model.Order, error)
 	GetSellerBySellerID(ctx context.Context, sellerID string) (*body.SellerResponse, error)
 	GetSellerByUserID(ctx context.Context, userID string) (*body.SellerResponse, error)

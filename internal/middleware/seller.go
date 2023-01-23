@@ -1,6 +1,7 @@
 package middleware
 
 import (
+	"murakali/internal/constant"
 	"murakali/pkg/response"
 	"net/http"
 
@@ -10,7 +11,7 @@ import (
 func (mw *MWManager) SellerJWTMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		roleID, exist := c.Get("roleID")
-		if !exist || roleID.(float64) != 2 {
+		if !exist || roleID.(float64) != constant.RoleSeller {
 			response.ErrorResponse(c.Writer, response.ForbiddenMessage, http.StatusForbidden)
 			c.Abort()
 			return

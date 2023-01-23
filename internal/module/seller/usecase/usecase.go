@@ -575,6 +575,43 @@ func (u *sellerUC) DeleteVoucherSeller(ctx context.Context, voucherIDShopID *bod
 	return nil
 }
 
+func (u *sellerUC) CancelOrderStatus(ctx context.Context, userID string, requestBody body.CancelOrderStatus) error {
+	shopIDFromUser, err := u.sellerRepo.GetShopIDByUser(ctx, userID)
+	if err != nil {
+		return err
+	}
+
+	order, err := u.sellerRepo.GetOrderByOrderID(ctx, requestBody.OrderID)
+	if err != nil {
+		return err
+	}
+
+	if shopIDFromUser != order.ShopID {
+		return httperror.New(http.StatusUnauthorized, response.UnauthorizedMessage)
+	}
+
+	if order.OrderStatus != constant.OrderStatusWaitingForSeller {
+		return httperror.New(http.StatusBadRequest, response.OrderNotWaitingForSeller)
+	}
+
+	errTx := u.txRepo.WithTransaction(func(tx postgre.Transaction) error {
+		if err := u.sellerRepo.CancelOrderStatus(ctx, tx, requestBody); err != nil {
+			return err
+		}
+
+		if err := u.sellerRepo.CreateRefundSeller(ctx, tx, requestBody); err != nil {
+			return err
+		}
+
+		return nil
+	})
+	if errTx != nil {
+		return errTx
+	}
+
+	return nil
+}
+
 func (u *sellerUC) GetAllPromotionSeller(ctx context.Context, userID, promoStatusID string,
 	pgn *pagination.Pagination) (*pagination.Pagination, error) {
 	shopID, err := u.sellerRepo.GetShopIDByUserID(ctx, userID)

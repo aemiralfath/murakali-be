@@ -29,7 +29,7 @@ type UseCase interface {
 	VerifyOTP(ctx context.Context, requestBody body.VerifyOTPRequest, userID string) (string, error)
 	ChangePassword(ctx context.Context, userID string, newPassword string) error
 	GetTransactionByID(ctx context.Context, transactionID string) (*body.GetTransactionByIDResponse, error)
-	GetTransactionByUserID(ctx context.Context, UserID string, pgn *pagination.Pagination) (*pagination.Pagination, error)
+	GetTransactionByUserID(ctx context.Context, userID string, status int, pgn *pagination.Pagination) (*pagination.Pagination, error)
 	CreateTransaction(ctx context.Context, userID string, requestBody body.CreateTransactionRequest) (string, error)
 	UpdateTransaction(ctx context.Context, transactionID string, requestBody body.SLPCallbackRequest) error
 	UpdateWalletTransaction(ctx context.Context, transactionID string, requestBody body.SLPCallbackRequest) error

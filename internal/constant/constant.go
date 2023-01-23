@@ -28,6 +28,7 @@ const (
 	SLPStatusCanceled  = "TXN_FAILED"
 	SLPMessageCanceled = "Transaction Canceled by user"
 
+	TRUE  = "true"
 	FALSE = "false"
 	ASC   = "asc"
 	DESC  = "desc"
