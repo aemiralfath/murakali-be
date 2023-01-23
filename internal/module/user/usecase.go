@@ -32,6 +32,7 @@ type UseCase interface {
 	GetTransactionByUserID(ctx context.Context, userID string, status int, pgn *pagination.Pagination) (*pagination.Pagination, error)
 	CreateTransaction(ctx context.Context, userID string, requestBody body.CreateTransactionRequest) (string, error)
 	UpdateTransaction(ctx context.Context, transactionID string, requestBody body.SLPCallbackRequest) error
+	UpdateTransactionPaymentMethod(ctx context.Context, transactionID, cardNumber string) error
 	UpdateWalletTransaction(ctx context.Context, transactionID string, requestBody body.SLPCallbackRequest) error
 	CreateSLPPayment(ctx context.Context, transactionID string) (string, error)
 	GetTransactionDetailByID(ctx context.Context, transactionID, userID string) (*body.TransactionDetailResponse, error)
