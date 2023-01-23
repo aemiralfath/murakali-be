@@ -2032,6 +2032,112 @@ paths:
               schema:
                 $ref: "#/components/schemas/GetPromotionDetailSellerResponse"
 
+  "/api/v1/admin/voucher":
+    get:
+      summary: Get All Voucher Marketplace Admin
+      description: >-
+        Get All Voucher Marketplace Admin
+      tags:
+        - Admin
+      security:
+        - BEARER: []
+      parameters:
+        - in: query
+          name: voucher_status
+          description: (1 All, 2 Will Come, 3 On Going, 4 HasEnded)
+          schema:
+            type: string
+            enum: [1, 2, 3, 4]
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GetAllSellerVoucherResponse"
+    post:
+      summary: Create Voucher Marketplace Admin
+      description: >-
+        Create Voucher Marketplace Admin
+      tags:
+        - Admin
+      security:
+        - BEARER: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateVoucherSellerRequest"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DefaultSuccess"
+    put:
+      summary: Update Voucher Marketplace Admin
+      description: >-
+        Update Voucher Marketplace Admin
+      tags:
+        - Admin
+      security:
+        - BEARER: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateVoucherSellerRequest"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DefaultSuccess"
+  "/api/v1/admin/voucher/{id}":
+    get:
+      summary: Get Detail Voucher Marketplace Admin
+      description: >-
+        Get Detail Voucher Marketplace Admin
+      tags:
+        - Admin
+      security:
+        - BEARER: []
+      parameters:
+        - in: path
+          name: id
+          schema:
+            type: string
+          required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GetVoucherDetailSellerResponse"
+    delete:
+      summary: Delete Voucher Marketplace Admin
+      description: >-
+        Delete Voucher Marketplace Admin
+      tags:
+        - Admin
+      security:
+        - BEARER: []
+      parameters:
+        - in: path
+          name: id
+          schema:
+            type: string
+          required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DefaultSuccess"
 components:
   schemas:
     LoginRequest:
