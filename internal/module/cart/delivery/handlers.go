@@ -207,7 +207,7 @@ func (h *cartHandlers) setLimitQueryCartItems(c *gin.Context) *pagination.Pagina
 	return pgn
 }
 
-func (h *cartHandlers) GetAllVoucher(c *gin.Context) {
+func (h *cartHandlers) GetVoucherShop(c *gin.Context) {
 	id := c.Param("shop_id")
 	shopID, err := uuid.Parse(id)
 	if err != nil {
@@ -217,7 +217,27 @@ func (h *cartHandlers) GetAllVoucher(c *gin.Context) {
 	pgn := &pagination.Pagination{}
 	h.ValidateQueryPagination(c, pgn)
 
-	shopVouchers, err := h.cartUC.GetAllVoucher(c, shopID.String(), pgn)
+	shopVouchers, err := h.cartUC.GetVoucherShop(c, shopID.String(), pgn)
+	if err != nil {
+		var e *httperror.Error
+		if !errors.As(err, &e) {
+			h.logger.Errorf("HandlerSeller, Error: %s", err)
+			response.ErrorResponse(c.Writer, response.InternalServerErrorMessage, http.StatusInternalServerError)
+			return
+		}
+
+		response.ErrorResponse(c.Writer, e.Err.Error(), e.Status)
+		return
+	}
+
+	response.SuccessResponse(c.Writer, shopVouchers, http.StatusOK)
+}
+
+func (h *cartHandlers) GetVoucherMarketplace(c *gin.Context) {
+	pgn := &pagination.Pagination{}
+	h.ValidateQueryPagination(c, pgn)
+
+	shopVouchers, err := h.cartUC.GetVoucherMarketplace(c, pgn)
 	if err != nil {
 		var e *httperror.Error
 		if !errors.As(err, &e) {

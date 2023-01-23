@@ -1640,6 +1640,62 @@ paths:
               schema:
                 $ref: "#/components/schemas/DefaultSuccess"
 
+  "/api/v1/cart/voucher":
+    get:
+      summary: Get All Voucher Marketplace for Cart
+      description: >-
+        Get All Voucher Marketplace for cart
+      tags:
+        - Cart
+      security:
+        - BEARER: []
+      parameters:
+        - in: query
+          name: limit
+          schema:
+            type: number
+        - in: query
+          name: page
+          schema:
+            type: number
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GetAllSellerVoucherResponse"
+
+  "/api/v1/cart/voucher/{shop_id}":
+    get:
+      summary: Get All Voucher Shop
+      description: >-
+        Get All Voucher Shop
+      tags:
+        - Cart
+      security:
+        - BEARER: []
+      parameters:
+        - in: path
+          name: shop_id
+          schema:
+            type: string
+          required: true
+        - in: query
+          name: limit
+          schema:
+            type: number
+        - in: query
+          name: page
+          schema:
+            type: number
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GetAllSellerVoucherResponse"
   "/api/v1/seller/courier":
     get:
       summary: Get Seller Courier Information
@@ -1854,6 +1910,14 @@ paths:
           schema:
             type: string
             enum: [1, 2, 3, 4]
+        - in: query
+          name: limit
+          schema:
+            type: number
+        - in: query
+          name: page
+          schema:
+            type: number
       responses:
         "200":
           description: OK
@@ -2048,6 +2112,14 @@ paths:
           schema:
             type: string
             enum: [1, 2, 3, 4]
+        - in: query
+          name: limit
+          schema:
+            type: number
+        - in: query
+          name: page
+          schema:
+            type: number
       responses:
         "200":
           description: OK
