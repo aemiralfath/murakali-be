@@ -299,9 +299,19 @@ func (r *sellerRepo) ChangeOrderStatus(ctx context.Context, requestBody body.Cha
 	return nil
 }
 
-func (r *sellerRepo) CancelOrderStatus(ctx context.Context, requestBody body.CancelOrderStatus) error {
-	_, err := r.PSQL.ExecContext(
+func (r *sellerRepo) CancelOrderStatus(ctx context.Context, tx postgre.Transaction, requestBody body.CancelOrderStatus) error {
+	_, err := tx.ExecContext(
 		ctx, CancelOrderStatusQuery, constant.OrderStatusCanceled, requestBody.CancelNotes, true, requestBody.OrderID)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (r *sellerRepo) CreateRefundSeller(ctx context.Context, tx postgre.Transaction, requestBody body.CancelOrderStatus) error {
+	_, err := tx.ExecContext(
+		ctx, CreateRefundSellerQuery, requestBody.OrderID, true, requestBody.CancelNotes, time.Now())
 	if err != nil {
 		return err
 	}

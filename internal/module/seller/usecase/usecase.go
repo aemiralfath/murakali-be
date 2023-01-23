@@ -577,8 +577,19 @@ func (u *sellerUC) CancelOrderStatus(ctx context.Context, userID string, request
 		return httperror.New(http.StatusBadRequest, response.OrderNotWaitingForSeller)
 	}
 
-	if err := u.sellerRepo.CancelOrderStatus(ctx, requestBody); err != nil {
-		return err
+	errTx := u.txRepo.WithTransaction(func(tx postgre.Transaction) error {
+		if err := u.sellerRepo.CancelOrderStatus(ctx, tx, requestBody); err != nil {
+			return err
+		}
+
+		if err := u.sellerRepo.CreateRefundSeller(ctx, tx, requestBody); err != nil {
+			return err
+		}
+
+		return nil
+	})
+	if errTx != nil {
+		return errTx
 	}
 
 	return nil

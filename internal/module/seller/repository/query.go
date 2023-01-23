@@ -156,6 +156,8 @@ const (
 	`
 	DeleteVoucherSellerQuery = `UPDATE "voucher" set deleted_at = now() WHERE "id" = $1 AND "shop_id" = $2 AND "deleted_at" IS NULL`
 
+	CreateRefundSellerQuery = `INSERT INTO "refund" (order_id, is_seller_refund, reason, accepted_at) VALUES($1, $2, $3, $4)`
+
 	GetAllVoucherSellerByIDandShopIDQuery = `
 	SELECT "v"."id", "v"."shop_id", "v"."code", "v"."quota", "v"."actived_date", "v"."expired_date",
 		"v"."discount_percentage", "v"."discount_fix_price", "v"."min_product_price", "v"."max_discount_price",
