@@ -206,3 +206,50 @@ func (h *cartHandlers) setLimitQueryCartItems(c *gin.Context) *pagination.Pagina
 
 	return pgn
 }
+
+func (h *cartHandlers) GetAllVoucher(c *gin.Context) {
+	id := c.Param("shop_id")
+	shopID, err := uuid.Parse(id)
+	if err != nil {
+		response.ErrorResponse(c.Writer, response.BadRequestMessage, http.StatusBadRequest)
+		return
+	}
+	pgn := &pagination.Pagination{}
+	h.ValidateQueryPagination(c, pgn)
+
+	shopVouchers, err := h.cartUC.GetAllVoucher(c, shopID.String(), pgn)
+	if err != nil {
+		var e *httperror.Error
+		if !errors.As(err, &e) {
+			h.logger.Errorf("HandlerSeller, Error: %s", err)
+			response.ErrorResponse(c.Writer, response.InternalServerErrorMessage, http.StatusInternalServerError)
+			return
+		}
+
+		response.ErrorResponse(c.Writer, e.Err.Error(), e.Status)
+		return
+	}
+
+	response.SuccessResponse(c.Writer, shopVouchers, http.StatusOK)
+}
+
+func (h *cartHandlers) ValidateQueryPagination(c *gin.Context, pgn *pagination.Pagination) {
+	limit := strings.TrimSpace(c.Query("limit"))
+	page := strings.TrimSpace(c.Query("page"))
+
+	var limitFilter int
+	var pageFilter int
+
+	limitFilter, err := strconv.Atoi(limit)
+	if err != nil || limitFilter < 1 {
+		limitFilter = 10
+	}
+
+	pageFilter, err = strconv.Atoi(page)
+	if err != nil || pageFilter < 1 {
+		pageFilter = 1
+	}
+
+	pgn.Limit = limitFilter
+	pgn.Page = pageFilter
+}

@@ -552,7 +552,7 @@ func (r *sellerRepo) GetTotalVoucherSeller(ctx context.Context, shopID, voucherS
 	q := GetTotalVoucherSellerQuery
 	switch voucherStatusID {
 	case "1":
-		q = q
+		q = GetTotalVoucherSellerQuery
 	case "2":
 		q = q + FilterVoucherWillCome
 	case "3":
@@ -560,7 +560,7 @@ func (r *sellerRepo) GetTotalVoucherSeller(ctx context.Context, shopID, voucherS
 	case "4":
 		q = q + FilterVoucherHasEnded
 	default:
-		q = q
+		q = GetTotalVoucherSellerQuery
 	}
 
 	if err := r.PSQL.QueryRowContext(ctx, q, shopID).Scan(&total); err != nil {
@@ -570,13 +570,13 @@ func (r *sellerRepo) GetTotalVoucherSeller(ctx context.Context, shopID, voucherS
 	return total, nil
 }
 
-func (r *sellerRepo) GetAllVoucherSeller(ctx context.Context, shopID, voucherStatusID string, pgn *pagination.Pagination) ([]*model.Voucher, error) {
+func (r *sellerRepo) GetAllVoucherSeller(ctx context.Context, shopID, voucherStatusID, sortFilter string, pgn *pagination.Pagination) ([]*model.Voucher, error) {
 	var shopVouchers []*model.Voucher
 
 	q := GetAllVoucherSellerQuery
 	switch voucherStatusID {
 	case "1":
-		q = q
+		q = GetAllVoucherSellerQuery
 	case "2":
 		q = q + FilterVoucherWillCome
 	case "3":
@@ -584,11 +584,11 @@ func (r *sellerRepo) GetAllVoucherSeller(ctx context.Context, shopID, voucherSta
 	case "4":
 		q = q + FilterVoucherHasEnded
 	default:
-		q = q
+		q = GetAllVoucherSellerQuery
 	}
-
-	res, err := r.PSQL.QueryContext(ctx, q, shopID, pgn.GetLimit(),
+	queryOrderBySomething := fmt.Sprintf(OrderBySomething, sortFilter, pgn.GetLimit(),
 		pgn.GetOffset())
+	res, err := r.PSQL.QueryContext(ctx, q+queryOrderBySomething, shopID)
 	if err != nil {
 		return nil, err
 	}

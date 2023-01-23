@@ -204,3 +204,53 @@ func (r *cartRepo) GetCartItems(ctx context.Context, userID string, pgn *paginat
 
 	return cartItems, products, promos, err
 }
+
+func (r *cartRepo) GetTotalVoucher(ctx context.Context, shopID string) (int64, error) {
+	var total int64
+
+	if err := r.PSQL.QueryRowContext(ctx, GetTotalVoucherQuery, shopID).Scan(&total); err != nil {
+		return -1, err
+	}
+
+	return total, nil
+}
+
+func (r *cartRepo) GetAllVoucher(ctx context.Context, shopID string, pgn *pagination.Pagination) ([]*model.Voucher, error) {
+	var shopVouchers []*model.Voucher
+
+	res, err := r.PSQL.QueryContext(ctx, GetAllVoucherQuery, shopID, pgn.GetLimit(),
+		pgn.GetOffset())
+	if err != nil {
+		return nil, err
+	}
+	defer res.Close()
+
+	for res.Next() {
+		var voucher model.Voucher
+		if errScan := res.Scan(
+			&voucher.ID,
+			&voucher.ShopID,
+			&voucher.Code,
+			&voucher.Quota,
+			&voucher.ActivedDate,
+			&voucher.ExpiredDate,
+			&voucher.DiscountPercentage,
+			&voucher.DiscountFixPrice,
+			&voucher.MinProductPrice,
+			&voucher.MaxDiscountPrice,
+			&voucher.CreatedAt,
+			&voucher.UpdatedAt,
+			&voucher.DeletedAt,
+		); errScan != nil {
+			return nil, err
+		}
+
+		shopVouchers = append(shopVouchers, &voucher)
+	}
+
+	if res.Err() != nil {
+		return nil, err
+	}
+
+	return shopVouchers, nil
+}

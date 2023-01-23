@@ -36,7 +36,7 @@ type Repository interface {
 	GetCostRedis(ctx context.Context, key string) (*string, error)
 	GetOrdersOnDelivery(ctx context.Context) ([]*model.OrderModel, error)
 	InsertCostRedis(ctx context.Context, key string, value string) error
-	GetAllVoucherSeller(ctx context.Context, shopID, voucherStatusID string, pgn *pagination.Pagination) ([]*model.Voucher, error)
+	GetAllVoucherSeller(ctx context.Context, shopID, voucherStatusID, sortFilter string, pgn *pagination.Pagination) ([]*model.Voucher, error)
 	GetTotalVoucherSeller(ctx context.Context, shopID, voucherStatusID string) (int64, error)
 	CreateVoucherSeller(ctx context.Context, voucherShop *model.Voucher) error
 	UpdateVoucherSeller(ctx context.Context, voucherShop *model.Voucher) error

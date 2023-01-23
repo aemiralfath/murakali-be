@@ -2,6 +2,9 @@ package server
 
 import (
 	"murakali/internal/middleware"
+	adminDelivery "murakali/internal/module/admin/delivery"
+	adminRepository "murakali/internal/module/admin/repository"
+	adminUseCase "murakali/internal/module/admin/usecase"
 	authDelivery "murakali/internal/module/auth/delivery"
 	authRepository "murakali/internal/module/auth/repository"
 	authUseCase "murakali/internal/module/auth/usecase"
@@ -31,6 +34,10 @@ import (
 
 func (s *Server) MapHandlers() error {
 	txRepo := postgre.NewTxRepository(s.db)
+
+	adminRepo := adminRepository.NewAdminRepository(s.db, s.redisClient)
+	adminUC := adminUseCase.NewAdminUseCase(s.cfg, txRepo, adminRepo)
+	adminHandlers := adminDelivery.NewAdminHandlers(s.cfg, adminUC, s.log)
 
 	authRepo := authRepository.NewAuthRepository(s.db, s.redisClient)
 	authUC := authUseCase.NewAuthUseCase(s.cfg, txRepo, authRepo)
@@ -80,6 +87,7 @@ func (s *Server) MapHandlers() error {
 	cartGroup := v1.Group("/cart")
 	locationGroup := v1.Group("/location")
 	sellerGroup := v1.Group("/seller")
+	adminGroup := v1.Group("/admin")
 
 	mw := middleware.NewMiddlewareManager(s.cfg, []string{"*"}, s.log)
 	authDelivery.MapAuthRoutes(authGroup, authHandlers)
@@ -88,6 +96,7 @@ func (s *Server) MapHandlers() error {
 	cartDelivery.MapCartRoutes(cartGroup, cartHandlers, mw)
 	locationDelivery.MapAuthRoutes(locationGroup, locationHandlers)
 	sellerDelivery.MapSellerRoutes(sellerGroup, sellerHandlers, mw)
+	adminDelivery.MapAdminRoutes(adminGroup, adminHandlers, mw)
 
 	return nil
 }

@@ -58,4 +58,21 @@ const (
 	CreateCartQuery     = `INSERT INTO "cart_item" (user_id, product_detail_id, quantity) VALUES ($1, $2, $3) RETURNING "id";`
 	UpdateCartByIDQuery = `UPDATE "cart_item" SET "quantity" = $1, "updated_at" = $2 WHERE "id" = $3;`
 	DeleteCartByIDQuery = `DELETE FROM "cart_item" WHERE "id" = $1`
+
+	GetTotalVoucherQuery = `
+	SELECT count(id) FROM "voucher" as "v" WHERE "v"."shop_id" = $1
+	AND  ("v"."actived_date" <= now() AND "v"."expired_date" >= now())
+	AND "v"."deleted_at" IS NULL
+	`
+	GetAllVoucherQuery = `
+	SELECT "v"."id", "v"."shop_id", "v"."code", "v"."quota", "v"."actived_date", "v"."expired_date",
+		"v"."discount_percentage", "v"."discount_fix_price", "v"."min_product_price", "v"."max_discount_price",
+		"v"."created_at", "v"."updated_at",  "v"."deleted_at"
+	FROM "voucher" as "v"
+	INNER JOIN "shop" as "s" ON "s"."id" = "v"."shop_id"
+	WHERE "v"."shop_id" = $1
+	AND  ("v"."actived_date" <= now() AND "v"."expired_date" >= now())
+	AND "v"."deleted_at" IS NULL
+	ORDER BY "v"."created_at" DESC LIMIT $2 OFFSET $3
+	`
 )
