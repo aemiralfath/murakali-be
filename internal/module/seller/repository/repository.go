@@ -425,6 +425,16 @@ func (r *sellerRepo) GetSellerByUserID(ctx context.Context, userID string) (*bod
 	return &sellerData, nil
 }
 
+func (r *sellerRepo) UpdateSellerInformationByUserID(ctx context.Context, shopName, userID string) error {
+	_, err := r.PSQL.ExecContext(
+		ctx, UpdateShopInformationByUserIDQuery, shopName, userID)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func (r *sellerRepo) GetCategoryBySellerID(ctx context.Context, shopID string) ([]*body.CategoryResponse, error) {
 	categories := make([]*body.CategoryResponse, 0)
 

@@ -218,6 +218,23 @@ func (u *sellerUC) GetSellerByUserID(ctx context.Context, userID string) (*body.
 	return sellerData, nil
 }
 
+func (u *sellerUC) UpdateSellerInformationByUserID(ctx context.Context, shopName, userID string) error {
+	_, err := u.sellerRepo.GetSellerByUserID(ctx, userID)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return httperror.New(http.StatusBadRequest, body.SellerNotFoundMessage)
+		}
+		return err
+	}
+
+	err = u.sellerRepo.UpdateSellerInformationByUserID(ctx, shopName, userID)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func (u *sellerUC) CreateCourierSeller(ctx context.Context, userID, courierID string) error {
 	_, err := u.sellerRepo.GetCourierByID(ctx, courierID)
 	if err != nil {
