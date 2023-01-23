@@ -58,6 +58,7 @@ const (
 	OrderNotExistMessage           = "Order not exist."
 	InvalidPasswordMessage         = "Invalid password."
 	TransactionNotFound            = "Transaction not found."
+	RefundNotFound                 = "Refund not found."
 	WalletHistoryNotFound          = "Wallet history not found."
 	OrderNotWaitingForSeller       = "Order not waiting for seller"
 )

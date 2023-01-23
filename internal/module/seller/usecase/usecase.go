@@ -343,7 +343,6 @@ func (u *sellerUC) UpdateOnDeliveryOrder(ctx context.Context) error {
 }
 
 func (u *sellerUC) UpdateExpiredAtOrder(ctx context.Context) error {
-	// TODO: Add voucher promotion stock & validation
 	transactions, err := u.sellerRepo.GetTransactionsExpired(ctx)
 	if err != nil {
 		return nil

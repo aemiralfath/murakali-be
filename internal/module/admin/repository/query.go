@@ -48,9 +48,24 @@ const (
 	WHERE "v"."id"  = $1 AND "v"."shop_id" IS NULL  AND "v"."deleted_at" IS NULL
 	`
 
+	GetRefundByIDQuery = `SELECT 
+	"id", "order_id", "is_seller_refund", "is_buyer_refund", "reason", "image", 
+	"accepted_at", "rejected_at", "refunded_at" FROM "refund" WHERE "id" = $1`
+
 	UpdateVoucherQuery = `
 		UPDATE "voucher" SET "quota" = $1, "actived_date" = $2, "expired_date" = $3, "discount_percentage" = $4,
 			"discount_fix_price" = $5, "min_product_price" = $6, "max_discount_price" = $7, "updated_at" = now()
 		WHERE "id" = $8
 	`
+
+	CreateWalletHistoryQuery      = `INSERT INTO "wallet_history" (transaction_id, wallet_id, "from", "to", description, amount, created_at) VALUES ($1, $2, $3, $4, $5, $6, $7)`
+	UpdateRefundQuery             = `UPDATE "refund" SET "refunded_at" = $1 WHERE "id" = $2`
+	UpdateOrderByID               = `UPDATE "order" SET "order_status_id" = $1 WHERE "id" = $2`
+	UpdateProductDetailStockQuery = `UPDATE "product_detail" SET "stock" = $1, "updated_at" = now() WHERE "id" = $2;`
+	UpdateWalletBalanceQuery      = `UPDATE "wallet" SET "balance" = $1, "updated_at" = $2 WHERE "id" = $3`
+
+	GetOrderByOrderIDQuery      = `SELECT o.id,o.order_status_id, o.user_id, o.transaction_id,o.total_price,o.delivery_fee,o.resi_no,o.created_at from "order" o WHERE o.id = $1`
+	GetOrderItemsByOrderIDQuery = `SELECT "id", "order_id", "product_detail_id", "quantity", "item_price", "total_price" FROM "order_item" WHERE "order_id" = $1`
+	GetProductDetailByIDQuery   = `SELECT "id", "price", "stock", "weight", "size", "hazardous", "condition", "bulk_price" FROM "product_detail" WHERE "id" = $1 AND "deleted_at" IS NULL;`
+	GetWalletByUserIDQuery      = `SELECT "id", "user_id", "balance", "pin", "attempt_count", "attempt_at", "unlocked_at", "active_date" FROM "wallet" WHERE "user_id" = $1 AND "deleted_at" IS NULL`
 )

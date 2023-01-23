@@ -7,6 +7,7 @@ import (
 	"murakali/internal/model"
 	"murakali/internal/module/admin"
 	"murakali/pkg/pagination"
+	"murakali/pkg/postgre"
 
 	"github.com/go-redis/redis/v8"
 )
@@ -178,6 +179,41 @@ func (r *adminRepo) GetVoucherByID(ctx context.Context, voucherID string) (*mode
 	return &voucher, nil
 }
 
+func (r *adminRepo) GetRefundByID(ctx context.Context, refundID string) (*model.Refund, error) {
+	var refund model.Refund
+	if err := r.PSQL.QueryRowContext(ctx, GetRefundByIDQuery, refundID).Scan(
+		&refund.ID,
+		&refund.OrderID,
+		&refund.IsSellerRefund,
+		&refund.IsBuyerRefund,
+		&refund.Reason,
+		&refund.Image,
+		&refund.AcceptedAt,
+		&refund.RejectedAt,
+		&refund.RefundedAt); err != nil {
+		return nil, err
+	}
+
+	return &refund, nil
+}
+
+func (r *adminRepo) GetOrderByID(ctx context.Context, orderID string) (*model.OrderModel, error) {
+	var order model.OrderModel
+	if err := r.PSQL.QueryRowContext(ctx, GetOrderByOrderIDQuery, orderID).Scan(
+		&order.ID,
+		&order.OrderStatusID,
+		&order.UserID,
+		&order.TransactionID,
+		&order.TotalPrice,
+		&order.DeliveryFee,
+		&order.ResiNo,
+		&order.CreatedAt); err != nil {
+		return nil, err
+	}
+
+	return &order, nil
+}
+
 func (r *adminRepo) CreateVoucher(ctx context.Context, voucherShop *model.Voucher) error {
 	if _, err := r.PSQL.ExecContext(ctx, CreateVoucherQuery,
 		voucherShop.Code,
@@ -205,6 +241,109 @@ func (r *adminRepo) UpdateVoucher(ctx context.Context, voucherShop *model.Vouche
 		voucherShop.ID); err != nil {
 		return err
 	}
+	return nil
+}
+
+func (r *adminRepo) UpdateRefund(ctx context.Context, tx postgre.Transaction, refund *model.Refund) error {
+	if _, err := tx.ExecContext(ctx, UpdateRefundQuery, refund.RefundedAt, refund.ID); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (r *adminRepo) UpdateOrderStatus(ctx context.Context, tx postgre.Transaction, orderData *model.OrderModel) error {
+	_, err := tx.ExecContext(ctx, UpdateOrderByID, orderData.OrderStatusID, orderData.ID)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (r *adminRepo) GetOrderItemsByOrderID(ctx context.Context, tx postgre.Transaction, orderID string) ([]*model.OrderItem, error) {
+	orderItems := make([]*model.OrderItem, 0)
+	res, err := tx.QueryContext(ctx, GetOrderItemsByOrderIDQuery, orderID)
+	if err != nil {
+		return nil, err
+	}
+	defer res.Close()
+
+	for res.Next() {
+		var orderItem model.OrderItem
+		if errScan := res.Scan(
+			&orderItem.ID,
+			&orderItem.OrderID,
+			&orderItem.ProductDetailID,
+			&orderItem.Quantity,
+			&orderItem.ItemPrice,
+			&orderItem.TotalPrice); errScan != nil {
+			return nil, err
+		}
+
+		orderItems = append(orderItems, &orderItem)
+	}
+
+	if res.Err() != nil {
+		return nil, err
+	}
+
+	return orderItems, nil
+}
+
+func (r *adminRepo) GetProductDetailByID(ctx context.Context, tx postgre.Transaction, productDetailID string) (*model.ProductDetail, error) {
+	var pd model.ProductDetail
+	if err := tx.QueryRowContext(ctx, GetProductDetailByIDQuery, productDetailID).Scan(
+		&pd.ID,
+		&pd.Price,
+		&pd.Stock,
+		&pd.Size,
+		&pd.Weight,
+		&pd.Hazardous,
+		&pd.Condition,
+		&pd.BulkPrice); err != nil {
+		return nil, err
+	}
+
+	return &pd, nil
+}
+
+func (r *adminRepo) GetWalletByUserID(ctx context.Context, userID string) (*model.Wallet, error) {
+	var walletModel model.Wallet
+	if err := r.PSQL.QueryRowContext(ctx, GetWalletByUserIDQuery, userID).Scan(&walletModel.ID, &walletModel.UserID,
+		&walletModel.Balance, &walletModel.PIN, &walletModel.AttemptCount,
+		&walletModel.AttemptAt, &walletModel.UnlockedAt, &walletModel.ActiveDate); err != nil {
+		return nil, err
+	}
+
+	return &walletModel, nil
+}
+
+func (r *adminRepo) InsertWalletHistory(ctx context.Context, tx postgre.Transaction, walletHistory *model.WalletHistory) error {
+	_, err := tx.ExecContext(ctx, CreateWalletHistoryQuery, walletHistory.TransactionID, walletHistory.WalletID,
+		walletHistory.From, walletHistory.To, walletHistory.Description, walletHistory.Amount, walletHistory.CreatedAt)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (r *adminRepo) UpdateWalletBalance(ctx context.Context, tx postgre.Transaction, wallet *model.Wallet) error {
+	_, err := tx.ExecContext(ctx, UpdateWalletBalanceQuery, wallet.Balance, wallet.UpdatedAt, wallet.ID)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (r *adminRepo) UpdateProductDetailStock(ctx context.Context, tx postgre.Transaction,
+	productDetailData *model.ProductDetail) error {
+	_, err := tx.ExecContext(ctx, UpdateProductDetailStockQuery, productDetailData.Stock, productDetailData.ID)
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 

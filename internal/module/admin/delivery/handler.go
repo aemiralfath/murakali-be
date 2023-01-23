@@ -156,6 +156,29 @@ func (h *adminHandlers) DeleteVoucher(c *gin.Context) {
 	response.SuccessResponse(c.Writer, nil, http.StatusOK)
 }
 
+func (h *adminHandlers) RefundOrder(c *gin.Context) {
+	id := c.Param("id")
+	refundID, err := uuid.Parse(id)
+	if err != nil {
+		response.ErrorResponse(c.Writer, response.BadRequestMessage, http.StatusBadRequest)
+		return
+	}
+
+	if err := h.adminUC.RefundOrder(c, refundID.String()); err != nil {
+		var e *httperror.Error
+		if !errors.As(err, &e) {
+			h.logger.Errorf("HandlerAdmin, Error: %s", err)
+			response.ErrorResponse(c.Writer, response.InternalServerErrorMessage, http.StatusInternalServerError)
+			return
+		}
+
+		response.ErrorResponse(c.Writer, e.Err.Error(), e.Status)
+		return
+	}
+
+	response.SuccessResponse(c.Writer, nil, http.StatusOK)
+}
+
 func (h *adminHandlers) UpdateVoucher(c *gin.Context) {
 	var requestBody body.UpdateVoucherRequest
 	if err := c.ShouldBind(&requestBody); err != nil {

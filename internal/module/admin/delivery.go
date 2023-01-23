@@ -9,4 +9,5 @@ type Handlers interface {
 	DeleteVoucher(c *gin.Context)
 	GetDetailVoucher(c *gin.Context)
 	GetRefunds(c *gin.Context)
+	RefundOrder(c *gin.Context)
 }
