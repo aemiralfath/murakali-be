@@ -185,7 +185,7 @@ const (
 	FROM "promotion" as "promo"
 	INNER JOIN "product" as "p" ON "p"."id" = "promo"."product_id"
 	INNER JOIN "shop" as "s" ON "s"."id" = "p"."shop_id"
-	WHERE "s"."id" = $1
+	WHERE "s"."id" = $1 ORDER BY "promo"."created_at" DESC
 	`
 
 	GetTotalPromotionSellerQuery = `
@@ -251,4 +251,19 @@ const (
 	GetOrderByTransactionID       = `SELECT 
 		"id", "transaction_id", "shop_id", "user_id", "courier_id", "voucher_shop_id", "order_status_id", "total_price", "delivery_fee", "resi_no", "created_at", "arrived_at" 
 	FROM "order" WHERE "transaction_id" = $1`
+
+	GetTotalProductWithoutPromotionQuery = `SELECT count("p"."id") FROM "product" as "p"
+		INNER JOIN "category" as "c" ON "c"."id" = "p"."category_id"
+		LEFT JOIN "promotion" as "promo" ON "promo"."product_id" = "p"."id"
+		WHERE "p"."shop_id" = $1 AND ("promo"."id" is NULL OR
+	("promo"."actived_date" < now() AND "promo"."expired_date" < now()));
+	`
+	GetProductWithoutPromotionQuery = `
+	SELECT "p"."id", "p"."title", "p"."min_price", "c"."name", "p"."thumbnail_url", "p"."unit_sold", "p"."rating_avg" FROM "product" as "p"
+		INNER JOIN "category" as "c" ON "c"."id" = "p"."category_id"
+		LEFT JOIN "promotion" as "promo" ON "promo"."product_id" = "p"."id"
+		WHERE "p"."shop_id" = $1 AND ("promo"."id" is NULL OR
+		("promo"."actived_date" < now() AND "promo"."expired_date" < now()))
+		LIMIT $2 OFFSET $3;
+	`
 )

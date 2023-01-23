@@ -830,3 +830,29 @@ func (h *sellerHandlers) GetDetailPromotionSellerByID(c *gin.Context) {
 
 	response.SuccessResponse(c.Writer, promotionShop, http.StatusOK)
 }
+
+func (h *sellerHandlers) GetProductWithoutPromotionSeller(c *gin.Context) {
+	userID, exist := c.Get("userID")
+	if !exist {
+		response.ErrorResponse(c.Writer, response.UnauthorizedMessage, http.StatusUnauthorized)
+		return
+	}
+
+	pgn := &pagination.Pagination{}
+	h.ValidateQueryPagination(c, pgn)
+
+	productWithoutPromotion, err := h.sellerUC.GetProductWithoutPromotionSeller(c, userID.(string), pgn)
+	if err != nil {
+		var e *httperror.Error
+		if !errors.As(err, &e) {
+			h.logger.Errorf("HandlerSeller, Error: %s", err)
+			response.ErrorResponse(c.Writer, response.InternalServerErrorMessage, http.StatusInternalServerError)
+			return
+		}
+
+		response.ErrorResponse(c.Writer, e.Err.Error(), e.Status)
+		return
+	}
+
+	response.SuccessResponse(c.Writer, productWithoutPromotion, http.StatusOK)
+}

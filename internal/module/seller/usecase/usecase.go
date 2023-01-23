@@ -655,8 +655,8 @@ func (u *sellerUC) CreatePromotionSeller(ctx context.Context, userID string, req
 
 	data, errTx := u.txRepo.WithTransactionReturnData(func(tx postgre.Transaction) (interface{}, error) {
 		countProduct := 0
-		for _, productID := range requestBody.ProductIDs {
-			shopProduct := &body.ShopProduct{ShopID: shopID, ProductID: productID}
+		for _, p := range requestBody.ProductPromotion {
+			shopProduct := &body.ShopProduct{ShopID: shopID, ProductID: p.ProductID}
 
 			productPromo, errProductPromo := u.sellerRepo.GetProductPromotion(ctx, shopProduct)
 			if errProductPromo != nil {
@@ -670,22 +670,22 @@ func (u *sellerUC) CreatePromotionSeller(ctx context.Context, userID string, req
 				return nil, httperror.New(http.StatusBadRequest, response.ProductAlreadyHasPromoMessage)
 			}
 
-			PID, err := uuid.Parse(productID)
+			PID, err := uuid.Parse(p.ProductID)
 			if err != nil {
 				return nil, err
 			}
 
 			promotionShop := &model.Promotion{
 				Name:               requestBody.Name,
-				ProductID:          PID,
-				DiscountPercentage: &requestBody.DiscountPercentage,
-				DiscountFixPrice:   &requestBody.DiscountFixPrice,
-				MinProductPrice:    &requestBody.MinProductPrice,
-				MaxDiscountPrice:   &requestBody.MaxDiscountPrice,
-				Quota:              requestBody.Quota,
-				MaxQuantity:        requestBody.MaxQuantity,
 				ActivedDate:        requestBody.ActiveDateTime,
 				ExpiredDate:        requestBody.ExpiredDateTime,
+				ProductID:          PID,
+				DiscountPercentage: &p.DiscountPercentage,
+				DiscountFixPrice:   &p.DiscountFixPrice,
+				MinProductPrice:    &p.MinProductPrice,
+				MaxDiscountPrice:   &p.MaxDiscountPrice,
+				Quota:              p.Quota,
+				MaxQuantity:        p.MaxQuantity,
 			}
 
 			err = u.sellerRepo.CreatePromotionSeller(ctx, tx, promotionShop)
@@ -752,8 +752,8 @@ func (u *sellerUC) UpdatePromotionSeller(ctx context.Context, userID string, req
 	}
 
 	promotion := &model.Promotion{
-		ID:                 promotionShop.ID,
-		Name:               requestBody.Name,
+		ID:                 promotionShop.PromotionID,
+		Name:               requestBody.PromotionName,
 		MaxQuantity:        requestBody.MaxQuantity,
 		DiscountPercentage: &requestBody.DiscountPercentage,
 		DiscountFixPrice:   &requestBody.DiscountFixPrice,
@@ -793,6 +793,34 @@ func (u *sellerUC) GetDetailPromotionSellerByID(ctx context.Context,
 	promotionShop = u.CalculateDiscountPromotionProduct(ctx, promotionShop)
 
 	return promotionShop, nil
+}
+
+func (u sellerUC) GetProductWithoutPromotionSeller(ctx context.Context, userID string, pgn *pagination.Pagination) (*pagination.Pagination, error) {
+	shopID, err := u.sellerRepo.GetShopIDByUserID(ctx, userID)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, httperror.New(http.StatusBadRequest, response.UserNotHaveShop)
+		}
+		return nil, err
+	}
+
+	totalRows, err := u.sellerRepo.GetTotalProductWithoutPromotionSeller(ctx, shopID)
+	if err != nil {
+		return nil, err
+	}
+
+	totalPages := int(math.Ceil(float64(totalRows) / float64(pgn.Limit)))
+	pgn.TotalRows = totalRows
+	pgn.TotalPages = totalPages
+
+	ProductWoutPromotion, err := u.sellerRepo.GetProductWithoutPromotionSeller(ctx, shopID, pgn)
+	if err != nil {
+		return nil, err
+	}
+
+	pgn.Rows = ProductWoutPromotion
+
+	return pgn, nil
 }
 
 func (u *sellerUC) CalculateDiscountPromotionProduct(ctx context.Context, p *body.PromotionDetailSeller) *body.PromotionDetailSeller {
