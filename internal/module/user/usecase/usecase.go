@@ -1075,7 +1075,7 @@ func (u *userUC) GetRedirectURL(transaction *model.Transaction, sign string) (st
 	return res.Header.Get("Location"), nil
 }
 
-func (u *userUC) GetTransactionByUserID(ctx context.Context, userID string, pgn *pagination.Pagination) (*pagination.Pagination, error) {
+func (u *userUC) GetTransactionByUserID(ctx context.Context, userID string, status int, pgn *pagination.Pagination) (*pagination.Pagination, error) {
 	totalRows, err := u.userRepo.GetTotalTransactionByUserID(ctx, userID)
 	if err != nil {
 		return nil, err
@@ -1086,7 +1086,7 @@ func (u *userUC) GetTransactionByUserID(ctx context.Context, userID string, pgn 
 	pgn.TotalPages = totalPages
 
 	transactionsRes := make([]*body.GetTransactionByIDResponse, 0)
-	transactions, err := u.userRepo.GetTransactionByUserID(ctx, userID, pgn)
+	transactions, err := u.userRepo.GetTransactionByUserID(ctx, userID, status, pgn)
 	if err != nil {
 		return nil, err
 	}

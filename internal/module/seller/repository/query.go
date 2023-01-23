@@ -72,6 +72,7 @@ const (
 	GetShopIDByOrderQuery = `SELECT shop_id from "order" where id = $1 `
 
 	ChangeOrderStatusQuery = `UPDATE "order" SET "order_status_id" = $1 WHERE "id" = $2`
+	CancelOrderStatusQuery = `UPDATE "order" SET "order_status_id" = $1, "cancel_notes" = $2, "is_refund" = $3 WHERE "id" = $4`
 
 	GetCourierSellerQuery = `
 	SELECT "sp"."id" as "shop_courier_id",	"sp"."courier_id" as "courier_id", "sp"."deleted_at" as "deleted_at"

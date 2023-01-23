@@ -715,11 +715,19 @@ func (r *userRepo) GetOrdersByTransactionID(ctx context.Context, transactionID, 
 	return orders, nil
 }
 
-func (r *userRepo) GetTransactionByUserID(ctx context.Context, userID string, pgn *pagination.Pagination) ([]*model.Transaction, error) {
+func (r *userRepo) GetTransactionByUserID(ctx context.Context, userID string, status int, pgn *pagination.Pagination) ([]*model.Transaction, error) {
 	transactions := make([]*model.Transaction, 0)
 
+	query := GetTransactionByUserIDQuery
+	switch status {
+	case constant.OrderStatusWaitingToPay:
+		query = GetTransactionByUserIDNotPaidQuery
+	default:
+		query = GetTransactionByUserIDQuery
+	}
+
 	res, err := r.PSQL.QueryContext(
-		ctx, GetTransactionByUserIDQuery,
+		ctx, query,
 		userID,
 		pgn.GetLimit(),
 		pgn.GetOffset())

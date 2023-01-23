@@ -64,6 +64,16 @@ const (
 	ORDER BY t.expired_at DESC LIMIT $2 OFFSET $3
 	`
 
+	GetTransactionByUserIDNotPaidQuery = `
+	SELECT t.id,t.voucher_marketplace_id,t.wallet_id,t.card_number,t.invoice,t.total_price,t.paid_at,t.canceled_at,t.expired_at
+	from "transaction" t, "order" o
+	WHERE t.id = o.transaction_id
+	AND o.user_id = $1
+	AND t.paid_at IS NULL AND t.canceled_at IS NULL
+	GROUP BY t.id
+	ORDER BY t.expired_at DESC LIMIT $2 OFFSET $3
+	`
+
 	GetOrdersByTransactionIDQuery = `SELECT o.id,o.order_status_id,o.total_price,o.delivery_fee,o.resi_no,s.id,s.name,v.code,o.created_at
 	from "order" o
 	join "shop" s on s.id = o.shop_id

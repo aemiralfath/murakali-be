@@ -299,6 +299,16 @@ func (r *sellerRepo) ChangeOrderStatus(ctx context.Context, requestBody body.Cha
 	return nil
 }
 
+func (r *sellerRepo) CancelOrderStatus(ctx context.Context, requestBody body.CancelOrderStatus) error {
+	_, err := r.PSQL.ExecContext(
+		ctx, CancelOrderStatusQuery, constant.OrderStatusCanceled, requestBody.CancelNotes, true, requestBody.OrderID)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func (r *sellerRepo) GetOrdersOnDelivery(ctx context.Context) ([]*model.OrderModel, error) {
 	orders := make([]*model.OrderModel, 0)
 	res, err := r.PSQL.QueryContext(ctx, GetOrderOnDeliveryQuery, constant.OrderStatusOnDelivery)

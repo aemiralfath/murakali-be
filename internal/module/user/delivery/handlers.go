@@ -138,6 +138,53 @@ func (h *userHandlers) GetWalletHistoryByID(c *gin.Context) {
 	response.SuccessResponse(c.Writer, detailWalletHistory, http.StatusOK)
 }
 
+func (h *userHandlers) ValidateTransactionQuery(c *gin.Context) (*pagination.Pagination, int) {
+	limit := strings.TrimSpace(c.Query("limit"))
+	page := strings.TrimSpace(c.Query("page"))
+	sort := strings.TrimSpace(c.Query("sort"))
+	status := strings.TrimSpace(c.Query("status"))
+
+	var limitFilter int
+	var pageFilter int
+	sortFilter := "DESC"
+	statusFilter := 0
+
+	limitFilter, err := strconv.Atoi(limit)
+	if err != nil || limitFilter < 1 {
+		limitFilter = 18
+	}
+
+	pageFilter, err = strconv.Atoi(page)
+	if err != nil || pageFilter < 1 {
+		pageFilter = 1
+	}
+
+	sort = strings.ToLower(sort)
+	if sort == constant.ASC {
+		sortFilter = constant.ASC
+	}
+
+	statusFilter, err = strconv.Atoi(status)
+	if err != nil || statusFilter < 1 {
+		statusFilter = 0
+	}
+
+	switch statusFilter {
+	case constant.OrderStatusWaitingToPay:
+		statusFilter = constant.OrderStatusWaitingToPay
+	default:
+		statusFilter = 0
+	}
+
+	pgn := &pagination.Pagination{
+		Limit: limitFilter,
+		Page:  pageFilter,
+		Sort:  "created_at " + sortFilter,
+	}
+
+	return pgn, statusFilter
+}
+
 func (h *userHandlers) ValidateQuery(c *gin.Context) *pagination.Pagination {
 	limit := strings.TrimSpace(c.Query("limit"))
 	page := strings.TrimSpace(c.Query("page"))
@@ -1248,9 +1295,9 @@ func (h *userHandlers) GetTransactions(c *gin.Context) {
 		return
 	}
 
-	pgn := h.ValidateQuery(c)
+	pgn, status := h.ValidateTransactionQuery(c)
 
-	transactions, err := h.userUC.GetTransactionByUserID(c, userID.(string), pgn)
+	transactions, err := h.userUC.GetTransactionByUserID(c, userID.(string), status, pgn)
 	if err != nil {
 		var e *httperror.Error
 		if !errors.As(err, &e) {
