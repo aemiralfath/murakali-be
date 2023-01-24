@@ -38,6 +38,7 @@ type UseCase interface {
 	GetTransactionDetailByID(ctx context.Context, transactionID, userID string) (*body.TransactionDetailResponse, error)
 	GetOrder(ctx context.Context, userID, orderStatusID string, pgn *pagination.Pagination) (*pagination.Pagination, error)
 	GetOrderByOrderID(ctx context.Context, orderID string) (*model.Order, error)
+	ChangeOrderStatus(ctx context.Context, userID string, requestBody body.ChangeOrderStatusRequest) error
 	ActivateWallet(ctx context.Context, userID, pin string) error
 	GetWallet(ctx context.Context, userID string) (*model.Wallet, error)
 	GetDetailWalletHistory(ctx context.Context, walletHistoryID, userID string) (*body.DetailHistoryWalletResponse, error)

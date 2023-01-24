@@ -318,6 +318,28 @@ func (u *userUC) GetOrderByOrderID(ctx context.Context, orderID string) (*model.
 	return order, nil
 }
 
+func (u *userUC) ChangeOrderStatus(ctx context.Context, userID string, requestBody body.ChangeOrderStatusRequest) error {
+	buyerID, err := u.userRepo.GetBuyerIDByOrderID(ctx, requestBody.OrderID)
+	if err != nil {
+		return err
+	}
+
+	if userID != buyerID {
+		return httperror.New(http.StatusUnauthorized, response.UnauthorizedMessage)
+	}
+
+	// Buyer can only set order to -> "Received"
+	if requestBody.OrderStatusID != constant.OrderStatusReceived {
+		return httperror.New(http.StatusBadRequest, response.BadRequestMessage)
+	}
+
+	err = u.userRepo.ChangeOrderStatus(ctx, requestBody)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 func (u *userUC) GetCostRajaOngkir(origin, destination, weight int, code string) (*body2.RajaOngkirCostResponse, error) {
 	var responseCost body2.RajaOngkirCostResponse
 	url := fmt.Sprintf("%s/cost", u.cfg.External.OngkirAPIURL)
