@@ -28,4 +28,5 @@ type Handlers interface {
 	UpdateExpiredAtOrder(c *gin.Context)
 	CancelOrderStatus(c *gin.Context)
 	GetProductWithoutPromotionSeller(c *gin.Context)
+	WithdrawalOrderBalance(c *gin.Context)
 }

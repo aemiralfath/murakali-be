@@ -34,6 +34,105 @@ func NewSellerUseCase(cfg *config.Config, txRepo *postgre.TxRepo, sellerRepo sel
 	return &sellerUC{cfg: cfg, txRepo: txRepo, sellerRepo: sellerRepo}
 }
 
+func (u *sellerUC) WithdrawalOrderBalance(ctx context.Context, orderID string) error {
+	order, err := u.sellerRepo.GetOrderByOrderID(ctx, orderID)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return httperror.New(http.StatusBadRequest, response.OrderNotExistMessage)
+		}
+
+		return err
+	}
+
+	if order.OrderStatus != constant.OrderStatusCompleted {
+		return httperror.New(http.StatusBadRequest, response.OrderNotCompletedMessage)
+	}
+
+	if order.IsWithdraw {
+		return httperror.New(http.StatusBadRequest, response.OrderAlreadyWithdrawMessage)
+	}
+
+	errTx := u.txRepo.WithTransaction(func(tx postgre.Transaction) error {
+		idUUID, err := uuid.Parse(order.OrderID)
+		if err != nil {
+			return err
+		}
+
+		if errWithdraw := u.sellerRepo.UpdateOrder(ctx, tx,
+			&model.OrderModel{ID: idUUID, OrderStatusID: order.OrderStatus, IsWithdraw: true}); err != nil {
+			return errWithdraw
+		}
+
+		walletMarketplace, err := u.sellerRepo.GetWalletByUserID(ctx, tx, constant.AdminMarketplaceID)
+		if err != nil {
+			return err
+		}
+
+		walletMarketplace.Balance -= *order.TotalPrice
+		walletMarketplace.UpdatedAt.Valid = true
+		walletMarketplace.UpdatedAt.Time = time.Now()
+		if err := u.sellerRepo.UpdateWalletBalance(ctx, tx, walletMarketplace); err != nil {
+			return err
+		}
+
+		sellerID, err := u.sellerRepo.GetSellerIDByOrderID(ctx, orderID)
+		if err != nil {
+			return err
+		}
+
+		walletSeller, err := u.sellerRepo.GetWalletByUserID(ctx, tx, sellerID)
+		if err != nil {
+			return err
+		}
+
+		walletSeller.Balance += *order.TotalPrice
+		walletSeller.UpdatedAt.Time = time.Now()
+		walletSeller.UpdatedAt.Valid = true
+		if err := u.sellerRepo.UpdateWalletBalance(ctx, tx, walletSeller); err != nil {
+			return err
+		}
+
+		transactionID, err := uuid.Parse(order.TransactionID)
+		if err != nil {
+			return err
+		}
+
+		walletMarketplaceHistory := &model.WalletHistory{
+			TransactionID: transactionID,
+			WalletID:      walletMarketplace.ID,
+			From:          walletMarketplace.ID.String(),
+			To:            walletSeller.ID.String(),
+			Description:   "Withdrawal order " + order.OrderID,
+			Amount:        *order.TotalPrice,
+			CreatedAt:     time.Now(),
+		}
+		if err := u.sellerRepo.InsertWalletHistory(ctx, tx, walletMarketplaceHistory); err != nil {
+			return err
+		}
+
+		walletUserHistory := &model.WalletHistory{
+			TransactionID: transactionID,
+			WalletID:      walletSeller.ID,
+			From:          walletMarketplace.ID.String(),
+			To:            walletSeller.ID.String(),
+			Description:   "Withdrawal order " + order.OrderID,
+			Amount:        *order.TotalPrice,
+			CreatedAt:     time.Now(),
+		}
+		if err := u.sellerRepo.InsertWalletHistory(ctx, tx, walletUserHistory); err != nil {
+			return err
+		}
+
+		return nil
+	})
+
+	if errTx != nil {
+		return errTx
+	}
+
+	return nil
+}
+
 func (u *sellerUC) GetOrder(ctx context.Context, userID, orderStatusID, voucherShopID string,
 	pgn *pagination.Pagination) (*pagination.Pagination, error) {
 	shopID, err := u.sellerRepo.GetShopIDByUser(ctx, userID)
@@ -363,6 +462,7 @@ func (u *sellerUC) UpdateExpiredAtOrder(ctx context.Context) error {
 
 			for _, order := range orders {
 				order.OrderStatusID = constant.OrderStatusCanceled
+				order.IsWithdraw = false
 				if err := u.sellerRepo.UpdateOrder(ctx, tx, order); err != nil {
 					return err
 				}

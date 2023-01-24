@@ -318,9 +318,9 @@ func (r *adminRepo) GetProductDetailByID(ctx context.Context, tx postgre.Transac
 	return &pd, nil
 }
 
-func (r *adminRepo) GetWalletByUserID(ctx context.Context, userID string) (*model.Wallet, error) {
+func (r *adminRepo) GetWalletByUserID(ctx context.Context, tx postgre.Transaction, userID string) (*model.Wallet, error) {
 	var walletModel model.Wallet
-	if err := r.PSQL.QueryRowContext(ctx, GetWalletByUserIDQuery, userID).Scan(&walletModel.ID, &walletModel.UserID,
+	if err := tx.QueryRowContext(ctx, GetWalletByUserIDQuery, userID).Scan(&walletModel.ID, &walletModel.UserID,
 		&walletModel.Balance, &walletModel.PIN, &walletModel.AttemptCount,
 		&walletModel.AttemptAt, &walletModel.UnlockedAt, &walletModel.ActiveDate); err != nil {
 		return nil, err

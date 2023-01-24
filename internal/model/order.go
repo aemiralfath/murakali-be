@@ -9,6 +9,7 @@ import (
 
 type Order struct {
 	OrderID            string         `json:"order_id"`
+	TransactionID      string         `json:"transaction_id"`
 	OrderStatus        int            `json:"order_status"`
 	TotalPrice         *float64       `json:"total_price"`
 	DeliveryFee        *float64       `json:"delivery_fee"`
@@ -29,6 +30,7 @@ type Order struct {
 	BuyerPhoneNumber   *string        `json:"buyer_phone_number"`
 	BuyerAddress       *Address       `json:"buyer_address"`
 	SellerAddress      *Address       `json:"seller_address"`
+	IsWithdraw         bool           `json:"is_withdraw"`
 	Detail             []*OrderDetail `json:"detail"`
 }
 
@@ -43,6 +45,7 @@ type OrderModel struct {
 	TotalPrice    float64      `json:"total_price" db:"total_price" binding:"omitempty"`
 	DeliveryFee   float64      `json:"delivery_fee" db:"delivery_fee" binding:"omitempty"`
 	ResiNo        *string      `json:"resi_no" db:"resi_no" binding:"omitempty"`
+	IsWithdraw    bool         `json:"is_withdraw" db:"is_withdraw" binding:"omitempty"`
 	CreatedAt     time.Time    `json:"created_at" db:"created_at" binding:"omitempty"`
 	ArrivedAt     sql.NullTime `json:"arrived_at" db:"arrived_at" binding:"omitempty"`
 }
