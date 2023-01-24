@@ -1269,6 +1269,7 @@ func (r *userRepo) GetProductDetailByID(ctx context.Context, tx postgre.Transact
 	var pd model.ProductDetail
 	if err := tx.QueryRowContext(ctx, GetProductDetailByIDQuery, productDetailID).Scan(
 		&pd.ID,
+		&pd.ProductID,
 		&pd.Price,
 		&pd.Stock,
 		&pd.Size,
@@ -1445,6 +1446,46 @@ func (r *userRepo) UpdateOrder(ctx context.Context, tx postgre.Transaction, orde
 
 func (r *userRepo) DeleteCartItemByID(ctx context.Context, tx postgre.Transaction, cartItemData *model.CartItem) error {
 	_, err := tx.ExecContext(ctx, DeleteCartItemByIDQuery, cartItemData.ID.String())
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (r *userRepo) GetProductPromotionByProductID(ctx context.Context, productID string) (*model.Promotion, error) {
+	var promo model.Promotion
+	if err := r.PSQL.QueryRowContext(ctx, GetProductPromotionByProductIDQuery, productID).
+	Scan(
+		&promo.ID,
+		&promo.Name,
+		&promo.ProductID,
+		&promo.DiscountPercentage,
+		&promo.DiscountFixPrice,
+		&promo.MinProductPrice,
+		&promo.MaxDiscountPrice,
+		&promo.Quota,
+		&promo.MaxQuantity,
+		&promo.ActivedDate,
+		&promo.ExpiredDate,
+		&promo.CreatedAt,
+		&promo.UpdatedAt,
+		&promo.DeletedAt); err != nil {
+	return nil, err
+}
+
+return &promo, nil
+}
+
+func (r *userRepo) UpdateVoucherQuota(ctx context.Context, tx postgre.Transaction, upVoucher *model.Voucher) error {
+	_, err := tx.ExecContext(ctx, UpdateVoucherQuotaQuery, upVoucher.Quota, upVoucher.ID)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (r *userRepo) UpdatePromotionQuota(ctx context.Context, tx postgre.Transaction, promo *model.Promotion) error {
+	_, err := tx.ExecContext(ctx, UpdatePromotionQuotaQuery, promo.Quota, promo.ID)
 	if err != nil {
 		return err
 	}

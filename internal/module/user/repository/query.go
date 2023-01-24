@@ -135,7 +135,7 @@ const (
 	GetCourierShopByIDQuery = `SELECT "c"."id", "c"."name", "c"."code", "c"."service", "c"."description" FROM "courier" as "c"
 		INNER JOIN "shop_courier" as sc ON "sc"."courier_id" = "c"."id"
 		WHERE "c"."id" = $1 AND "sc"."shop_id" = $2 AND "c"."deleted_at" IS NULL;`
-	GetProductDetailByIDQuery     = `SELECT "id", "price", "stock", "weight", "size", "hazardous", "condition", "bulk_price" FROM "product_detail" WHERE "id" = $1 AND "deleted_at" IS NULL;`
+	GetProductDetailByIDQuery     = `SELECT "id", "product_id", "price", "stock", "weight", "size", "hazardous", "condition", "bulk_price" FROM "product_detail" WHERE "id" = $1 AND "deleted_at" IS NULL;`
 	GetShopByIDQuery              = `SELECT "id", "name" FROM "shop" WHERE "id" = $1 AND "deleted_at" IS NULL;`
 	CreateTransactionQuery        = `INSERT INTO "transaction" (voucher_marketplace_id, wallet_id, card_number, total_price, expired_at) VALUES ($1, $2, $3, $4, $5) RETURNING "id";`
 	CreateOrderQuery              = `INSERT INTO "order" (transaction_id, shop_id, user_id, courier_id, voucher_shop_id, order_status_id, total_price, delivery_fee) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING "id";`
@@ -196,4 +196,16 @@ const (
 	"id", "user_id", "name", "province_id", "city_id", "province", "city", "district", "sub_district",  
 	"address_detail", "zip_code", "is_default", "is_shop_default", "created_at", "updated_at"
 	FROM "address" WHERE "user_id" = $1 AND "deleted_at" IS NULL AND is_shop_default is true`
+
+	GetProductPromotionByProductIDQuery = `
+	SELECT "promo"."id", "promo"."name", "promo"."product_id", "promo"."discount_percentage", "promo"."discount_fix_price",
+		"promo"."min_product_price", "promo"."max_discount_price", "promo"."quota", "promo"."max_quantity", "promo"."actived_date",
+		"promo"."expired_date", "promo"."created_at", "promo"."updated_at", "promo"."deleted_at"
+	FROM "promotion" as "promo" 
+	INNER JOIN "product" as "p" ON "p"."id" = "promo"."product_id"
+	WHERE "p"."id" = $1 AND ("promo"."actived_date" < now() AND "promo"."expired_date" >= now())
+	`
+
+	UpdateVoucherQuotaQuery = `UPDATE "voucher" SET "quota" = $1, "updated_at" = now() WHERE "id" = $2;`
+	UpdatePromotionQuotaQuery = `UPDATE "promotion" SET "quota" = $1, "updated_at" = now() WHERE "id" = $2;`
 )

@@ -95,4 +95,7 @@ type Repository interface {
 	UpdateUserSealabsPay(ctx context.Context, request body.AddSealabsPayRequest, userid string) error
 	UpdateUserSealabsPayTrans(ctx context.Context, tx postgre.Transaction, request body.AddSealabsPayRequest, userid string) error
 	UpdateWalletPin(ctx context.Context, wallet *model.Wallet) error
+	GetProductPromotionByProductID(ctx context.Context, productID string) (*model.Promotion, error)
+	UpdateVoucherQuota(ctx context.Context, tx postgre.Transaction, upVoucher *model.Voucher) error
+	UpdatePromotionQuota(ctx context.Context, tx postgre.Transaction, promo *model.Promotion) error
 }
