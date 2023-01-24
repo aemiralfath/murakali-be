@@ -7,7 +7,7 @@ const (
 	AND "o"."voucher_shop_id" = $3
 	`
 
-	GetOrdersQuery = `SELECT o.id,o.order_status_id,o.total_price,o.delivery_fee,o.resi_no,s.id,s.name,v.code,o.created_at
+	GetOrdersQuery = `SELECT o.id, o.is_withdraw, o.order_status_id,o.total_price,o.delivery_fee,o.resi_no,s.id,s.name,v.code,o.created_at
 	from "order" o
 	join "shop" s on s.id = o.shop_id
 	left join "voucher" v on v.id = o.voucher_shop_id 
@@ -16,7 +16,7 @@ const (
 	ORDER BY o.created_at asc LIMIT $3 OFFSET $4
 	`
 
-	GetOrdersWithVoucherIDQuery = `SELECT o.id,o.order_status_id,o.total_price,o.delivery_fee,o.resi_no,s.id,s.name,v.code,o.created_at
+	GetOrdersWithVoucherIDQuery = `SELECT o.id, o.is_withdraw,o.order_status_id,o.total_price,o.delivery_fee,o.resi_no,s.id,s.name,v.code,o.created_at
 	from "order" o
 	join "shop" s on s.id = o.shop_id
 	left join "voucher" v on v.id = o.voucher_shop_id 

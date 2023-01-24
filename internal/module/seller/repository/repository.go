@@ -253,6 +253,7 @@ func (r *sellerRepo) GetOrders(ctx context.Context, shopID, orderStatusID, vouch
 		var order model.Order
 		if errScan := res.Scan(
 			&order.OrderID,
+			&order.IsWithdraw,
 			&order.OrderStatus,
 			&order.TotalPrice,
 			&order.DeliveryFee,
