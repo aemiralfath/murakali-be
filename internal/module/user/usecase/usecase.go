@@ -1562,7 +1562,7 @@ func (u *userUC) ChangeWalletPin(ctx context.Context, userID, pin string) error 
 }
 
 func (u *userUC) CreateTransaction(ctx context.Context, userID string, requestBody body.CreateTransactionRequest) (string, error) {
-	// TODO: Add voucher promotion stock & validation
+	
 	transactionData := &model.Transaction{}
 	orderResponses := make([]*body.OrderResponse, 0)
 
@@ -1610,9 +1610,6 @@ func (u *userUC) CreateTransaction(ctx context.Context, userID string, requestBo
 		}
 		transactionData.VoucherMarketplaceID = &voucherMarketplace.ID
 	}
-	fmt.Println("voucher marketplace p: ", voucherMarketplace.DiscountPercentage)
-	fmt.Println("voucher marketplace n: ", voucherMarketplace.DiscountFixPrice)
-	fmt.Println("")
 
 	voucherShopList := make([]*model.Voucher, 0)
 	promotionMap := make(map[string]int, 0)
@@ -1646,10 +1643,6 @@ func (u *userUC) CreateTransaction(ctx context.Context, userID string, requestBo
 				}
 				voucherShopID = &voucherShop.ID
 			}
-			fmt.Println("shop ", cart.ShopID)
-			fmt.Println("voucher shop p: ", voucherShop.DiscountPercentage)
-			fmt.Println("voucher shop n: ", voucherShop.DiscountFixPrice)
-			fmt.Println("")
 
 			courierShop, err := u.userRepo.GetCourierShopByID(ctx, cart.CourierID, cartShop.ID.String())
 			if err != nil {
@@ -1688,7 +1681,6 @@ func (u *userUC) CreateTransaction(ctx context.Context, userID string, requestBo
 
 				promo, errPromo := u.userRepo.GetProductPromotionByProductID(ctx, productDetailData.ProductID.String())
 				if(errPromo != nil){
-					fmt.Println("errpromo", errPromo)
 					if(errPromo != sql.ErrNoRows){
 						return nil, errPromo
 					}
@@ -1696,12 +1688,6 @@ func (u *userUC) CreateTransaction(ctx context.Context, userID string, requestBo
 						promo = &model.Promotion{}
 					}
 				}
-
-				fmt.Println("product ", productDetailData.ProductID.String())
-				fmt.Println("promo product p: ", promo.DiscountPercentage)
-				fmt.Println("promo product n: ", promo.DiscountFixPrice)
-				fmt.Println("")
-				
 				totalQuantity := qtyTotalProduct[productDetailData.ProductID.String()]
 				subPrice := productDetailData.Price
 
@@ -1712,16 +1698,13 @@ func (u *userUC) CreateTransaction(ctx context.Context, userID string, requestBo
 						MinProductPrice: promo.MinProductPrice,
 						MaxDiscountPrice: promo.MaxDiscountPrice,
 					}
-					fmt.Println("harga asli :", productDetailData.Price)
 					_, subPrice = util.CalculateDiscount(productDetailData.Price, DiscountPromotion)
-					fmt.Println("hitung discountnya :", subPrice)
 					if(promotionMap[promo.ID.String()] == 0){
 						promotionList = append(promotionList, promo)
 					}
 					promotionMap[promo.ID.String()] = 1
 				}
 				totalPrice := subPrice * float64(bodyProductDetail.Quantity);
-				fmt.Println("totalprice :", totalPrice)
 				if int(productDetailData.Stock)-bodyProductDetail.Quantity < 0 {
 					isAvail = false
 					errCart := u.userRepo.DeleteCartItemByID(ctx, tx, cartData)
@@ -1750,19 +1733,14 @@ func (u *userUC) CreateTransaction(ctx context.Context, userID string, requestBo
 			}
 
 			subOrderPrice := orderData.TotalPrice
-			fmt.Println("voucher shop ID:", voucherShop.ID)
-			fmt.Println("voucher nil:", uuid.Nil)
 			if voucherShop.ID != uuid.Nil {
-			fmt.Println("masuk")
 				discountVoucher := &model.Discount{
 					DiscountPercentage: voucherShop.DiscountPercentage,
 					DiscountFixPrice: voucherShop.DiscountFixPrice,
 					MinProductPrice: voucherShop.MinProductPrice,
 					MaxDiscountPrice: voucherShop.MaxDiscountPrice,
 				}
-				fmt.Println("harga asli sblm voucher :", subOrderPrice)
 				_, subOrderPrice = util.CalculateDiscount(subOrderPrice, discountVoucher)
-				fmt.Println("setelah hitung voucher :", subOrderPrice)
 				voucherShopList = append(voucherShopList, voucherShop)
 			}
 			orderData.TotalPrice = subOrderPrice
