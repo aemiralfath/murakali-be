@@ -22,6 +22,8 @@ type UseCase interface {
 	GetProductReviews(ctx context.Context, pgn *pagination.Pagination, productID string,
 		query *body.GetReviewQueryRequest) (*pagination.Pagination, error)
 	GetTotalReviewRatingByProductID(ctx context.Context, productID string) (*body.AllRatingProduct, error)
+	CreateProductReview(ctx context.Context, reqBody body.ReviewProductRequest, userID string) error
+	DeleteProductReview(ctx context.Context, reviewID, userID string) error
 	CreateProduct(ctx context.Context, requestBody body.CreateProductRequest, userID string) error
 	UpdateListedStatus(ctx context.Context, productID string) error
 	UpdateProductListedStatusBulk(ctx context.Context, product body.UpdateProductListedStatusBulkRequest) error
