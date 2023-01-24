@@ -120,7 +120,7 @@ func (u *adminUC) RefundOrder(ctx context.Context, refundID string) error {
 			}
 		}
 
-		walletMarketplace, err := u.adminRepo.GetWalletByUserID(ctx, constant.AdminMarketplaceID)
+		walletMarketplace, err := u.adminRepo.GetWalletByUserID(ctx, tx, constant.AdminMarketplaceID)
 		if err != nil {
 			return err
 		}
@@ -132,7 +132,7 @@ func (u *adminUC) RefundOrder(ctx context.Context, refundID string) error {
 			return err
 		}
 
-		walletUser, err := u.adminRepo.GetWalletByUserID(ctx, order.UserID.String())
+		walletUser, err := u.adminRepo.GetWalletByUserID(ctx, tx, order.UserID.String())
 		if err != nil {
 			return err
 		}

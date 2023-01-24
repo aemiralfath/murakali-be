@@ -26,6 +26,7 @@ func MapSellerRoutes(sellerGroup *gin.RouterGroup, h seller.Handlers, mw *middle
 	sellerGroup.POST("/courier", h.CreateCourierSeller)
 	sellerGroup.DELETE("/courier/:id", h.DeleteCourierSellerByID)
 	sellerGroup.PATCH("/order-resi/:id", h.UpdateResiNumberInOrderSeller)
+	sellerGroup.POST("/withdrawal/:id", h.WithdrawalOrderBalance)
 	sellerGroup.GET("/voucher", h.GetAllVoucherSeller)
 	sellerGroup.POST("/voucher", h.CreateVoucherSeller)
 	sellerGroup.PUT("/voucher", h.UpdateVoucherSeller)

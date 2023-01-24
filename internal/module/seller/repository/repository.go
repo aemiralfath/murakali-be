@@ -133,11 +133,22 @@ func (r *sellerRepo) GetSellerIDByOrderID(ctx context.Context, orderID string) (
 	return sellerID, nil
 }
 
+func (r *sellerRepo) InsertWalletHistory(ctx context.Context, tx postgre.Transaction, walletHistory *model.WalletHistory) error {
+	_, err := tx.ExecContext(ctx, CreateWalletHistoryQuery, walletHistory.TransactionID, walletHistory.WalletID,
+		walletHistory.From, walletHistory.To, walletHistory.Description, walletHistory.Amount, walletHistory.CreatedAt)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 func (r *sellerRepo) GetOrderByOrderID(ctx context.Context, orderID string) (*model.Order, error) {
 	var order model.Order
 	if err := r.PSQL.QueryRowContext(ctx, GetOrderByOrderID, orderID).Scan(
 		&order.OrderID,
+		&order.TransactionID,
 		&order.OrderStatus,
+		&order.IsWithdraw,
 		&order.TotalPrice,
 		&order.DeliveryFee,
 		&order.ResiNumber,
@@ -242,6 +253,7 @@ func (r *sellerRepo) GetOrders(ctx context.Context, shopID, orderStatusID, vouch
 		var order model.Order
 		if errScan := res.Scan(
 			&order.OrderID,
+			&order.IsWithdraw,
 			&order.OrderStatus,
 			&order.TotalPrice,
 			&order.DeliveryFee,
@@ -900,12 +912,32 @@ func (r *sellerRepo) GetDetailPromotionSellerByID(ctx context.Context,
 }
 
 func (r *sellerRepo) UpdateOrder(ctx context.Context, tx postgre.Transaction, orderData *model.OrderModel) error {
-	_, err := tx.ExecContext(ctx, UpdateOrderByID, orderData.OrderStatusID, orderData.ID)
+	_, err := tx.ExecContext(ctx, UpdateOrderByID, orderData.OrderStatusID, orderData.IsWithdraw, orderData.ID)
 	if err != nil {
 		return err
 	}
 
 	return nil
+}
+
+func (r *sellerRepo) UpdateWalletBalance(ctx context.Context, tx postgre.Transaction, wallet *model.Wallet) error {
+	_, err := tx.ExecContext(ctx, UpdateWalletBalanceQuery, wallet.Balance, wallet.UpdatedAt, wallet.ID)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (r *sellerRepo) GetWalletByUserID(ctx context.Context, tx postgre.Transaction, userID string) (*model.Wallet, error) {
+	var walletModel model.Wallet
+	if err := tx.QueryRowContext(ctx, GetWalletByUserIDQuery, userID).Scan(&walletModel.ID, &walletModel.UserID,
+		&walletModel.Balance, &walletModel.PIN, &walletModel.AttemptCount,
+		&walletModel.AttemptAt, &walletModel.UnlockedAt, &walletModel.ActiveDate); err != nil {
+		return nil, err
+	}
+
+	return &walletModel, nil
 }
 
 func (r *sellerRepo) UpdateTransaction(ctx context.Context, tx postgre.Transaction, transactionData *model.Transaction) error {
@@ -1043,7 +1075,7 @@ func (r *sellerRepo) UpdateProductDetailStock(ctx context.Context, tx postgre.Tr
 	return nil
 }
 
-func (r *sellerRepo) GetTotalProductWithoutPromotionSeller(ctx context.Context, shopID string) (int64, error){
+func (r *sellerRepo) GetTotalProductWithoutPromotionSeller(ctx context.Context, shopID string) (int64, error) {
 	var total int64
 	if err := r.PSQL.QueryRowContext(ctx, GetTotalProductWithoutPromotionQuery, shopID).Scan(&total); err != nil {
 		return -1, err

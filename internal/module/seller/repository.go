@@ -62,4 +62,7 @@ type Repository interface {
 	GetDetailPromotionSellerByID(ctx context.Context, shopProductPromo *body.ShopProductPromo) (*body.PromotionDetailSeller, error)
 	GetTotalProductWithoutPromotionSeller(ctx context.Context, shopID string) (int64, error)
 	GetProductWithoutPromotionSeller(ctx context.Context, shopID string, pgn *pagination.Pagination) ([]*body.GetProductWithoutPromotion, error)
+	GetWalletByUserID(ctx context.Context, tx postgre.Transaction, userID string) (*model.Wallet, error)
+	UpdateWalletBalance(ctx context.Context, tx postgre.Transaction, wallet *model.Wallet) error
+	InsertWalletHistory(ctx context.Context, tx postgre.Transaction, walletHistory *model.WalletHistory) error
 }

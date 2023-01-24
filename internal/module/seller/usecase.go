@@ -22,6 +22,7 @@ type UseCase interface {
 	UpdateResiNumberInOrderSeller(ctx context.Context, userID, orderID string, requestBody body.UpdateNoResiOrderSellerRequest) error
 	UpdateOnDeliveryOrder(ctx context.Context) error
 	UpdateExpiredAtOrder(ctx context.Context) error
+	WithdrawalOrderBalance(ctx context.Context, orderID string) error
 	GetAllVoucherSeller(ctx context.Context, userID, voucherStatusID, sortFilter string, pgn *pagination.Pagination) (*pagination.Pagination, error)
 	CreateVoucherSeller(ctx context.Context, userID string, requestBody body.CreateVoucherRequest) error
 	UpdateVoucherSeller(ctx context.Context, userID string, requestBody body.UpdateVoucherRequest) error

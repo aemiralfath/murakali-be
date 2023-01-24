@@ -25,7 +25,7 @@ type Repository interface {
 	GetOrderItemsByOrderID(ctx context.Context, tx postgre.Transaction, orderID string) ([]*model.OrderItem, error)
 	GetProductDetailByID(ctx context.Context, tx postgre.Transaction, productDetailID string) (*model.ProductDetail, error)
 	UpdateProductDetailStock(ctx context.Context, tx postgre.Transaction, productDetailData *model.ProductDetail) error
-	GetWalletByUserID(ctx context.Context, userID string) (*model.Wallet, error)
+	GetWalletByUserID(ctx context.Context, tx postgre.Transaction, userID string) (*model.Wallet, error)
 	InsertWalletHistory(ctx context.Context, tx postgre.Transaction, walletHistory *model.WalletHistory) error
 	UpdateWalletBalance(ctx context.Context, tx postgre.Transaction, wallet *model.Wallet) error
 	GetCategories(ctx context.Context) ([]*body.CategoryResponse, error)

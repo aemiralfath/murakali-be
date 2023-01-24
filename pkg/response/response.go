@@ -56,6 +56,8 @@ const (
 	WalletBalanceNotEnough         = "Insufficient wallet balance, please top up!"
 	InvalidPaymentMethod           = "Invalid payment method."
 	OrderNotExistMessage           = "Order not exist."
+	OrderNotCompletedMessage       = "Order not completed."
+	OrderAlreadyWithdrawMessage    = "Order already withdraw."
 	InvalidPasswordMessage         = "Invalid password."
 	TransactionNotFound            = "Transaction not found."
 	RefundNotFound                 = "Refund not found."
