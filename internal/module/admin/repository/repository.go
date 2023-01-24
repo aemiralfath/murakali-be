@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"murakali/internal/model"
 	"murakali/internal/module/admin"
+	"murakali/internal/module/admin/delivery/body"
 	"murakali/pkg/pagination"
 	"murakali/pkg/postgre"
 
@@ -359,6 +360,49 @@ func (r *adminRepo) UpdateProductDetailStock(ctx context.Context, tx postgre.Tra
 
 func (r *adminRepo) DeleteVoucher(ctx context.Context, voucherID string) error {
 	_, err := r.PSQL.ExecContext(ctx, DeleteVoucherQuery, voucherID)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (r *adminRepo) GetCategories(ctx context.Context) ([]*body.CategoryResponse, error) {
+	var categories = make([]*body.CategoryResponse, 0)
+	res, err := r.PSQL.QueryContext(ctx, GetCategoriesQuery)
+	if err != nil {
+		return nil, err
+	}
+
+	for res.Next() {
+		category := body.CategoryResponse{}
+		if errScan := res.Scan(&category.CategoryID, &category.ParentID, &category.Name, &category.PhotoURL, &category.Level); errScan != nil {
+			return nil, errScan
+		}
+		categories = append(categories, &category)
+	}
+
+	return categories, nil
+
+}
+
+func (r *adminRepo) AddCategory(ctx context.Context, requestBody body.CategoryRequest) error {
+	if _, err := r.PSQL.ExecContext(ctx, AddCategoryQuery,
+		&requestBody.ParentIDValue, requestBody.Name, requestBody.PhotoURL); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (r *adminRepo) DeleteCategory(ctx context.Context, categoryID string) error {
+	_, err := r.PSQL.ExecContext(ctx, DeleteCategoryQuery, categoryID)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (r *adminRepo) EditCategory(ctx context.Context, requestBody body.CategoryRequest) error {
+	_, err := r.PSQL.ExecContext(ctx, EditCategoryQuery, requestBody.ParentIDValue, requestBody.Name, requestBody.PhotoURL, requestBody.ID)
 	if err != nil {
 		return err
 	}
