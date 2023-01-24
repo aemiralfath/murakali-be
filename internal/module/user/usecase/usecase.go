@@ -328,8 +328,8 @@ func (u *userUC) ChangeOrderStatus(ctx context.Context, userID string, requestBo
 		return httperror.New(http.StatusUnauthorized, response.UnauthorizedMessage)
 	}
 
-	// Buyer can only set order to -> "Received"
-	if requestBody.OrderStatusID != constant.OrderStatusReceived {
+	// Buyer can only set order to -> "Received" & "Completed"
+	if requestBody.OrderStatusID != constant.OrderStatusReceived && requestBody.OrderStatusID != constant.OrderStatusCompleted {
 		return httperror.New(http.StatusBadRequest, response.BadRequestMessage)
 	}
 
