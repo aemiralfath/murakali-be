@@ -20,4 +20,12 @@ func MapAdminRoutes(adminGroup *gin.RouterGroup, h admin.Handlers, mw *middlewar
 
 	adminGroup.GET("/refund", h.GetRefunds)
 	adminGroup.POST("/refund/:id", h.RefundOrder)
+
+	adminGroup.GET("/category", h.GetCategories)
+	adminGroup.POST("/category", h.AddCategory)
+	adminGroup.PUT("/category", h.EditCategory)
+	adminGroup.DELETE("/category/:id", h.DeleteCategory)
+
+	adminGroup.POST("/picture", h.UploadProductPicture)
+
 }
