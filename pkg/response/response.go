@@ -63,6 +63,8 @@ const (
 	RefundRejected                 = "Refund is rejected."
 	WalletHistoryNotFound          = "Wallet history not found."
 	OrderNotWaitingForSeller       = "Order not waiting for seller"
+	VoucherMarketplaceNotFound     = "Voucher Marketplace Not Found"
+	VoucherShopNotFound            = "Voucher Shop Not Found"
 )
 
 type JSONResponse struct {
