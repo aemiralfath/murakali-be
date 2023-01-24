@@ -3,6 +3,7 @@ package admin
 import (
 	"context"
 	"murakali/internal/model"
+	"murakali/internal/module/admin/delivery/body"
 	"murakali/pkg/pagination"
 	"murakali/pkg/postgre"
 )
@@ -26,6 +27,9 @@ type Repository interface {
 	UpdateProductDetailStock(ctx context.Context, tx postgre.Transaction, productDetailData *model.ProductDetail) error
 	GetWalletByUserID(ctx context.Context, userID string) (*model.Wallet, error)
 	InsertWalletHistory(ctx context.Context, tx postgre.Transaction, walletHistory *model.WalletHistory) error
-
 	UpdateWalletBalance(ctx context.Context, tx postgre.Transaction, wallet *model.Wallet) error
+	GetCategories(ctx context.Context) ([]*body.CategoryResponse, error)
+	AddCategory(ctx context.Context, requestBody body.CategoryRequest) error
+	DeleteCategory(ctx context.Context, categoryID string) error
+	EditCategory(ctx context.Context, requestBody body.CategoryRequest) error
 }

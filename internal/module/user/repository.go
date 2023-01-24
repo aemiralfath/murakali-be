@@ -51,6 +51,7 @@ type Repository interface {
 	UpdateProfileImage(ctx context.Context, imgURL, userID string) error
 	UpdatePasswordByID(ctx context.Context, userID, newPassword string) error
 	GetPasswordByID(ctx context.Context, id string) (string, error)
+	ChangeOrderStatus(ctx context.Context, requestBody body.ChangeOrderStatusRequest) error
 	GetOrdersByTransactionID(ctx context.Context, transactionID, userID string) ([]*model.Order, error)
 	GetTotalOrder(ctx context.Context, userID, orderStatusID string) (int64, error)
 	GetOrders(ctx context.Context, userID, orderStatusID string, pgn *pagination.Pagination) ([]*model.Order, error)

@@ -6,6 +6,7 @@ import (
 	"murakali/internal/constant"
 	"murakali/internal/module/admin"
 	"murakali/internal/module/admin/delivery/body"
+	"murakali/internal/util"
 	"murakali/pkg/httperror"
 	"murakali/pkg/logger"
 	"murakali/pkg/pagination"
@@ -250,4 +251,133 @@ func (h *adminHandlers) ValidateQueryPagination(c *gin.Context, pgn *pagination.
 
 	pgn.Limit = limitFilter
 	pgn.Page = pageFilter
+}
+
+func (h *adminHandlers) GetCategories(c *gin.Context) {
+	Categories, err := h.adminUC.GetCategories(c)
+	if err != nil {
+		var e *httperror.Error
+		if !errors.As(err, &e) {
+			h.logger.Errorf("HandlerAdmin, Error: %s", err)
+			response.ErrorResponse(c.Writer, response.InternalServerErrorMessage, http.StatusInternalServerError)
+			return
+		}
+
+		response.ErrorResponse(c.Writer, e.Err.Error(), e.Status)
+		return
+	}
+
+	response.SuccessResponse(c.Writer, Categories, http.StatusOK)
+}
+
+func (h *adminHandlers) UploadProductPicture(c *gin.Context) {
+	type Sizer interface {
+		Size() int64
+	}
+
+	var imgURL string
+	var img body.ImageRequest
+
+	err := c.ShouldBind(&img)
+	if err != nil {
+		response.ErrorResponse(c.Writer, response.InternalServerErrorMessage, http.StatusInternalServerError)
+		return
+	}
+	data, _, err := c.Request.FormFile("Img")
+	if err != nil {
+		response.ErrorResponse(c.Writer, body.ImageIsEmpty, http.StatusInternalServerError)
+		return
+	}
+
+	if data.(Sizer).Size() > constant.ImgMaxSize {
+		response.ErrorResponse(c.Writer, response.PictureSizeTooBig, http.StatusInternalServerError)
+		return
+	}
+
+	if data == nil {
+		response.ErrorResponse(c.Writer, response.InternalServerErrorMessage, http.StatusInternalServerError)
+		return
+	}
+	imgURL = util.UploadImageToCloudinary(c, h.cfg, data)
+
+	response.SuccessResponse(c.Writer, imgURL, http.StatusOK)
+}
+
+func (h *adminHandlers) AddCategory(c *gin.Context) {
+	var requestBody body.CategoryRequest
+	if err := c.ShouldBind(&requestBody); err != nil {
+		response.ErrorResponse(c.Writer, response.BadRequestMessage, http.StatusBadRequest)
+		return
+	}
+
+	invalidFields, err := requestBody.Validate()
+	if err != nil {
+		response.ErrorResponseData(c.Writer, invalidFields, response.UnprocessableEntityMessage, http.StatusUnprocessableEntity)
+		return
+	}
+
+	if err := h.adminUC.AddCategory(c, requestBody); err != nil {
+		var e *httperror.Error
+		if !errors.As(err, &e) {
+			h.logger.Errorf("HandlerAdmin, Error: %s", err)
+			response.ErrorResponse(c.Writer, response.InternalServerErrorMessage, http.StatusInternalServerError)
+			return
+		}
+
+		response.ErrorResponse(c.Writer, e.Err.Error(), e.Status)
+		return
+	}
+
+	response.SuccessResponse(c.Writer, nil, http.StatusOK)
+}
+
+func (h *adminHandlers) DeleteCategory(c *gin.Context) {
+	id := c.Param("id")
+	categoryID, err := uuid.Parse(id)
+	if err != nil {
+		response.ErrorResponse(c.Writer, response.BadRequestMessage, http.StatusBadRequest)
+		return
+	}
+
+	if err := h.adminUC.DeleteCategory(c, categoryID.String()); err != nil {
+		var e *httperror.Error
+		if !errors.As(err, &e) {
+			h.logger.Errorf("HandlerAdmin, Error: %s", err)
+			response.ErrorResponse(c.Writer, response.InternalServerErrorMessage, http.StatusInternalServerError)
+			return
+		}
+
+		response.ErrorResponse(c.Writer, e.Err.Error(), e.Status)
+		return
+	}
+
+	response.SuccessResponse(c.Writer, nil, http.StatusOK)
+}
+
+func (h *adminHandlers) EditCategory(c *gin.Context) {
+	var requestBody body.CategoryRequest
+	if err := c.ShouldBind(&requestBody); err != nil {
+		response.ErrorResponse(c.Writer, response.BadRequestMessage, http.StatusBadRequest)
+		return
+	}
+
+	invalidFields, err := requestBody.Validate()
+	if err != nil {
+		response.ErrorResponseData(c.Writer, invalidFields, response.UnprocessableEntityMessage, http.StatusUnprocessableEntity)
+		return
+	}
+
+	if err := h.adminUC.EditCategory(c, requestBody); err != nil {
+		var e *httperror.Error
+		if !errors.As(err, &e) {
+			h.logger.Errorf("HandlerAdmin, Error: %s", err)
+			response.ErrorResponse(c.Writer, response.InternalServerErrorMessage, http.StatusInternalServerError)
+			return
+		}
+
+		response.ErrorResponse(c.Writer, e.Err.Error(), e.Status)
+		return
+	}
+
+	response.SuccessResponse(c.Writer, nil, http.StatusOK)
 }

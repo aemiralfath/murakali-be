@@ -1380,6 +1380,16 @@ func (r *userRepo) InsertWalletHistory(ctx context.Context, tx postgre.Transacti
 	return nil
 }
 
+func (r *userRepo) ChangeOrderStatus(ctx context.Context, requestBody body.ChangeOrderStatusRequest) error {
+	_, err := r.PSQL.ExecContext(
+		ctx, UpdateOrderByID, requestBody.OrderStatusID, requestBody.OrderID)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func (r *userRepo) GetOrderByTransactionID(ctx context.Context, transactionID string) ([]*model.OrderModel, error) {
 	orders := make([]*model.OrderModel, 0)
 	res, err := r.PSQL.QueryContext(ctx, GetOrderByTransactionID, transactionID)

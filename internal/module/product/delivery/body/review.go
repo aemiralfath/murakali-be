@@ -1,9 +1,18 @@
 package body
 
 import (
+	"murakali/pkg/httperror"
+	"murakali/pkg/response"
+	"net/http"
+	"strings"
 	"time"
 
 	"github.com/google/uuid"
+)
+
+const (
+	ReviewAlreadyExist = "Product Review Already Exist"
+	ReviewNotExist     = "Review Not Exist"
 )
 
 type ReviewProduct struct {
@@ -33,10 +42,15 @@ type GetReviewQueryRequest struct {
 	Rating      string `json:"rating"`
 	ShowComment bool   `json:"show_comment"`
 	ShowImage   bool   `json:"show_image"`
+	UserID      string `json:"user_id"`
 }
 
 func (p *GetReviewQueryRequest) GetValidate() string {
 	query := ""
+
+	if p.UserID != "" {
+		query += ` AND r.user_id = '` + p.UserID + `'`
+	}
 
 	if p.Rating != "" && p.Rating != "0" {
 		query += " AND r.rating = " + p.Rating
@@ -51,4 +65,69 @@ func (p *GetReviewQueryRequest) GetValidate() string {
 	}
 
 	return query
+}
+
+type ReviewProductRequest struct {
+	ProductID string  `json:"product_id"`
+	Comment   *string `json:"comment,omitempty"`
+	Rating    int     `json:"rating"`
+	PhotoURL  *string `json:"photo_url,omitempty"`
+}
+
+func (r *ReviewProductRequest) Validate() (UnprocessableEntity, error) {
+	unprocessableEntity := false
+	entity := UnprocessableEntity{
+		Fields: map[string]string{
+			"product_id": "",
+			"rating":     "",
+		},
+	}
+
+	r.ProductID = strings.TrimSpace(r.ProductID)
+	if r.ProductID == "" {
+		unprocessableEntity = true
+		entity.Fields["product_id"] = FieldCannotBeEmptyMessage
+	}
+
+	if r.Rating == 0 {
+		unprocessableEntity = true
+		entity.Fields["rating"] = FieldCannotBeEmptyMessage
+	}
+
+	if unprocessableEntity {
+		return entity, httperror.New(
+			http.StatusUnprocessableEntity,
+			response.UnprocessableEntityMessage,
+		)
+	}
+
+	return entity, nil
+}
+
+type DeleteReviewProductRequest struct {
+	ReviewID string `json:"review_id"`
+}
+
+func (r *DeleteReviewProductRequest) Validate() (UnprocessableEntity, error) {
+	unprocessableEntity := false
+	entity := UnprocessableEntity{
+		Fields: map[string]string{
+			"review_id": "",
+		},
+	}
+
+	r.ReviewID = strings.TrimSpace(r.ReviewID)
+	if r.ReviewID == "" {
+		unprocessableEntity = true
+		entity.Fields["product_id"] = FieldCannotBeEmptyMessage
+	}
+
+	if unprocessableEntity {
+		return entity, httperror.New(
+			http.StatusUnprocessableEntity,
+			response.UnprocessableEntityMessage,
+		)
+	}
+
+	return entity, nil
 }
