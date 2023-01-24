@@ -72,4 +72,24 @@ const (
 	GetOrderItemsByOrderIDQuery = `SELECT "id", "order_id", "product_detail_id", "quantity", "item_price", "total_price" FROM "order_item" WHERE "order_id" = $1`
 	GetProductDetailByIDQuery   = `SELECT "id", "price", "stock", "weight", "size", "hazardous", "condition", "bulk_price" FROM "product_detail" WHERE "id" = $1 AND "deleted_at" IS NULL;`
 	GetWalletByUserIDQuery      = `SELECT "id", "user_id", "balance", "pin", "attempt_count", "attempt_at", "unlocked_at", "active_date" FROM "wallet" WHERE "user_id" = $1 AND "deleted_at" IS NULL`
+
+	GetCategoriesQuery = `WITH RECURSIVE ctgry AS (
+		SELECT id, parent_id, name, photo_url, created_at, updated_at, deleted_at, 1 as level
+		FROM category
+		WHERE parent_id IS NULL
+		UNION ALL
+		SELECT t.id, t.parent_id, t.name, t.photo_url, t.created_at, t.updated_at, t.deleted_at, ctgry.level + 1
+		FROM category t
+		JOIN ctgry ON t.parent_id = ctgry.id
+	)
+	SELECT id, parent_id, name, photo_url,level
+	FROM ctgry
+	WHERE level <= 3  and deleted_at is null`
+
+	AddCategoryQuery = `INSERT INTO "category" 
+	( parent_id, name, photo_url)
+	VALUES ($1, $2, $3)`
+
+	DeleteCategoryQuery = `UPDATE "category" set deleted_at = now() WHERE "id" = $1 AND "deleted_at" IS NULL`
+	EditCategoryQuery   = `UPDATE "category" set parent_id = $1, name = $2 , photo_url = $3,  updated_at = now() WHERE "id" = $4 AND "deleted_at" IS NULL`
 )

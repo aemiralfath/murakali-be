@@ -15,4 +15,8 @@ type UseCase interface {
 	DeleteVoucher(ctx context.Context, voucherID string) error
 	GetRefunds(ctx context.Context, sortFilter string, pgn *pagination.Pagination) (*pagination.Pagination, error)
 	RefundOrder(ctx context.Context, refundID string) error
+	GetCategories(ctx context.Context) ([]*body.CategoryResponse, error)
+	AddCategory(ctx context.Context, requestBody body.CategoryRequest) error
+	DeleteCategory(ctx context.Context, categoryID string) error
+	EditCategory(ctx context.Context, requestBody body.CategoryRequest) error
 }

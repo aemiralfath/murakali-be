@@ -10,4 +10,9 @@ type Handlers interface {
 	GetDetailVoucher(c *gin.Context)
 	GetRefunds(c *gin.Context)
 	RefundOrder(c *gin.Context)
+	GetCategories(c *gin.Context)
+	UploadProductPicture(c *gin.Context)
+	AddCategory(c *gin.Context)
+	DeleteCategory(c *gin.Context)
+	EditCategory(c *gin.Context)
 }

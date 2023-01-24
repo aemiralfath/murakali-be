@@ -12,6 +12,10 @@ const (
 	InvalidPasswordSameOldPasswordMessage = "Your new password cannot be the same as your old password."
 	VoucherSellerNotFoundMessage          = "Voucher Admin Not Found"
 	CodeVoucherAlreadyExist               = "Code Voucher Already Exist"
+	CategoryLevelInvalid                  = "Category Level Invalid"
+	ProductNotFound                       = "Product not found"
+	UpdateProductFailed                   = "Update product failed"
+	ImageIsEmpty                          = "image cannot be empty"
 )
 
 type UnprocessableEntity struct {

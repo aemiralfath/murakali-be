@@ -755,6 +755,48 @@ func (r *productRepo) GetTotalReviewRatingByProductID(ctx context.Context, produ
 	return reviewRating, nil
 }
 
+func (r *productRepo) FindReview(ctx context.Context, reviewID string) (*body.ReviewProduct, error) {
+	var review body.ReviewProduct
+	if err := r.PSQL.QueryRowContext(ctx, GetReviewProductByIDQuery, reviewID).Scan(
+		&review.ID,
+		&review.UserID,
+		&review.ProductID,
+		&review.Comment,
+		&review.Rating,
+		&review.ImageURL,
+		&review.Username,
+		&review.PhotoURL,
+		&review.Username,
+	); err != nil {
+		return nil, err
+	}
+	return &review, nil
+}
+
+func (r *productRepo) CreateProductReview(ctx context.Context, tx postgre.Transaction, userID string, reqBody body.ReviewProductRequest) error {
+	_, err := tx.ExecContext(
+		ctx,
+		CreateReviewQuery,
+		userID,
+		reqBody.ProductID,
+		reqBody.Comment,
+		reqBody.Rating,
+		reqBody.PhotoURL,
+	)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (r *productRepo) DeleteReview(ctx context.Context, tx postgre.Transaction, reviewID string) error {
+	_, err := tx.ExecContext(ctx, DeleteReviewByIDQuery, reviewID)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 func (r *productRepo) GetShopIDByUserID(ctx context.Context, userID string) (string, error) {
 	var shopID string
 	if err := r.PSQL.QueryRowContext(ctx, GetShopIDByUserIDQuery, userID).Scan(&shopID); err != nil {

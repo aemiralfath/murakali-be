@@ -260,3 +260,35 @@ func (u *adminUC) DeleteVoucher(ctx context.Context, voucherID string) error {
 
 	return nil
 }
+
+func (u *adminUC) GetCategories(ctx context.Context) ([]*body.CategoryResponse, error) {
+	category, err := u.adminRepo.GetCategories(ctx)
+	if err != nil {
+		return nil, err
+	}
+	return category, nil
+}
+
+func (u *adminUC) AddCategory(ctx context.Context, requestBody body.CategoryRequest) error {
+	err := u.adminRepo.AddCategory(ctx, requestBody)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (u *adminUC) DeleteCategory(ctx context.Context, categoryID string) error {
+	if err := u.adminRepo.DeleteCategory(ctx, categoryID); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (u *adminUC) EditCategory(ctx context.Context, requestBody body.CategoryRequest) error {
+	err := u.adminRepo.EditCategory(ctx, requestBody)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
