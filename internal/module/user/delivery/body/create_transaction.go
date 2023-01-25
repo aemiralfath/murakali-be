@@ -31,6 +31,7 @@ type ProductDetail struct {
 	ID       string  `json:"id"`
 	Quantity int     `json:"quantity"`
 	SubPrice float64 `json:"sub_price"`
+	Note     string  `json:"note"`
 }
 type TransactionResponse struct {
 	TransactionData *model.Transaction

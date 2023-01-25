@@ -30,7 +30,6 @@ func MapProductRoutes(productGroup *gin.RouterGroup, h product.Handlers, mw *mid
 	productGroup.POST("/:product_id/review", h.CreateProductReview)
 	productGroup.Use(mw.SellerJWTMiddleware())
 	productGroup.POST("/", h.CreateProduct)
-
 	productGroup.PUT("/status/:id", h.UpdateListedStatus)
 	productGroup.PATCH("/bulk-status", h.UpdateListedStatusBulk)
 	productGroup.PUT("/:id", h.UpdateProduct)
