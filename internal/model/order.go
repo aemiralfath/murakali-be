@@ -30,6 +30,8 @@ type Order struct {
 	BuyerPhoneNumber   *string        `json:"buyer_phone_number"`
 	BuyerAddress       *Address       `json:"buyer_address"`
 	SellerAddress      *Address       `json:"seller_address"`
+	StrBuyerAddress    string         `json:"str_buyer_address"`
+	StrSellerAddress   string         `json:"str_seller_address"`
 	IsWithdraw         bool           `json:"is_withdraw"`
 	Detail             []*OrderDetail `json:"detail"`
 }
@@ -45,7 +47,10 @@ type OrderModel struct {
 	TotalPrice    float64      `json:"total_price" db:"total_price" binding:"omitempty"`
 	DeliveryFee   float64      `json:"delivery_fee" db:"delivery_fee" binding:"omitempty"`
 	ResiNo        *string      `json:"resi_no" db:"resi_no" binding:"omitempty"`
+	BuyerAddress  string	   `json:"buyer_address" db:"buyer_address" binding:"omitempty"`
+	ShopAddress   string	   `json:"shop_address" db:"shop_address" binding:"omitempty"`
 	IsWithdraw    bool         `json:"is_withdraw" db:"is_withdraw" binding:"omitempty"`
+	IsRefund      bool         `json:"is_refund" db:"is_refund" binding:"omitempty"`
 	CreatedAt     time.Time    `json:"created_at" db:"created_at" binding:"omitempty"`
 	ArrivedAt     sql.NullTime `json:"arrived_at" db:"arrived_at" binding:"omitempty"`
 }

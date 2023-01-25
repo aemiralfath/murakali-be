@@ -104,7 +104,7 @@ func GenerateInvoice() (string, error) {
 	if err != nil {
 		return "", err
 	}
-	invoice := fmt.Sprintf("INV/%s/MRK/%x\n", time.Now().Format("20060102"), id)
+	invoice := fmt.Sprintf("INV/%s/%x\n", time.Now().Format("20060102"), id)
 
 	return invoice, nil
 }

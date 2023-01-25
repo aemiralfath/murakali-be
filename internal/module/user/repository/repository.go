@@ -3,6 +3,7 @@ package repository
 import (
 	"context"
 	"database/sql"
+	"encoding/json"
 	"fmt"
 	"murakali/internal/constant"
 	"murakali/internal/model"
@@ -358,6 +359,7 @@ func (r *userRepo) GetAllAddresses(ctx context.Context, userID, name string, pgn
 
 func (r *userRepo) GetOrderByOrderID(ctx context.Context, orderID string) (*model.Order, error) {
 	var order model.Order
+	var strShopAddress, strBuyerAddress string
 	if err := r.PSQL.QueryRowContext(ctx, GetOrderByOrderID, orderID).Scan(
 		&order.OrderID,
 		&order.OrderStatus,
@@ -377,9 +379,15 @@ func (r *userRepo) GetOrderByOrderID(ctx context.Context, orderID string) (*mode
 		&order.CourierDescription,
 		&order.BuyerUsername,
 		&order.BuyerPhoneNumber,
+		&strShopAddress,
+		&strBuyerAddress,
 	); err != nil {
 		return nil, err
 	}
+
+	json.Unmarshal([]byte(strBuyerAddress), &order.BuyerAddress)
+	json.Unmarshal([]byte(strShopAddress), &order.SellerAddress)
+	
 	orderDetail := make([]*model.OrderDetail, 0)
 
 	res, err := r.PSQL.QueryContext(
@@ -1267,7 +1275,8 @@ func (r *userRepo) GetShopByID(ctx context.Context, shopID string) (*model.Shop,
 	var shopCart model.Shop
 	if err := r.PSQL.QueryRowContext(ctx, GetShopByIDQuery, shopID).Scan(
 		&shopCart.ID,
-		&shopCart.Name); err != nil {
+		&shopCart.Name,
+		&shopCart.UserID); err != nil {
 		return nil, err
 	}
 
@@ -1351,7 +1360,9 @@ func (r *userRepo) CreateOrder(ctx context.Context, tx postgre.Transaction, orde
 		orderData.VoucherShopID,
 		orderData.OrderStatusID,
 		orderData.TotalPrice,
-		orderData.DeliveryFee).Scan(&orderID); err != nil {
+		orderData.DeliveryFee,
+		orderData.BuyerAddress,
+		orderData.ShopAddress).Scan(&orderID); err != nil {
 		return nil, err
 	}
 
@@ -1365,7 +1376,8 @@ func (r *userRepo) CreateOrderItem(ctx context.Context, tx postgre.Transaction, 
 		item.ProductDetailID,
 		item.Quantity,
 		item.ItemPrice,
-		item.TotalPrice).Scan(&orderItemID); err != nil {
+		item.TotalPrice,
+		item.Note).Scan(&orderItemID); err != nil {
 		return nil, err
 	}
 
