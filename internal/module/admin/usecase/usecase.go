@@ -108,9 +108,9 @@ func (u *adminUC) RefundOrder(ctx context.Context, refundID string) error {
 		}
 
 		for _, item := range orderItems {
-			productDetailData, err := u.adminRepo.GetProductDetailByID(ctx, tx, item.ProductDetailID.String())
-			if err != nil {
-				return err
+			productDetailData, errData := u.adminRepo.GetProductDetailByID(ctx, tx, item.ProductDetailID.String())
+			if errData != nil {
+				return errData
 			}
 
 			productDetailData.Stock += float64(item.Quantity)
@@ -128,8 +128,8 @@ func (u *adminUC) RefundOrder(ctx context.Context, refundID string) error {
 		walletMarketplace.Balance -= order.TotalPrice
 		walletMarketplace.UpdatedAt.Valid = true
 		walletMarketplace.UpdatedAt.Time = time.Now()
-		if err := u.adminRepo.UpdateWalletBalance(ctx, tx, walletMarketplace); err != nil {
-			return err
+		if errWallet := u.adminRepo.UpdateWalletBalance(ctx, tx, walletMarketplace); errWallet != nil {
+			return errWallet
 		}
 
 		walletUser, err := u.adminRepo.GetWalletByUserID(ctx, tx, order.UserID.String())
@@ -244,7 +244,6 @@ func (u *adminUC) GetDetailVoucher(ctx context.Context, voucherID string) (*mode
 }
 
 func (u *adminUC) DeleteVoucher(ctx context.Context, voucherID string) error {
-
 	_, errVoucher := u.adminRepo.GetVoucherByID(ctx, voucherID)
 	if errVoucher != nil {
 		if errVoucher == sql.ErrNoRows {

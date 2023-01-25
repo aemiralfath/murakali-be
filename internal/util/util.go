@@ -97,8 +97,8 @@ func SKUGenerator(productName string) string {
 
 	return productName + "-" + string(buffer)
 }
-func GenerateInvoice() (string, error) {
 
+func GenerateInvoice() (string, error) {
 	flake := sonyflake.NewSonyflake(sonyflake.Settings{})
 	id, err := flake.NextID()
 	if err != nil {
@@ -132,7 +132,7 @@ func CalculateDiscount(price float64, disc *model.Discount) (float64, float64) {
 	if disc.DiscountPercentage != nil {
 		discountPercentage = *disc.DiscountPercentage
 		if price >= minProductPrice && discountPercentage > 0 {
-			resultDiscount = math.Min(maxDiscountPrice, price * (discountPercentage/100.00))
+			resultDiscount = math.Min(maxDiscountPrice, price*(discountPercentage/100.00))
 		}
 	}
 

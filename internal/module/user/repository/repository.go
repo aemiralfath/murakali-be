@@ -718,7 +718,7 @@ func (r *userRepo) GetOrdersByTransactionID(ctx context.Context, transactionID, 
 func (r *userRepo) GetTransactionByUserID(ctx context.Context, userID string, status int, pgn *pagination.Pagination) ([]*model.Transaction, error) {
 	transactions := make([]*model.Transaction, 0)
 
-	query := GetTransactionByUserIDQuery
+	var query string
 	switch status {
 	case constant.OrderStatusWaitingToPay:
 		query = GetTransactionByUserIDNotPaidQuery
@@ -1428,7 +1428,8 @@ func (r *userRepo) GetOrderByTransactionID(ctx context.Context, transactionID st
 }
 
 func (r *userRepo) UpdateTransaction(ctx context.Context, tx postgre.Transaction, transactionData *model.Transaction) error {
-	_, err := tx.ExecContext(ctx, UpdateTransactionByID, transactionData.PaidAt, transactionData.CanceledAt, transactionData.CardNumber, transactionData.ID)
+	_, err := tx.ExecContext(ctx, UpdateTransactionByID, transactionData.PaidAt, transactionData.CanceledAt,
+		transactionData.CardNumber, transactionData.ID)
 	if err != nil {
 		return err
 	}
@@ -1456,25 +1457,25 @@ func (r *userRepo) DeleteCartItemByID(ctx context.Context, tx postgre.Transactio
 func (r *userRepo) GetProductPromotionByProductID(ctx context.Context, productID string) (*model.Promotion, error) {
 	var promo model.Promotion
 	if err := r.PSQL.QueryRowContext(ctx, GetProductPromotionByProductIDQuery, productID).
-	Scan(
-		&promo.ID,
-		&promo.Name,
-		&promo.ProductID,
-		&promo.DiscountPercentage,
-		&promo.DiscountFixPrice,
-		&promo.MinProductPrice,
-		&promo.MaxDiscountPrice,
-		&promo.Quota,
-		&promo.MaxQuantity,
-		&promo.ActivedDate,
-		&promo.ExpiredDate,
-		&promo.CreatedAt,
-		&promo.UpdatedAt,
-		&promo.DeletedAt); err != nil {
-	return nil, err
-}
+		Scan(
+			&promo.ID,
+			&promo.Name,
+			&promo.ProductID,
+			&promo.DiscountPercentage,
+			&promo.DiscountFixPrice,
+			&promo.MinProductPrice,
+			&promo.MaxDiscountPrice,
+			&promo.Quota,
+			&promo.MaxQuantity,
+			&promo.ActivedDate,
+			&promo.ExpiredDate,
+			&promo.CreatedAt,
+			&promo.UpdatedAt,
+			&promo.DeletedAt); err != nil {
+		return nil, err
+	}
 
-return &promo, nil
+	return &promo, nil
 }
 
 func (r *userRepo) UpdateVoucherQuota(ctx context.Context, tx postgre.Transaction, upVoucher *model.Voucher) error {
