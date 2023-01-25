@@ -370,6 +370,16 @@ func (u *productUC) GetFavoriteProducts(
 	return pgn, nil
 }
 
+func (u *productUC) CheckProductIsFavorite(
+	ctx context.Context, userID, productID string) bool {
+	totalRows, _ := u.productRepo.CountFavoriteProduct(ctx, userID, productID)
+	if totalRows > 0 {
+		return true
+	}
+
+	return false
+}
+
 func (u *productUC) CreateFavoriteProduct(ctx context.Context, productID, userID string) error {
 	_, err := u.productRepo.GetProductInfo(ctx, productID)
 	if err != nil {

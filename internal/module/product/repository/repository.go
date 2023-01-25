@@ -623,6 +623,14 @@ func (r *productRepo) GetAllFavoriteTotalProduct(ctx context.Context, query *bod
 
 	return total, nil
 }
+func (r *productRepo) CountFavoriteProduct(ctx context.Context, userID, productID string) (int64, error) {
+	var total int64
+	if err := r.PSQL.QueryRowContext(ctx, CountFavoriteProduct, userID, productID).Scan(&total); err != nil {
+		return 0, err
+	}
+
+	return total, nil
+}
 
 func (r *productRepo) CreateFavoriteProduct(ctx context.Context, tx postgre.Transaction, userID, productID string) error {
 	_, err := r.PSQL.ExecContext(ctx, CreateFavoriteProductQuery, userID, productID)

@@ -185,6 +185,30 @@ func (h *productHandlers) GetFavoriteProducts(c *gin.Context) {
 	response.SuccessResponse(c.Writer, SearchProducts, http.StatusOK)
 }
 
+func (h *productHandlers) CheckProductIsFavorite(c *gin.Context) {
+	var requestBody body.GetProductRequest
+	if err := c.ShouldBind(&requestBody); err != nil {
+		response.ErrorResponse(c.Writer, response.BadRequestMessage, http.StatusBadRequest)
+		return
+	}
+
+	invalidFields, err := requestBody.Validate()
+	if err != nil {
+		response.ErrorResponseData(c.Writer, invalidFields, response.UnprocessableEntityMessage, http.StatusUnprocessableEntity)
+		return
+	}
+
+	userID, exist := c.Get("userID")
+	if !exist {
+		response.ErrorResponse(c.Writer, response.UnauthorizedMessage, http.StatusUnauthorized)
+		return
+	}
+
+	check := h.productUC.CheckProductIsFavorite(c, userID.(string), requestBody.ProductID)
+
+	response.SuccessResponse(c.Writer, check, http.StatusOK)
+}
+
 func (h *productHandlers) CreateFavoriteProduct(c *gin.Context) {
 	var requestBody body.GetProductRequest
 	if err := c.ShouldBind(&requestBody); err != nil {
