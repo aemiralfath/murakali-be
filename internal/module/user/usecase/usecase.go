@@ -337,6 +337,26 @@ func (u *userUC) ChangeOrderStatus(ctx context.Context, userID string, requestBo
 	if err != nil {
 		return err
 	}
+
+	if requestBody.OrderStatusID == constant.OrderStatusCompleted {
+		if err = u.txRepo.WithTransaction(func(tx postgre.Transaction) error {
+			productUnitSolds, err := u.userRepo.GetProductUnitSoldByOrderID(ctx, tx, requestBody.OrderID)
+			if err != nil {
+				return err
+			}
+			for _, productUnitSold := range productUnitSolds {
+				newQty := (productUnitSold.Quantity + productUnitSold.UnitSold)
+				if err = u.userRepo.UpdateProductUnitSold(ctx, tx, productUnitSold.ProductID.String(), newQty); err != nil {
+					return err
+				}
+			}
+			return nil
+		},
+		); err != nil {
+			return err
+		}
+	}
+
 	return nil
 }
 
