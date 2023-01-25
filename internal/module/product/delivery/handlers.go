@@ -678,17 +678,7 @@ func (h *productHandlers) CreateProductReview(c *gin.Context) {
 }
 
 func (h *productHandlers) DeleteProductReview(c *gin.Context) {
-	var requestBody body.DeleteReviewProductRequest
-	if err := c.ShouldBind(&requestBody); err != nil {
-		response.ErrorResponse(c.Writer, response.BadRequestMessage, http.StatusBadRequest)
-		return
-	}
-
-	invalidFields, err := requestBody.Validate()
-	if err != nil {
-		response.ErrorResponseData(c.Writer, invalidFields, response.UnprocessableEntityMessage, http.StatusUnprocessableEntity)
-		return
-	}
+	reviewId := c.Param("review_id")
 
 	userID, exist := c.Get("userID")
 	if !exist {
@@ -696,7 +686,7 @@ func (h *productHandlers) DeleteProductReview(c *gin.Context) {
 		return
 	}
 
-	err = h.productUC.DeleteProductReview(c, requestBody.ReviewID, userID.(string))
+	err := h.productUC.DeleteProductReview(c, reviewId, userID.(string))
 	if err != nil {
 		var e *httperror.Error
 		if !errors.As(err, &e) {
