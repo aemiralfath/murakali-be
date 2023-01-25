@@ -17,8 +17,9 @@ type UseCase interface {
 	GetProducts(ctx context.Context, pgn *pagination.Pagination, query *body.GetProductQueryRequest) (*pagination.Pagination, error)
 	GetFavoriteProducts(ctx context.Context, pgn *pagination.Pagination, query *body.GetProductQueryRequest,
 		userID string) (*pagination.Pagination, error)
-	CheckProductIsFavorite(
-		ctx context.Context, userID, productID string) bool
+	CheckProductIsFavorite(ctx context.Context, userID, productID string) bool
+	CountSpecificFavoriteProduct(
+		ctx context.Context, productID string) (int64, error)
 	CreateFavoriteProduct(ctx context.Context, productID, userID string) error
 	DeleteFavoriteProduct(ctx context.Context, productID, userID string) error
 	GetProductReviews(ctx context.Context, pgn *pagination.Pagination, productID string,

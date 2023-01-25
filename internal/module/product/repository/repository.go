@@ -623,9 +623,18 @@ func (r *productRepo) GetAllFavoriteTotalProduct(ctx context.Context, query *bod
 
 	return total, nil
 }
-func (r *productRepo) CountFavoriteProduct(ctx context.Context, userID, productID string) (int64, error) {
+func (r *productRepo) CountUserFavoriteProduct(ctx context.Context, userID, productID string) (int64, error) {
 	var total int64
-	if err := r.PSQL.QueryRowContext(ctx, CountFavoriteProduct, userID, productID).Scan(&total); err != nil {
+	if err := r.PSQL.QueryRowContext(ctx, CountUserFavoriteProduct, userID, productID).Scan(&total); err != nil {
+		return 0, err
+	}
+
+	return total, nil
+}
+
+func (r *productRepo) CountSpecificFavoriteProduct(ctx context.Context, productID string) (int64, error) {
+	var total int64
+	if err := r.PSQL.QueryRowContext(ctx, CountSpecificFavoriteProduct, productID).Scan(&total); err != nil {
 		return 0, err
 	}
 

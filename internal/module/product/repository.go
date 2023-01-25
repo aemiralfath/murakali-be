@@ -27,7 +27,8 @@ type Repository interface {
 	GetFavoriteProducts(ctx context.Context, pgn *pagination.Pagination, query *body.GetProductQueryRequest, userID string) ([]*body.Products,
 		[]*model.Promotion, []*model.Voucher, error)
 	GetAllFavoriteTotalProduct(ctx context.Context, query *body.GetProductQueryRequest, userID string) (int64, error)
-	CountFavoriteProduct(ctx context.Context, userID, productID string) (int64, error)
+	CountUserFavoriteProduct(ctx context.Context, userID, productID string) (int64, error)
+	CountSpecificFavoriteProduct(ctx context.Context, productID string) (int64, error)
 	CreateFavoriteProduct(ctx context.Context, tx postgre.Transaction, userID, productID string) error
 	DeleteFavoriteProduct(ctx context.Context, tx postgre.Transaction, userID, productID string) error
 	FindFavoriteProduct(ctx context.Context, userID, productID string) (bool, error)
