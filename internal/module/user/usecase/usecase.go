@@ -252,28 +252,15 @@ func (u *userUC) GetOrderByOrderID(ctx context.Context, orderID string) (*model.
 		return nil, err
 	}
 
-	buyerID, err := u.userRepo.GetBuyerIDByOrderID(ctx, orderID)
+	_, err = u.userRepo.GetBuyerIDByOrderID(ctx, orderID)
 	if err != nil {
 		return nil, err
 	}
 
-	sellerID, err := u.userRepo.GetSellerIDByOrderID(ctx, orderID)
+	_, err = u.userRepo.GetSellerIDByOrderID(ctx, orderID)
 	if err != nil {
 		return nil, err
 	}
-
-	buyerAddress, err := u.userRepo.GetAddressByBuyerID(ctx, buyerID)
-	if err != nil {
-		return nil, err
-	}
-
-	sellerAddress, err := u.userRepo.GetAddressBySellerID(ctx, sellerID)
-	if err != nil {
-		return nil, err
-	}
-
-	order.BuyerAddress = buyerAddress
-	order.SellerAddress = sellerAddress
 
 	totalWeight := 0
 	for _, detail := range order.Detail {
@@ -281,10 +268,10 @@ func (u *userUC) GetOrderByOrderID(ctx context.Context, orderID string) (*model.
 	}
 
 	var costRedis *string
-	key := fmt.Sprintf("%d:%d:%d:%s", sellerAddress.CityID, buyerAddress.CityID, totalWeight, order.CourierCode)
+	key := fmt.Sprintf("%d:%d:%d:%s", order.SellerAddress.CityID, order.BuyerAddress.CityID, totalWeight, order.CourierCode)
 	costRedis, err = u.userRepo.GetCostRedis(ctx, key)
 	if err != nil {
-		res, err := u.GetCostRajaOngkir(sellerAddress.CityID, buyerAddress.CityID, totalWeight, order.CourierCode)
+		res, err := u.GetCostRajaOngkir(order.SellerAddress.CityID, order.BuyerAddress.CityID, totalWeight, order.CourierCode)
 		if err != nil {
 			return nil, err
 		}
@@ -1717,6 +1704,7 @@ func (u *userUC) CreateTransaction(ctx context.Context, userID string, requestBo
 					Quantity:        bodyProductDetail.Quantity,
 					ItemPrice:       subPrice,
 					TotalPrice:      totalPrice,
+					Note:            bodyProductDetail.Note,
 				}
 				item := &body.OrderItemResponse{
 					Item:              orderItem,
@@ -1744,8 +1732,19 @@ func (u *userUC) CreateTransaction(ctx context.Context, userID string, requestBo
 			}
 			orderData.TotalPrice = subOrderPrice
 
+			buyerAddressString, errBAS := u.getAdressString(ctx, userModel.ID.String(), false)
+			if errBAS != nil {
+				return nil, errBAS
+			}
+			shopAddressString, errSAS := u.getAdressString(ctx, cartShop.UserID.String(), true)
+			if errSAS != nil {
+				return nil, errSAS
+			}
+
 			orderData.ShopID = cartShop.ID
 			orderData.UserID = userModel.ID
+			orderData.BuyerAddress = buyerAddressString
+			orderData.ShopAddress = shopAddressString
 			orderData.VoucherShopID = voucherShopID
 			orderData.CourierID = courierShop.ID
 			orderData.DeliveryFee = cart.CourierFee
@@ -1840,4 +1839,29 @@ func (u *userUC) CreateTransaction(ctx context.Context, userID string, requestBo
 		return "", err
 	}
 	return data.(string), nil
+}
+
+func (u *userUC) getAdressString(ctx context.Context, userID string, isShop bool) (string, error){
+
+	AddressModel := &model.Address{}
+	var err error
+	if isShop {
+		AddressModel, err = u.userRepo.GetAddressBySellerID(ctx, userID)
+		if err != nil {
+			return "", err
+		}
+	}
+	if !isShop {
+		AddressModel, err = u.userRepo.GetAddressByBuyerID(ctx, userID)
+		if err != nil {
+			return "", err
+		}
+	}
+	resultAddress, errMarshal := json.Marshal(AddressModel)
+	if errMarshal != nil {
+
+		return "", errMarshal
+	}
+
+	return string(resultAddress), nil
 }
