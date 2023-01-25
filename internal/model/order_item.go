@@ -11,4 +11,6 @@ type OrderItem struct {
 	Quantity        int       `json:"quantity" db:"quantity" binding:"omitempty"`
 	ItemPrice       float64   `json:"item_price" db:"item_price" binding:"omitempty"`
 	TotalPrice      float64   `json:"total_price" db:"total_price" binding:"omitempty"`
+	Note            string    `json:"note" db:"note" binding:"omitempty"`
+	IsReview        bool      `json:"is_review" db:"is_review" binding:"omitempty"`
 }
