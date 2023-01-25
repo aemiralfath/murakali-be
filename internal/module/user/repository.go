@@ -51,6 +51,7 @@ type Repository interface {
 	UpdateProfileImage(ctx context.Context, imgURL, userID string) error
 	UpdatePasswordByID(ctx context.Context, userID, newPassword string) error
 	GetPasswordByID(ctx context.Context, id string) (string, error)
+	ChangeOrderStatus(ctx context.Context, requestBody body.ChangeOrderStatusRequest) error
 	GetOrdersByTransactionID(ctx context.Context, transactionID, userID string) ([]*model.Order, error)
 	GetTotalOrder(ctx context.Context, userID, orderStatusID string) (int64, error)
 	GetOrders(ctx context.Context, userID, orderStatusID string, pgn *pagination.Pagination) ([]*model.Order, error)
@@ -94,4 +95,7 @@ type Repository interface {
 	UpdateUserSealabsPay(ctx context.Context, request body.AddSealabsPayRequest, userid string) error
 	UpdateUserSealabsPayTrans(ctx context.Context, tx postgre.Transaction, request body.AddSealabsPayRequest, userid string) error
 	UpdateWalletPin(ctx context.Context, wallet *model.Wallet) error
+	GetProductPromotionByProductID(ctx context.Context, productID string) (*model.Promotion, error)
+	UpdateVoucherQuota(ctx context.Context, tx postgre.Transaction, upVoucher *model.Voucher) error
+	UpdatePromotionQuota(ctx context.Context, tx postgre.Transaction, promo *model.Promotion) error
 }

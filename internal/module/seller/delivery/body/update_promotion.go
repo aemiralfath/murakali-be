@@ -11,7 +11,7 @@ import (
 type UpdatePromotionRequest struct {
 	PromotionID        string  `json:"promotion_id"`
 	ProductID          string  `json:"product_id"`
-	Name               string  `json:"name"`
+	PromotionName      string  `json:"promotion_name"`
 	MaxQuantity        int     `json:"max_quantity"`
 	ActivedDate        string  `json:"actived_date"`
 	ExpiredDate        string  `json:"expired_date"`
@@ -60,10 +60,10 @@ func (r *UpdatePromotionRequest) Validate() (UnprocessableEntity, error) {
 		entity.Fields["product_id"] = FieldCannotBeEmptyMessage
 	}
 
-	r.Name = strings.TrimSpace(r.Name)
-	if r.Name == "" {
+	r.PromotionName = strings.TrimSpace(r.PromotionName)
+	if r.PromotionName == "" {
 		unprocessableEntity = true
-		entity.Fields["name"] = FieldCannotBeEmptyMessage
+		entity.Fields["promotion_name"] = FieldCannotBeEmptyMessage
 	}
 
 	if r.MaxQuantity <= 0 {

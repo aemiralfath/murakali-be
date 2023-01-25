@@ -146,7 +146,7 @@ func (h *userHandlers) ValidateTransactionQuery(c *gin.Context) (*pagination.Pag
 
 	var limitFilter int
 	var pageFilter int
-	sortFilter := "DESC"
+	sortFilter := constant.DESC
 	statusFilter := 0
 
 	limitFilter, err := strconv.Atoi(limit)
@@ -574,6 +574,48 @@ func (h *userHandlers) GetOrderByOrderID(c *gin.Context) {
 	response.SuccessResponse(c.Writer, data, http.StatusOK)
 }
 
+func (h *userHandlers) ChangeOrderStatus(c *gin.Context) {
+	var requestBody body.ChangeOrderStatusRequest
+
+	if err := c.ShouldBind(&requestBody); err != nil {
+		response.ErrorResponse(c.Writer, response.BadRequestMessage, http.StatusBadRequest)
+		return
+	}
+
+	invalidFields, err := requestBody.Validate()
+	if err != nil {
+		response.ErrorResponseData(c.Writer, invalidFields, response.UnprocessableEntityMessage, http.StatusUnprocessableEntity)
+		return
+	}
+
+	userID, exist := c.Get("userID")
+	if !exist {
+		response.ErrorResponse(c.Writer, response.UnauthorizedMessage, http.StatusUnauthorized)
+		return
+	}
+
+	_, err = uuid.Parse(userID.(string))
+	if err != nil {
+		response.ErrorResponse(c.Writer, response.BadRequestMessage, http.StatusBadRequest)
+		return
+	}
+
+	err = h.userUC.ChangeOrderStatus(c, fmt.Sprintf("%v", userID), requestBody)
+	if err != nil {
+		var e *httperror.Error
+		if !errors.As(err, &e) {
+			h.logger.Errorf("HandlerSeller, Error: %s", err)
+			response.ErrorResponse(c.Writer, response.InternalServerErrorMessage, http.StatusInternalServerError)
+			return
+		}
+
+		response.ErrorResponse(c.Writer, e.Err.Error(), e.Status)
+		return
+	}
+
+	response.SuccessResponse(c.Writer, nil, http.StatusOK)
+}
+
 func (h *userHandlers) GetTransactionDetailByID(c *gin.Context) {
 	userID, exist := c.Get("userID")
 	if !exist {
@@ -619,10 +661,10 @@ func (h *userHandlers) ChangeTransactionPaymentMethod(c *gin.Context) {
 		return
 	}
 
-	if err := h.userUC.UpdateTransactionPaymentMethod(c, requestBody.TransactionID, requestBody.CardNumber); err != nil {
+	if errTrans := h.userUC.UpdateTransactionPaymentMethod(c, requestBody.TransactionID, requestBody.CardNumber); errTrans != nil {
 		var e *httperror.Error
-		if !errors.As(err, &e) {
-			h.logger.Errorf("HandlerUser, Error: %s", err)
+		if !errors.As(errTrans, &e) {
+			h.logger.Errorf("HandlerUser, Error: %s", errTrans)
 			response.ErrorResponse(c.Writer, response.InternalServerErrorMessage, http.StatusInternalServerError)
 			return
 		}

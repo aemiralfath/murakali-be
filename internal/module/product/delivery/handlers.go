@@ -666,6 +666,66 @@ func (h *productHandlers) GetProductReviews(c *gin.Context) {
 	response.SuccessResponse(c.Writer, reviews, http.StatusOK)
 }
 
+func (h *productHandlers) CreateProductReview(c *gin.Context) {
+	var requestBody body.ReviewProductRequest
+	if err := c.ShouldBind(&requestBody); err != nil {
+		response.ErrorResponse(c.Writer, response.BadRequestMessage, http.StatusBadRequest)
+		return
+	}
+
+	invalidFields, err := requestBody.Validate()
+	if err != nil {
+		response.ErrorResponseData(c.Writer, invalidFields, response.UnprocessableEntityMessage, http.StatusUnprocessableEntity)
+		return
+	}
+
+	userID, exist := c.Get("userID")
+	if !exist {
+		response.ErrorResponse(c.Writer, response.UnauthorizedMessage, http.StatusUnauthorized)
+		return
+	}
+
+	err = h.productUC.CreateProductReview(c, requestBody, userID.(string))
+	if err != nil {
+		var e *httperror.Error
+		if !errors.As(err, &e) {
+			h.logger.Errorf("HandlerProduct, Error: %s", err)
+			response.ErrorResponse(c.Writer, response.InternalServerErrorMessage, http.StatusInternalServerError)
+			return
+		}
+
+		response.ErrorResponse(c.Writer, e.Err.Error(), e.Status)
+		return
+	}
+
+	response.SuccessResponse(c.Writer, nil, http.StatusCreated)
+}
+
+func (h *productHandlers) DeleteProductReview(c *gin.Context) {
+	reviewID := c.Param("review_id")
+
+	userID, exist := c.Get("userID")
+	if !exist {
+		response.ErrorResponse(c.Writer, response.UnauthorizedMessage, http.StatusUnauthorized)
+		return
+	}
+
+	err := h.productUC.DeleteProductReview(c, reviewID, userID.(string))
+	if err != nil {
+		var e *httperror.Error
+		if !errors.As(err, &e) {
+			h.logger.Errorf("HandlerProduct, Error: %s", err)
+			response.ErrorResponse(c.Writer, response.InternalServerErrorMessage, http.StatusInternalServerError)
+			return
+		}
+
+		response.ErrorResponse(c.Writer, e.Err.Error(), e.Status)
+		return
+	}
+
+	response.SuccessResponse(c.Writer, nil, http.StatusOK)
+}
+
 func (h *productHandlers) ValidateQueryReview(c *gin.Context) (*pagination.Pagination, *body.GetReviewQueryRequest) {
 	limit := strings.TrimSpace(c.Query("limit"))
 	page := strings.TrimSpace(c.Query("page"))
@@ -701,11 +761,13 @@ func (h *productHandlers) ValidateQueryReview(c *gin.Context) (*pagination.Pagin
 	rating := strings.TrimSpace(c.Query("rating"))
 	showComment := strings.TrimSpace(c.Query("show_comment"))
 	showImage := strings.TrimSpace(c.Query("show_image"))
+	userID := strings.TrimSpace(c.Query("user_id"))
 
 	var ratingFilter int
 	ratingFilterInput := "0"
 	var showCommentFilter bool
 	var showImageFilter bool
+	userIDFilter := userID
 
 	ratingFilter, err = strconv.Atoi(rating)
 
@@ -725,10 +787,15 @@ func (h *productHandlers) ValidateQueryReview(c *gin.Context) (*pagination.Pagin
 		showImageFilter = true
 	}
 
+	if _, err := uuid.Parse(userID); err != nil {
+		userIDFilter = ""
+	}
+
 	query := &body.GetReviewQueryRequest{
 		Rating:      ratingFilterInput,
 		ShowComment: showCommentFilter,
 		ShowImage:   showImageFilter,
+		UserID:      userIDFilter,
 	}
 
 	return pgn, query

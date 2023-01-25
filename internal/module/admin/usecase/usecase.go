@@ -5,13 +5,16 @@ import (
 	"database/sql"
 	"math"
 	"murakali/config"
+	"murakali/internal/constant"
 	"murakali/internal/model"
 	"murakali/internal/module/admin"
 	"murakali/internal/module/admin/delivery/body"
 	"murakali/pkg/httperror"
 	"murakali/pkg/pagination"
 	"murakali/pkg/postgre"
+	"murakali/pkg/response"
 	"net/http"
+	"time"
 )
 
 type adminUC struct {
@@ -42,6 +45,138 @@ func (u *adminUC) GetAllVoucher(ctx context.Context, voucherStatusID, sortFilter
 	pgn.Rows = ShopVouchers
 
 	return pgn, nil
+}
+
+func (u *adminUC) GetRefunds(ctx context.Context, sortFilter string, pgn *pagination.Pagination) (*pagination.Pagination, error) {
+	totalRows, err := u.adminRepo.GetTotalRefunds(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	totalPages := int(math.Ceil(float64(totalRows) / float64(pgn.Limit)))
+	pgn.TotalRows = totalRows
+	pgn.TotalPages = totalPages
+
+	refunds, err := u.adminRepo.GetRefunds(ctx, sortFilter, pgn)
+	if err != nil {
+		return nil, err
+	}
+
+	pgn.Rows = refunds
+	return pgn, nil
+}
+
+func (u *adminUC) RefundOrder(ctx context.Context, refundID string) error {
+	refund, err := u.adminRepo.GetRefundByID(ctx, refundID)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return httperror.New(http.StatusBadRequest, response.RefundNotFound)
+		}
+
+		return err
+	}
+
+	if refund.RejectedAt.Valid {
+		return httperror.New(http.StatusBadRequest, response.RefundRejected)
+	}
+
+	if refund.RefundedAt.Valid {
+		return httperror.New(http.StatusBadRequest, response.RefundAlreadyFinished)
+	}
+
+	order, err := u.adminRepo.GetOrderByID(ctx, refund.OrderID.String())
+	if err != nil {
+		return err
+	}
+
+	errTx := u.txRepo.WithTransaction(func(tx postgre.Transaction) error {
+		refund.RefundedAt.Valid = true
+		refund.RefundedAt.Time = time.Now()
+
+		if errRefund := u.adminRepo.UpdateRefund(ctx, tx, refund); errRefund != nil {
+			return errRefund
+		}
+
+		order.OrderStatusID = constant.OrderStatusRefunded
+		if errStatus := u.adminRepo.UpdateOrderStatus(ctx, tx, order); errStatus != nil {
+			return errStatus
+		}
+
+		orderItems, err := u.adminRepo.GetOrderItemsByOrderID(ctx, tx, order.ID.String())
+		if err != nil {
+			return err
+		}
+
+		for _, item := range orderItems {
+			productDetailData, errData := u.adminRepo.GetProductDetailByID(ctx, tx, item.ProductDetailID.String())
+			if errData != nil {
+				return errData
+			}
+
+			productDetailData.Stock += float64(item.Quantity)
+			errProduct := u.adminRepo.UpdateProductDetailStock(ctx, tx, productDetailData)
+			if errProduct != nil {
+				return errProduct
+			}
+		}
+
+		walletMarketplace, err := u.adminRepo.GetWalletByUserID(ctx, tx, constant.AdminMarketplaceID)
+		if err != nil {
+			return err
+		}
+
+		walletMarketplace.Balance -= order.TotalPrice
+		walletMarketplace.UpdatedAt.Valid = true
+		walletMarketplace.UpdatedAt.Time = time.Now()
+		if errWallet := u.adminRepo.UpdateWalletBalance(ctx, tx, walletMarketplace); errWallet != nil {
+			return errWallet
+		}
+
+		walletUser, err := u.adminRepo.GetWalletByUserID(ctx, tx, order.UserID.String())
+		if err != nil {
+			return err
+		}
+
+		walletUser.Balance += order.TotalPrice
+		walletUser.UpdatedAt.Valid = true
+		walletUser.UpdatedAt.Time = time.Now()
+		if err := u.adminRepo.UpdateWalletBalance(ctx, tx, walletUser); err != nil {
+			return err
+		}
+
+		walletMarketplaceHistory := &model.WalletHistory{
+			TransactionID: order.TransactionID,
+			WalletID:      walletMarketplace.ID,
+			From:          walletMarketplace.ID.String(),
+			To:            walletUser.ID.String(),
+			Description:   "Refund order " + order.ID.String(),
+			Amount:        order.TotalPrice,
+			CreatedAt:     time.Now(),
+		}
+		if err := u.adminRepo.InsertWalletHistory(ctx, tx, walletMarketplaceHistory); err != nil {
+			return err
+		}
+
+		walletUserHistory := &model.WalletHistory{
+			TransactionID: order.TransactionID,
+			WalletID:      walletUser.ID,
+			From:          walletMarketplace.ID.String(),
+			To:            walletUser.ID.String(),
+			Description:   "Refund order " + order.ID.String(),
+			Amount:        order.TotalPrice,
+			CreatedAt:     time.Now(),
+		}
+		if err := u.adminRepo.InsertWalletHistory(ctx, tx, walletUserHistory); err != nil {
+			return err
+		}
+
+		return nil
+	})
+	if errTx != nil {
+		return errTx
+	}
+
+	return nil
 }
 
 func (u *adminUC) CreateVoucher(ctx context.Context, requestBody body.CreateVoucherRequest) error {
@@ -109,7 +244,6 @@ func (u *adminUC) GetDetailVoucher(ctx context.Context, voucherID string) (*mode
 }
 
 func (u *adminUC) DeleteVoucher(ctx context.Context, voucherID string) error {
-
 	_, errVoucher := u.adminRepo.GetVoucherByID(ctx, voucherID)
 	if errVoucher != nil {
 		if errVoucher == sql.ErrNoRows {
@@ -120,6 +254,38 @@ func (u *adminUC) DeleteVoucher(ctx context.Context, voucherID string) error {
 	}
 
 	if err := u.adminRepo.DeleteVoucher(ctx, voucherID); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (u *adminUC) GetCategories(ctx context.Context) ([]*body.CategoryResponse, error) {
+	category, err := u.adminRepo.GetCategories(ctx)
+	if err != nil {
+		return nil, err
+	}
+	return category, nil
+}
+
+func (u *adminUC) AddCategory(ctx context.Context, requestBody body.CategoryRequest) error {
+	err := u.adminRepo.AddCategory(ctx, requestBody)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (u *adminUC) DeleteCategory(ctx context.Context, categoryID string) error {
+	if err := u.adminRepo.DeleteCategory(ctx, categoryID); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (u *adminUC) EditCategory(ctx context.Context, requestBody body.CategoryRequest) error {
+	err := u.adminRepo.EditCategory(ctx, requestBody)
+	if err != nil {
 		return err
 	}
 

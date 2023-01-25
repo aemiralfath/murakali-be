@@ -718,7 +718,7 @@ func (r *userRepo) GetOrdersByTransactionID(ctx context.Context, transactionID, 
 func (r *userRepo) GetTransactionByUserID(ctx context.Context, userID string, status int, pgn *pagination.Pagination) ([]*model.Transaction, error) {
 	transactions := make([]*model.Transaction, 0)
 
-	query := GetTransactionByUserIDQuery
+	var query string
 	switch status {
 	case constant.OrderStatusWaitingToPay:
 		query = GetTransactionByUserIDNotPaidQuery
@@ -1269,6 +1269,7 @@ func (r *userRepo) GetProductDetailByID(ctx context.Context, tx postgre.Transact
 	var pd model.ProductDetail
 	if err := tx.QueryRowContext(ctx, GetProductDetailByIDQuery, productDetailID).Scan(
 		&pd.ID,
+		&pd.ProductID,
 		&pd.Price,
 		&pd.Stock,
 		&pd.Size,
@@ -1289,6 +1290,7 @@ func (r *userRepo) CreateTransaction(ctx context.Context, tx postgre.Transaction
 		transactionData.VoucherMarketplaceID,
 		transactionData.WalletID,
 		transactionData.CardNumber,
+		transactionData.Invoice,
 		transactionData.TotalPrice,
 		transactionData.ExpiredAt).Scan(&transactionID); err != nil {
 		return nil, err
@@ -1379,6 +1381,16 @@ func (r *userRepo) InsertWalletHistory(ctx context.Context, tx postgre.Transacti
 	return nil
 }
 
+func (r *userRepo) ChangeOrderStatus(ctx context.Context, requestBody body.ChangeOrderStatusRequest) error {
+	_, err := r.PSQL.ExecContext(
+		ctx, UpdateOrderByID, requestBody.OrderStatusID, requestBody.OrderID)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func (r *userRepo) GetOrderByTransactionID(ctx context.Context, transactionID string) ([]*model.OrderModel, error) {
 	orders := make([]*model.OrderModel, 0)
 	res, err := r.PSQL.QueryContext(ctx, GetOrderByTransactionID, transactionID)
@@ -1416,7 +1428,8 @@ func (r *userRepo) GetOrderByTransactionID(ctx context.Context, transactionID st
 }
 
 func (r *userRepo) UpdateTransaction(ctx context.Context, tx postgre.Transaction, transactionData *model.Transaction) error {
-	_, err := tx.ExecContext(ctx, UpdateTransactionByID, transactionData.PaidAt, transactionData.CanceledAt, transactionData.CardNumber, transactionData.ID)
+	_, err := tx.ExecContext(ctx, UpdateTransactionByID, transactionData.PaidAt, transactionData.CanceledAt,
+		transactionData.CardNumber, transactionData.ID)
 	if err != nil {
 		return err
 	}
@@ -1435,6 +1448,46 @@ func (r *userRepo) UpdateOrder(ctx context.Context, tx postgre.Transaction, orde
 
 func (r *userRepo) DeleteCartItemByID(ctx context.Context, tx postgre.Transaction, cartItemData *model.CartItem) error {
 	_, err := tx.ExecContext(ctx, DeleteCartItemByIDQuery, cartItemData.ID.String())
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (r *userRepo) GetProductPromotionByProductID(ctx context.Context, productID string) (*model.Promotion, error) {
+	var promo model.Promotion
+	if err := r.PSQL.QueryRowContext(ctx, GetProductPromotionByProductIDQuery, productID).
+		Scan(
+			&promo.ID,
+			&promo.Name,
+			&promo.ProductID,
+			&promo.DiscountPercentage,
+			&promo.DiscountFixPrice,
+			&promo.MinProductPrice,
+			&promo.MaxDiscountPrice,
+			&promo.Quota,
+			&promo.MaxQuantity,
+			&promo.ActivedDate,
+			&promo.ExpiredDate,
+			&promo.CreatedAt,
+			&promo.UpdatedAt,
+			&promo.DeletedAt); err != nil {
+		return nil, err
+	}
+
+	return &promo, nil
+}
+
+func (r *userRepo) UpdateVoucherQuota(ctx context.Context, tx postgre.Transaction, upVoucher *model.Voucher) error {
+	_, err := tx.ExecContext(ctx, UpdateVoucherQuotaQuery, upVoucher.Quota, upVoucher.ID)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (r *userRepo) UpdatePromotionQuota(ctx context.Context, tx postgre.Transaction, promo *model.Promotion) error {
+	_, err := tx.ExecContext(ctx, UpdatePromotionQuotaQuery, promo.Quota, promo.ID)
 	if err != nil {
 		return err
 	}

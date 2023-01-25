@@ -7,7 +7,7 @@ const (
 	AND "o"."voucher_shop_id" = $3
 	`
 
-	GetOrdersQuery = `SELECT o.id,o.order_status_id,o.total_price,o.delivery_fee,o.resi_no,s.id,s.name,v.code,o.created_at
+	GetOrdersQuery = `SELECT o.id, o.is_withdraw, o.order_status_id,o.total_price,o.delivery_fee,o.resi_no,s.id,s.name,v.code,o.created_at
 	from "order" o
 	join "shop" s on s.id = o.shop_id
 	left join "voucher" v on v.id = o.voucher_shop_id 
@@ -16,7 +16,7 @@ const (
 	ORDER BY o.created_at asc LIMIT $3 OFFSET $4
 	`
 
-	GetOrdersWithVoucherIDQuery = `SELECT o.id,o.order_status_id,o.total_price,o.delivery_fee,o.resi_no,s.id,s.name,v.code,o.created_at
+	GetOrdersWithVoucherIDQuery = `SELECT o.id, o.is_withdraw,o.order_status_id,o.total_price,o.delivery_fee,o.resi_no,s.id,s.name,v.code,o.created_at
 	from "order" o
 	join "shop" s on s.id = o.shop_id
 	left join "voucher" v on v.id = o.voucher_shop_id 
@@ -36,7 +36,7 @@ const (
 	"address_detail", "zip_code", "is_default", "is_shop_default", "created_at", "updated_at"
 	FROM "address" WHERE "user_id" = $1 AND "deleted_at" IS NULL AND is_shop_default is true`
 
-	GetOrderByOrderID = `SELECT o.id,o.order_status_id,o.total_price,o.delivery_fee,o.resi_no,s.id,s.name,u2.phone_no,u2.username,v.code,o.created_at,t.invoice
+	GetOrderByOrderID = `SELECT o.id, o.transaction_id, o.order_status_id, o.is_withdraw,o.total_price,o.delivery_fee,o.resi_no,s.id,s.name,u2.phone_no,u2.username,v.code,o.created_at,t.invoice
 	,c.name,c.code,c.service,c.description,u.username,u.phone_no
 	from "order" o
 	join "shop" s on s.id = o.shop_id
@@ -46,8 +46,8 @@ const (
 	join transaction t on o.transaction_id = t.id
 	left join "voucher" v on v.id = o.voucher_shop_id WHERE o.id = $1 ORDER BY o.created_at asc`
 
-	GetBuyerIDByOrderIDQuery = `SELECT o.user_id from "order" o where o.id = $1`
-
+	GetBuyerIDByOrderIDQuery  = `SELECT o.user_id from "order" o where o.id = $1`
+	CreateWalletHistoryQuery  = `INSERT INTO "wallet_history" (transaction_id, wallet_id, "from", "to", description, amount, created_at) VALUES ($1, $2, $3, $4, $5, $6, $7)`
 	GetSellerIDByOrderIDQuery = `SELECT s.user_id from "order" o join shop s on o.shop_id = s.id where o.id = $1`
 
 	GetOrderDetailQuery = `SELECT pd.id,pd.product_id,p.title, pd.weight,
@@ -185,7 +185,7 @@ const (
 	FROM "promotion" as "promo"
 	INNER JOIN "product" as "p" ON "p"."id" = "promo"."product_id"
 	INNER JOIN "shop" as "s" ON "s"."id" = "p"."shop_id"
-	WHERE "s"."id" = $1
+	WHERE "s"."id" = $1 ORDER BY "promo"."created_at" DESC
 	`
 
 	GetTotalPromotionSellerQuery = `
@@ -242,7 +242,7 @@ const (
 	WHERE "promo"."id" = $1 AND "s"."id" = $2
 	`
 
-	UpdateOrderByID               = `UPDATE "order" SET "order_status_id" = $1 WHERE "id" = $2`
+	UpdateOrderByID               = `UPDATE "order" SET "order_status_id" = $1, "is_withdraw" = $2 WHERE "id" = $3`
 	UpdateTransactionByID         = `UPDATE "transaction" SET "paid_at" = $1, "canceled_at" = $2 WHERE "id" = $3`
 	GetProductDetailByIDQuery     = `SELECT "id", "price", "stock", "weight", "size", "hazardous", "condition", "bulk_price" FROM "product_detail" WHERE "id" = $1 AND "deleted_at" IS NULL;`
 	GetTransactionsExpiredQuery   = `SELECT "id", "voucher_marketplace_id", "wallet_id", "card_number", "invoice", "total_price", "paid_at", "canceled_at", "expired_at" FROM "transaction" WHERE "paid_at" IS NULL AND "canceled_at" IS NULL AND "expired_at" < current_timestamp`
@@ -251,4 +251,22 @@ const (
 	GetOrderByTransactionID       = `SELECT 
 		"id", "transaction_id", "shop_id", "user_id", "courier_id", "voucher_shop_id", "order_status_id", "total_price", "delivery_fee", "resi_no", "created_at", "arrived_at" 
 	FROM "order" WHERE "transaction_id" = $1`
+	UpdateWalletBalanceQuery = `UPDATE "wallet" SET "balance" = $1, "updated_at" = $2 WHERE "id" = $3`
+
+	GetTotalProductWithoutPromotionQuery = `SELECT count("p"."id") FROM "product" as "p"
+		INNER JOIN "category" as "c" ON "c"."id" = "p"."category_id"
+		LEFT JOIN "promotion" as "promo" ON "promo"."product_id" = "p"."id"
+		WHERE "p"."shop_id" = $1 AND ("promo"."id" is NULL OR
+	("promo"."actived_date" < now() AND "promo"."expired_date" < now()));
+	`
+	GetProductWithoutPromotionQuery = `
+	SELECT "p"."id", "p"."title", "p"."min_price", "c"."name", "p"."thumbnail_url", "p"."unit_sold", "p"."rating_avg" FROM "product" as "p"
+		INNER JOIN "category" as "c" ON "c"."id" = "p"."category_id"
+		LEFT JOIN "promotion" as "promo" ON "promo"."product_id" = "p"."id"
+		WHERE "p"."shop_id" = $1 AND ("promo"."id" is NULL OR
+		("promo"."actived_date" < now() AND "promo"."expired_date" < now()))
+		LIMIT $2 OFFSET $3;
+	`
+
+	GetWalletByUserIDQuery = `SELECT "id", "user_id", "balance", "pin", "attempt_count", "attempt_at", "unlocked_at", "active_date" FROM "wallet" WHERE "user_id" = $1 AND "deleted_at" IS NULL`
 )

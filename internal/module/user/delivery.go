@@ -31,6 +31,7 @@ type Handlers interface {
 	WalletPaymentCallback(c *gin.Context)
 	GetOrder(c *gin.Context)
 	GetOrderByOrderID(c *gin.Context)
+	ChangeOrderStatus(c *gin.Context)
 	ActivateWallet(c *gin.Context)
 	GetWallet(c *gin.Context)
 	GetWalletHistory(c *gin.Context)

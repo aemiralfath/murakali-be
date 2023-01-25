@@ -133,11 +133,22 @@ func (r *sellerRepo) GetSellerIDByOrderID(ctx context.Context, orderID string) (
 	return sellerID, nil
 }
 
+func (r *sellerRepo) InsertWalletHistory(ctx context.Context, tx postgre.Transaction, walletHistory *model.WalletHistory) error {
+	_, err := tx.ExecContext(ctx, CreateWalletHistoryQuery, walletHistory.TransactionID, walletHistory.WalletID,
+		walletHistory.From, walletHistory.To, walletHistory.Description, walletHistory.Amount, walletHistory.CreatedAt)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 func (r *sellerRepo) GetOrderByOrderID(ctx context.Context, orderID string) (*model.Order, error) {
 	var order model.Order
 	if err := r.PSQL.QueryRowContext(ctx, GetOrderByOrderID, orderID).Scan(
 		&order.OrderID,
+		&order.TransactionID,
 		&order.OrderStatus,
+		&order.IsWithdraw,
 		&order.TotalPrice,
 		&order.DeliveryFee,
 		&order.ResiNumber,
@@ -242,6 +253,7 @@ func (r *sellerRepo) GetOrders(ctx context.Context, shopID, orderStatusID, vouch
 		var order model.Order
 		if errScan := res.Scan(
 			&order.OrderID,
+			&order.IsWithdraw,
 			&order.OrderStatus,
 			&order.TotalPrice,
 			&order.DeliveryFee,
@@ -611,7 +623,8 @@ func (r *sellerRepo) CountCodeVoucher(ctx context.Context, code string) (int64, 
 	return total, nil
 }
 
-func (r *sellerRepo) GetAllVoucherSeller(ctx context.Context, shopID, voucherStatusID, sortFilter string, pgn *pagination.Pagination) ([]*model.Voucher, error) {
+func (r *sellerRepo) GetAllVoucherSeller(ctx context.Context, shopID, voucherStatusID, sortFilter string,
+	pgn *pagination.Pagination) ([]*model.Voucher, error) {
 	var shopVouchers []*model.Voucher
 
 	q := GetAllVoucherSellerQuery
@@ -748,7 +761,7 @@ func (r *sellerRepo) GetAllPromotionSeller(ctx context.Context, shopID, promoSta
 		var promotion body.PromotionSellerResponse
 
 		if errScan := res.Scan(
-			&promotion.ID,
+			&promotion.PromotionID,
 			&promotion.PromotionName,
 			&promotion.ProductID,
 			&promotion.ProductName,
@@ -832,7 +845,7 @@ func (r *sellerRepo) GetPromotionSellerDetailByID(ctx context.Context,
 	var promotion body.PromotionSellerResponse
 	if err := r.PSQL.QueryRowContext(ctx, GetPromotionSellerDetailByIDQuery,
 		shopProductPromo.PromotionID, shopProductPromo.ShopID, shopProductPromo.ProductID).Scan(
-		&promotion.ID,
+		&promotion.PromotionID,
 		&promotion.PromotionName,
 		&promotion.ProductID,
 		&promotion.ProductName,
@@ -900,12 +913,32 @@ func (r *sellerRepo) GetDetailPromotionSellerByID(ctx context.Context,
 }
 
 func (r *sellerRepo) UpdateOrder(ctx context.Context, tx postgre.Transaction, orderData *model.OrderModel) error {
-	_, err := tx.ExecContext(ctx, UpdateOrderByID, orderData.OrderStatusID, orderData.ID)
+	_, err := tx.ExecContext(ctx, UpdateOrderByID, orderData.OrderStatusID, orderData.IsWithdraw, orderData.ID)
 	if err != nil {
 		return err
 	}
 
 	return nil
+}
+
+func (r *sellerRepo) UpdateWalletBalance(ctx context.Context, tx postgre.Transaction, wallet *model.Wallet) error {
+	_, err := tx.ExecContext(ctx, UpdateWalletBalanceQuery, wallet.Balance, wallet.UpdatedAt, wallet.ID)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (r *sellerRepo) GetWalletByUserID(ctx context.Context, tx postgre.Transaction, userID string) (*model.Wallet, error) {
+	var walletModel model.Wallet
+	if err := tx.QueryRowContext(ctx, GetWalletByUserIDQuery, userID).Scan(&walletModel.ID, &walletModel.UserID,
+		&walletModel.Balance, &walletModel.PIN, &walletModel.AttemptCount,
+		&walletModel.AttemptAt, &walletModel.UnlockedAt, &walletModel.ActiveDate); err != nil {
+		return nil, err
+	}
+
+	return &walletModel, nil
 }
 
 func (r *sellerRepo) UpdateTransaction(ctx context.Context, tx postgre.Transaction, transactionData *model.Transaction) error {
@@ -1041,4 +1074,47 @@ func (r *sellerRepo) UpdateProductDetailStock(ctx context.Context, tx postgre.Tr
 	}
 
 	return nil
+}
+
+func (r *sellerRepo) GetTotalProductWithoutPromotionSeller(ctx context.Context, shopID string) (int64, error) {
+	var total int64
+	if err := r.PSQL.QueryRowContext(ctx, GetTotalProductWithoutPromotionQuery, shopID).Scan(&total); err != nil {
+		return -1, err
+	}
+
+	return total, nil
+}
+func (r *sellerRepo) GetProductWithoutPromotionSeller(ctx context.Context, shopID string,
+	pgn *pagination.Pagination) ([]*body.GetProductWithoutPromotion, error) {
+	var productWoutPromos []*body.GetProductWithoutPromotion
+
+	res, err := r.PSQL.QueryContext(ctx, GetProductWithoutPromotionQuery, shopID, pgn.Limit, pgn.GetOffset())
+	if err != nil {
+		return nil, err
+	}
+	defer res.Close()
+
+	for res.Next() {
+		var productNoPromo body.GetProductWithoutPromotion
+
+		if errScan := res.Scan(
+			&productNoPromo.ProductID,
+			&productNoPromo.ProductName,
+			&productNoPromo.Price,
+			&productNoPromo.CategoryName,
+			&productNoPromo.ProductThumbnailURL,
+			&productNoPromo.UnitSold,
+			&productNoPromo.Rating,
+		); errScan != nil {
+			return nil, errScan
+		}
+
+		productWoutPromos = append(productWoutPromos, &productNoPromo)
+	}
+
+	if res.Err() != nil {
+		return nil, err
+	}
+
+	return productWoutPromos, nil
 }

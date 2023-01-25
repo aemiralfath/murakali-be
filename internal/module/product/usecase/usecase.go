@@ -693,3 +693,47 @@ func (u *productUC) UpdateProduct(ctx context.Context, requestBody body.UpdatePr
 	}
 	return nil
 }
+
+func (u *productUC) CreateProductReview(ctx context.Context, reqBody body.ReviewProductRequest, userID string) error {
+	gotReview, err := u.productRepo.GetProductReviews(ctx, &pagination.Pagination{}, reqBody.ProductID, &body.GetReviewQueryRequest{
+		UserID: userID,
+	})
+
+	if len(gotReview) > 0 {
+		return httperror.New(http.StatusBadRequest, body.ReviewAlreadyExist)
+	}
+
+	err = u.txRepo.WithTransaction(func(tx postgre.Transaction) error {
+		err = u.productRepo.CreateProductReview(ctx, tx, userID, reqBody)
+		if err != nil {
+			return err
+		}
+		return nil
+	})
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (u *productUC) DeleteProductReview(ctx context.Context, reviewID, userID string) error {
+	gotReview, err := u.productRepo.FindReview(ctx, reviewID)
+	if err != nil {
+		return err
+	}
+	if gotReview == nil {
+		return httperror.New(http.StatusBadRequest, body.ReviewNotExist)
+	}
+	err = u.txRepo.WithTransaction(func(tx postgre.Transaction) error {
+		err = u.productRepo.DeleteReview(ctx, tx, reviewID)
+		if err != nil {
+			return err
+		}
+		return nil
+	})
+	if err != nil {
+		return err
+	}
+
+	return nil
+}

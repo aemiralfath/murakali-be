@@ -318,6 +318,28 @@ func (u *userUC) GetOrderByOrderID(ctx context.Context, orderID string) (*model.
 	return order, nil
 }
 
+func (u *userUC) ChangeOrderStatus(ctx context.Context, userID string, requestBody body.ChangeOrderStatusRequest) error {
+	buyerID, err := u.userRepo.GetBuyerIDByOrderID(ctx, requestBody.OrderID)
+	if err != nil {
+		return err
+	}
+
+	if userID != buyerID {
+		return httperror.New(http.StatusUnauthorized, response.UnauthorizedMessage)
+	}
+
+	// Buyer can only set order to -> "Received" & "Completed"
+	if requestBody.OrderStatusID != constant.OrderStatusReceived && requestBody.OrderStatusID != constant.OrderStatusCompleted {
+		return httperror.New(http.StatusBadRequest, response.BadRequestMessage)
+	}
+
+	err = u.userRepo.ChangeOrderStatus(ctx, requestBody)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 func (u *userUC) GetCostRajaOngkir(origin, destination, weight int, code string) (*body2.RajaOngkirCostResponse, error) {
 	var responseCost body2.RajaOngkirCostResponse
 	url := fmt.Sprintf("%s/cost", u.cfg.External.OngkirAPIURL)
@@ -1540,7 +1562,6 @@ func (u *userUC) ChangeWalletPin(ctx context.Context, userID, pin string) error 
 }
 
 func (u *userUC) CreateTransaction(ctx context.Context, userID string, requestBody body.CreateTransactionRequest) (string, error) {
-	// TODO: Add voucher promotion stock & validation
 	transactionData := &model.Transaction{}
 	orderResponses := make([]*body.OrderResponse, 0)
 
@@ -1576,17 +1597,26 @@ func (u *userUC) CreateTransaction(ctx context.Context, userID string, requestBo
 		transactionData.CardNumber = &SealabsPayUser.CardNumber
 	}
 
+	voucherMarketplace := &model.Voucher{}
 	if requestBody.VoucherMarketplaceID != "" {
-		voucherMarketplace, errVoucherMP := u.userRepo.GetVoucherMarketplaceByID(ctx, requestBody.VoucherMarketplaceID)
+		var errVoucherMP error
+		voucherMarketplace, errVoucherMP = u.userRepo.GetVoucherMarketplaceByID(ctx, requestBody.VoucherMarketplaceID)
 		if errVoucherMP != nil {
 			if errVoucherMP != sql.ErrNoRows {
 				return "", errVoucherMP
 			}
+			return "", httperror.New(http.StatusBadRequest, response.VoucherMarketplaceNotFound)
 		}
 		transactionData.VoucherMarketplaceID = &voucherMarketplace.ID
 	}
 
+	voucherShopList := make([]*model.Voucher, 0)
+	promotionMap := make(map[string]int, 0)
+	qtyTotalProduct := make(map[string]int, 0)
+	promotionList := make([]*model.Promotion, 0)
+
 	data, err := u.txRepo.WithTransactionReturnData(func(tx postgre.Transaction) (interface{}, error) {
+		var totalDeliveryFee float64
 		for _, cart := range requestBody.CartItems {
 			orderData := &model.OrderModel{}
 			cartShop, err := u.userRepo.GetShopByID(ctx, cart.ShopID)
@@ -1597,13 +1627,17 @@ func (u *userUC) CreateTransaction(ctx context.Context, userID string, requestBo
 				return nil, err
 			}
 
-			var voucherShop *model.Voucher
+			voucherShop := &model.Voucher{}
 			var voucherShopID *uuid.UUID
 			if cart.VoucherShopID != "" {
-				voucherShop, err = u.userRepo.GetVoucherShopByID(ctx, cart.VoucherShopID, cartShop.ID.String())
-				if err != nil {
-					if err != sql.ErrNoRows {
+				var errVoucherShop error
+				voucherShop, errVoucherShop = u.userRepo.GetVoucherShopByID(ctx, cart.VoucherShopID, cartShop.ID.String())
+				if errVoucherShop != nil {
+					if errVoucherShop != sql.ErrNoRows {
 						return nil, err
+					}
+					if errVoucherShop == sql.ErrNoRows {
+						return "", httperror.New(http.StatusBadRequest, response.VoucherShopNotFound)
 					}
 				}
 				voucherShopID = &voucherShop.ID
@@ -1618,6 +1652,7 @@ func (u *userUC) CreateTransaction(ctx context.Context, userID string, requestBo
 			}
 
 			isAvail := true
+
 			for _, bodyProductDetail := range cart.ProductDetails {
 				productDetailData, err := u.userRepo.GetProductDetailByID(ctx, tx, bodyProductDetail.ID)
 				if err != nil {
@@ -1629,6 +1664,46 @@ func (u *userUC) CreateTransaction(ctx context.Context, userID string, requestBo
 					return nil, httperror.New(http.StatusBadRequest, response.CartItemNotExist)
 				}
 
+				qtyTotalProduct[productDetailData.ProductID.String()] += int(cartData.Quantity)
+			}
+
+			for _, bodyProductDetail := range cart.ProductDetails {
+				productDetailData, err := u.userRepo.GetProductDetailByID(ctx, tx, bodyProductDetail.ID)
+				if err != nil {
+					return nil, err
+				}
+
+				cartData, err := u.userRepo.GetCartItemUser(ctx, userModel.ID.String(), productDetailData.ID.String())
+				if err != nil {
+					return nil, httperror.New(http.StatusBadRequest, response.CartItemNotExist)
+				}
+
+				promo, errPromo := u.userRepo.GetProductPromotionByProductID(ctx, productDetailData.ProductID.String())
+				if errPromo != nil {
+					if errPromo != sql.ErrNoRows {
+						return nil, errPromo
+					}
+					if errPromo == sql.ErrNoRows {
+						promo = &model.Promotion{}
+					}
+				}
+				totalQuantity := qtyTotalProduct[productDetailData.ProductID.String()]
+				subPrice := productDetailData.Price
+
+				if (totalQuantity <= promo.MaxQuantity) && (totalQuantity <= promo.Quota) && (promo.ID != uuid.Nil) {
+					DiscountPromotion := &model.Discount{
+						DiscountPercentage: promo.DiscountPercentage,
+						DiscountFixPrice:   promo.DiscountFixPrice,
+						MinProductPrice:    promo.MinProductPrice,
+						MaxDiscountPrice:   promo.MaxDiscountPrice,
+					}
+					_, subPrice = util.CalculateDiscount(productDetailData.Price, DiscountPromotion)
+					if promotionMap[promo.ID.String()] == 0 {
+						promotionList = append(promotionList, promo)
+					}
+					promotionMap[promo.ID.String()] = 1
+				}
+				totalPrice := subPrice * float64(bodyProductDetail.Quantity)
 				if int(productDetailData.Stock)-bodyProductDetail.Quantity < 0 {
 					isAvail = false
 					errCart := u.userRepo.DeleteCartItemByID(ctx, tx, cartData)
@@ -1640,8 +1715,8 @@ func (u *userUC) CreateTransaction(ctx context.Context, userID string, requestBo
 				orderItem := &model.OrderItem{
 					ProductDetailID: productDetailData.ID,
 					Quantity:        bodyProductDetail.Quantity,
-					ItemPrice:       bodyProductDetail.SubPrice,
-					TotalPrice:      bodyProductDetail.SubPrice,
+					ItemPrice:       subPrice,
+					TotalPrice:      totalPrice,
 				}
 				item := &body.OrderItemResponse{
 					Item:              orderItem,
@@ -1656,6 +1731,19 @@ func (u *userUC) CreateTransaction(ctx context.Context, userID string, requestBo
 				return nil, httperror.New(http.StatusBadRequest, response.ProductQuantityNotAvailable)
 			}
 
+			subOrderPrice := orderData.TotalPrice
+			if voucherShop.ID != uuid.Nil {
+				discountVoucher := &model.Discount{
+					DiscountPercentage: voucherShop.DiscountPercentage,
+					DiscountFixPrice:   voucherShop.DiscountFixPrice,
+					MinProductPrice:    voucherShop.MinProductPrice,
+					MaxDiscountPrice:   voucherShop.MaxDiscountPrice,
+				}
+				_, subOrderPrice = util.CalculateDiscount(subOrderPrice, discountVoucher)
+				voucherShopList = append(voucherShopList, voucherShop)
+			}
+			orderData.TotalPrice = subOrderPrice
+
 			orderData.ShopID = cartShop.ID
 			orderData.UserID = userModel.ID
 			orderData.VoucherShopID = voucherShopID
@@ -1664,13 +1752,32 @@ func (u *userUC) CreateTransaction(ctx context.Context, userID string, requestBo
 			orderData.OrderStatusID = 1
 
 			orderResponse.OrderData = orderData
-			transactionData.TotalPrice += orderData.TotalPrice + orderData.DeliveryFee
+			transactionData.TotalPrice += orderData.TotalPrice
+			totalDeliveryFee += orderData.DeliveryFee
 
 			orderResponses = append(orderResponses, orderResponse)
 		}
 
+		if voucherMarketplace.ID != uuid.Nil {
+			discountVoucherMarketplace := &model.Discount{
+				DiscountPercentage: voucherMarketplace.DiscountPercentage,
+				DiscountFixPrice:   voucherMarketplace.DiscountFixPrice,
+				MinProductPrice:    voucherMarketplace.MinProductPrice,
+				MaxDiscountPrice:   voucherMarketplace.MaxDiscountPrice,
+			}
+			_, subTransactionPrice := util.CalculateDiscount(transactionData.TotalPrice, discountVoucherMarketplace)
+			transactionData.TotalPrice = subTransactionPrice
+		}
+		transactionData.TotalPrice += totalDeliveryFee
+		invoice, errInvoice := util.GenerateInvoice()
+		if errInvoice != nil {
+			return nil, errInvoice
+		}
+		transactionData.Invoice = &invoice
+
 		transactionData.ExpiredAt.Valid = true
 		transactionData.ExpiredAt.Time = time.Now().Add(time.Hour * 24)
+
 		transactionResponse := &body.TransactionResponse{
 			TransactionData: transactionData,
 			OrderResponses:  orderResponses,
@@ -1681,12 +1788,35 @@ func (u *userUC) CreateTransaction(ctx context.Context, userID string, requestBo
 			return nil, errTrans
 		}
 
+		if voucherMarketplace.ID != uuid.Nil {
+			voucherMarketplace.Quota--
+			if errVoucherMarketplace := u.userRepo.UpdateVoucherQuota(ctx, tx, voucherMarketplace); errVoucherMarketplace != nil {
+				return nil, errVoucherMarketplace
+			}
+		}
+
+		for _, vs := range voucherShopList {
+			vs.Quota--
+			if errVoucherMarketplace := u.userRepo.UpdateVoucherQuota(ctx, tx, vs); errVoucherMarketplace != nil {
+				return nil, errVoucherMarketplace
+			}
+		}
+
+		for _, promo := range promotionList {
+			reduceQty := qtyTotalProduct[promo.ProductID.String()]
+			promo.Quota -= reduceQty
+			if errPromo := u.userRepo.UpdatePromotionQuota(ctx, tx, promo); errPromo != nil {
+				return nil, errPromo
+			}
+		}
+
 		for _, o := range transactionResponse.OrderResponses {
 			o.OrderData.TransactionID = *transactionID
 			orderID, errOrder := u.userRepo.CreateOrder(ctx, tx, o.OrderData)
 			if errOrder != nil {
 				return nil, errOrder
 			}
+
 			for _, i := range o.Items {
 				i.Item.OrderID = *orderID
 				_, errItem := u.userRepo.CreateOrderItem(ctx, tx, i.Item)

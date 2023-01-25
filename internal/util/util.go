@@ -2,14 +2,19 @@ package util
 
 import (
 	"crypto/rand"
+	"fmt"
+	"math"
 	"mime/multipart"
 	"murakali/config"
+	"murakali/internal/model"
+	"time"
 
 	"unicode"
 
 	"github.com/cloudinary/cloudinary-go/v2"
 	"github.com/cloudinary/cloudinary-go/v2/api/uploader"
 	"github.com/gin-gonic/gin"
+	"github.com/sony/sonyflake"
 )
 
 func GenerateOTP(length int) (string, error) {
@@ -91,4 +96,52 @@ func SKUGenerator(productName string) string {
 	}
 
 	return productName + "-" + string(buffer)
+}
+
+func GenerateInvoice() (string, error) {
+	flake := sonyflake.NewSonyflake(sonyflake.Settings{})
+	id, err := flake.NextID()
+	if err != nil {
+		return "", err
+	}
+	invoice := fmt.Sprintf("INV/%s/MRK/%x\n", time.Now().Format("20060102"), id)
+
+	return invoice, nil
+}
+
+func CalculateDiscount(price float64, disc *model.Discount) (float64, float64) {
+	if disc.MaxDiscountPrice == nil {
+		return 0, price
+	}
+	var maxDiscountPrice float64
+	var minProductPrice float64
+	var discountPercentage float64
+	var discountFixPrice float64
+
+	var resultDiscount float64
+
+	maxDiscountPrice = *disc.MaxDiscountPrice
+	if maxDiscountPrice == 0 {
+		return 0, price
+	}
+
+	if disc.MinProductPrice != nil {
+		minProductPrice = *disc.MinProductPrice
+	}
+
+	if disc.DiscountPercentage != nil {
+		discountPercentage = *disc.DiscountPercentage
+		if price >= minProductPrice && discountPercentage > 0 {
+			resultDiscount = math.Min(maxDiscountPrice, price*(discountPercentage/100.00))
+		}
+	}
+
+	if disc.DiscountFixPrice != nil {
+		discountFixPrice = *disc.DiscountFixPrice
+		if price >= minProductPrice && discountFixPrice > 0 {
+			resultDiscount = math.Max(resultDiscount, discountFixPrice)
+			resultDiscount = math.Min(resultDiscount, maxDiscountPrice)
+		}
+	}
+	return resultDiscount, price - resultDiscount
 }

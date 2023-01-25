@@ -56,10 +56,17 @@ const (
 	WalletBalanceNotEnough         = "Insufficient wallet balance, please top up!"
 	InvalidPaymentMethod           = "Invalid payment method."
 	OrderNotExistMessage           = "Order not exist."
+	OrderNotCompletedMessage       = "Order not completed."
+	OrderAlreadyWithdrawMessage    = "Order already withdraw."
 	InvalidPasswordMessage         = "Invalid password."
 	TransactionNotFound            = "Transaction not found."
+	RefundNotFound                 = "Refund not found."
+	RefundAlreadyFinished          = "Refund already finished."
+	RefundRejected                 = "Refund is rejected."
 	WalletHistoryNotFound          = "Wallet history not found."
 	OrderNotWaitingForSeller       = "Order not waiting for seller"
+	VoucherMarketplaceNotFound     = "Voucher Marketplace Not Found"
+	VoucherShopNotFound            = "Voucher Shop Not Found"
 )
 
 type JSONResponse struct {

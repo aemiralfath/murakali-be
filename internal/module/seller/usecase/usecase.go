@@ -34,6 +34,105 @@ func NewSellerUseCase(cfg *config.Config, txRepo *postgre.TxRepo, sellerRepo sel
 	return &sellerUC{cfg: cfg, txRepo: txRepo, sellerRepo: sellerRepo}
 }
 
+func (u *sellerUC) WithdrawalOrderBalance(ctx context.Context, orderID string) error {
+	order, err := u.sellerRepo.GetOrderByOrderID(ctx, orderID)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return httperror.New(http.StatusBadRequest, response.OrderNotExistMessage)
+		}
+
+		return err
+	}
+
+	if order.OrderStatus != constant.OrderStatusCompleted {
+		return httperror.New(http.StatusBadRequest, response.OrderNotCompletedMessage)
+	}
+
+	if order.IsWithdraw {
+		return httperror.New(http.StatusBadRequest, response.OrderAlreadyWithdrawMessage)
+	}
+
+	errTx := u.txRepo.WithTransaction(func(tx postgre.Transaction) error {
+		idUUID, err := uuid.Parse(order.OrderID)
+		if err != nil {
+			return err
+		}
+
+		if errWithdraw := u.sellerRepo.UpdateOrder(ctx, tx,
+			&model.OrderModel{ID: idUUID, OrderStatusID: order.OrderStatus, IsWithdraw: true}); err != nil {
+			return errWithdraw
+		}
+
+		walletMarketplace, err := u.sellerRepo.GetWalletByUserID(ctx, tx, constant.AdminMarketplaceID)
+		if err != nil {
+			return err
+		}
+
+		walletMarketplace.Balance -= *order.TotalPrice
+		walletMarketplace.UpdatedAt.Valid = true
+		walletMarketplace.UpdatedAt.Time = time.Now()
+		if errWallet := u.sellerRepo.UpdateWalletBalance(ctx, tx, walletMarketplace); errWallet != nil {
+			return errWallet
+		}
+
+		sellerID, err := u.sellerRepo.GetSellerIDByOrderID(ctx, orderID)
+		if err != nil {
+			return err
+		}
+
+		walletSeller, err := u.sellerRepo.GetWalletByUserID(ctx, tx, sellerID)
+		if err != nil {
+			return err
+		}
+
+		walletSeller.Balance += *order.TotalPrice
+		walletSeller.UpdatedAt.Time = time.Now()
+		walletSeller.UpdatedAt.Valid = true
+		if errWallet := u.sellerRepo.UpdateWalletBalance(ctx, tx, walletSeller); errWallet != nil {
+			return errWallet
+		}
+
+		transactionID, err := uuid.Parse(order.TransactionID)
+		if err != nil {
+			return err
+		}
+
+		walletMarketplaceHistory := &model.WalletHistory{
+			TransactionID: transactionID,
+			WalletID:      walletMarketplace.ID,
+			From:          walletMarketplace.ID.String(),
+			To:            walletSeller.ID.String(),
+			Description:   "Withdrawal order " + order.OrderID,
+			Amount:        *order.TotalPrice,
+			CreatedAt:     time.Now(),
+		}
+		if err := u.sellerRepo.InsertWalletHistory(ctx, tx, walletMarketplaceHistory); err != nil {
+			return err
+		}
+
+		walletUserHistory := &model.WalletHistory{
+			TransactionID: transactionID,
+			WalletID:      walletSeller.ID,
+			From:          walletMarketplace.ID.String(),
+			To:            walletSeller.ID.String(),
+			Description:   "Withdrawal order " + order.OrderID,
+			Amount:        *order.TotalPrice,
+			CreatedAt:     time.Now(),
+		}
+		if err := u.sellerRepo.InsertWalletHistory(ctx, tx, walletUserHistory); err != nil {
+			return err
+		}
+
+		return nil
+	})
+
+	if errTx != nil {
+		return errTx
+	}
+
+	return nil
+}
+
 func (u *sellerUC) GetOrder(ctx context.Context, userID, orderStatusID, voucherShopID string,
 	pgn *pagination.Pagination) (*pagination.Pagination, error) {
 	shopID, err := u.sellerRepo.GetShopIDByUser(ctx, userID)
@@ -343,7 +442,6 @@ func (u *sellerUC) UpdateOnDeliveryOrder(ctx context.Context) error {
 }
 
 func (u *sellerUC) UpdateExpiredAtOrder(ctx context.Context) error {
-	// TODO: Add voucher promotion stock & validation
 	transactions, err := u.sellerRepo.GetTransactionsExpired(ctx)
 	if err != nil {
 		return nil
@@ -364,6 +462,7 @@ func (u *sellerUC) UpdateExpiredAtOrder(ctx context.Context) error {
 
 			for _, order := range orders {
 				order.OrderStatusID = constant.OrderStatusCanceled
+				order.IsWithdraw = false
 				if err := u.sellerRepo.UpdateOrder(ctx, tx, order); err != nil {
 					return err
 				}
@@ -425,7 +524,8 @@ func (u *sellerUC) GetCostRajaOngkir(origin, destination, weight int, code strin
 	return &responseCost, nil
 }
 
-func (u *sellerUC) GetAllVoucherSeller(ctx context.Context, userID, voucherStatusID, sortFilter string, pgn *pagination.Pagination) (*pagination.Pagination, error) {
+func (u *sellerUC) GetAllVoucherSeller(ctx context.Context, userID, voucherStatusID, sortFilter string,
+	pgn *pagination.Pagination) (*pagination.Pagination, error) {
 	shopID, err := u.sellerRepo.GetShopIDByUserID(ctx, userID)
 	if err != nil {
 		if err == sql.ErrNoRows {
@@ -656,8 +756,8 @@ func (u *sellerUC) CreatePromotionSeller(ctx context.Context, userID string, req
 
 	data, errTx := u.txRepo.WithTransactionReturnData(func(tx postgre.Transaction) (interface{}, error) {
 		countProduct := 0
-		for _, productID := range requestBody.ProductIDs {
-			shopProduct := &body.ShopProduct{ShopID: shopID, ProductID: productID}
+		for _, p := range requestBody.ProductPromotion {
+			shopProduct := &body.ShopProduct{ShopID: shopID, ProductID: p.ProductID}
 
 			productPromo, errProductPromo := u.sellerRepo.GetProductPromotion(ctx, shopProduct)
 			if errProductPromo != nil {
@@ -671,22 +771,22 @@ func (u *sellerUC) CreatePromotionSeller(ctx context.Context, userID string, req
 				return nil, httperror.New(http.StatusBadRequest, response.ProductAlreadyHasPromoMessage)
 			}
 
-			PID, err := uuid.Parse(productID)
+			PID, err := uuid.Parse(p.ProductID)
 			if err != nil {
 				return nil, err
 			}
 
 			promotionShop := &model.Promotion{
 				Name:               requestBody.Name,
-				ProductID:          PID,
-				DiscountPercentage: &requestBody.DiscountPercentage,
-				DiscountFixPrice:   &requestBody.DiscountFixPrice,
-				MinProductPrice:    &requestBody.MinProductPrice,
-				MaxDiscountPrice:   &requestBody.MaxDiscountPrice,
-				Quota:              requestBody.Quota,
-				MaxQuantity:        requestBody.MaxQuantity,
 				ActivedDate:        requestBody.ActiveDateTime,
 				ExpiredDate:        requestBody.ExpiredDateTime,
+				ProductID:          PID,
+				DiscountPercentage: &p.DiscountPercentage,
+				DiscountFixPrice:   &p.DiscountFixPrice,
+				MinProductPrice:    &p.MinProductPrice,
+				MaxDiscountPrice:   &p.MaxDiscountPrice,
+				Quota:              p.Quota,
+				MaxQuantity:        p.MaxQuantity,
 			}
 
 			err = u.sellerRepo.CreatePromotionSeller(ctx, tx, promotionShop)
@@ -753,8 +853,8 @@ func (u *sellerUC) UpdatePromotionSeller(ctx context.Context, userID string, req
 	}
 
 	promotion := &model.Promotion{
-		ID:                 promotionShop.ID,
-		Name:               requestBody.Name,
+		ID:                 promotionShop.PromotionID,
+		Name:               requestBody.PromotionName,
 		MaxQuantity:        requestBody.MaxQuantity,
 		DiscountPercentage: &requestBody.DiscountPercentage,
 		DiscountFixPrice:   &requestBody.DiscountFixPrice,
@@ -794,6 +894,34 @@ func (u *sellerUC) GetDetailPromotionSellerByID(ctx context.Context,
 	promotionShop = u.CalculateDiscountPromotionProduct(ctx, promotionShop)
 
 	return promotionShop, nil
+}
+
+func (u sellerUC) GetProductWithoutPromotionSeller(ctx context.Context, userID string, pgn *pagination.Pagination) (*pagination.Pagination, error) {
+	shopID, err := u.sellerRepo.GetShopIDByUserID(ctx, userID)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, httperror.New(http.StatusBadRequest, response.UserNotHaveShop)
+		}
+		return nil, err
+	}
+
+	totalRows, err := u.sellerRepo.GetTotalProductWithoutPromotionSeller(ctx, shopID)
+	if err != nil {
+		return nil, err
+	}
+
+	totalPages := int(math.Ceil(float64(totalRows) / float64(pgn.Limit)))
+	pgn.TotalRows = totalRows
+	pgn.TotalPages = totalPages
+
+	ProductWoutPromotion, err := u.sellerRepo.GetProductWithoutPromotionSeller(ctx, shopID, pgn)
+	if err != nil {
+		return nil, err
+	}
+
+	pgn.Rows = ProductWoutPromotion
+
+	return pgn, nil
 }
 
 func (u *sellerUC) CalculateDiscountPromotionProduct(ctx context.Context, p *body.PromotionDetailSeller) *body.PromotionDetailSeller {

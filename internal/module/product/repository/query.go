@@ -250,12 +250,25 @@ const (
 	AND r.deleted_at IS NULL
 	ORDER BY %s LIMIT $2 OFFSET $3;`
 
+	GetReviewProductByIDQuery = `
+	SELECT r.id, r.user_id, r.product_id, r.comment, r.rating, r.image_url, r.created_at, u.photo_url, u.username
+	FROM review r
+	INNER JOIN "user" u
+	ON r.user_id = u.id
+	WHERE r.id = $1
+	AND r.deleted_at IS NULL;`
+
 	GetTotalReviewRatingByProductIDQuery = `
 	SELECT r.rating, count(r.id) as count 
 	FROM review r
 	WHERE r.product_id = $1
 	and r.deleted_at IS NULL
 	group by r.rating;`
+
+	CreateReviewQuery = `INSERT INTO "review" (user_id, product_id, comment, rating, image_url)
+	VALUES ($1, $2, $3, $4, $5);`
+
+	DeleteReviewByIDQuery = `UPDATE "review" set deleted_at = now() WHERE id = $1;`
 
 	GetShopIDByUserIDQuery = `SELECT id from "shop" WHERE user_id = $1 AND deleted_at IS NULL `
 
