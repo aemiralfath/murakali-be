@@ -136,10 +136,10 @@ const (
 		INNER JOIN "shop_courier" as sc ON "sc"."courier_id" = "c"."id"
 		WHERE "c"."id" = $1 AND "sc"."shop_id" = $2 AND "c"."deleted_at" IS NULL;`
 	GetProductDetailByIDQuery     = `SELECT "id", "product_id", "price", "stock", "weight", "size", "hazardous", "condition", "bulk_price" FROM "product_detail" WHERE "id" = $1 AND "deleted_at" IS NULL;`
-	GetShopByIDQuery              = `SELECT "id", "name" FROM "shop" WHERE "id" = $1 AND "deleted_at" IS NULL;`
+	GetShopByIDQuery              = `SELECT "id", "name", "user_id" FROM "shop" WHERE "id" = $1 AND "deleted_at" IS NULL;`
 	CreateTransactionQuery        = `INSERT INTO "transaction" (voucher_marketplace_id, wallet_id, card_number, invoice, total_price, expired_at) VALUES ($1, $2, $3, $4, $5, $6) RETURNING "id";`
-	CreateOrderQuery              = `INSERT INTO "order" (transaction_id, shop_id, user_id, courier_id, voucher_shop_id, order_status_id, total_price, delivery_fee) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING "id";`
-	CreateOrderItemQuery          = `INSERT INTO "order_item" (order_id, product_detail_id, quantity, item_price, total_price) VALUES ($1, $2, $3, $4, $5) RETURNING "id";`
+	CreateOrderQuery              = `INSERT INTO "order" (transaction_id, shop_id, user_id, courier_id, voucher_shop_id, order_status_id, total_price, delivery_fee, buyer_address, shop_address) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) RETURNING "id";`
+	CreateOrderItemQuery          = `INSERT INTO "order_item" (order_id, product_detail_id, quantity, item_price, total_price, note) VALUES ($1, $2, $3, $4, $5, $6) RETURNING "id";`
 	CreateWalletQuery             = `INSERT INTO "wallet" (user_id, balance, pin, attempt_count, active_date) VALUES ($1, $2, $3, $4, $5)`
 	CreateWalletHistoryQuery      = `INSERT INTO "wallet_history" (transaction_id, wallet_id, "from", "to", description, amount, created_at) VALUES ($1, $2, $3, $4, $5, $6, $7)`
 	UpdateWalletBalanceQuery      = `UPDATE "wallet" SET "balance" = $1, "updated_at" = $2 WHERE "id" = $3`
@@ -174,7 +174,7 @@ const (
 	join "product" p on p.id = pd.product_id WHERE oi.order_id = $1 `
 
 	GetOrderByOrderID = `SELECT o.id,o.order_status_id,o.total_price,o.delivery_fee,o.resi_no,s.id,s.name,u2.phone_no,u2.username,v.code,o.created_at,t.invoice
-	,c.name,c.code,c.service,c.description,u.username,u.phone_no
+	,c.name,c.code,c.service,c.description,u.username,u.phone_no,o.shop_address, o.buyer_address
 	from "order" o
 	join "shop" s on s.id = o.shop_id
 	join "courier" c on o.courier_id = c.id
