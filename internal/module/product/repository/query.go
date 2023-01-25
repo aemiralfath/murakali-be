@@ -204,6 +204,12 @@ const (
 	 AND "p"."deleted_at" IS NULL
 	 AND "p"."listed_status" = true `
 
+	CountUserFavoriteProduct = `
+	SELECT count(user_id) FROM "favorite" WHERE "user_id" = $1  AND "product_id"  = $2 
+	`
+	CountSpecificFavoriteProduct = `
+	SELECT count(user_id) FROM "favorite" WHERE "product_id"  = $1 
+	`
 	CreateFavoriteProductQuery = `
 	INSERT INTO "favorite" ("user_id", "product_id")
 	VALUES ($1, $2);`
