@@ -2,16 +2,19 @@ package util
 
 import (
 	"crypto/rand"
+	"fmt"
 	"math"
 	"mime/multipart"
 	"murakali/config"
 	"murakali/internal/model"
+	"time"
 
 	"unicode"
 
 	"github.com/cloudinary/cloudinary-go/v2"
 	"github.com/cloudinary/cloudinary-go/v2/api/uploader"
 	"github.com/gin-gonic/gin"
+	"github.com/sony/sonyflake"
 )
 
 func GenerateOTP(length int) (string, error) {
@@ -93,6 +96,17 @@ func SKUGenerator(productName string) string {
 	}
 
 	return productName + "-" + string(buffer)
+}
+func GenerateInvoice() (string, error) {
+
+	flake := sonyflake.NewSonyflake(sonyflake.Settings{})
+	id, err := flake.NextID()
+	if err != nil {
+		return "", err
+	}
+	invoice := fmt.Sprintf("INV/%s/MRK/%x\n", time.Now().Format("20060102"), id)
+
+	return invoice, nil
 }
 
 func CalculateDiscount(price float64, disc *model.Discount) (float64, float64) {

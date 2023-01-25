@@ -1770,9 +1770,15 @@ func (u *userUC) CreateTransaction(ctx context.Context, userID string, requestBo
 			transactionData.TotalPrice = subTransactionPrice
 		}
 		transactionData.TotalPrice += float64(totalDeliveryFee)
+		invoice, errInvoice := util.GenerateInvoice()
+		if errInvoice != nil {
+			return nil, errInvoice
+		}
+		transactionData.Invoice = &invoice
 
 		transactionData.ExpiredAt.Valid = true
 		transactionData.ExpiredAt.Time = time.Now().Add(time.Hour * 24)
+		
 		transactionResponse := &body.TransactionResponse{
 			TransactionData: transactionData,
 			OrderResponses:  orderResponses,

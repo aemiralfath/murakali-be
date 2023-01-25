@@ -1290,6 +1290,7 @@ func (r *userRepo) CreateTransaction(ctx context.Context, tx postgre.Transaction
 		transactionData.VoucherMarketplaceID,
 		transactionData.WalletID,
 		transactionData.CardNumber,
+		transactionData.Invoice,
 		transactionData.TotalPrice,
 		transactionData.ExpiredAt).Scan(&transactionID); err != nil {
 		return nil, err
