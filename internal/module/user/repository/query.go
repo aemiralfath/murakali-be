@@ -137,7 +137,7 @@ const (
 		WHERE "c"."id" = $1 AND "sc"."shop_id" = $2 AND "c"."deleted_at" IS NULL;`
 	GetProductDetailByIDQuery     = `SELECT "id", "product_id", "price", "stock", "weight", "size", "hazardous", "condition", "bulk_price" FROM "product_detail" WHERE "id" = $1 AND "deleted_at" IS NULL;`
 	GetShopByIDQuery              = `SELECT "id", "name" FROM "shop" WHERE "id" = $1 AND "deleted_at" IS NULL;`
-	CreateTransactionQuery        = `INSERT INTO "transaction" (voucher_marketplace_id, wallet_id, card_number, total_price, expired_at) VALUES ($1, $2, $3, $4, $5) RETURNING "id";`
+	CreateTransactionQuery        = `INSERT INTO "transaction" (voucher_marketplace_id, wallet_id, card_number, invoice, total_price, expired_at) VALUES ($1, $2, $3, $4, $5, $6) RETURNING "id";`
 	CreateOrderQuery              = `INSERT INTO "order" (transaction_id, shop_id, user_id, courier_id, voucher_shop_id, order_status_id, total_price, delivery_fee) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING "id";`
 	CreateOrderItemQuery          = `INSERT INTO "order_item" (order_id, product_detail_id, quantity, item_price, total_price) VALUES ($1, $2, $3, $4, $5) RETURNING "id";`
 	CreateWalletQuery             = `INSERT INTO "wallet" (user_id, balance, pin, attempt_count, active_date) VALUES ($1, $2, $3, $4, $5)`
