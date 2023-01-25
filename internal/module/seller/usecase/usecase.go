@@ -71,8 +71,8 @@ func (u *sellerUC) WithdrawalOrderBalance(ctx context.Context, orderID string) e
 		walletMarketplace.Balance -= *order.TotalPrice
 		walletMarketplace.UpdatedAt.Valid = true
 		walletMarketplace.UpdatedAt.Time = time.Now()
-		if err := u.sellerRepo.UpdateWalletBalance(ctx, tx, walletMarketplace); err != nil {
-			return err
+		if errWallet := u.sellerRepo.UpdateWalletBalance(ctx, tx, walletMarketplace); errWallet != nil {
+			return errWallet
 		}
 
 		sellerID, err := u.sellerRepo.GetSellerIDByOrderID(ctx, orderID)
@@ -88,8 +88,8 @@ func (u *sellerUC) WithdrawalOrderBalance(ctx context.Context, orderID string) e
 		walletSeller.Balance += *order.TotalPrice
 		walletSeller.UpdatedAt.Time = time.Now()
 		walletSeller.UpdatedAt.Valid = true
-		if err := u.sellerRepo.UpdateWalletBalance(ctx, tx, walletSeller); err != nil {
-			return err
+		if errWallet := u.sellerRepo.UpdateWalletBalance(ctx, tx, walletSeller); errWallet != nil {
+			return errWallet
 		}
 
 		transactionID, err := uuid.Parse(order.TransactionID)
@@ -524,7 +524,8 @@ func (u *sellerUC) GetCostRajaOngkir(origin, destination, weight int, code strin
 	return &responseCost, nil
 }
 
-func (u *sellerUC) GetAllVoucherSeller(ctx context.Context, userID, voucherStatusID, sortFilter string, pgn *pagination.Pagination) (*pagination.Pagination, error) {
+func (u *sellerUC) GetAllVoucherSeller(ctx context.Context, userID, voucherStatusID, sortFilter string,
+	pgn *pagination.Pagination) (*pagination.Pagination, error) {
 	shopID, err := u.sellerRepo.GetShopIDByUserID(ctx, userID)
 	if err != nil {
 		if err == sql.ErrNoRows {

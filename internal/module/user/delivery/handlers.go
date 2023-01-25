@@ -146,7 +146,7 @@ func (h *userHandlers) ValidateTransactionQuery(c *gin.Context) (*pagination.Pag
 
 	var limitFilter int
 	var pageFilter int
-	sortFilter := "DESC"
+	sortFilter := constant.DESC
 	statusFilter := 0
 
 	limitFilter, err := strconv.Atoi(limit)
@@ -661,10 +661,10 @@ func (h *userHandlers) ChangeTransactionPaymentMethod(c *gin.Context) {
 		return
 	}
 
-	if err := h.userUC.UpdateTransactionPaymentMethod(c, requestBody.TransactionID, requestBody.CardNumber); err != nil {
+	if errTrans := h.userUC.UpdateTransactionPaymentMethod(c, requestBody.TransactionID, requestBody.CardNumber); errTrans != nil {
 		var e *httperror.Error
-		if !errors.As(err, &e) {
-			h.logger.Errorf("HandlerUser, Error: %s", err)
+		if !errors.As(errTrans, &e) {
+			h.logger.Errorf("HandlerUser, Error: %s", errTrans)
 			response.ErrorResponse(c.Writer, response.InternalServerErrorMessage, http.StatusInternalServerError)
 			return
 		}

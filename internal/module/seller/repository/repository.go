@@ -623,7 +623,8 @@ func (r *sellerRepo) CountCodeVoucher(ctx context.Context, code string) (int64, 
 	return total, nil
 }
 
-func (r *sellerRepo) GetAllVoucherSeller(ctx context.Context, shopID, voucherStatusID, sortFilter string, pgn *pagination.Pagination) ([]*model.Voucher, error) {
+func (r *sellerRepo) GetAllVoucherSeller(ctx context.Context, shopID, voucherStatusID, sortFilter string,
+	pgn *pagination.Pagination) ([]*model.Voucher, error) {
 	var shopVouchers []*model.Voucher
 
 	q := GetAllVoucherSellerQuery
@@ -1082,9 +1083,9 @@ func (r *sellerRepo) GetTotalProductWithoutPromotionSeller(ctx context.Context, 
 	}
 
 	return total, nil
-
 }
-func (r *sellerRepo) GetProductWithoutPromotionSeller(ctx context.Context, shopID string, pgn *pagination.Pagination) ([]*body.GetProductWithoutPromotion, error) {
+func (r *sellerRepo) GetProductWithoutPromotionSeller(ctx context.Context, shopID string,
+	pgn *pagination.Pagination) ([]*body.GetProductWithoutPromotion, error) {
 	var productWoutPromos []*body.GetProductWithoutPromotion
 
 	res, err := r.PSQL.QueryContext(ctx, GetProductWithoutPromotionQuery, shopID, pgn.Limit, pgn.GetOffset())

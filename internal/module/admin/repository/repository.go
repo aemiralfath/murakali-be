@@ -43,11 +43,11 @@ func (r *adminRepo) GetTotalVoucher(ctx context.Context, voucherStatusID string)
 	case "1":
 		q = GetTotalVoucherQuery
 	case "2":
-		q = q + FilterVoucherWillCome
+		q += FilterVoucherWillCome
 	case "3":
-		q = q + FilterVoucherOngoing
+		q += FilterVoucherOngoing
 	case "4":
-		q = q + FilterVoucherHasEnded
+		q += FilterVoucherHasEnded
 	default:
 		q = GetTotalVoucherQuery
 	}
@@ -76,11 +76,11 @@ func (r *adminRepo) GetAllVoucher(ctx context.Context, voucherStatusID, sortFilt
 	case "1":
 		q = GetAllVoucherQuery
 	case "2":
-		q = q + FilterVoucherWillCome
+		q += FilterVoucherWillCome
 	case "3":
-		q = q + FilterVoucherOngoing
+		q += FilterVoucherOngoing
 	case "4":
-		q = q + FilterVoucherHasEnded
+		q += FilterVoucherHasEnded
 	default:
 		q = GetAllVoucherQuery
 	}
@@ -382,7 +382,6 @@ func (r *adminRepo) GetCategories(ctx context.Context) ([]*body.CategoryResponse
 	}
 
 	return categories, nil
-
 }
 
 func (r *adminRepo) AddCategory(ctx context.Context, requestBody body.CategoryRequest) error {

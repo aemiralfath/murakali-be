@@ -9,24 +9,22 @@ import (
 )
 
 type CreatePromotionRequest struct {
-	Name               string   `json:"name"`
-	ActivedDate        string   `json:"actived_date"`
-	ExpiredDate        string   `json:"expired_date"`
-	ProductPromotion   []ProductPromotionData `json:"product_promotion"`
-
-	ActiveDateTime  time.Time
-	ExpiredDateTime time.Time
+	Name             string                 `json:"name"`
+	ActivedDate      string                 `json:"actived_date"`
+	ExpiredDate      string                 `json:"expired_date"`
+	ProductPromotion []ProductPromotionData `json:"product_promotion"`
+	ActiveDateTime   time.Time
+	ExpiredDateTime  time.Time
 }
 
 type ProductPromotionData struct {
-	ProductID string `json:"product_id"`
-	Quota              int      `json:"quota"`
-	MaxQuantity        int      `json:"max_quantity"`
-	DiscountPercentage float64  `json:"discount_percentage"`
-	DiscountFixPrice   float64  `json:"discount_fix_price"`
-	MinProductPrice    float64  `json:"min_product_price"`
-	MaxDiscountPrice   float64  `json:"max_discount_price"`
-
+	ProductID          string  `json:"product_id"`
+	Quota              int     `json:"quota"`
+	MaxQuantity        int     `json:"max_quantity"`
+	DiscountPercentage float64 `json:"discount_percentage"`
+	DiscountFixPrice   float64 `json:"discount_fix_price"`
+	MinProductPrice    float64 `json:"min_product_price"`
+	MaxDiscountPrice   float64 `json:"max_discount_price"`
 }
 
 type ProductPromotion struct {
@@ -43,9 +41,9 @@ func (r *CreatePromotionRequest) Validate() (UnprocessableEntity, error) {
 	unprocessableEntity := false
 	entity := UnprocessableEntity{
 		Fields: map[string]string{
-			"name":                "",
-			"actived_date":        "",
-			"expired_date":        "",
+			"name":              "",
+			"actived_date":      "",
+			"expired_date":      "",
 			"product_promotion": "",
 		},
 	}

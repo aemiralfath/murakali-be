@@ -678,7 +678,7 @@ func (h *productHandlers) CreateProductReview(c *gin.Context) {
 }
 
 func (h *productHandlers) DeleteProductReview(c *gin.Context) {
-	reviewId := c.Param("review_id")
+	reviewID := c.Param("review_id")
 
 	userID, exist := c.Get("userID")
 	if !exist {
@@ -686,7 +686,7 @@ func (h *productHandlers) DeleteProductReview(c *gin.Context) {
 		return
 	}
 
-	err := h.productUC.DeleteProductReview(c, reviewId, userID.(string))
+	err := h.productUC.DeleteProductReview(c, reviewID, userID.(string))
 	if err != nil {
 		var e *httperror.Error
 		if !errors.As(err, &e) {
@@ -737,13 +737,13 @@ func (h *productHandlers) ValidateQueryReview(c *gin.Context) (*pagination.Pagin
 	rating := strings.TrimSpace(c.Query("rating"))
 	showComment := strings.TrimSpace(c.Query("show_comment"))
 	showImage := strings.TrimSpace(c.Query("show_image"))
-	userId := strings.TrimSpace(c.Query("user_id"))
+	userID := strings.TrimSpace(c.Query("user_id"))
 
 	var ratingFilter int
 	ratingFilterInput := "0"
 	var showCommentFilter bool
 	var showImageFilter bool
-	userIdFilter := userId
+	userIDFilter := userID
 
 	ratingFilter, err = strconv.Atoi(rating)
 
@@ -763,15 +763,15 @@ func (h *productHandlers) ValidateQueryReview(c *gin.Context) (*pagination.Pagin
 		showImageFilter = true
 	}
 
-	if _, err := uuid.Parse(userId); err != nil {
-		userIdFilter = ""
+	if _, err := uuid.Parse(userID); err != nil {
+		userIDFilter = ""
 	}
 
 	query := &body.GetReviewQueryRequest{
 		Rating:      ratingFilterInput,
 		ShowComment: showCommentFilter,
 		ShowImage:   showImageFilter,
-		UserID:      userIdFilter,
+		UserID:      userIDFilter,
 	}
 
 	return pgn, query

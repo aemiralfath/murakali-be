@@ -8,7 +8,6 @@ import (
 )
 
 func MapAdminRoutes(adminGroup *gin.RouterGroup, h admin.Handlers, mw *middleware.MWManager) {
-
 	adminGroup.Use(mw.AuthJWTMiddleware())
 	adminGroup.Use(mw.AdminJWTMiddleware())
 
@@ -27,5 +26,4 @@ func MapAdminRoutes(adminGroup *gin.RouterGroup, h admin.Handlers, mw *middlewar
 	adminGroup.DELETE("/category/:id", h.DeleteCategory)
 
 	adminGroup.POST("/picture", h.UploadProductPicture)
-
 }

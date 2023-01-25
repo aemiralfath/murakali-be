@@ -1562,7 +1562,6 @@ func (u *userUC) ChangeWalletPin(ctx context.Context, userID, pin string) error 
 }
 
 func (u *userUC) CreateTransaction(ctx context.Context, userID string, requestBody body.CreateTransactionRequest) (string, error) {
-	
 	transactionData := &model.Transaction{}
 	orderResponses := make([]*body.OrderResponse, 0)
 
@@ -1617,7 +1616,7 @@ func (u *userUC) CreateTransaction(ctx context.Context, userID string, requestBo
 	promotionList := make([]*model.Promotion, 0)
 
 	data, err := u.txRepo.WithTransactionReturnData(func(tx postgre.Transaction) (interface{}, error) {
-		var totalDeliveryFee float64 = 0
+		var totalDeliveryFee float64
 		for _, cart := range requestBody.CartItems {
 			orderData := &model.OrderModel{}
 			cartShop, err := u.userRepo.GetShopByID(ctx, cart.ShopID)
@@ -1680,11 +1679,11 @@ func (u *userUC) CreateTransaction(ctx context.Context, userID string, requestBo
 				}
 
 				promo, errPromo := u.userRepo.GetProductPromotionByProductID(ctx, productDetailData.ProductID.String())
-				if(errPromo != nil){
-					if(errPromo != sql.ErrNoRows){
+				if errPromo != nil {
+					if errPromo != sql.ErrNoRows {
 						return nil, errPromo
 					}
-					if(errPromo == sql.ErrNoRows){
+					if errPromo == sql.ErrNoRows {
 						promo = &model.Promotion{}
 					}
 				}
@@ -1694,17 +1693,17 @@ func (u *userUC) CreateTransaction(ctx context.Context, userID string, requestBo
 				if (totalQuantity <= promo.MaxQuantity) && (totalQuantity <= promo.Quota) && (promo.ID != uuid.Nil) {
 					DiscountPromotion := &model.Discount{
 						DiscountPercentage: promo.DiscountPercentage,
-						DiscountFixPrice: promo.DiscountFixPrice,
-						MinProductPrice: promo.MinProductPrice,
-						MaxDiscountPrice: promo.MaxDiscountPrice,
+						DiscountFixPrice:   promo.DiscountFixPrice,
+						MinProductPrice:    promo.MinProductPrice,
+						MaxDiscountPrice:   promo.MaxDiscountPrice,
 					}
 					_, subPrice = util.CalculateDiscount(productDetailData.Price, DiscountPromotion)
-					if(promotionMap[promo.ID.String()] == 0){
+					if promotionMap[promo.ID.String()] == 0 {
 						promotionList = append(promotionList, promo)
 					}
 					promotionMap[promo.ID.String()] = 1
 				}
-				totalPrice := subPrice * float64(bodyProductDetail.Quantity);
+				totalPrice := subPrice * float64(bodyProductDetail.Quantity)
 				if int(productDetailData.Stock)-bodyProductDetail.Quantity < 0 {
 					isAvail = false
 					errCart := u.userRepo.DeleteCartItemByID(ctx, tx, cartData)
@@ -1736,9 +1735,9 @@ func (u *userUC) CreateTransaction(ctx context.Context, userID string, requestBo
 			if voucherShop.ID != uuid.Nil {
 				discountVoucher := &model.Discount{
 					DiscountPercentage: voucherShop.DiscountPercentage,
-					DiscountFixPrice: voucherShop.DiscountFixPrice,
-					MinProductPrice: voucherShop.MinProductPrice,
-					MaxDiscountPrice: voucherShop.MaxDiscountPrice,
+					DiscountFixPrice:   voucherShop.DiscountFixPrice,
+					MinProductPrice:    voucherShop.MinProductPrice,
+					MaxDiscountPrice:   voucherShop.MaxDiscountPrice,
 				}
 				_, subOrderPrice = util.CalculateDiscount(subOrderPrice, discountVoucher)
 				voucherShopList = append(voucherShopList, voucherShop)
@@ -1753,7 +1752,7 @@ func (u *userUC) CreateTransaction(ctx context.Context, userID string, requestBo
 			orderData.OrderStatusID = 1
 
 			orderResponse.OrderData = orderData
-			transactionData.TotalPrice += orderData.TotalPrice 
+			transactionData.TotalPrice += orderData.TotalPrice
 			totalDeliveryFee += orderData.DeliveryFee
 
 			orderResponses = append(orderResponses, orderResponse)
@@ -1762,14 +1761,14 @@ func (u *userUC) CreateTransaction(ctx context.Context, userID string, requestBo
 		if voucherMarketplace.ID != uuid.Nil {
 			discountVoucherMarketplace := &model.Discount{
 				DiscountPercentage: voucherMarketplace.DiscountPercentage,
-				DiscountFixPrice: voucherMarketplace.DiscountFixPrice,
-				MinProductPrice: voucherMarketplace.MinProductPrice,
-				MaxDiscountPrice: voucherMarketplace.MaxDiscountPrice,
+				DiscountFixPrice:   voucherMarketplace.DiscountFixPrice,
+				MinProductPrice:    voucherMarketplace.MinProductPrice,
+				MaxDiscountPrice:   voucherMarketplace.MaxDiscountPrice,
 			}
 			_, subTransactionPrice := util.CalculateDiscount(transactionData.TotalPrice, discountVoucherMarketplace)
 			transactionData.TotalPrice = subTransactionPrice
 		}
-		transactionData.TotalPrice += float64(totalDeliveryFee)
+		transactionData.TotalPrice += totalDeliveryFee
 		invoice, errInvoice := util.GenerateInvoice()
 		if errInvoice != nil {
 			return nil, errInvoice
@@ -1778,7 +1777,7 @@ func (u *userUC) CreateTransaction(ctx context.Context, userID string, requestBo
 
 		transactionData.ExpiredAt.Valid = true
 		transactionData.ExpiredAt.Time = time.Now().Add(time.Hour * 24)
-		
+
 		transactionResponse := &body.TransactionResponse{
 			TransactionData: transactionData,
 			OrderResponses:  orderResponses,
@@ -1790,14 +1789,14 @@ func (u *userUC) CreateTransaction(ctx context.Context, userID string, requestBo
 		}
 
 		if voucherMarketplace.ID != uuid.Nil {
-			voucherMarketplace.Quota--;
+			voucherMarketplace.Quota--
 			if errVoucherMarketplace := u.userRepo.UpdateVoucherQuota(ctx, tx, voucherMarketplace); errVoucherMarketplace != nil {
 				return nil, errVoucherMarketplace
 			}
 		}
 
 		for _, vs := range voucherShopList {
-			vs.Quota--;
+			vs.Quota--
 			if errVoucherMarketplace := u.userRepo.UpdateVoucherQuota(ctx, tx, vs); errVoucherMarketplace != nil {
 				return nil, errVoucherMarketplace
 			}
@@ -1807,7 +1806,7 @@ func (u *userUC) CreateTransaction(ctx context.Context, userID string, requestBo
 			reduceQty := qtyTotalProduct[promo.ProductID.String()]
 			promo.Quota -= reduceQty
 			if errPromo := u.userRepo.UpdatePromotionQuota(ctx, tx, promo); errPromo != nil {
-				return nil, errPromo;
+				return nil, errPromo
 			}
 		}
 
@@ -1817,7 +1816,7 @@ func (u *userUC) CreateTransaction(ctx context.Context, userID string, requestBo
 			if errOrder != nil {
 				return nil, errOrder
 			}
-			
+
 			for _, i := range o.Items {
 				i.Item.OrderID = *orderID
 				_, errItem := u.userRepo.CreateOrderItem(ctx, tx, i.Item)

@@ -128,10 +128,37 @@ func (r *authRepo) InsertNewOTPKey(ctx context.Context, email, otp string) error
 	return nil
 }
 
+func (r *authRepo) InsertNewOTPHashedKey(ctx context.Context, hashedOTP, email, otp string) error {
+	duration, err := time.ParseDuration(constant.OtpDuration)
+	if err != nil {
+		return err
+	}
+
+	if err := r.RedisClient.Set(ctx, hashedOTP, fmt.Sprintf("%s %s", email, otp), duration); err.Err() != nil {
+		return err.Err()
+	}
+
+	return nil
+}
+
 func (r *authRepo) GetOTPValue(ctx context.Context, email string) (string, error) {
 	key := fmt.Sprintf("%s:%s", constant.OtpKey, email)
 
 	res := r.RedisClient.Get(ctx, key)
+	if res.Err() != nil {
+		return "", res.Err()
+	}
+
+	value, err := res.Result()
+	if err != nil {
+		return "", err
+	}
+
+	return value, nil
+}
+
+func (r *authRepo) GetOTPHashedValue(ctx context.Context, hashedOTP string) (string, error) {
+	res := r.RedisClient.Get(ctx, hashedOTP)
 	if res.Err() != nil {
 		return "", res.Err()
 	}
