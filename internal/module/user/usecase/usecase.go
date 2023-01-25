@@ -1841,7 +1841,7 @@ func (u *userUC) CreateTransaction(ctx context.Context, userID string, requestBo
 	return data.(string), nil
 }
 
-func (u *userUC) getAdressString(ctx context.Context, userID string, isShop bool) (string, error){
+func (u *userUC) getAdressString(ctx context.Context, userID string, isShop bool) (string, error) {
 
 	AddressModel := &model.Address{}
 	var err error
@@ -1859,7 +1859,6 @@ func (u *userUC) getAdressString(ctx context.Context, userID string, isShop bool
 	}
 	resultAddress, errMarshal := json.Marshal(AddressModel)
 	if errMarshal != nil {
-
 		return "", errMarshal
 	}
 

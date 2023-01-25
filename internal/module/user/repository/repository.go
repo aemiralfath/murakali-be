@@ -345,7 +345,6 @@ func (r *userRepo) GetOrderByOrderID(ctx context.Context, orderID string) (*mode
 
 	json.Unmarshal([]byte(strBuyerAddress), &order.BuyerAddress)
 	json.Unmarshal([]byte(strShopAddress), &order.SellerAddress)
-	
 	orderDetail := make([]*model.OrderDetail, 0)
 
 	res, err := r.PSQL.QueryContext(
