@@ -292,7 +292,7 @@ func (u *authUC) VerifyOTP(ctx context.Context, requestBody body.VerifyOTPReques
 }
 
 func (u *authUC) ResetPasswordVerifyOTP(ctx context.Context, requestBody body.ResetPasswordVerifyOTPRequest) (string, error) {
-	value, err := u.authRepo.GetOTPValue(ctx, requestBody.Email)
+	value, err := u.authRepo.GetOTPHashedValue(ctx, requestBody.Code)
 	if err != nil {
 		return "", httperror.New(http.StatusBadRequest, response.OTPAlreadyExpiredMessage)
 	}
@@ -305,12 +305,13 @@ func (u *authUC) ResetPasswordVerifyOTP(ctx context.Context, requestBody body.Re
 		return "", httperror.New(http.StatusBadRequest, response.OTPIsNotValidMessage)
 	}
 
-	resetPasswordToken, err := jwt.GenerateJWTResetPasswordToken(requestBody.Email, hashedOTP, u.cfg)
+	valueSplit := strings.Split(value, " ")
+	resetPasswordToken, err := jwt.GenerateJWTResetPasswordToken(valueSplit[0], hashedOTP, u.cfg)
 	if err != nil {
 		return "", err
 	}
 
-	_, err = u.authRepo.DeleteOTPValue(ctx, requestBody.Email)
+	_, err = u.authRepo.DeleteOTPValue(ctx, requestBody.Code)
 	if err != nil {
 		return "", err
 	}
@@ -341,15 +342,15 @@ func (u *authUC) SendLinkOTPEmail(ctx context.Context, email string) error {
 		return err
 	}
 
-	if err := u.authRepo.InsertNewOTPKey(ctx, email, otp); err != nil {
+	h := sha256.New()
+	h.Write([]byte(fmt.Sprintf("%s %s", email, otp)))
+	hashedOTP := fmt.Sprintf("%x", h.Sum(nil))
+
+	if err := u.authRepo.InsertNewOTPHashedKey(ctx, hashedOTP, email, otp); err != nil {
 		return err
 	}
 
-	h := sha256.New()
-	h.Write([]byte(otp))
-	hashedOTP := fmt.Sprintf("%x", h.Sum(nil))
-
-	link := fmt.Sprintf("%s/verify?code=%s&email=%s", u.cfg.Server.Origin, hashedOTP, email)
+	link := fmt.Sprintf("%s/verify?code=%s", u.cfg.Server.Origin, hashedOTP)
 
 	subject := "Reset Password!"
 	msg := smtp.VerificationEmailLinkOTPBody(link)
