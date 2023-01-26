@@ -219,5 +219,9 @@ const (
 	FROM "refund" WHERE "id" = $1`
 
 	GetRefundThreadByRefundIDQuery = `SELECT "id", "refund_id", "user_id", "is_seller", "is_buyer", "text", "created_at"
-	FROM "refund_thread" WHERE "refund_id" = $1`
+	FROM "refund_thread" WHERE "refund_id" = $1 ORDER BY "created_at" ASC`
+
+	CreateRefundThreadUserQuery = `INSERT INTO "refund_thread" 
+	(refund_id, user_id, is_seller, is_buyer, text)
+	VALUES ($1, $2, $3, $4, $5)`
 )

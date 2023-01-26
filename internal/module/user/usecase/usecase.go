@@ -1879,6 +1879,10 @@ func (u *userUC) CreateRefundUser(ctx context.Context, userID string, requestBod
 	if errOrderID != nil {
 		return errOrderID
 	}
+
+	*requestBody.IsSellerRefund = false
+	*requestBody.IsBuyerRefund = true
+
 	refundData := &model.Refund{
 		OrderID: orderID,
 		IsSellerRefund: requestBody.IsSellerRefund,
@@ -1923,4 +1927,38 @@ func (u *userUC) GetRefundOrder(ctx context.Context, userID string, refundID str
 	}
 
 	return refundThreadResponse, nil
+}
+
+func (u *userUC) CreateRefundThreadUser(ctx context.Context, userID string, requestBody *body.CreateRefundThreadRequest) error {
+	_, err := u.userRepo.GetRefundOrderByID(ctx, requestBody.RefundID)
+	if err != nil {
+		return err
+	}
+
+	parsedRefundID, err := uuid.Parse(requestBody.RefundID)
+	if err != nil {
+		return err;
+	}
+
+	parsedUserID, err := uuid.Parse(userID)
+	if err != nil {
+		return err;
+	}
+	*requestBody.IsSeller = false
+	*requestBody.IsBuyer = true
+
+	refundThreadData := &model.RefundThread{
+		RefundID: parsedRefundID,
+		UserID:   parsedUserID,
+		IsSeller: requestBody.IsSeller,
+		IsBuyer:  requestBody.IsBuyer,
+		Text:     requestBody.Text,
+	}
+	
+	err = u.userRepo.CreateRefundThreadUser(ctx, refundThreadData)
+	if err != nil {
+		return err;
+	}
+
+	return nil;
 }

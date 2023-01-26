@@ -1576,3 +1576,16 @@ func (r *userRepo) GetRefundThreadByRefundID(ctx context.Context, refundID strin
 	}
 	return refundThreadList, nil
 }
+
+func (r *userRepo) CreateRefundThreadUser(ctx context.Context, refundThreadData *model.RefundThread) error {
+	if _, err := r.PSQL.ExecContext(ctx, CreateRefundThreadUserQuery, 
+		refundThreadData.RefundID,
+		refundThreadData.UserID,
+		refundThreadData.IsSeller,
+		refundThreadData.IsBuyer,
+		refundThreadData.Text); err != nil {
+		return err
+	}
+
+	return nil
+}

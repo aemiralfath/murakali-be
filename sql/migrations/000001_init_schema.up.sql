@@ -541,7 +541,11 @@ CREATE TABLE IF NOT EXISTS "refund_thread"
     "is_seller" boolean DEFAULT false,
     "is_buyer" boolean DEFAULT false,
     "text" varchar NOT NULL DEFAULT '',
-    "created_at" timestamptz
+    "created_at" timestamptz NOT NULL DEFAULT
+(
+    NOW
+(
+)),
     );
 
 CREATE INDEX ON "refund_thread" ("refund_id");
