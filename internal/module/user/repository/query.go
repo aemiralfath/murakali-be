@@ -219,5 +219,5 @@ const (
 
 	UpdateVoucherQuotaQuery    = `UPDATE "voucher" SET "quota" = $1, "updated_at" = now() WHERE "id" = $2;`
 	UpdatePromotionQuotaQuery  = `UPDATE "promotion" SET "quota" = $1, "updated_at" = now() WHERE "id" = $2;`
-	UpdateProductUnitSoldQuery = `UPDATE "product" SET "unit_sold" = $1 "updated_at" = now() WHERE "id" = $2;`
+	UpdateProductUnitSoldQuery = `UPDATE "product" SET "unit_sold" = $1, "updated_at" = now() WHERE "id" = $2;`
 )
