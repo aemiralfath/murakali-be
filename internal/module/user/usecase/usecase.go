@@ -1841,7 +1841,7 @@ func (u *userUC) CreateTransaction(ctx context.Context, userID string, requestBo
 	return data.(string), nil
 }
 
-func (u *userUC) getAdressString(ctx context.Context, userID string, isShop bool) (string, error){
+func (u *userUC) getAdressString(ctx context.Context, userID string, isShop bool) (string, error) {
 
 	AddressModel := &model.Address{}
 	var err error
@@ -1884,17 +1884,17 @@ func (u *userUC) CreateRefundUser(ctx context.Context, userID string, requestBod
 	*requestBody.IsBuyerRefund = true
 
 	refundData := &model.Refund{
-		OrderID: orderID,
+		OrderID:        orderID,
 		IsSellerRefund: requestBody.IsSellerRefund,
-		IsBuyerRefund: requestBody.IsBuyerRefund,
-		Reason: requestBody.Reason,
-		Image: requestBody.Image,
+		IsBuyerRefund:  requestBody.IsBuyerRefund,
+		Reason:         requestBody.Reason,
+		Image:          requestBody.Image,
 	}
 
 	err = u.txRepo.WithTransaction(func(tx postgre.Transaction) error {
 		errRefund := u.userRepo.CreateRefundUser(ctx, tx, refundData)
 		if errRefund != nil {
-			return errRefund;
+			return errRefund
 		}
 
 		isRefund := true
@@ -1922,7 +1922,7 @@ func (u *userUC) GetRefundOrder(ctx context.Context, userID string, refundID str
 	}
 
 	refundThreadResponse := &body.GetRefundThreadResponse{
-		RefundData: refundData,
+		RefundData:    refundData,
 		RefundThreads: refundThreadData,
 	}
 
@@ -1937,12 +1937,12 @@ func (u *userUC) CreateRefundThreadUser(ctx context.Context, userID string, requ
 
 	parsedRefundID, err := uuid.Parse(requestBody.RefundID)
 	if err != nil {
-		return err;
+		return err
 	}
 
 	parsedUserID, err := uuid.Parse(userID)
 	if err != nil {
-		return err;
+		return err
 	}
 	*requestBody.IsSeller = false
 	*requestBody.IsBuyer = true
@@ -1954,11 +1954,11 @@ func (u *userUC) CreateRefundThreadUser(ctx context.Context, userID string, requ
 		IsBuyer:  requestBody.IsBuyer,
 		Text:     requestBody.Text,
 	}
-	
+
 	err = u.userRepo.CreateRefundThreadUser(ctx, refundThreadData)
 	if err != nil {
-		return err;
+		return err
 	}
 
-	return nil;
+	return nil
 }

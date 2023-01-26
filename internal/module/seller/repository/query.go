@@ -269,4 +269,14 @@ const (
 	`
 
 	GetWalletByUserIDQuery = `SELECT "id", "user_id", "balance", "pin", "attempt_count", "attempt_at", "unlocked_at", "active_date" FROM "wallet" WHERE "user_id" = $1 AND "deleted_at" IS NULL`
+
+	GetRefundOrderByIDQuery = `SELECT "id", "order_id", "is_seller_refund", "is_buyer_refund", "reason", "image", "accepted_at", "rejected_at", "refunded_at"
+	FROM "refund" WHERE "id" = $1`
+
+	GetRefundThreadByRefundIDQuery = `SELECT "id", "refund_id", "user_id", "is_seller", "is_buyer", "text", "created_at"
+	FROM "refund_thread" WHERE "refund_id" = $1 ORDER BY "created_at" ASC`
+
+	CreateRefundThreadSellerQuery = `INSERT INTO "refund_thread" 
+	(refund_id, user_id, is_seller, is_buyer, text)
+	VALUES ($1, $2, $3, $4, $5)`
 )

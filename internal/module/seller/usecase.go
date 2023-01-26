@@ -33,4 +33,6 @@ type UseCase interface {
 	UpdatePromotionSeller(ctx context.Context, userID string, requestBody body.UpdatePromotionRequest) error
 	GetDetailPromotionSellerByID(ctx context.Context, shopProductPromo *body.ShopProductPromo) (*body.PromotionDetailSeller, error)
 	GetProductWithoutPromotionSeller(ctx context.Context, userID string, pgn *pagination.Pagination) (*pagination.Pagination, error)
+	GetRefundOrderSeller(ctx context.Context, userID string, refundID string) (*body.GetRefundThreadResponse, error)
+	CreateRefundThreadSeller(ctx context.Context, userID string, requestBody *body.CreateRefundThreadRequest) error
 }

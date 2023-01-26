@@ -1119,3 +1119,61 @@ func (r *sellerRepo) GetProductWithoutPromotionSeller(ctx context.Context, shopI
 
 	return productWoutPromos, nil
 }
+
+func (r *sellerRepo) GetRefundOrderByID(ctx context.Context, refundID string) (*model.Refund, error) {
+	var refundData model.Refund
+	if err := r.PSQL.QueryRowContext(ctx, GetRefundOrderByIDQuery, refundID).Scan(
+		&refundData.ID,
+		&refundData.OrderID,
+		&refundData.IsSellerRefund,
+		&refundData.IsBuyerRefund,
+		&refundData.Reason,
+		&refundData.Image,
+		&refundData.AcceptedAt,
+		&refundData.RejectedAt,
+		&refundData.RefundedAt); err != nil {
+		return nil, err
+	}
+
+	return &refundData, nil
+}
+
+func (r *sellerRepo) GetRefundThreadByRefundID(ctx context.Context, refundID string) ([]*model.RefundThread, error) {
+	refundThreadList := make([]*model.RefundThread, 0)
+	res, err := r.PSQL.QueryContext(ctx, GetRefundThreadByRefundIDQuery, refundID)
+
+	if err != nil {
+		return nil, err
+	}
+	defer res.Close()
+
+	for res.Next() {
+		var refundThreadData model.RefundThread
+		if err := res.Scan(
+			&refundThreadData.ID,
+			&refundThreadData.RefundID,
+			&refundThreadData.UserID,
+			&refundThreadData.IsSeller,
+			&refundThreadData.IsBuyer,
+			&refundThreadData.Text,
+			&refundThreadData.CreatedAt,
+		); err != nil {
+			return nil, err
+		}
+		refundThreadList = append(refundThreadList, &refundThreadData)
+	}
+	return refundThreadList, nil
+}
+
+func (r *sellerRepo) CreateRefundThreadSeller(ctx context.Context, refundThreadData *model.RefundThread) error {
+	if _, err := r.PSQL.ExecContext(ctx, CreateRefundThreadSellerQuery,
+		refundThreadData.RefundID,
+		refundThreadData.UserID,
+		refundThreadData.IsSeller,
+		refundThreadData.IsBuyer,
+		refundThreadData.Text); err != nil {
+		return err
+	}
+
+	return nil
+}

@@ -206,7 +206,7 @@ const (
 	WHERE "p"."id" = $1 AND ("promo"."actived_date" < now() AND "promo"."expired_date" >= now())
 	`
 
-	UpdateVoucherQuotaQuery = `UPDATE "voucher" SET "quota" = $1, "updated_at" = now() WHERE "id" = $2;`
+	UpdateVoucherQuotaQuery   = `UPDATE "voucher" SET "quota" = $1, "updated_at" = now() WHERE "id" = $2;`
 	UpdatePromotionQuotaQuery = `UPDATE "promotion" SET "quota" = $1, "updated_at" = now() WHERE "id" = $2;`
 
 	CreateRefundUserQuery = `INSERT INTO "refund" 

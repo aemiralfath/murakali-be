@@ -347,7 +347,7 @@ func (r *userRepo) GetOrderByOrderID(ctx context.Context, orderID string) (*mode
 
 	json.Unmarshal([]byte(strBuyerAddress), &order.BuyerAddress)
 	json.Unmarshal([]byte(strShopAddress), &order.SellerAddress)
-	
+
 	orderDetail := make([]*model.OrderDetail, 0)
 
 	res, err := r.PSQL.QueryContext(
@@ -1547,7 +1547,7 @@ func (r *userRepo) GetRefundOrderByID(ctx context.Context, refundID string) (*mo
 		return nil, err
 	}
 
-	return &refundData, nil;
+	return &refundData, nil
 }
 
 func (r *userRepo) GetRefundThreadByRefundID(ctx context.Context, refundID string) ([]*model.RefundThread, error) {
@@ -1569,7 +1569,7 @@ func (r *userRepo) GetRefundThreadByRefundID(ctx context.Context, refundID strin
 			&refundThreadData.IsBuyer,
 			&refundThreadData.Text,
 			&refundThreadData.CreatedAt,
-			); err != nil {
+		); err != nil {
 			return nil, err
 		}
 		refundThreadList = append(refundThreadList, &refundThreadData)
@@ -1578,7 +1578,7 @@ func (r *userRepo) GetRefundThreadByRefundID(ctx context.Context, refundID strin
 }
 
 func (r *userRepo) CreateRefundThreadUser(ctx context.Context, refundThreadData *model.RefundThread) error {
-	if _, err := r.PSQL.ExecContext(ctx, CreateRefundThreadUserQuery, 
+	if _, err := r.PSQL.ExecContext(ctx, CreateRefundThreadUserQuery,
 		refundThreadData.RefundID,
 		refundThreadData.UserID,
 		refundThreadData.IsSeller,

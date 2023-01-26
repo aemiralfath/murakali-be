@@ -924,6 +924,58 @@ func (u sellerUC) GetProductWithoutPromotionSeller(ctx context.Context, userID s
 	return pgn, nil
 }
 
+func (u *sellerUC) GetRefundOrderSeller(ctx context.Context, userID string, refundID string) (*body.GetRefundThreadResponse, error) {
+	refundData, err := u.sellerRepo.GetRefundOrderByID(ctx, refundID)
+	if err != nil {
+		return nil, err
+	}
+	refundThreadData, err := u.sellerRepo.GetRefundThreadByRefundID(ctx, refundID)
+	if err != nil {
+		return nil, err
+	}
+
+	refundThreadResponse := &body.GetRefundThreadResponse{
+		RefundData:    refundData,
+		RefundThreads: refundThreadData,
+	}
+
+	return refundThreadResponse, nil
+}
+
+func (u *sellerUC) CreateRefundThreadSeller(ctx context.Context, userID string, requestBody *body.CreateRefundThreadRequest) error {
+	_, err := u.sellerRepo.GetRefundOrderByID(ctx, requestBody.RefundID)
+	if err != nil {
+		return err
+	}
+
+	parsedRefundID, err := uuid.Parse(requestBody.RefundID)
+	if err != nil {
+		return err
+	}
+
+	parsedUserID, err := uuid.Parse(userID)
+	if err != nil {
+		return err
+	}
+	*requestBody.IsSeller = true
+	*requestBody.IsBuyer = false
+
+	refundThreadData := &model.RefundThread{
+		RefundID: parsedRefundID,
+		UserID:   parsedUserID,
+		IsSeller: requestBody.IsSeller,
+		IsBuyer:  requestBody.IsBuyer,
+		Text:     requestBody.Text,
+	}
+
+	err = u.sellerRepo.CreateRefundThreadSeller(ctx, refundThreadData)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func (u *sellerUC) CalculateDiscountPromotionProduct(ctx context.Context, p *body.PromotionDetailSeller) *body.PromotionDetailSeller {
 	var maxDiscountPrice float64
 	var minProductPrice float64

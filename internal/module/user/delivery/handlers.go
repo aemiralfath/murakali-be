@@ -1492,7 +1492,7 @@ func (h *userHandlers) GetRefundOrder(c *gin.Context) {
 	response.SuccessResponse(c.Writer, refundThreadResponse, http.StatusOK)
 }
 
-func (h *userHandlers) CreateRefundThreadUser(c *gin.Context){
+func (h *userHandlers) CreateRefundThreadUser(c *gin.Context) {
 	userID, exist := c.Get("userID")
 	if !exist {
 		response.ErrorResponse(c.Writer, response.UnauthorizedMessage, http.StatusUnauthorized)
