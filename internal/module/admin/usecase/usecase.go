@@ -277,6 +277,22 @@ func (u *adminUC) AddCategory(ctx context.Context, requestBody body.CategoryRequ
 }
 
 func (u *adminUC) DeleteCategory(ctx context.Context, categoryID string) error {
+	productCount, err := u.adminRepo.CountProductCategory(ctx, categoryID)
+	if err != nil {
+		return err
+	}
+	if productCount != 0 {
+		return httperror.New(http.StatusBadRequest, body.CategoryIsBeingUsed)
+	}
+
+	categoryCount, err := u.adminRepo.CountCategoryParent(ctx, categoryID)
+	if err != nil {
+		return err
+	}
+	if categoryCount != 0 {
+		return httperror.New(http.StatusBadRequest, body.CategoryIsBeingUsed)
+	}
+
 	if err := u.adminRepo.DeleteCategory(ctx, categoryID); err != nil {
 		return err
 	}

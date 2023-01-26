@@ -32,4 +32,6 @@ type Repository interface {
 	AddCategory(ctx context.Context, requestBody body.CategoryRequest) error
 	DeleteCategory(ctx context.Context, categoryID string) error
 	EditCategory(ctx context.Context, requestBody body.CategoryRequest) error
+	CountProductCategory(ctx context.Context, userid string) (int, error)
+	CountCategoryParent(ctx context.Context, userid string) (int, error)
 }

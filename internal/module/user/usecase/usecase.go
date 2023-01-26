@@ -1603,6 +1603,9 @@ func (u *userUC) CreateTransaction(ctx context.Context, userID string, requestBo
 
 	data, err := u.txRepo.WithTransactionReturnData(func(tx postgre.Transaction) (interface{}, error) {
 		var totalDeliveryFee float64
+		if len(requestBody.CartItems) == 0 {
+			return nil, httperror.New(http.StatusBadRequest, response.CartIsEmpty)
+		}
 		for _, cart := range requestBody.CartItems {
 			orderData := &model.OrderModel{}
 			cartShop, err := u.userRepo.GetShopByID(ctx, cart.ShopID)
@@ -1636,8 +1639,11 @@ func (u *userUC) CreateTransaction(ctx context.Context, userID string, requestBo
 			orderResponse := &body.OrderResponse{
 				Items: make([]*body.OrderItemResponse, 0),
 			}
-
 			isAvail := true
+
+			if len(cart.ProductDetails) == 0 {
+				return nil, httperror.New(http.StatusBadRequest, response.CartIsEmpty)
+			}
 
 			for _, bodyProductDetail := range cart.ProductDetails {
 				productDetailData, err := u.userRepo.GetProductDetailByID(ctx, tx, bodyProductDetail.ID)

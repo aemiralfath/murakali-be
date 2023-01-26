@@ -42,6 +42,7 @@ const (
 	SelectShippingCourier          = "Select shipping Courier"
 	UnknownShop                    = "Unknown shop."
 	CartItemNotExist               = "Cart Item not exist."
+	CartIsEmpty                    = "Cart is Empty."
 	ProductQuantityNotAvailable    = "Product quantity not available."
 	ShopAddressNotFound            = "Shop address not found."
 	UserNotHaveShop                = "User not register shop"

@@ -90,6 +90,8 @@ const (
 	( parent_id, name, photo_url)
 	VALUES ($1, $2, $3)`
 
-	DeleteCategoryQuery = `UPDATE "category" set deleted_at = now() WHERE "id" = $1 AND "deleted_at" IS NULL`
-	EditCategoryQuery   = `UPDATE "category" set parent_id = $1, name = $2 , photo_url = $3,  updated_at = now() WHERE "id" = $4 AND "deleted_at" IS NULL`
+	DeleteCategoryQuery       = `UPDATE "category" set deleted_at = now() WHERE "id" = $1 AND "deleted_at" IS NULL`
+	EditCategoryQuery         = `UPDATE "category" set parent_id = $1, name = $2 , photo_url = $3,  updated_at = now() WHERE "id" = $4 AND "deleted_at" IS NULL`
+	CountProductCategoryQuery = `SELECT count(1) from product where category_id = $1 and deleted_at is null`
+	CountCategoryParentQuery  = `SELECT count(1) from category where parent_id = $1 and deleted_at is null`
 )
