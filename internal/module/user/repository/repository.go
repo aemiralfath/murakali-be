@@ -476,30 +476,8 @@ func (r *userRepo) GetCostRedis(ctx context.Context, key string) (*string, error
 	return &value, nil
 }
 
-func (r *userRepo) GetProfileRedis(ctx context.Context, key string) (*string, error) {
-	res := r.RedisClient.Get(ctx, key)
-	if res.Err() != nil {
-		return nil, res.Err()
-	}
-
-	value, err := res.Result()
-	if err != nil {
-		return nil, err
-	}
-
-	return &value, nil
-}
-
 func (r *userRepo) InsertCostRedis(ctx context.Context, key, value string) error {
 	if err := r.RedisClient.Set(ctx, key, value, 0); err.Err() != nil {
-		return err.Err()
-	}
-
-	return nil
-}
-
-func (r *userRepo) InsertProfileRedis(ctx context.Context, key, value string) error {
-	if err := r.RedisClient.Set(ctx, key, value, time.Minute*5); err.Err() != nil {
 		return err.Err()
 	}
 

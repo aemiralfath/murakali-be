@@ -62,8 +62,6 @@ type Repository interface {
 	GetBuyerIDByOrderID(ctx context.Context, orderID string) (string, error)
 	GetCostRedis(ctx context.Context, key string) (*string, error)
 	InsertCostRedis(ctx context.Context, key string, value string) error
-	GetProfileRedis(ctx context.Context, key string) (*string, error)
-	InsertProfileRedis(ctx context.Context, key string, value string) error
 	GetWalletUser(ctx context.Context, walletID string) (*model.Wallet, error)
 	GetWalletHistoryByID(ctx context.Context, id string) (*model.WalletHistory, error)
 	GetWalletHistoryByWalletID(ctx context.Context, pgn *pagination.Pagination, walletID string) ([]*body.HistoryWalletResponse, error)
