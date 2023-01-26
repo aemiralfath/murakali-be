@@ -36,7 +36,7 @@ const (
 	"address_detail", "zip_code", "is_default", "is_shop_default", "created_at", "updated_at"
 	FROM "address" WHERE "user_id" = $1 AND "deleted_at" IS NULL AND is_shop_default is true`
 
-	GetOrderByOrderID = `SELECT o.id, o.transaction_id, o.order_status_id, o.is_withdraw,o.total_price,o.delivery_fee,o.resi_no,s.id,s.name,u2.phone_no,u2.username,v.code,o.created_at,t.invoice
+	GetOrderByOrderID = `SELECT o.id, o.transaction_id, o.order_status_id, o.is_withdraw,o.is_refund,o.total_price,o.delivery_fee,o.resi_no,s.id,s.name,u2.phone_no,u2.username,v.code,o.created_at,t.invoice
 	,c.name,c.code,c.service,c.description,u.username,u.phone_no
 	from "order" o
 	join "shop" s on s.id = o.shop_id

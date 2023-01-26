@@ -67,6 +67,7 @@ const (
 	OrderNotWaitingForSeller       = "Order not waiting for seller"
 	VoucherMarketplaceNotFound     = "Voucher Marketplace Not Found"
 	VoucherShopNotFound            = "Voucher Shop Not Found"
+	OrderUnderProgressRefund       = "Order is Under Progress Refunding"
 )
 
 type JSONResponse struct {

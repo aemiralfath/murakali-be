@@ -149,6 +149,7 @@ func (r *sellerRepo) GetOrderByOrderID(ctx context.Context, orderID string) (*mo
 		&order.TransactionID,
 		&order.OrderStatus,
 		&order.IsWithdraw,
+		&order.IsRefund,
 		&order.TotalPrice,
 		&order.DeliveryFee,
 		&order.ResiNumber,

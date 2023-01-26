@@ -33,6 +33,7 @@ type Order struct {
 	StrBuyerAddress    string         `json:"str_buyer_address"`
 	StrSellerAddress   string         `json:"str_seller_address"`
 	IsWithdraw         bool           `json:"is_withdraw"`
+	IsRefund           bool           `json:"is_refund"`
 	Detail             []*OrderDetail `json:"detail"`
 }
 

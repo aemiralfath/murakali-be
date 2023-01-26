@@ -337,6 +337,8 @@ func (r *userRepo) GetOrderByOrderID(ctx context.Context, orderID string) (*mode
 		&order.CourierDescription,
 		&order.BuyerUsername,
 		&order.BuyerPhoneNumber,
+		&order.IsWithdraw,
+		&order.IsRefund,
 		&strShopAddress,
 		&strBuyerAddress,
 	); err != nil {
@@ -1500,6 +1502,30 @@ func (r *userRepo) UpdateVoucherQuota(ctx context.Context, tx postgre.Transactio
 
 func (r *userRepo) UpdatePromotionQuota(ctx context.Context, tx postgre.Transaction, promo *model.Promotion) error {
 	_, err := tx.ExecContext(ctx, UpdatePromotionQuotaQuery, promo.Quota, promo.ID)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (r *userRepo) CreateRefundUser(ctx context.Context, tx postgre.Transaction, refundData *model.Refund) error {
+	_, err := tx.ExecContext(
+		ctx,
+		CreateRefundUserQuery,
+		refundData.OrderID,
+		refundData.IsSellerRefund,
+		refundData.IsBuyerRefund,
+		refundData.Reason,
+		refundData.Image)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (r *userRepo) UpdateOrderRefund(ctx context.Context, tx postgre.Transaction, orderID string, isRefund bool) error {
+	_, err := tx.ExecContext(ctx, UpdateOrderRefundQuery, isRefund, orderID)
 	if err != nil {
 		return err
 	}

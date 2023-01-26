@@ -1459,7 +1459,7 @@ func (h *userHandlers) CreateRefundUser(c *gin.Context) {
 		return
 	}
 
-	response.SuccessResponse(c.Writer, body.CreateTransactionResponse{TransactionID: transactionID}, http.StatusOK)
+	response.SuccessResponse(c.Writer, nil, http.StatusOK)
 }
 
 func (h *userHandlers) CreateTransaction(c *gin.Context) {

@@ -1871,6 +1871,10 @@ func (u *userUC) CreateRefundUser(ctx context.Context, userID string, requestBod
 	if err != nil {
 		return err
 	}
+	if order.IsRefund {
+		return httperror.New(http.StatusBadRequest, response.OrderUnderProgressRefund)
+	}
+
 	orderID, errOrderID := uuid.Parse(order.OrderID)
 	if errOrderID != nil {
 		return errOrderID
@@ -1884,38 +1888,21 @@ func (u *userUC) CreateRefundUser(ctx context.Context, userID string, requestBod
 	}
 
 	err = u.txRepo.WithTransaction(func(tx postgre.Transaction) error {
-		
-		if requestBody.IsDefault {
-			defaultAddress, getErr := u.userRepo.GetDefaultUserAddress(ctx, userModel.ID.String())
-			if getErr != nil && getErr != sql.ErrNoRows {
-				return getErr
-			}
-
-			if defaultAddress != nil && defaultAddress.IsDefault {
-				if errUpdate := u.userRepo.UpdateDefaultAddress(ctx, tx, false, defaultAddress); errUpdate != nil {
-					return errUpdate
-				}
-			}
+		errRefund := u.userRepo.CreateRefundUser(ctx, tx, refundData)
+		if errRefund != nil {
+			return errRefund;
 		}
 
-		if requestBody.IsShopDefault {
-			defaultShopAddress, getErr := u.userRepo.GetDefaultShopAddress(ctx, userModel.ID.String())
-			if getErr != nil && getErr != sql.ErrNoRows {
-				return getErr
-			}
-
-			if defaultShopAddress != nil && defaultShopAddress.IsShopDefault {
-				if errUpdate := u.userRepo.UpdateDefaultShopAddress(ctx, tx, false, defaultShopAddress); errUpdate != nil {
-					return errUpdate
-				}
-			}
+		isRefund := true
+		errOrderRefund := u.userRepo.UpdateOrderRefund(ctx, tx, orderID.String(), isRefund)
+		if errOrderRefund != nil {
+			return errOrderRefund
 		}
-
-		err = u.userRepo.CreateAddress(ctx, tx, userModel.ID.String(), requestBody)
-		if err != nil {
-			return err
-		}
-
 		return nil
 	})
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
