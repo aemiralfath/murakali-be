@@ -25,5 +25,10 @@ func MapAdminRoutes(adminGroup *gin.RouterGroup, h admin.Handlers, mw *middlewar
 	adminGroup.PUT("/category", h.EditCategory)
 	adminGroup.DELETE("/category/:id", h.DeleteCategory)
 
+	adminGroup.GET("/banner", h.GetBanner)
+	adminGroup.POST("/banner", h.AddBanner)
+	// adminGroup.PUT("/banner", h.EditBanner)
+	adminGroup.DELETE("/banner/:id", h.DeleteBanner)
+
 	adminGroup.POST("/picture", h.UploadProductPicture)
 }

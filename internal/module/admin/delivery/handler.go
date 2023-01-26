@@ -381,3 +381,71 @@ func (h *adminHandlers) EditCategory(c *gin.Context) {
 
 	response.SuccessResponse(c.Writer, nil, http.StatusOK)
 }
+
+func (h *adminHandlers) GetBanner(c *gin.Context) {
+	banner, err := h.adminUC.GetBanner(c)
+	if err != nil {
+		var e *httperror.Error
+		if !errors.As(err, &e) {
+			h.logger.Errorf("HandlerAdmin, Error: %s", err)
+			response.ErrorResponse(c.Writer, response.InternalServerErrorMessage, http.StatusInternalServerError)
+			return
+		}
+
+		response.ErrorResponse(c.Writer, e.Err.Error(), e.Status)
+		return
+	}
+
+	response.SuccessResponse(c.Writer, banner, http.StatusOK)
+}
+
+func (h *adminHandlers) AddBanner(c *gin.Context) {
+	var requestBody body.BannerRequest
+	if err := c.ShouldBind(&requestBody); err != nil {
+		response.ErrorResponse(c.Writer, response.BadRequestMessage, http.StatusBadRequest)
+		return
+	}
+
+	invalidFields, err := requestBody.Validate()
+	if err != nil {
+		response.ErrorResponseData(c.Writer, invalidFields, response.UnprocessableEntityMessage, http.StatusUnprocessableEntity)
+		return
+	}
+
+	if err := h.adminUC.AddBanner(c, requestBody); err != nil {
+		var e *httperror.Error
+		if !errors.As(err, &e) {
+			h.logger.Errorf("HandlerAdmin, Error: %s", err)
+			response.ErrorResponse(c.Writer, response.InternalServerErrorMessage, http.StatusInternalServerError)
+			return
+		}
+
+		response.ErrorResponse(c.Writer, e.Err.Error(), e.Status)
+		return
+	}
+
+	response.SuccessResponse(c.Writer, nil, http.StatusOK)
+}
+
+func (h *adminHandlers) DeleteBanner(c *gin.Context) {
+	id := c.Param("id")
+	bannerID, err := uuid.Parse(id)
+	if err != nil {
+		response.ErrorResponse(c.Writer, response.BadRequestMessage, http.StatusBadRequest)
+		return
+	}
+
+	if err := h.adminUC.DeleteBanner(c, bannerID.String()); err != nil {
+		var e *httperror.Error
+		if !errors.As(err, &e) {
+			h.logger.Errorf("HandlerAdmin, Error: %s", err)
+			response.ErrorResponse(c.Writer, response.InternalServerErrorMessage, http.StatusInternalServerError)
+			return
+		}
+
+		response.ErrorResponse(c.Writer, e.Err.Error(), e.Status)
+		return
+	}
+
+	response.SuccessResponse(c.Writer, nil, http.StatusOK)
+}

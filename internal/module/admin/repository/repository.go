@@ -427,3 +427,37 @@ func (r *adminRepo) CountCategoryParent(ctx context.Context, userid string) (int
 
 	return temp, nil
 }
+
+func (r *adminRepo) GetBanner(ctx context.Context) ([]*body.BannerResponse, error) {
+	var banners = make([]*body.BannerResponse, 0)
+	res, err := r.PSQL.QueryContext(ctx, GetBannerQuery)
+	if err != nil {
+		return nil, err
+	}
+
+	for res.Next() {
+		banner := body.BannerResponse{}
+		if errScan := res.Scan(&banner.ID, &banner.Title, &banner.Content, &banner.ImageURL, &banner.PageURL, &banner.IsActive); errScan != nil {
+			return nil, errScan
+		}
+		banners = append(banners, &banner)
+	}
+
+	return banners, nil
+}
+
+func (r *adminRepo) AddBanner(ctx context.Context, requestBody body.BannerRequest) error {
+	if _, err := r.PSQL.ExecContext(ctx, AddBannerQuery,
+		&requestBody.Title, requestBody.Content, requestBody.ImageURL, requestBody.PageURL, requestBody.IsActive); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (r *adminRepo) DeleteBanner(ctx context.Context, bannerID string) error {
+	_, err := r.PSQL.ExecContext(ctx, DeleteBannerQuery, bannerID)
+	if err != nil {
+		return err
+	}
+	return nil
+}
