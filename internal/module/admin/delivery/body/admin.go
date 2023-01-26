@@ -16,6 +16,7 @@ const (
 	ProductNotFound                       = "Product not found"
 	UpdateProductFailed                   = "Update product failed"
 	ImageIsEmpty                          = "image cannot be empty"
+	CategoryIsBeingUsed                   = "Category is being used"
 )
 
 type UnprocessableEntity struct {

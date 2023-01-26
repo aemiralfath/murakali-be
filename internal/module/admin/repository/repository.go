@@ -407,3 +407,23 @@ func (r *adminRepo) EditCategory(ctx context.Context, requestBody body.CategoryR
 	}
 	return nil
 }
+
+func (r *adminRepo) CountProductCategory(ctx context.Context, userid string) (int, error) {
+	var temp int
+	if err := r.PSQL.QueryRowContext(ctx, CountProductCategoryQuery, userid).
+		Scan(&temp); err != nil {
+		return 0, err
+	}
+
+	return temp, nil
+}
+
+func (r *adminRepo) CountCategoryParent(ctx context.Context, userid string) (int, error) {
+	var temp int
+	if err := r.PSQL.QueryRowContext(ctx, CountCategoryParentQuery, userid).
+		Scan(&temp); err != nil {
+		return 0, err
+	}
+
+	return temp, nil
+}
