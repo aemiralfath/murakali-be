@@ -96,6 +96,47 @@ func (f *ProductFaker) GenerateDataProductDetail(tx postgre.Transaction, id, pro
 	return nil
 }
 
+func (f *ProductFaker) GenerateTransactions() {
+	// create transaction table
+	// - card number -> using same user card
+	// - invoice -> using utils
+	// - total_price -> product detail price + delivery_fee
+	// - paid_at -> random time between today to 30 days ago
+	// - expired_at -> random time between today to 30 days ago
+
+	// create order table
+	// - transaction_id
+	// - shop_id
+	// - user_id -> using same user with slp card
+	// - courier_id -> using same courier
+	// - order_status_id -> 7
+	// - total_price -> product detail price
+	// - delivery_fee -> delivery_fee
+	// - resi_no -> generate random string
+	// - buyer_address -> same address
+	// - shop_address -> same address
+	// - is_withdraw -> true
+	// - created_at -> random time between today to 30 days ago
+	// - arrived_at -> random time between today to 30 days ago
+
+	// order item table
+	// - order_id
+	// - product_detail_id
+	// - quantity -> 1
+	// - item_price -> product detail price
+	// - total_price -> product detail price
+	// - is_review -> true
+
+	// review table
+	// - user_id
+	// - product_id
+	// - comment -> generate random text
+	// - rating -> generate random number 1 to 5
+	// - created_at -> now()
+
+	// update product field
+}
+
 func (f *ProductFaker) GenerateProductDetail(id, productID uuid.UUID, price float64) *model.ProductDetail {
 	return &model.ProductDetail{
 		ID:        id,
