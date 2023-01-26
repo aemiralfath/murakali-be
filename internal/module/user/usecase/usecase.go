@@ -1865,3 +1865,57 @@ func (u *userUC) getAdressString(ctx context.Context, userID string, isShop bool
 
 	return string(resultAddress), nil
 }
+
+func (u *userUC) CreateRefundUser(ctx context.Context, userID string, requestBody body.CreateRefundUserRequest) error {
+	order, err := u.userRepo.GetOrderByOrderID(ctx, requestBody.OrderID)
+	if err != nil {
+		return err
+	}
+	orderID, errOrderID := uuid.Parse(order.OrderID)
+	if errOrderID != nil {
+		return errOrderID
+	}
+	refundData := &model.Refund{
+		OrderID: orderID,
+		IsSellerRefund: requestBody.IsSellerRefund,
+		IsBuyerRefund: requestBody.IsBuyerRefund,
+		Reason: requestBody.Reason,
+		Image: requestBody.Image,
+	}
+
+	err = u.txRepo.WithTransaction(func(tx postgre.Transaction) error {
+		
+		if requestBody.IsDefault {
+			defaultAddress, getErr := u.userRepo.GetDefaultUserAddress(ctx, userModel.ID.String())
+			if getErr != nil && getErr != sql.ErrNoRows {
+				return getErr
+			}
+
+			if defaultAddress != nil && defaultAddress.IsDefault {
+				if errUpdate := u.userRepo.UpdateDefaultAddress(ctx, tx, false, defaultAddress); errUpdate != nil {
+					return errUpdate
+				}
+			}
+		}
+
+		if requestBody.IsShopDefault {
+			defaultShopAddress, getErr := u.userRepo.GetDefaultShopAddress(ctx, userModel.ID.String())
+			if getErr != nil && getErr != sql.ErrNoRows {
+				return getErr
+			}
+
+			if defaultShopAddress != nil && defaultShopAddress.IsShopDefault {
+				if errUpdate := u.userRepo.UpdateDefaultShopAddress(ctx, tx, false, defaultShopAddress); errUpdate != nil {
+					return errUpdate
+				}
+			}
+		}
+
+		err = u.userRepo.CreateAddress(ctx, tx, userModel.ID.String(), requestBody)
+		if err != nil {
+			return err
+		}
+
+		return nil
+	})
+}
