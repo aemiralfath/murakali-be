@@ -29,6 +29,34 @@ func NewSellerHandlers(cfg *config.Config, sellerUC seller.UseCase, log logger.L
 	return &sellerHandlers{cfg: cfg, sellerUC: sellerUC, logger: log}
 }
 
+func (h *sellerHandlers) GetPerformance(c *gin.Context) {
+	userID, exist := c.Get("userID")
+	if !exist {
+		response.ErrorResponse(c.Writer, response.UnauthorizedMessage, http.StatusUnauthorized)
+		return
+	}
+
+	userIDString := fmt.Sprintf("%v", userID)
+
+	_, err := uuid.Parse(userIDString)
+	if err != nil {
+		response.ErrorResponse(c.Writer, response.BadRequestMessage, http.StatusBadRequest)
+		return
+	}
+
+	updateQry := c.DefaultQuery("update", "")
+	isUpdate := updateQry == "true"
+
+	gotPerformance, err := h.sellerUC.GetPerformance(c, userIDString, isUpdate)
+	if err != nil {
+		h.logger.Errorf("HandlerGetPerformance, Error: %s", err)
+		response.ErrorResponse(c.Writer, response.InternalServerErrorMessage, http.StatusInternalServerError)
+		return
+	}
+
+	response.SuccessResponse(c.Writer, gotPerformance, http.StatusOK)
+}
+
 func (h *sellerHandlers) GetOrder(c *gin.Context) {
 	userID, exist := c.Get("userID")
 	if !exist {
