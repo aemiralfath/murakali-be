@@ -7,11 +7,11 @@ import (
 	"strings"
 )
 
-type RefundAcceptedRequest struct {
+type UpdateRefundRequest struct {
 	RefundID string `json:"refund_id"`
 }
 
-func (r *RefundAcceptedRequest) Validate() (UnprocessableEntity, error) {
+func (r *UpdateRefundRequest) Validate() (UnprocessableEntity, error) {
 	unprocessableEntity := false
 	entity := UnprocessableEntity{
 		Fields: map[string]string{

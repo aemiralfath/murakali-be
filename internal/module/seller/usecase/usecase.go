@@ -976,7 +976,7 @@ func (u *sellerUC) CreateRefundThreadSeller(ctx context.Context, userID string, 
 	return nil
 }
 
-func (u *sellerUC) UpdateRefundAccept(ctx context.Context, userID string, requestBody *body.RefundAcceptedRequest) error {
+func (u *sellerUC) UpdateRefundAccept(ctx context.Context, userID string, requestBody *body.UpdateRefundRequest) error {
 	_, err := u.sellerRepo.GetShopIDByUserID(ctx, userID)
 	if err != nil {
 		if err == sql.ErrNoRows {
@@ -991,6 +991,28 @@ func (u *sellerUC) UpdateRefundAccept(ctx context.Context, userID string, reques
 	}
 
 	err = u.sellerRepo.UpdateRefundAccept(ctx, refundData.ID.String())
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (u *sellerUC) UpdateRefundReject(ctx context.Context, userID string, requestBody *body.UpdateRefundRequest) error {
+	_, err := u.sellerRepo.GetShopIDByUserID(ctx, userID)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return httperror.New(http.StatusBadRequest, response.UnknownShop)
+		}
+		return err
+	}
+
+	refundData, err := u.sellerRepo.GetRefundOrderByID(ctx, requestBody.RefundID)
+	if err != nil {
+		return err
+	}
+
+	err = u.sellerRepo.UpdateRefundReject(ctx, refundData.ID.String())
 	if err != nil {
 		return err
 	}

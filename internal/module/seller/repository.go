@@ -69,4 +69,5 @@ type Repository interface {
 	GetRefundThreadByRefundID(ctx context.Context, refundID string) ([]*model.RefundThread, error)
 	CreateRefundThreadSeller(ctx context.Context, refundThreadData *model.RefundThread) error
 	UpdateRefundAccept(ctx context.Context, refundDataID string) error
+	UpdateRefundReject(ctx context.Context, refundDataID string) error
 }

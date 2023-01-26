@@ -32,4 +32,5 @@ type Handlers interface {
 	GetRefundOrderSeller(c *gin.Context)
 	CreateRefundThreadSeller(c *gin.Context)
 	UpdateRefundAccept(c *gin.Context)
+	UpdateRefundReject(c *gin.Context)
 }

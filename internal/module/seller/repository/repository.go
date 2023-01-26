@@ -1184,3 +1184,10 @@ func (r *sellerRepo) UpdateRefundAccept(ctx context.Context, refundDataID string
 	}
 	return nil
 }
+
+func (r *sellerRepo) UpdateRefundReject(ctx context.Context, refundDataID string) error {
+	if _, err := r.PSQL.ExecContext(ctx, UpdateRefundRejectQuery, refundDataID); err != nil {
+		return err
+	}
+	return nil
+}

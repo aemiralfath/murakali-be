@@ -281,4 +281,5 @@ const (
 	VALUES ($1, $2, $3, $4, $5)`
 
 	UpdateRefundAcceptQuery = `UPDATE "refund" SET "accepted_at" = now() WHERE "id" = $1;`
+	UpdateRefundRejectQuery = `UPDATE "refund" SET "rejected_at" = now() WHERE "id" = $1;`
 )
