@@ -214,4 +214,10 @@ const (
 	VALUES ($1, $2, $3, $4, $5)`
 
 	UpdateOrderRefundQuery = `UPDATE "order" SET "is_refund" = $1 WHERE "id" = $2`
+
+	GetRefundOrderByIDQuery = `SELECT "id", "order_id", "is_seller_refund", "is_buyer_refund", "reason", "image", "accepted_at", "rejected_at", "refunded_at"
+	FROM "refund" WHERE "id" = $1`
+
+	GetRefundThreadByRefundIDQuery = `SELECT "id", "refund_id", "user_id", "is_seller", "is_buyer", "text", "created_at"
+	FROM "refund_thread" WHERE "refund_id" = $1`
 )

@@ -100,4 +100,6 @@ type Repository interface {
 	UpdatePromotionQuota(ctx context.Context, tx postgre.Transaction, promo *model.Promotion) error
 	CreateRefundUser(ctx context.Context, tx postgre.Transaction, refundData *model.Refund) error
 	UpdateOrderRefund(ctx context.Context, tx postgre.Transaction, orderID string, isRefund bool) error
+	GetRefundOrderByID(ctx context.Context, refundID string) (*model.Refund, error)
+	GetRefundThreadByRefundID(ctx context.Context, refundID string) ([]*model.RefundThread, error)
 }

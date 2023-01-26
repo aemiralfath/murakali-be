@@ -1906,3 +1906,21 @@ func (u *userUC) CreateRefundUser(ctx context.Context, userID string, requestBod
 
 	return nil
 }
+
+func (u *userUC) GetRefundOrder(ctx context.Context, userID string, refundID string) (*body.GetRefundThreadResponse, error) {
+	refundData, err := u.userRepo.GetRefundOrderByID(ctx, refundID)
+	if err != nil {
+		return nil, err
+	}
+	refundThreadData, err := u.userRepo.GetRefundThreadByRefundID(ctx, refundID)
+	if err != nil {
+		return nil, err
+	}
+
+	refundThreadResponse := &body.GetRefundThreadResponse{
+		RefundData: refundData,
+		RefundThreads: refundThreadData,
+	}
+
+	return refundThreadResponse, nil
+}
