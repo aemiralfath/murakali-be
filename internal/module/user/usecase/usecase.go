@@ -653,10 +653,23 @@ func (u *userUC) PatchSealabsPay(ctx context.Context, cardNumber, userid string)
 	return nil
 }
 
-func (u *userUC) DeleteSealabsPay(ctx context.Context, cardNumber string) error {
-	err := u.userRepo.DeleteSealabsPay(ctx, cardNumber)
+func (u *userUC) DeleteSealabsPay(ctx context.Context, userID, cardNumber string) error {
+	slp, err := u.userRepo.GetSealabsPayUser(ctx, userID, cardNumber)
 	if err != nil {
+		if err == sql.ErrNoRows {
+			return httperror.New(http.StatusBadRequest, response.SealabsCardNotFound)
+		}
+
 		return err
+	}
+
+	if slp.IsDefault {
+		return httperror.New(http.StatusBadRequest, response.SealabsCardIsDefault)
+	}
+
+	errDelete := u.userRepo.DeleteSealabsPay(ctx, cardNumber)
+	if errDelete != nil {
+		return errDelete
 	}
 
 	return nil
@@ -1372,21 +1385,27 @@ func (u *userUC) GetWalletHistory(ctx context.Context, userID string, pgn *pagin
 		}
 	}
 
-	totalRows, err := u.userRepo.GetTotalWalletHistoryByWalletID(ctx, wallet.ID.String())
-	if err != nil {
-		return nil, err
+	var totalRows int64
+	if wallet != nil {
+		totalRows, err = u.userRepo.GetTotalWalletHistoryByWalletID(ctx, wallet.ID.String())
+		if err != nil {
+			return nil, err
+		}
+
+		walletHistory, err := u.userRepo.GetWalletHistoryByWalletID(ctx, pgn, wallet.ID.String())
+		if err != nil {
+			return nil, err
+		}
+
+		pgn.Rows = walletHistory
+	} else {
+		totalRows = 0
+		pgn.Rows = make([]*body.HistoryWalletResponse, 0)
 	}
 
 	totalPages := int(math.Ceil(float64(totalRows) / float64(pgn.Limit)))
 	pgn.TotalRows = totalRows
 	pgn.TotalPages = totalPages
-
-	walletHistory, err := u.userRepo.GetWalletHistoryByWalletID(ctx, pgn, wallet.ID.String())
-	if err != nil {
-		return nil, err
-	}
-
-	pgn.Rows = walletHistory
 
 	return pgn, nil
 }

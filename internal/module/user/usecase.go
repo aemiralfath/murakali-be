@@ -20,7 +20,7 @@ type UseCase interface {
 	GetSealabsPay(ctx context.Context, userid string) ([]*model.SealabsPay, error)
 	AddSealabsPay(ctx context.Context, request body.AddSealabsPayRequest, userid string) error
 	PatchSealabsPay(ctx context.Context, cardNumber string, userid string) error
-	DeleteSealabsPay(ctx context.Context, cardNumber string) error
+	DeleteSealabsPay(ctx context.Context, userID, cardNumber string) error
 	RegisterMerchant(ctx context.Context, userID string, shopName string) error
 	GetUserProfile(ctx context.Context, userID string) (*body.ProfileResponse, error)
 	UploadProfilePicture(ctx context.Context, imgURL, userID string) error
