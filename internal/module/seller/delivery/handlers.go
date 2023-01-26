@@ -879,3 +879,7 @@ func (h *sellerHandlers) GetProductWithoutPromotionSeller(c *gin.Context) {
 
 	response.SuccessResponse(c.Writer, productWithoutPromotion, http.StatusOK)
 }
+
+func (h *sellerHandlers) CreateRefundThreadSeller(c *gin.Context) {
+	
+}
