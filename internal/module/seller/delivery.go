@@ -31,4 +31,5 @@ type Handlers interface {
 	WithdrawalOrderBalance(c *gin.Context)
 	GetRefundOrderSeller(c *gin.Context)
 	CreateRefundThreadSeller(c *gin.Context)
+	UpdateRefundAccept(c *gin.Context)
 }

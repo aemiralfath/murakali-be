@@ -1177,3 +1177,10 @@ func (r *sellerRepo) CreateRefundThreadSeller(ctx context.Context, refundThreadD
 
 	return nil
 }
+
+func (r *sellerRepo) UpdateRefundAccept(ctx context.Context, refundDataID string) error {
+	if _, err := r.PSQL.ExecContext(ctx, UpdateRefundAcceptQuery, refundDataID); err != nil {
+		return err
+	}
+	return nil
+}

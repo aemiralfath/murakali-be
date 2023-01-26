@@ -279,4 +279,6 @@ const (
 	CreateRefundThreadSellerQuery = `INSERT INTO "refund_thread" 
 	(refund_id, user_id, is_seller, is_buyer, text)
 	VALUES ($1, $2, $3, $4, $5)`
+
+	UpdateRefundAcceptQuery = `UPDATE "refund" SET "accepted_at" = now() WHERE "id" = $1;`
 )

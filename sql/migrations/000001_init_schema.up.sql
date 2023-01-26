@@ -545,7 +545,7 @@ CREATE TABLE IF NOT EXISTS "refund_thread"
 (
     NOW
 (
-)),
+))
     );
 
 CREATE INDEX ON "refund_thread" ("refund_id");
