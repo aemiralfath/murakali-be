@@ -673,10 +673,23 @@ func (u *userUC) PatchSealabsPay(ctx context.Context, cardNumber, userid string)
 	return nil
 }
 
-func (u *userUC) DeleteSealabsPay(ctx context.Context, cardNumber string) error {
-	err := u.userRepo.DeleteSealabsPay(ctx, cardNumber)
+func (u *userUC) DeleteSealabsPay(ctx context.Context, userID, cardNumber string) error {
+	slp, err := u.userRepo.GetSealabsPayUser(ctx, userID, cardNumber)
 	if err != nil {
+		if err == sql.ErrNoRows {
+			return httperror.New(http.StatusBadRequest, response.SealabsCardNotFound)
+		}
+
 		return err
+	}
+
+	if slp.IsDefault {
+		return httperror.New(http.StatusBadRequest, response.SealabsCardIsDefault)
+	}
+
+	errDelete := u.userRepo.DeleteSealabsPay(ctx, cardNumber)
+	if errDelete != nil {
+		return errDelete
 	}
 
 	return nil
@@ -1392,21 +1405,27 @@ func (u *userUC) GetWalletHistory(ctx context.Context, userID string, pgn *pagin
 		}
 	}
 
-	totalRows, err := u.userRepo.GetTotalWalletHistoryByWalletID(ctx, wallet.ID.String())
-	if err != nil {
-		return nil, err
+	var totalRows int64
+	if wallet != nil {
+		totalRows, err = u.userRepo.GetTotalWalletHistoryByWalletID(ctx, wallet.ID.String())
+		if err != nil {
+			return nil, err
+		}
+
+		walletHistory, err := u.userRepo.GetWalletHistoryByWalletID(ctx, pgn, wallet.ID.String())
+		if err != nil {
+			return nil, err
+		}
+
+		pgn.Rows = walletHistory
+	} else {
+		totalRows = 0
+		pgn.Rows = make([]*body.HistoryWalletResponse, 0)
 	}
 
 	totalPages := int(math.Ceil(float64(totalRows) / float64(pgn.Limit)))
 	pgn.TotalRows = totalRows
 	pgn.TotalPages = totalPages
-
-	walletHistory, err := u.userRepo.GetWalletHistoryByWalletID(ctx, pgn, wallet.ID.String())
-	if err != nil {
-		return nil, err
-	}
-
-	pgn.Rows = walletHistory
 
 	return pgn, nil
 }
@@ -1624,6 +1643,9 @@ func (u *userUC) CreateTransaction(ctx context.Context, userID string, requestBo
 
 	data, err := u.txRepo.WithTransactionReturnData(func(tx postgre.Transaction) (interface{}, error) {
 		var totalDeliveryFee float64
+		if len(requestBody.CartItems) == 0 {
+			return nil, httperror.New(http.StatusBadRequest, response.CartIsEmpty)
+		}
 		for _, cart := range requestBody.CartItems {
 			orderData := &model.OrderModel{}
 			cartShop, err := u.userRepo.GetShopByID(ctx, cart.ShopID)
@@ -1657,8 +1679,11 @@ func (u *userUC) CreateTransaction(ctx context.Context, userID string, requestBo
 			orderResponse := &body.OrderResponse{
 				Items: make([]*body.OrderItemResponse, 0),
 			}
-
 			isAvail := true
+
+			if len(cart.ProductDetails) == 0 {
+				return nil, httperror.New(http.StatusBadRequest, response.CartIsEmpty)
+			}
 
 			for _, bodyProductDetail := range cart.ProductDetails {
 				productDetailData, err := u.userRepo.GetProductDetailByID(ctx, tx, bodyProductDetail.ID)
@@ -1861,7 +1886,7 @@ func (u *userUC) CreateTransaction(ctx context.Context, userID string, requestBo
 	return data.(string), nil
 }
 
-func (u *userUC) getAdressString(ctx context.Context, userID string, isShop bool) (string, error){
+func (u *userUC) getAdressString(ctx context.Context, userID string, isShop bool) (string, error) {
 
 	AddressModel := &model.Address{}
 	var err error
@@ -1879,9 +1904,142 @@ func (u *userUC) getAdressString(ctx context.Context, userID string, isShop bool
 	}
 	resultAddress, errMarshal := json.Marshal(AddressModel)
 	if errMarshal != nil {
-
 		return "", errMarshal
 	}
 
 	return string(resultAddress), nil
+}
+
+func (u *userUC) CreateRefundUser(ctx context.Context, userID string, requestBody body.CreateRefundUserRequest) error {
+	orderData, err := u.userRepo.GetOrderModelByID(ctx, requestBody.OrderID)
+	if err != nil {
+		return err
+	}
+
+	if orderData.UserID.String() != userID {
+		return httperror.New(http.StatusBadRequest, response.InvalidRefund)
+	}
+
+	if orderData.IsRefund {
+		return httperror.New(http.StatusBadRequest, response.OrderUnderProgressRefund)
+	}
+
+	refundData, errRefundData := u.userRepo.GetRefundOrderByOrderID(ctx, orderData.ID.String())
+	if errRefundData != nil {
+		if errRefundData != sql.ErrNoRows {
+			return errRefundData
+		}
+	}
+	if refundData != nil {
+		if !refundData.RejectedAt.Valid && !refundData.AcceptedAt.Valid {
+			return httperror.New(http.StatusBadRequest, response.OrderUnderProgressRefund)
+		}
+		compareToday := time.Now().Add(-24 * time.Hour)
+		if refundData.RejectedAt.Valid && refundData.RejectedAt.Time.Before(compareToday) {
+			return httperror.New(http.StatusBadRequest, response.OrderCannotToRefund)
+		}
+		if refundData.AcceptedAt.Valid {
+			return httperror.New(http.StatusBadRequest, response.OrderHasAcceptedToRefund)
+		}
+	}
+
+	requestBody.IsSellerRefund = false
+	requestBody.IsBuyerRefund = true
+
+	refundData = &model.Refund{
+		OrderID:        orderData.ID,
+		IsSellerRefund: &requestBody.IsSellerRefund,
+		IsBuyerRefund:  &requestBody.IsBuyerRefund,
+		Reason:         requestBody.Reason,
+		Image:          requestBody.Image,
+	}
+
+	err = u.txRepo.WithTransaction(func(tx postgre.Transaction) error {
+		errRefund := u.userRepo.CreateRefundUser(ctx, tx, refundData)
+		if errRefund != nil {
+			return errRefund
+		}
+
+		isRefund := true
+		errOrderRefund := u.userRepo.UpdateOrderRefund(ctx, tx, orderData.ID.String(), isRefund)
+		if errOrderRefund != nil {
+			return errOrderRefund
+		}
+		return nil
+	})
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (u *userUC) GetRefundOrder(ctx context.Context, userID string, orderID string) (*body.GetRefundThreadResponse, error) {
+	orderData, err := u.userRepo.GetOrderModelByID(ctx, orderID)
+	if err != nil {
+		return nil, err
+	}
+
+	if orderData.UserID.String() != userID {
+		return nil, httperror.New(http.StatusBadRequest, response.InvalidRefund)
+	}
+
+	refundData, err := u.userRepo.GetRefundOrderByOrderID(ctx, orderID)
+	if err != nil {
+		return nil, err
+	}
+	refundThreadData, err := u.userRepo.GetRefundThreadByRefundID(ctx, refundData.ID.String())
+	if err != nil {
+		return nil, err
+	}
+
+	refundThreadResponse := &body.GetRefundThreadResponse{
+		RefundData:    refundData,
+		RefundThreads: refundThreadData,
+	}
+
+	return refundThreadResponse, nil
+}
+
+func (u *userUC) CreateRefundThreadUser(ctx context.Context, userID string, requestBody *body.CreateRefundThreadRequest) error {
+	refundData, err := u.userRepo.GetRefundOrderByID(ctx, requestBody.RefundID)
+	if err != nil {
+		return err
+	}
+
+	orderData, err := u.userRepo.GetOrderModelByID(ctx, refundData.OrderID.String())
+	if err != nil {
+		return err
+	}
+
+	if orderData.UserID.String() != userID {
+		return httperror.New(http.StatusBadRequest, response.InvalidRefund)
+	}
+
+	parsedRefundID, err := uuid.Parse(requestBody.RefundID)
+	if err != nil {
+		return err
+	}
+
+	parsedUserID, err := uuid.Parse(userID)
+	if err != nil {
+		return err
+	}
+	requestBody.IsSeller = false
+	requestBody.IsBuyer = true
+
+	refundThreadData := &model.RefundThread{
+		RefundID: parsedRefundID,
+		UserID:   parsedUserID,
+		IsSeller: &requestBody.IsSeller,
+		IsBuyer:  &requestBody.IsBuyer,
+		Text:     requestBody.Text,
+	}
+
+	err = u.userRepo.CreateRefundThreadUser(ctx, refundThreadData)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

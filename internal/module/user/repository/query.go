@@ -174,7 +174,7 @@ const (
 	join "product" p on p.id = pd.product_id WHERE oi.order_id = $1 `
 
 	GetOrderByOrderID = `SELECT o.id,o.order_status_id,o.total_price,o.delivery_fee,o.resi_no,s.id,s.name,u2.phone_no,u2.username,v.code,o.created_at,t.invoice
-	,c.name,c.code,c.service,c.description,u.username,u.phone_no,o.shop_address, o.buyer_address
+	,c.name,c.code,c.service,c.description,u.username,u.phone_no,o.is_withdraw,o.is_refund,o.shop_address, o.buyer_address
 	from "order" o
 	join "shop" s on s.id = o.shop_id
 	join "courier" c on o.courier_id = c.id
@@ -217,7 +217,30 @@ const (
 	WHERE "p"."id" = $1 AND ("promo"."actived_date" < now() AND "promo"."expired_date" >= now())
 	`
 
-	UpdateVoucherQuotaQuery    = `UPDATE "voucher" SET "quota" = $1, "updated_at" = now() WHERE "id" = $2;`
-	UpdatePromotionQuotaQuery  = `UPDATE "promotion" SET "quota" = $1, "updated_at" = now() WHERE "id" = $2;`
+	UpdateVoucherQuotaQuery   = `UPDATE "voucher" SET "quota" = $1, "updated_at" = now() WHERE "id" = $2;`
+	UpdatePromotionQuotaQuery = `UPDATE "promotion" SET "quota" = $1, "updated_at" = now() WHERE "id" = $2;`
+
+	GetOrderModelByIDQuery = `SELECT "id", "transaction_id", "shop_id", "user_id", "courier_id", "voucher_shop_id", "order_status_id", "total_price",
+	"delivery_fee", "resi_no", "buyer_address", "shop_address", "cancel_notes", "is_withdraw", "is_refund", "created_at", "arrived_at"
+	FROM "order" WHERE "id" = $1`
+
+	GetRefundOrderByOrderIDQuery = `SELECT "id", "order_id", "is_seller_refund", "is_buyer_refund", "reason", "image", "accepted_at", "rejected_at", "refunded_at"
+	FROM "refund" WHERE "order_id" = $1`
+
+	CreateRefundUserQuery = `INSERT INTO "refund" 
+	(order_id, is_seller_refund, is_buyer_refund, reason, image)
+	VALUES ($1, $2, $3, $4, $5)`
+
+	UpdateOrderRefundQuery = `UPDATE "order" SET "is_refund" = $1 WHERE "id" = $2`
+
+	GetRefundOrderByIDQuery = `SELECT "id", "order_id", "is_seller_refund", "is_buyer_refund", "reason", "image", "accepted_at", "rejected_at", "refunded_at"
+	FROM "refund" WHERE "id" = $1`
+
+	GetRefundThreadByRefundIDQuery = `SELECT "id", "refund_id", "user_id", "is_seller", "is_buyer", "text", "created_at"
+	FROM "refund_thread" WHERE "refund_id" = $1 ORDER BY "created_at" ASC`
+
+	CreateRefundThreadUserQuery = `INSERT INTO "refund_thread" 
+	(refund_id, user_id, is_seller, is_buyer, text)
+	VALUES ($1, $2, $3, $4, $5)`
 	UpdateProductUnitSoldQuery = `UPDATE "product" SET "unit_sold" = $1, "updated_at" = now() WHERE "id" = $2;`
 )

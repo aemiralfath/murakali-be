@@ -277,6 +277,22 @@ func (u *adminUC) AddCategory(ctx context.Context, requestBody body.CategoryRequ
 }
 
 func (u *adminUC) DeleteCategory(ctx context.Context, categoryID string) error {
+	productCount, err := u.adminRepo.CountProductCategory(ctx, categoryID)
+	if err != nil {
+		return err
+	}
+	if productCount != 0 {
+		return httperror.New(http.StatusBadRequest, body.CategoryIsBeingUsed)
+	}
+
+	categoryCount, err := u.adminRepo.CountCategoryParent(ctx, categoryID)
+	if err != nil {
+		return err
+	}
+	if categoryCount != 0 {
+		return httperror.New(http.StatusBadRequest, body.CategoryIsBeingUsed)
+	}
+
 	if err := u.adminRepo.DeleteCategory(ctx, categoryID); err != nil {
 		return err
 	}
@@ -288,6 +304,36 @@ func (u *adminUC) EditCategory(ctx context.Context, requestBody body.CategoryReq
 	if err != nil {
 		return err
 	}
+	return nil
+}
 
+func (u *adminUC) GetBanner(ctx context.Context) ([]*body.BannerResponse, error) {
+	banner, err := u.adminRepo.GetBanner(ctx)
+	if err != nil {
+		return nil, err
+	}
+	return banner, nil
+}
+
+func (u *adminUC) AddBanner(ctx context.Context, requestBody body.BannerRequest) error {
+	err := u.adminRepo.AddBanner(ctx, requestBody)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (u *adminUC) DeleteBanner(ctx context.Context, bannerID string) error {
+	if err := u.adminRepo.DeleteBanner(ctx, bannerID); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (u *adminUC) EditBanner(ctx context.Context, requestBody body.BannerIDRequest) error {
+	err := u.adminRepo.EditBanner(ctx, requestBody)
+	if err != nil {
+		return err
+	}
 	return nil
 }

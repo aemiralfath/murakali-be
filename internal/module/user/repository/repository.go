@@ -379,6 +379,8 @@ func (r *userRepo) GetOrderByOrderID(ctx context.Context, orderID string) (*mode
 		&order.CourierDescription,
 		&order.BuyerUsername,
 		&order.BuyerPhoneNumber,
+		&order.IsWithdraw,
+		&order.IsRefund,
 		&strShopAddress,
 		&strBuyerAddress,
 	); err != nil {
@@ -387,7 +389,7 @@ func (r *userRepo) GetOrderByOrderID(ctx context.Context, orderID string) (*mode
 
 	json.Unmarshal([]byte(strBuyerAddress), &order.BuyerAddress)
 	json.Unmarshal([]byte(strShopAddress), &order.SellerAddress)
-	
+
 	orderDetail := make([]*model.OrderDetail, 0)
 
 	res, err := r.PSQL.QueryContext(
@@ -1543,6 +1545,131 @@ func (r *userRepo) UpdateVoucherQuota(ctx context.Context, tx postgre.Transactio
 func (r *userRepo) UpdatePromotionQuota(ctx context.Context, tx postgre.Transaction, promo *model.Promotion) error {
 	_, err := tx.ExecContext(ctx, UpdatePromotionQuotaQuery, promo.Quota, promo.ID)
 	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (r *userRepo) GetOrderModelByID(ctx context.Context, orderID string) (*model.OrderModel, error) {
+	var orderData model.OrderModel
+	if err := r.PSQL.QueryRowContext(ctx, GetOrderModelByIDQuery, orderID).Scan(
+		&orderData.ID,
+		&orderData.TransactionID,
+		&orderData.ShopID,
+		&orderData.UserID,
+		&orderData.CourierID,
+		&orderData.VoucherShopID,
+		&orderData.OrderStatusID,
+		&orderData.TotalPrice,
+		&orderData.DeliveryFee,
+		&orderData.ResiNo,
+		&orderData.BuyerAddress,
+		&orderData.ShopAddress,
+		&orderData.CancelNotes,
+		&orderData.IsWithdraw,
+		&orderData.IsRefund,
+		&orderData.CreatedAt,
+		&orderData.ArrivedAt,
+	); err != nil {
+		return nil, err
+	}
+	return &orderData, nil
+}
+
+func (r *userRepo) GetRefundOrderByOrderID(ctx context.Context, orderID string) (*model.Refund, error) {
+	var refundData model.Refund
+	if err := r.PSQL.QueryRowContext(ctx, GetRefundOrderByOrderIDQuery, orderID).Scan(
+		&refundData.ID,
+		&refundData.OrderID,
+		&refundData.IsSellerRefund,
+		&refundData.IsBuyerRefund,
+		&refundData.Reason,
+		&refundData.Image,
+		&refundData.AcceptedAt,
+		&refundData.RejectedAt,
+		&refundData.RefundedAt); err != nil {
+		return nil, err
+	}
+
+	return &refundData, nil
+}
+
+func (r *userRepo) CreateRefundUser(ctx context.Context, tx postgre.Transaction, refundData *model.Refund) error {
+	_, err := tx.ExecContext(
+		ctx,
+		CreateRefundUserQuery,
+		refundData.OrderID,
+		refundData.IsSellerRefund,
+		refundData.IsBuyerRefund,
+		refundData.Reason,
+		refundData.Image)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (r *userRepo) UpdateOrderRefund(ctx context.Context, tx postgre.Transaction, orderID string, isRefund bool) error {
+	_, err := tx.ExecContext(ctx, UpdateOrderRefundQuery, isRefund, orderID)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (r *userRepo) GetRefundOrderByID(ctx context.Context, refundID string) (*model.Refund, error) {
+	var refundData model.Refund
+	if err := r.PSQL.QueryRowContext(ctx, GetRefundOrderByIDQuery, refundID).Scan(
+		&refundData.ID,
+		&refundData.OrderID,
+		&refundData.IsSellerRefund,
+		&refundData.IsBuyerRefund,
+		&refundData.Reason,
+		&refundData.Image,
+		&refundData.AcceptedAt,
+		&refundData.RejectedAt,
+		&refundData.RefundedAt); err != nil {
+		return nil, err
+	}
+
+	return &refundData, nil
+}
+
+func (r *userRepo) GetRefundThreadByRefundID(ctx context.Context, refundID string) ([]*model.RefundThread, error) {
+	refundThreadList := make([]*model.RefundThread, 0)
+	res, err := r.PSQL.QueryContext(ctx, GetRefundThreadByRefundIDQuery, refundID)
+
+	if err != nil {
+		return nil, err
+	}
+	defer res.Close()
+
+	for res.Next() {
+		var refundThreadData model.RefundThread
+		if err := res.Scan(
+			&refundThreadData.ID,
+			&refundThreadData.RefundID,
+			&refundThreadData.UserID,
+			&refundThreadData.IsSeller,
+			&refundThreadData.IsBuyer,
+			&refundThreadData.Text,
+			&refundThreadData.CreatedAt,
+		); err != nil {
+			return nil, err
+		}
+		refundThreadList = append(refundThreadList, &refundThreadData)
+	}
+	return refundThreadList, nil
+}
+
+func (r *userRepo) CreateRefundThreadUser(ctx context.Context, refundThreadData *model.RefundThread) error {
+	if _, err := r.PSQL.ExecContext(ctx, CreateRefundThreadUserQuery,
+		refundThreadData.RefundID,
+		refundThreadData.UserID,
+		refundThreadData.IsSeller,
+		refundThreadData.IsBuyer,
+		refundThreadData.Text); err != nil {
 		return err
 	}
 	return nil

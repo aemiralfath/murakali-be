@@ -20,7 +20,7 @@ type UseCase interface {
 	GetSealabsPay(ctx context.Context, userid string) ([]*model.SealabsPay, error)
 	AddSealabsPay(ctx context.Context, request body.AddSealabsPayRequest, userid string) error
 	PatchSealabsPay(ctx context.Context, cardNumber string, userid string) error
-	DeleteSealabsPay(ctx context.Context, cardNumber string) error
+	DeleteSealabsPay(ctx context.Context, userID, cardNumber string) error
 	RegisterMerchant(ctx context.Context, userID string, shopName string) error
 	GetUserProfile(ctx context.Context, userID string) (*body.ProfileResponse, error)
 	UploadProfilePicture(ctx context.Context, imgURL, userID string) error
@@ -48,4 +48,7 @@ type UseCase interface {
 	CreateWalletPayment(ctx context.Context, transactionID string) error
 	ChangeWalletPinStepUp(ctx context.Context, userID string, requestBody body.ChangeWalletPinStepUpRequest) (string, error)
 	ChangeWalletPin(ctx context.Context, userID, pin string) error
+	CreateRefundUser(ctx context.Context, userID string, requestBody body.CreateRefundUserRequest) error
+	GetRefundOrder(ctx context.Context, userID string, refundID string) (*body.GetRefundThreadResponse, error)
+	CreateRefundThreadUser(ctx context.Context, userID string, requestBody *body.CreateRefundThreadRequest) error
 }

@@ -915,7 +915,13 @@ func (h *userHandlers) DeleteSealabsPay(c *gin.Context) {
 		return
 	}
 
-	if err := h.userUC.DeleteSealabsPay(c, requestBody.CardNumber); err != nil {
+	userID, exist := c.Get("userID")
+	if !exist {
+		response.ErrorResponse(c.Writer, response.UnauthorizedMessage, http.StatusUnauthorized)
+		return
+	}
+
+	if err := h.userUC.DeleteSealabsPay(c, userID.(string), requestBody.CardNumber); err != nil {
 		var e *httperror.Error
 		if !errors.As(err, &e) {
 			h.logger.Errorf("HandlerUser, Error: %s", err)
@@ -1425,6 +1431,105 @@ func (h *userHandlers) GetTransaction(c *gin.Context) {
 	}
 
 	response.SuccessResponse(c.Writer, transactions, http.StatusOK)
+}
+
+func (h *userHandlers) CreateRefundUser(c *gin.Context) {
+	userID, exist := c.Get("userID")
+	if !exist {
+		response.ErrorResponse(c.Writer, response.UnauthorizedMessage, http.StatusUnauthorized)
+		return
+	}
+
+	var requestBody body.CreateRefundUserRequest
+	if err := c.ShouldBind(&requestBody); err != nil {
+		response.ErrorResponse(c.Writer, response.BadRequestMessage, http.StatusBadRequest)
+		return
+	}
+
+	invalidFields, err := requestBody.Validate()
+	if err != nil {
+		response.ErrorResponseData(c.Writer, invalidFields, response.UnprocessableEntityMessage, http.StatusUnprocessableEntity)
+		return
+	}
+
+	err = h.userUC.CreateRefundUser(c, userID.(string), requestBody)
+	if err != nil {
+		var e *httperror.Error
+		if !errors.As(err, &e) {
+			h.logger.Errorf("HandlerUser, Error: %s", err)
+			response.ErrorResponse(c.Writer, response.InternalServerErrorMessage, http.StatusInternalServerError)
+			return
+		}
+
+		response.ErrorResponse(c.Writer, e.Err.Error(), e.Status)
+		return
+	}
+
+	response.SuccessResponse(c.Writer, nil, http.StatusOK)
+}
+
+func (h *userHandlers) GetRefundOrder(c *gin.Context) {
+	userID, exist := c.Get("userID")
+	if !exist {
+		response.ErrorResponse(c.Writer, response.UnauthorizedMessage, http.StatusUnauthorized)
+		return
+	}
+
+	ParamRefundID := c.Param("refund_id")
+	refundID, err := uuid.Parse(ParamRefundID)
+	if err != nil {
+		response.ErrorResponse(c.Writer, response.BadRequestMessage, http.StatusBadRequest)
+		return
+	}
+
+	refundThreadResponse, err := h.userUC.GetRefundOrder(c, userID.(string), refundID.String())
+	if err != nil {
+		var e *httperror.Error
+		if !errors.As(err, &e) {
+			h.logger.Errorf("HandlerUser, Error: %s", err)
+			response.ErrorResponse(c.Writer, response.InternalServerErrorMessage, http.StatusInternalServerError)
+			return
+		}
+
+		response.ErrorResponse(c.Writer, e.Err.Error(), e.Status)
+		return
+	}
+
+	response.SuccessResponse(c.Writer, refundThreadResponse, http.StatusOK)
+}
+
+func (h *userHandlers) CreateRefundThreadUser(c *gin.Context) {
+	userID, exist := c.Get("userID")
+	if !exist {
+		response.ErrorResponse(c.Writer, response.UnauthorizedMessage, http.StatusUnauthorized)
+		return
+	}
+
+	var requestBody body.CreateRefundThreadRequest
+	if err := c.ShouldBind(&requestBody); err != nil {
+		response.ErrorResponse(c.Writer, response.BadRequestMessage, http.StatusBadRequest)
+		return
+	}
+
+	invalidFields, err := requestBody.Validate()
+	if err != nil {
+		response.ErrorResponseData(c.Writer, invalidFields, response.UnprocessableEntityMessage, http.StatusUnprocessableEntity)
+		return
+	}
+
+	err = h.userUC.CreateRefundThreadUser(c, userID.(string), &requestBody)
+	if err != nil {
+		var e *httperror.Error
+		if !errors.As(err, &e) {
+			h.logger.Errorf("HandlerUser, Error: %s", err)
+			response.ErrorResponse(c.Writer, response.InternalServerErrorMessage, http.StatusInternalServerError)
+			return
+		}
+		response.ErrorResponse(c.Writer, e.Err.Error(), e.Status)
+		return
+	}
+
+	response.SuccessResponse(c.Writer, nil, http.StatusOK)
 }
 
 func (h *userHandlers) CreateTransaction(c *gin.Context) {

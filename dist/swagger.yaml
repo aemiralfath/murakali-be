@@ -1298,6 +1298,28 @@ paths:
               schema:
                 $ref: "#/components/schemas/DeleteProductFavoriteResponse"
 
+  "/api/v1/product/favorite/check":
+    post:
+      summary: Check Favorite Product
+      description: >-
+        check favorite product
+      tags:
+        - Product
+      security:
+        - BEARER: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateProductFavoriteRequest"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CheckProductIsFavoriteResponse"
+
   "/api/v1/product/recommended":
     get:
       summary: Get Recommended Product List
@@ -3798,6 +3820,17 @@ components:
         message:
           type: string
           example: "success"
+    CheckProductIsFavoriteResponse:
+      title: CheckProductIsFavoriteResponse
+      type: object
+      description: Check product favorite response data model.
+      properties:
+        message:
+          type: string
+          example: "success"
+        data:
+          type: bool
+          example: true
 
     DeleteProductFavoriteRequest:
       title: DeleteProductFavoriteRequest
