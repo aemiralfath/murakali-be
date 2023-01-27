@@ -8,11 +8,9 @@ import (
 )
 
 func MapAdminRoutes(adminGroup *gin.RouterGroup, h admin.Handlers, mw *middleware.MWManager) {
-	adminGroup.Use(mw.AuthJWTMiddleware())
 	adminGroup.GET("/banner", h.GetBanner)
-
+	adminGroup.Use(mw.AuthJWTMiddleware())
 	adminGroup.Use(mw.AdminJWTMiddleware())
-
 	adminGroup.GET("/voucher", h.GetAllVoucher)
 	adminGroup.POST("/voucher", h.CreateVoucher)
 	adminGroup.PUT("/voucher", h.UpdateVoucher)
