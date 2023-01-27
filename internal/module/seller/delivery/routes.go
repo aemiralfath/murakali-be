@@ -38,7 +38,7 @@ func MapSellerRoutes(sellerGroup *gin.RouterGroup, h seller.Handlers, mw *middle
 	sellerGroup.PUT("/promotion", h.UpdatePromotionSeller)
 	sellerGroup.GET("/promotion/:id", h.GetDetailPromotionSellerByID)
 	sellerGroup.GET("/refund/:refund_id", h.GetRefundOrderSeller)
-	sellerGroup.POST("/refund/thread", h.CreateRefundThreadSeller)
+	sellerGroup.POST("/refund-thread", h.CreateRefundThreadSeller)
 	sellerGroup.PATCH("/refund-accept", h.UpdateRefundAccept)
 	sellerGroup.PATCH("/refund-reject", h.UpdateRefundReject)
 }
