@@ -9,6 +9,8 @@ const InsertShopQuery = `INSERT INTO "shop" (id, user_id, name, total_product, t
 const InsertShopCourierQuery = `INSERT INTO "shop_courier" (shop_id, courier_id) VALUES ($1, $2)`
 
 type ShopFaker struct {
+	BuyerID      string
+	BuyerCard    string
 	ID           []string
 	UserID       []string
 	CategoryID   []string
@@ -17,8 +19,8 @@ type ShopFaker struct {
 	CourierID    []string
 }
 
-func NewShopFaker(id, userID, categoryID, name []string, totalProduct []int, courierID []string) ISeeder {
-	return &ShopFaker{ID: id, UserID: userID, CategoryID: categoryID, Name: name, TotalProduct: totalProduct, CourierID: courierID}
+func NewShopFaker(id, userID, categoryID, name []string, totalProduct []int, courierID []string, buyerID, buyerCard string) ISeeder {
+	return &ShopFaker{ID: id, UserID: userID, CategoryID: categoryID, Name: name, TotalProduct: totalProduct, CourierID: courierID, BuyerID: buyerID, BuyerCard: buyerCard}
 }
 
 func (f *ShopFaker) GenerateData(tx postgre.Transaction) error {
@@ -53,7 +55,7 @@ func (f *ShopFaker) GenerateData(tx postgre.Transaction) error {
 			}
 		}
 
-		productFaker := NewProductFaker(f.TotalProduct[i], id.String(), categoryID.String(), []string{})
+		productFaker := NewProductFaker(f.TotalProduct[i], id.String(), categoryID.String(), f.BuyerID, f.CourierID[0], f.BuyerCard, []string{})
 		if err := productFaker.GenerateData(tx); err != nil {
 			return err
 		}
