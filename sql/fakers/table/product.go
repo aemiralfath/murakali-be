@@ -76,7 +76,7 @@ func (f *ProductFaker) GenerateDataProduct(tx postgre.Transaction, id, categoryI
 	}
 
 	productDetailID := uuid.New()
-	if err := f.GenerateDataProductDetail(tx, productDetailID, data.ID, data.MaxPrice); err != nil {
+	if err := f.GenerateDataProductDetail(tx, productDetailID, data.ID, data.MaxPrice, data.RatingAvg); err != nil {
 		return err
 	}
 
@@ -92,7 +92,7 @@ func (f *ProductFaker) GenerateDataProduct(tx postgre.Transaction, id, categoryI
 	return nil
 }
 
-func (f *ProductFaker) GenerateDataProductDetail(tx postgre.Transaction, id, productID uuid.UUID, price float64) error {
+func (f *ProductFaker) GenerateDataProductDetail(tx postgre.Transaction, id, productID uuid.UUID, price, ratingAvg float64) error {
 	data := f.GenerateProductDetail(id, productID, price)
 	_, err := tx.Exec(InsertProductDetailQuery, data.ID, data.ProductID, data.Price, data.Stock, data.Weight, data.Size, data.Hazardous, data.Condition, data.BulkPrice)
 	if err != nil {
@@ -104,14 +104,14 @@ func (f *ProductFaker) GenerateDataProductDetail(tx postgre.Transaction, id, pro
 		return err
 	}
 
-	if err := f.GenerateTransactions(tx, data); err != nil {
+	if err := f.GenerateTransactions(tx, data, ratingAvg); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-func (f *ProductFaker) GenerateTransactions(tx postgre.Transaction, productDetail *model.ProductDetail) error {
+func (f *ProductFaker) GenerateTransactions(tx postgre.Transaction, productDetail *model.ProductDetail, ratingAvg float64) error {
 	txID := uuid.New()
 	deliveryFee := float64(8000)
 	randomTime := time.Now().AddDate(0, 0, -1*rand.Intn(31))
@@ -139,7 +139,7 @@ func (f *ProductFaker) GenerateTransactions(tx postgre.Transaction, productDetai
 		return errItem
 	}
 
-	_, errReview := tx.Exec(InsertOrderReviewQuery, f.UserID, productDetail.ProductID, faker.Paragraph(), rand.Intn(5-1)+1, randomTime)
+	_, errReview := tx.Exec(InsertOrderReviewQuery, f.UserID, productDetail.ProductID, faker.Paragraph(), ratingAvg, randomTime)
 	if errReview != nil {
 		return errReview
 	}
@@ -152,7 +152,7 @@ func (f *ProductFaker) GenerateProductDetail(id, productID uuid.UUID, price floa
 		ID:        id,
 		ProductID: productID,
 		Price:     price,
-		Stock:     float64(rand.Intn(20000)),
+		Stock:     float64(rand.Intn(50)),
 		Weight:    float64(rand.Intn(10-1)+1) * 100,
 		Size:      float64(rand.Intn(20000)),
 		Hazardous: false,
@@ -176,7 +176,7 @@ func (f *ProductFaker) GenerateProduct(id, categoryID, shopID uuid.UUID) *model.
 		UnitSold:      1,
 		ListedStatus:  true,
 		ThumbnailURL:  "https://cf.shopee.co.id/file/76a0969b7d64065bc13493bf55df1849_tn",
-		RatingAvg:     0,
+		RatingAvg:     float64(rand.Intn(6-1) + 1),
 		MinPrice:      float64(price),
 		MaxPrice:      float64(price),
 	}

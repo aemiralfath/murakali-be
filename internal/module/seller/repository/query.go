@@ -76,8 +76,8 @@ const (
 		month,
 		success_order,
 		failed_order,
-		(success_order / LAG(success_order) OVER (ORDER BY month)) * 100 AS success_order_percent_change,
-		(failed_order / LAG(failed_order) OVER (ORDER BY month)) * 100 AS failed_order_percent_change
+		NULL AS success_order_percent_change,
+		NULL AS failed_order_percent_change
 	FROM month_order
 	ORDER BY month
 	`
