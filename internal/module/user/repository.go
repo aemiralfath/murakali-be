@@ -54,6 +54,8 @@ type Repository interface {
 	ChangeOrderStatus(ctx context.Context, requestBody body.ChangeOrderStatusRequest) error
 	GetOrdersByTransactionID(ctx context.Context, transactionID, userID string) ([]*model.Order, error)
 	GetTotalOrder(ctx context.Context, userID, orderStatusID string) (int64, error)
+	GetProductUnitSoldByOrderID(ctx context.Context, tx postgre.Transaction, orderID string) ([]*body.ProductUnitSoldOrderQty, error)
+	UpdateProductUnitSold(ctx context.Context, tx postgre.Transaction, productID string, newQty int64) error
 	GetOrders(ctx context.Context, userID, orderStatusID string, pgn *pagination.Pagination) ([]*model.Order, error)
 	GetOrderByOrderID(ctx context.Context, OrderID string) (*model.Order, error)
 	GetSellerIDByOrderID(ctx context.Context, orderID string) (string, error)
