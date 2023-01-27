@@ -104,6 +104,10 @@ func (f *ProductFaker) GenerateDataProductDetail(tx postgre.Transaction, id, pro
 		return err
 	}
 
+	if err := f.GenerateTransactions(tx, data); err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -111,12 +115,8 @@ func (f *ProductFaker) GenerateTransactions(tx postgre.Transaction, productDetai
 	txID := uuid.New()
 	deliveryFee := float64(8000)
 	randomTime := time.Now().AddDate(0, 0, -1*rand.Intn(31))
-	invoice, errInvoice := util.GenerateInvoice()
-	if errInvoice != nil {
-		return errInvoice
-	}
 
-	_, errTx := tx.Exec(InsertTransactionQuery, txID, f.CardNumber, invoice, productDetail.Price+deliveryFee, randomTime, randomTime)
+	_, errTx := tx.Exec(InsertTransactionQuery, txID, f.CardNumber, faker.Username(), productDetail.Price+deliveryFee, randomTime, randomTime)
 	if errTx != nil {
 		return errTx
 	}
@@ -129,7 +129,7 @@ func (f *ProductFaker) GenerateTransactions(tx postgre.Transaction, productDetai
 		return err
 	}
 
-	_, errOrder := tx.Exec(InsertOrderQuery, orderID, f.ShopID, f.UserID, f.CourierID, constant.OrderStatusCompleted, productDetail.Price, deliveryFee, resiNo, buyerAddress, shopAddress, true, randomTime, randomTime)
+	_, errOrder := tx.Exec(InsertOrderQuery, orderID, txID, f.ShopID, f.UserID, f.CourierID, constant.OrderStatusCompleted, productDetail.Price, deliveryFee, resiNo, buyerAddress, shopAddress, true, randomTime, randomTime)
 	if errOrder != nil {
 		return errOrder
 	}

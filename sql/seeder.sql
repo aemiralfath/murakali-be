@@ -6,17 +6,6 @@ VALUES ('9a4de0f5-0556-491b-ba1b-0873933262da', 'festival hari ibu', 'festival d
         'https://cf.shopee.co.id/file/f73747bf997bd9d0f20f0b33727f018e',
         'https://shopee.co.id/m/mall-super-category-day', true);
 
-INSERT INTO "order_status" (name)
-VALUES ('Waiting to Pay'),
-       ('Waiting for Seller'),
-       ('Processed'),
-       ('On Delivery'),
-       ('Delivered'),
-       ('Received'),
-       ('Completed'),
-       ('Canceled'),
-       ('Refunded');
-
 INSERT INTO product(id, category_id, shop_id, sku, title, description, view_count, favorite_count, unit_sold,
                     listed_status, thumbnail_url, rating_avg, min_price, max_price, created_at, updated_at, deleted_at)
 VALUES ('e6fb2764-076f-4b3b-bc05-8aa125d537ed', '159aa7d7-2fa0-4cc8-a708-3328d1d08eb5',

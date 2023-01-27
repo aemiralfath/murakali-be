@@ -13,6 +13,7 @@ type Seeder struct {
 func RegisterSeeders() []Seeder {
 	return []Seeder{
 		{Seeder: table.NewRoleFaker([]string{"user", "seller", "admin"})},
+		{Seeder: table.NewOrderStatusFaker([]string{"Waiting to Pay", "Waiting for Seller", "Processed", "On Delivery", "Delivered", "Received", "Completed", "Canceled", "Refunded"})},
 		{Seeder: table.NewUserFaker(
 			0,
 			1,
