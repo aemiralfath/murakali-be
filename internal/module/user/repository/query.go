@@ -209,10 +209,13 @@ const (
 	UpdateVoucherQuotaQuery   = `UPDATE "voucher" SET "quota" = $1, "updated_at" = now() WHERE "id" = $2;`
 	UpdatePromotionQuotaQuery = `UPDATE "promotion" SET "quota" = $1, "updated_at" = now() WHERE "id" = $2;`
 
-	GetOrderModelByIDQuery = ``
+	GetOrderModelByIDQuery = `SELECT "id", "transaction_id", "shop_id", "user_id", "courier_id", "voucher_shop_id", "order_status_id", "total_price",
+	"delivery_fee", "resi_no", "buyer_address", "shop_address", "cancel_notes", "is_withdraw", "is_refund", "created_at", "arrived_at"
+	FROM "order" WHERE "id" = $1`
 
 	GetRefundOrderByOrderIDQuery = `SELECT "id", "order_id", "is_seller_refund", "is_buyer_refund", "reason", "image", "accepted_at", "rejected_at", "refunded_at"
 	FROM "refund" WHERE "order_id" = $1`
+
 	CreateRefundUserQuery = `INSERT INTO "refund" 
 	(order_id, is_seller_refund, is_buyer_refund, reason, image)
 	VALUES ($1, $2, $3, $4, $5)`

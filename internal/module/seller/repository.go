@@ -65,6 +65,8 @@ type Repository interface {
 	GetWalletByUserID(ctx context.Context, tx postgre.Transaction, userID string) (*model.Wallet, error)
 	UpdateWalletBalance(ctx context.Context, tx postgre.Transaction, wallet *model.Wallet) error
 	InsertWalletHistory(ctx context.Context, tx postgre.Transaction, walletHistory *model.WalletHistory) error
+	GetOrderModelByID(ctx context.Context, OrderID string) (*model.OrderModel, error)
+	GetRefundOrderByOrderID(ctx context.Context, orderID string) (*model.Refund, error)
 	GetRefundOrderByID(ctx context.Context, refundID string) (*model.Refund, error)
 	GetRefundThreadByRefundID(ctx context.Context, refundID string) ([]*model.RefundThread, error)
 	CreateRefundThreadSeller(ctx context.Context, refundThreadData *model.RefundThread) error

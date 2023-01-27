@@ -11,8 +11,8 @@ import (
 
 type CreateRefundThreadRequest struct {
 	RefundID string `json:"refund_id"`
-	IsSeller *bool  `json:"is_seller"`
-	IsBuyer  *bool  `json:"is_buyer"`
+	IsSeller bool   `json:"is_seller"`
+	IsBuyer  bool   `json:"is_buyer"`
 	Text     string `json:"text"`
 }
 
@@ -21,8 +21,6 @@ func (r *CreateRefundThreadRequest) Validate() (UnprocessableEntity, error) {
 	entity := UnprocessableEntity{
 		Fields: map[string]string{
 			"refund_id": "",
-			"is_seller": "",
-			"is_buyer":  "",
 			"text":      "",
 		},
 	}
@@ -37,16 +35,6 @@ func (r *CreateRefundThreadRequest) Validate() (UnprocessableEntity, error) {
 	if err != nil {
 		unprocessableEntity = true
 		entity.Fields["refund_id"] = IDNotValidMessage
-	}
-
-	if r.IsSeller == nil {
-		unprocessableEntity = true
-		entity.Fields["is_seller"] = FieldCannotBeEmptyMessage
-	}
-
-	if r.IsBuyer == nil {
-		unprocessableEntity = true
-		entity.Fields["is_buyer"] = FieldCannotBeEmptyMessage
 	}
 
 	r.Text = strings.TrimSpace(r.Text)

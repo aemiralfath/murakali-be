@@ -1899,13 +1899,13 @@ func (u *userUC) CreateRefundUser(ctx context.Context, userID string, requestBod
 		}
 	}
 
-	*requestBody.IsSellerRefund = false
-	*requestBody.IsBuyerRefund = true
+	requestBody.IsSellerRefund = false
+	requestBody.IsBuyerRefund = true
 
 	refundData = &model.Refund{
 		OrderID:        orderData.ID,
-		IsSellerRefund: requestBody.IsSellerRefund,
-		IsBuyerRefund:  requestBody.IsBuyerRefund,
+		IsSellerRefund: &requestBody.IsSellerRefund,
+		IsBuyerRefund:  &requestBody.IsBuyerRefund,
 		Reason:         requestBody.Reason,
 		Image:          requestBody.Image,
 	}
@@ -1981,14 +1981,14 @@ func (u *userUC) CreateRefundThreadUser(ctx context.Context, userID string, requ
 	if err != nil {
 		return err
 	}
-	*requestBody.IsSeller = false
-	*requestBody.IsBuyer = true
+	requestBody.IsSeller = false
+	requestBody.IsBuyer = true
 
 	refundThreadData := &model.RefundThread{
 		RefundID: parsedRefundID,
 		UserID:   parsedUserID,
-		IsSeller: requestBody.IsSeller,
-		IsBuyer:  requestBody.IsBuyer,
+		IsSeller: &requestBody.IsSeller,
+		IsBuyer:  &requestBody.IsBuyer,
 		Text:     requestBody.Text,
 	}
 

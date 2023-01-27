@@ -924,12 +924,29 @@ func (u sellerUC) GetProductWithoutPromotionSeller(ctx context.Context, userID s
 	return pgn, nil
 }
 
-func (u *sellerUC) GetRefundOrderSeller(ctx context.Context, userID string, refundID string) (*body.GetRefundThreadResponse, error) {
-	refundData, err := u.sellerRepo.GetRefundOrderByID(ctx, refundID)
+func (u *sellerUC) GetRefundOrderSeller(ctx context.Context, userID string, orderID string) (*body.GetRefundThreadResponse, error) {
+	shopID, err := u.sellerRepo.GetShopIDByUserID(ctx, userID)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, httperror.New(http.StatusBadRequest, response.UserNotHaveShop)
+		}
+		return nil, err
+	}
+
+	orderData, err := u.sellerRepo.GetOrderModelByID(ctx, orderID)
 	if err != nil {
 		return nil, err
 	}
-	refundThreadData, err := u.sellerRepo.GetRefundThreadByRefundID(ctx, refundID)
+
+	if orderData.ShopID.String() != shopID {
+		return nil, httperror.New(http.StatusBadRequest, response.InvalidRefund)
+	}
+
+	refundData, err := u.sellerRepo.GetRefundOrderByOrderID(ctx, orderID)
+	if err != nil {
+		return nil, err
+	}
+	refundThreadData, err := u.sellerRepo.GetRefundThreadByRefundID(ctx, refundData.ID.String())
 	if err != nil {
 		return nil, err
 	}
@@ -943,9 +960,26 @@ func (u *sellerUC) GetRefundOrderSeller(ctx context.Context, userID string, refu
 }
 
 func (u *sellerUC) CreateRefundThreadSeller(ctx context.Context, userID string, requestBody *body.CreateRefundThreadRequest) error {
-	_, err := u.sellerRepo.GetRefundOrderByID(ctx, requestBody.RefundID)
+	shopID, err := u.sellerRepo.GetShopIDByUserID(ctx, userID)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return httperror.New(http.StatusBadRequest, response.UserNotHaveShop)
+		}
+		return err
+	}
+
+	refundData, err := u.sellerRepo.GetRefundOrderByID(ctx, requestBody.RefundID)
 	if err != nil {
 		return err
+	}
+
+	orderData, err := u.sellerRepo.GetOrderModelByID(ctx, refundData.OrderID.String())
+	if err != nil {
+		return err
+	}
+
+	if orderData.ShopID.String() != shopID {
+		return httperror.New(http.StatusBadRequest, response.InvalidRefund)
 	}
 
 	parsedRefundID, err := uuid.Parse(requestBody.RefundID)
@@ -957,14 +991,14 @@ func (u *sellerUC) CreateRefundThreadSeller(ctx context.Context, userID string, 
 	if err != nil {
 		return err
 	}
-	*requestBody.IsSeller = true
-	*requestBody.IsBuyer = false
+	requestBody.IsSeller = true
+	requestBody.IsBuyer = false
 
 	refundThreadData := &model.RefundThread{
 		RefundID: parsedRefundID,
 		UserID:   parsedUserID,
-		IsSeller: requestBody.IsSeller,
-		IsBuyer:  requestBody.IsBuyer,
+		IsSeller: &requestBody.IsSeller,
+		IsBuyer:  &requestBody.IsBuyer,
 		Text:     requestBody.Text,
 	}
 
@@ -977,7 +1011,7 @@ func (u *sellerUC) CreateRefundThreadSeller(ctx context.Context, userID string, 
 }
 
 func (u *sellerUC) UpdateRefundAccept(ctx context.Context, userID string, requestBody *body.UpdateRefundRequest) error {
-	_, err := u.sellerRepo.GetShopIDByUserID(ctx, userID)
+	shopID, err := u.sellerRepo.GetShopIDByUserID(ctx, userID)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return httperror.New(http.StatusBadRequest, response.UnknownShop)
@@ -988,6 +1022,19 @@ func (u *sellerUC) UpdateRefundAccept(ctx context.Context, userID string, reques
 	refundData, err := u.sellerRepo.GetRefundOrderByID(ctx, requestBody.RefundID)
 	if err != nil {
 		return err
+	}
+
+	orderData, err := u.sellerRepo.GetOrderModelByID(ctx, refundData.OrderID.String())
+	if err != nil {
+		return err
+	}
+
+	if orderData.ShopID.String() != shopID {
+		return httperror.New(http.StatusBadRequest, response.InvalidRefund)
+	}
+
+	if refundData.AcceptedAt.Valid || refundData.RejectedAt.Valid {
+		return httperror.New(http.StatusBadRequest, response.OrderRefundHasBeenFinished)
 	}
 
 	err = u.sellerRepo.UpdateRefundAccept(ctx, refundData.ID.String())
@@ -999,7 +1046,7 @@ func (u *sellerUC) UpdateRefundAccept(ctx context.Context, userID string, reques
 }
 
 func (u *sellerUC) UpdateRefundReject(ctx context.Context, userID string, requestBody *body.UpdateRefundRequest) error {
-	_, err := u.sellerRepo.GetShopIDByUserID(ctx, userID)
+	shopID, err := u.sellerRepo.GetShopIDByUserID(ctx, userID)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return httperror.New(http.StatusBadRequest, response.UnknownShop)
@@ -1010,6 +1057,19 @@ func (u *sellerUC) UpdateRefundReject(ctx context.Context, userID string, reques
 	refundData, err := u.sellerRepo.GetRefundOrderByID(ctx, requestBody.RefundID)
 	if err != nil {
 		return err
+	}
+
+	orderData, err := u.sellerRepo.GetOrderModelByID(ctx, refundData.OrderID.String())
+	if err != nil {
+		return err
+	}
+
+	if orderData.ShopID.String() != shopID {
+		return httperror.New(http.StatusBadRequest, response.InvalidRefund)
+	}
+
+	if refundData.AcceptedAt.Valid || refundData.RejectedAt.Valid {
+		return httperror.New(http.StatusBadRequest, response.OrderRefundHasBeenFinished)
 	}
 
 	err = u.sellerRepo.UpdateRefundReject(ctx, refundData.ID.String())

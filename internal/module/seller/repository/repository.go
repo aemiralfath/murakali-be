@@ -1120,6 +1120,50 @@ func (r *sellerRepo) GetProductWithoutPromotionSeller(ctx context.Context, shopI
 	return productWoutPromos, nil
 }
 
+func (r *sellerRepo) GetOrderModelByID(ctx context.Context, orderID string) (*model.OrderModel, error) {
+	var orderData model.OrderModel
+	if err := r.PSQL.QueryRowContext(ctx, GetOrderModelByIDQuery, orderID).Scan(
+		&orderData.ID,
+		&orderData.TransactionID,
+		&orderData.ShopID,
+		&orderData.UserID,
+		&orderData.CourierID,
+		&orderData.VoucherShopID,
+		&orderData.OrderStatusID,
+		&orderData.TotalPrice,
+		&orderData.DeliveryFee,
+		&orderData.ResiNo,
+		&orderData.BuyerAddress,
+		&orderData.ShopAddress,
+		&orderData.CancelNotes,
+		&orderData.IsWithdraw,
+		&orderData.IsRefund,
+		&orderData.CreatedAt,
+		&orderData.ArrivedAt,
+	); err != nil {
+		return nil, err
+	}
+	return &orderData, nil
+}
+
+func (r *sellerRepo) GetRefundOrderByOrderID(ctx context.Context, orderID string) (*model.Refund, error) {
+	var refundData model.Refund
+	if err := r.PSQL.QueryRowContext(ctx, GetRefundOrderByOrderIDQuery, orderID).Scan(
+		&refundData.ID,
+		&refundData.OrderID,
+		&refundData.IsSellerRefund,
+		&refundData.IsBuyerRefund,
+		&refundData.Reason,
+		&refundData.Image,
+		&refundData.AcceptedAt,
+		&refundData.RejectedAt,
+		&refundData.RefundedAt); err != nil {
+		return nil, err
+	}
+
+	return &refundData, nil
+}
+
 func (r *sellerRepo) GetRefundOrderByID(ctx context.Context, refundID string) (*model.Refund, error) {
 	var refundData model.Refund
 	if err := r.PSQL.QueryRowContext(ctx, GetRefundOrderByIDQuery, refundID).Scan(

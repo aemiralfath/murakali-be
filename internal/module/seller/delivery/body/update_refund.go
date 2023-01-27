@@ -22,7 +22,7 @@ func (r *UpdateRefundRequest) Validate() (UnprocessableEntity, error) {
 	r.RefundID = strings.TrimSpace(r.RefundID)
 	if r.RefundID == "" {
 		unprocessableEntity = true
-		entity.Fields["order_id"] = FieldCannotBeEmptyMessage
+		entity.Fields["refund_id"] = FieldCannotBeEmptyMessage
 	}
 
 	if unprocessableEntity {

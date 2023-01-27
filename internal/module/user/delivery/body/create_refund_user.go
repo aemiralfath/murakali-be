@@ -9,21 +9,19 @@ import (
 
 type CreateRefundUserRequest struct {
 	OrderID        string  `json:"order_id"`
-	IsSellerRefund *bool   `json:"is_seller_refund"`
-	IsBuyerRefund  *bool   `json:"is_buyer_refund"`
 	Reason         string  `json:"reason"`
 	Image          *string `json:"image"`
+	IsSellerRefund bool
+	IsBuyerRefund  bool
 }
 
 func (r *CreateRefundUserRequest) Validate() (UnprocessableEntity, error) {
 	unprocessableEntity := false
 	entity := UnprocessableEntity{
 		Fields: map[string]string{
-			"order_id":         "",
-			"is_seller_refund": "",
-			"is_buyer_refund":  "",
-			"reason":           "",
-			"image":            "",
+			"order_id": "",
+			"reason":   "",
+			"image":    "",
 		},
 	}
 
@@ -31,16 +29,6 @@ func (r *CreateRefundUserRequest) Validate() (UnprocessableEntity, error) {
 	if r.OrderID == "" {
 		unprocessableEntity = true
 		entity.Fields["order_id"] = FieldCannotBeEmptyMessage
-	}
-
-	if r.IsSellerRefund == nil {
-		unprocessableEntity = true
-		entity.Fields["is_seller_refund"] = FieldCannotBeEmptyMessage
-	}
-
-	if r.IsBuyerRefund == nil {
-		unprocessableEntity = true
-		entity.Fields["is_buyer_refund"] = FieldCannotBeEmptyMessage
 	}
 
 	r.Reason = strings.TrimSpace(r.Reason)
