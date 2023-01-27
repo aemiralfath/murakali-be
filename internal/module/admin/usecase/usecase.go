@@ -304,7 +304,6 @@ func (u *adminUC) EditCategory(ctx context.Context, requestBody body.CategoryReq
 	if err != nil {
 		return err
 	}
-
 	return nil
 }
 
@@ -326,6 +325,14 @@ func (u *adminUC) AddBanner(ctx context.Context, requestBody body.BannerRequest)
 
 func (u *adminUC) DeleteBanner(ctx context.Context, bannerID string) error {
 	if err := u.adminRepo.DeleteBanner(ctx, bannerID); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (u *adminUC) EditBanner(ctx context.Context, requestBody body.BannerIDRequest) error {
+	err := u.adminRepo.EditBanner(ctx, requestBody)
+	if err != nil {
 		return err
 	}
 	return nil

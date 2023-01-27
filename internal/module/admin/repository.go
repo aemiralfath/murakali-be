@@ -37,4 +37,5 @@ type Repository interface {
 	GetBanner(ctx context.Context) ([]*body.BannerResponse, error)
 	AddBanner(ctx context.Context, requestBody body.BannerRequest) error
 	DeleteBanner(ctx context.Context, bannerID string) error
+	EditBanner(ctx context.Context, requestBody body.BannerIDRequest) error
 }

@@ -18,4 +18,5 @@ type Handlers interface {
 	GetBanner(c *gin.Context)
 	AddBanner(c *gin.Context)
 	DeleteBanner(c *gin.Context)
+	EditBanner(c *gin.Context)
 }

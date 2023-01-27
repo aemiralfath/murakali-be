@@ -74,3 +74,27 @@ func (r *BannerRequest) Validate() (UnprocessableEntity, error) {
 
 	return entity, nil
 }
+
+func (r *BannerIDRequest) IDValidate() (UnprocessableEntity, error) {
+	unprocessableEntity := false
+	entity := UnprocessableEntity{
+		Fields: map[string]string{
+			"id": "",
+		},
+	}
+
+	r.ID = strings.TrimSpace(r.ID)
+	if r.ID == "" {
+		unprocessableEntity = true
+		entity.Fields["id"] = FieldCannotBeEmptyMessage
+	}
+
+	if unprocessableEntity {
+		return entity, httperror.New(
+			http.StatusUnprocessableEntity,
+			response.UnprocessableEntityMessage,
+		)
+	}
+
+	return entity, nil
+}

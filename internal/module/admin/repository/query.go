@@ -99,4 +99,5 @@ const (
 	( title, content, image_url, page_url, is_active)
 	VALUES ($1, $2, $3, $4, $5)`
 	DeleteBannerQuery = `DELETE FROM "banner" WHERE id = $1`
+	EditBannerQuery   = `UPDATE "banner" set is_active = $1 WHERE "id" = $2`
 )

@@ -461,3 +461,11 @@ func (r *adminRepo) DeleteBanner(ctx context.Context, bannerID string) error {
 	}
 	return nil
 }
+
+func (r *adminRepo) EditBanner(ctx context.Context, requestBody body.BannerIDRequest) error {
+	_, err := r.PSQL.ExecContext(ctx, EditBannerQuery, requestBody.IsActive, requestBody.ID)
+	if err != nil {
+		return err
+	}
+	return nil
+}
