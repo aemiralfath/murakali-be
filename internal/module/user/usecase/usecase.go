@@ -1867,20 +1867,20 @@ func (u *userUC) getAdressString(ctx context.Context, userID string, isShop bool
 }
 
 func (u *userUC) CreateRefundUser(ctx context.Context, userID string, requestBody body.CreateRefundUserRequest) error {
-	order, err := u.userRepo.GetOrderByOrderID(ctx, requestBody.OrderID)
+	orderData, err := u.userRepo.GetOrderModelByID(ctx, requestBody.OrderID)
 	if err != nil {
 		return err
 	}
-	if order.IsRefund {
+
+	if orderData.UserID.String() != userID {
+		return httperror.New(http.StatusBadRequest, response.InvalidRefund)
+	}
+
+	if orderData.IsRefund {
 		return httperror.New(http.StatusBadRequest, response.OrderUnderProgressRefund)
 	}
 
-	orderID, errOrderID := uuid.Parse(order.OrderID)
-	if errOrderID != nil {
-		return errOrderID
-	}
-
-	refundData, errRefundData := u.userRepo.GetRefundOrderByOrderID(ctx, orderID.String())
+	refundData, errRefundData := u.userRepo.GetRefundOrderByOrderID(ctx, orderData.ID.String())
 	if errRefundData != nil {
 		if errRefundData != sql.ErrNoRows {
 			return errRefundData
@@ -1903,7 +1903,7 @@ func (u *userUC) CreateRefundUser(ctx context.Context, userID string, requestBod
 	*requestBody.IsBuyerRefund = true
 
 	refundData = &model.Refund{
-		OrderID:        orderID,
+		OrderID:        orderData.ID,
 		IsSellerRefund: requestBody.IsSellerRefund,
 		IsBuyerRefund:  requestBody.IsBuyerRefund,
 		Reason:         requestBody.Reason,
@@ -1917,7 +1917,7 @@ func (u *userUC) CreateRefundUser(ctx context.Context, userID string, requestBod
 		}
 
 		isRefund := true
-		errOrderRefund := u.userRepo.UpdateOrderRefund(ctx, tx, orderID.String(), isRefund)
+		errOrderRefund := u.userRepo.UpdateOrderRefund(ctx, tx, orderData.ID.String(), isRefund)
 		if errOrderRefund != nil {
 			return errOrderRefund
 		}
@@ -1930,12 +1930,21 @@ func (u *userUC) CreateRefundUser(ctx context.Context, userID string, requestBod
 	return nil
 }
 
-func (u *userUC) GetRefundOrder(ctx context.Context, userID string, refundID string) (*body.GetRefundThreadResponse, error) {
-	refundData, err := u.userRepo.GetRefundOrderByID(ctx, refundID)
+func (u *userUC) GetRefundOrder(ctx context.Context, userID string, orderID string) (*body.GetRefundThreadResponse, error) {
+	orderData, err := u.userRepo.GetOrderModelByID(ctx, orderID)
 	if err != nil {
 		return nil, err
 	}
-	refundThreadData, err := u.userRepo.GetRefundThreadByRefundID(ctx, refundID)
+
+	if orderData.UserID.String() != userID {
+		return nil, httperror.New(http.StatusBadRequest, response.InvalidRefund)
+	}
+
+	refundData, err := u.userRepo.GetRefundOrderByOrderID(ctx, orderID)
+	if err != nil {
+		return nil, err
+	}
+	refundThreadData, err := u.userRepo.GetRefundThreadByRefundID(ctx, refundData.ID.String())
 	if err != nil {
 		return nil, err
 	}
@@ -1949,9 +1958,18 @@ func (u *userUC) GetRefundOrder(ctx context.Context, userID string, refundID str
 }
 
 func (u *userUC) CreateRefundThreadUser(ctx context.Context, userID string, requestBody *body.CreateRefundThreadRequest) error {
-	_, err := u.userRepo.GetRefundOrderByID(ctx, requestBody.RefundID)
+	refundData, err := u.userRepo.GetRefundOrderByID(ctx, requestBody.RefundID)
 	if err != nil {
 		return err
+	}
+
+	orderData, err := u.userRepo.GetOrderModelByID(ctx, refundData.OrderID.String())
+	if err != nil {
+		return err
+	}
+
+	if orderData.UserID.String() != userID {
+		return httperror.New(http.StatusBadRequest, response.InvalidRefund)
 	}
 
 	parsedRefundID, err := uuid.Parse(requestBody.RefundID)

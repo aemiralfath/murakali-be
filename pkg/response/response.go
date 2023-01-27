@@ -68,6 +68,7 @@ const (
 	VoucherMarketplaceNotFound     = "Voucher Marketplace Not Found"
 	VoucherShopNotFound            = "Voucher Shop Not Found"
 	OrderUnderProgressRefund       = "Order is Under Progress Refunding"
+	InvalidRefund                  = "Invalid Refund"
 	OrderCannotToRefund            = "Order Cannot to Refund"
 	OrderHasAcceptedToRefund       = "Order Has Accepted to Refund"
 )
