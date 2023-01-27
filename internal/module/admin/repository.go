@@ -32,4 +32,10 @@ type Repository interface {
 	AddCategory(ctx context.Context, requestBody body.CategoryRequest) error
 	DeleteCategory(ctx context.Context, categoryID string) error
 	EditCategory(ctx context.Context, requestBody body.CategoryRequest) error
+	CountProductCategory(ctx context.Context, userid string) (int, error)
+	CountCategoryParent(ctx context.Context, userid string) (int, error)
+	GetBanner(ctx context.Context) ([]*body.BannerResponse, error)
+	AddBanner(ctx context.Context, requestBody body.BannerRequest) error
+	DeleteBanner(ctx context.Context, bannerID string) error
+	EditBanner(ctx context.Context, requestBody body.BannerIDRequest) error
 }

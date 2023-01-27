@@ -653,6 +653,1243 @@ func (u *userUC) PatchSealabsPay(ctx context.Context, cardNumber, userid string)
 	return nil
 }
 
+func (u *userUC) DeleteSealabsPay(ctx context.Context, userID, cardNumber string) error {
+	slp, err := u.userRepo.GetSealabsPayUser(ctx, userID, cardNumber)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return httperror.New(http.StatusBadRequest, response.SealabsCardNotFound)
+		}
+
+		return err
+	}
+
+	if slp.IsDefault {
+		return httperror.New(http.StatusBadRequest, response.SealabsCardIsDefault)
+	}
+
+	errDelete := u.userRepo.DeleteSealabsPay(ctx, cardNumber)
+	if errDelete != nil {
+		return errDelete
+	}
+
+	return nil
+}
+
+func (u *userUC) ActivateWallet(ctx context.Context, userID, pin string) error {
+	userModel, err := u.userRepo.GetUserByID(ctx, userID)
+	if err != nil {
+		return err
+	}
+
+	wallet, err := u.userRepo.GetWalletByUserID(ctx, userID)
+	if err != nil {
+		if err != sql.ErrNoRows {
+			return err
+		}
+	}
+
+	if wallet != nil {
+		return httperror.New(http.StatusBadRequest, response.WalletAlreadyActivated)
+	}
+
+	hashedPin, err := bcrypt.GenerateFromPassword([]byte(pin), bcrypt.DefaultCost)
+	if err != nil {
+		return err
+	}
+
+	walletData := &model.Wallet{}
+	walletData.UserID = userModel.ID
+	walletData.Balance = 0
+	walletData.PIN = string(hashedPin)
+	walletData.AttemptCount = 0
+	walletData.ActiveDate.Valid = true
+	walletData.ActiveDate.Time = time.Now()
+
+	if err := u.userRepo.CreateWallet(ctx, walletData); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (u *userUC) RegisterMerchant(ctx context.Context, userID, shopName string) error {
+	count, err := u.userRepo.CheckShopByID(ctx, userID)
+	if err != nil {
+		return err
+	}
+	if count != 0 {
+		return httperror.New(http.StatusBadRequest, response.UserAlreadyHaveShop)
+	}
+
+	count, err = u.userRepo.CheckShopUnique(ctx, shopName)
+	if err != nil {
+		return err
+	}
+	if count != 0 {
+		return httperror.New(http.StatusBadRequest, response.ShopAlreadyExists)
+	}
+
+	if _, errWallet := u.userRepo.GetWalletByUserID(ctx, userID); errWallet != nil {
+		if errWallet == sql.ErrNoRows {
+			return httperror.New(http.StatusBadRequest, response.WalletIsNotActivated)
+		}
+		return errWallet
+	}
+
+	err = u.userRepo.AddShop(ctx, userID, shopName)
+	if err != nil {
+		return err
+	}
+
+	err = u.userRepo.UpdateRole(ctx, userID)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (u *userUC) GetUserProfile(ctx context.Context, userID string) (*body.ProfileResponse, error) {
+	profile := &body.ProfileResponse{}
+	key := fmt.Sprintf("profile:%s", userID)
+	profileRedis, err := u.userRepo.GetProfileRedis(ctx, key)
+	if err != nil {
+		userModel, err := u.userRepo.GetUserByID(ctx, userID)
+		if err != nil {
+			if err == sql.ErrNoRows {
+				return nil, httperror.New(http.StatusBadRequest, response.UserNotExistMessage)
+			}
+			return nil, err
+		}
+
+		profileInfo := &body.ProfileResponse{
+			Role:        userModel.RoleID,
+			UserName:    userModel.Username,
+			Email:       userModel.Email,
+			PhoneNumber: userModel.PhoneNo,
+			FullName:    userModel.FullName,
+			Gender:      userModel.Gender,
+			BirthDate:   userModel.BirthDate.Time,
+			PhotoURL:    userModel.PhotoURL,
+			IsVerify:    userModel.IsVerify,
+		}
+
+		redisValue, err := json.Marshal(profileInfo)
+		if err != nil {
+			return nil, err
+		}
+
+		if err := u.userRepo.InsertProfileRedis(ctx, key, string(redisValue)); err != nil {
+			return nil, err
+		}
+
+		return profileInfo, nil
+	}
+
+	if err := json.Unmarshal([]byte(*profileRedis), profile); err != nil {
+		return nil, err
+	}
+
+	return profile, nil
+}
+
+func (u *userUC) UploadProfilePicture(ctx context.Context, imgURL, userID string) error {
+	err := u.userRepo.UpdateProfileImage(ctx, imgURL, userID)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (u *userUC) VerifyPasswordChange(ctx context.Context, userID string) error {
+	userInfo, err := u.userRepo.GetUserByID(ctx, userID)
+	if err != nil {
+		return err
+	}
+
+	err = u.SendOTPEmail(ctx, userInfo.Email)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (u *userUC) SendOTPEmail(ctx context.Context, email string) error {
+	otp, err := util.GenerateRandomAlpaNumeric(6)
+	if err != nil {
+		return err
+	}
+
+	if err := u.userRepo.InsertNewOTPKey(ctx, email, otp); err != nil {
+		return err
+	}
+
+	subject := "Change Password Verification!"
+	msg := smtp.VerificationEmailBody(otp)
+	go smtp.SendEmail(u.cfg, email, subject, msg)
+
+	return nil
+}
+
+func (u *userUC) VerifyOTP(ctx context.Context, requestBody body.VerifyOTPRequest, userID string) (string, error) {
+	userInfo, err := u.userRepo.GetUserByID(ctx, userID)
+	if err != nil {
+		return "", err
+	}
+	value, err := u.userRepo.GetOTPValue(ctx, userInfo.Email)
+	if err != nil {
+		return "", httperror.New(http.StatusBadRequest, response.OTPAlreadyExpiredMessage)
+	}
+
+	if value != requestBody.OTP {
+		return "", httperror.New(http.StatusBadRequest, response.OTPIsNotValidMessage)
+	}
+
+	changePasswordToken, err := jwt.GenerateJWTChangePasswordToken(userInfo.ID.String(), u.cfg)
+	if err != nil {
+		return "", err
+	}
+
+	_, err = u.userRepo.DeleteOTPValue(ctx, userInfo.Email)
+	if err != nil {
+		return "", err
+	}
+
+	return changePasswordToken, nil
+}
+
+func (u *userUC) ChangePassword(ctx context.Context, userID, newPassword string) error {
+	userInfo, err := u.userRepo.GetUserByID(ctx, userID)
+	if err != nil {
+		return err
+	}
+	userPassword, err := u.userRepo.GetPasswordByID(ctx, userID)
+	if err != nil {
+		return err
+	}
+	err = bcrypt.CompareHashAndPassword([]byte(userPassword), []byte(newPassword))
+	if err == nil {
+		return httperror.New(http.StatusBadRequest, response.PasswordSameOldPasswordMessage)
+	}
+
+	if strings.Contains(strings.ToLower(newPassword), strings.ToLower(*userInfo.Username)) {
+		return httperror.New(http.StatusBadRequest, response.PasswordContainUsernameMessage)
+	}
+
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(newPassword), bcrypt.DefaultCost)
+	if err != nil {
+		return err
+	}
+
+	password := string(hashedPassword)
+
+	err = u.userRepo.UpdatePasswordByID(ctx, userID, password)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (u *userUC) TopUpWallet(ctx context.Context, userID string, requestBody body.TopUpWalletRequest) (string, error) {
+	wallet, err := u.userRepo.GetWalletByUserID(ctx, userID)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return "", httperror.New(http.StatusBadRequest, response.WalletIsNotActivated)
+		}
+		return "", err
+	}
+
+	card, err := u.userRepo.GetSealabsPayUser(ctx, userID, requestBody.CardNumber)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return "", httperror.New(http.StatusBadRequest, response.SealabsCardNotFound)
+		}
+		return "", err
+	}
+
+	transactionID, err := u.txRepo.WithTransactionReturnData(func(tx postgre.Transaction) (interface{}, error) {
+		transaction := &model.Transaction{}
+		transaction.WalletID = &wallet.ID
+		transaction.CardNumber = &card.CardNumber
+		transaction.TotalPrice = float64(requestBody.Amount)
+		transaction.ExpiredAt.Valid = true
+		transaction.ExpiredAt.Time = time.Now().Add(time.Hour * 24)
+
+		transactionID, errTrans := u.userRepo.CreateTransaction(ctx, tx, transaction)
+		if errTrans != nil {
+			return nil, errTrans
+		}
+
+		return transactionID.String(), nil
+	})
+
+	if err != nil {
+		return "", err
+	}
+
+	return transactionID.(string), nil
+}
+
+func (u *userUC) CreateSLPPayment(ctx context.Context, transactionID string) (string, error) {
+	transaction, err := u.userRepo.GetTransactionByID(ctx, transactionID)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return "", httperror.New(http.StatusBadRequest, response.TransactionIDNotExist)
+		}
+
+		return "", err
+	}
+
+	if time.Until(transaction.ExpiredAt.Time) < 0 {
+		return "", httperror.New(http.StatusBadRequest, response.TransactionAlreadyExpired)
+	}
+
+	if transaction.PaidAt.Valid || transaction.CanceledAt.Valid {
+		return "", httperror.New(http.StatusBadRequest, response.TransactionAlreadyFinished)
+	}
+
+	if transaction.CardNumber == nil {
+		return "", httperror.New(http.StatusBadRequest, response.InvalidPaymentMethod)
+	}
+
+	signFormat := fmt.Sprintf("%s:%d:%s", *transaction.CardNumber, int(transaction.TotalPrice), u.cfg.External.SlpMerchantCode)
+	h := hmac.New(sha256.New, []byte(u.cfg.External.SlpAPIKey))
+	h.Write([]byte(signFormat))
+	sign := hex.EncodeToString(h.Sum(nil))
+
+	redirectURL, err := u.GetRedirectURL(transaction, sign)
+	if err != nil {
+		return "", err
+	}
+
+	return redirectURL, nil
+}
+
+func (u *userUC) CreateWalletPayment(ctx context.Context, transactionID string) error {
+	transaction, err := u.userRepo.GetTransactionByID(ctx, transactionID)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return httperror.New(http.StatusBadRequest, response.TransactionIDNotExist)
+		}
+
+		return err
+	}
+
+	if time.Until(transaction.ExpiredAt.Time) < 0 {
+		return httperror.New(http.StatusBadRequest, response.TransactionAlreadyExpired)
+	}
+
+	if transaction.PaidAt.Valid || transaction.CanceledAt.Valid {
+		return httperror.New(http.StatusBadRequest, response.TransactionAlreadyFinished)
+	}
+
+	if transaction.WalletID == nil {
+		return httperror.New(http.StatusBadRequest, response.InvalidPaymentMethod)
+	}
+
+	wallet, err := u.userRepo.GetWalletUser(ctx, transaction.WalletID.String())
+	if err != nil {
+		return err
+	}
+
+	if wallet.Balance-transaction.TotalPrice < 0 {
+		return httperror.New(http.StatusBadRequest, response.WalletBalanceNotEnough)
+	}
+
+	orders, err := u.userRepo.GetOrderByTransactionID(ctx, transactionID)
+	if err != nil {
+		return err
+	}
+
+	errTx := u.txRepo.WithTransaction(func(tx postgre.Transaction) error {
+		transaction.PaidAt.Valid = true
+		transaction.PaidAt.Time = time.Now()
+		if errTransaction := u.userRepo.UpdateTransaction(ctx, tx, transaction); errTransaction != nil {
+			return errTransaction
+		}
+
+		for _, order := range orders {
+			order.OrderStatusID = constant.OrderStatusWaitingForSeller
+			if errOrder := u.userRepo.UpdateOrder(ctx, tx, order); errOrder != nil {
+				return errOrder
+			}
+		}
+
+		walletHistory := &model.WalletHistory{}
+		walletHistory.TransactionID = transaction.ID
+		walletHistory.WalletID = wallet.ID
+		walletHistory.From = wallet.ID.String()
+		walletHistory.To = transaction.ID.String()
+		walletHistory.Description = "Payment transaction " + transaction.ID.String()
+		walletHistory.Amount = transaction.TotalPrice
+		walletHistory.CreatedAt = time.Now()
+		if errWallet := u.userRepo.InsertWalletHistory(ctx, tx, walletHistory); errWallet != nil {
+			return errWallet
+		}
+
+		wallet.Balance -= transaction.TotalPrice
+		wallet.UpdatedAt.Valid = true
+		wallet.UpdatedAt.Time = time.Now()
+
+		if errBalance := u.userRepo.UpdateWalletBalance(ctx, tx, wallet); errBalance != nil {
+			return errBalance
+		}
+
+		if errCredit := u.CreditToMarketplaceAccount(ctx, tx, transaction); errCredit != nil {
+			return errCredit
+		}
+
+		return nil
+	})
+	if errTx != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (u *userUC) GetRedirectURL(transaction *model.Transaction, sign string) (string, error) {
+	var responseSLP body.SLPPaymentResponse
+
+	url := fmt.Sprintf("%s/v1/transaction/pay", u.cfg.External.SlpURL)
+	callbackURL := fmt.Sprintf("https://%s/api/v1/user/transaction/slp-payment/%s", u.cfg.Server.Domain, transaction.ID.String())
+	if transaction.WalletID != nil {
+		callbackURL = fmt.Sprintf("https://%s/api/v1/user/transaction/wallet-payment/%s", u.cfg.Server.Domain, transaction.ID.String())
+	}
+
+	payload := fmt.Sprintf(
+		"card_number=%s&amount=%d&merchant_code=%s&redirect_url=%s&callback_url=%s&signature=%s",
+		*transaction.CardNumber,
+		int(transaction.TotalPrice),
+		u.cfg.External.SlpMerchantCode,
+		"https://www.google.com",
+		callbackURL,
+		sign)
+
+	req, err := http.NewRequest("POST", url, strings.NewReader(payload))
+	if err != nil {
+		return "", err
+	}
+
+	client := &http.Client{
+		CheckRedirect: func(req *http.Request, via []*http.Request) error {
+			return http.ErrUseLastResponse
+		},
+	}
+
+	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
+	res, err := client.Do(req)
+	if err != nil {
+		return "", err
+	}
+	defer res.Body.Close()
+
+	if res.StatusCode != 303 {
+		readErr := json.NewDecoder(res.Body).Decode(&responseSLP)
+		if readErr != nil {
+			return "", err
+		}
+
+		return "", httperror.New(http.StatusBadRequest, responseSLP.Message)
+	}
+
+	return res.Header.Get("Location"), nil
+}
+
+func (u *userUC) GetTransactionByUserID(ctx context.Context, userID string, status int, pgn *pagination.Pagination) (*pagination.Pagination, error) {
+	totalRows, err := u.userRepo.GetTotalTransactionByUserID(ctx, userID)
+	if err != nil {
+		return nil, err
+	}
+
+	totalPages := int(math.Ceil(float64(totalRows) / float64(pgn.Limit)))
+	pgn.TotalRows = totalRows
+	pgn.TotalPages = totalPages
+
+	transactionsRes := make([]*body.GetTransactionByIDResponse, 0)
+	transactions, err := u.userRepo.GetTransactionByUserID(ctx, userID, status, pgn)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, transaction := range transactions {
+		res := &body.GetTransactionByIDResponse{
+			ID:         transaction.ID,
+			WalletID:   transaction.WalletID,
+			CardNumber: transaction.CardNumber,
+			Invoice:    transaction.Invoice,
+			TotalPrice: transaction.TotalPrice,
+			ExpiredAt:  transaction.ExpiredAt,
+		}
+
+		res.Orders, err = u.userRepo.GetOrderDetailByTransactionID(ctx, res.ID.String())
+		if err != nil {
+			return nil, err
+		}
+
+		res.VoucherMarketplace, err = u.userRepo.GetVoucherMarketplaceByID(ctx, res.ID.String())
+		if err != nil {
+			if err != sql.ErrNoRows {
+				return nil, err
+			}
+		}
+
+		transactionsRes = append(transactionsRes, res)
+	}
+
+	pgn.Rows = transactionsRes
+
+	return pgn, nil
+}
+
+func (u *userUC) GetTransactionByID(ctx context.Context, transactionID string) (*body.GetTransactionByIDResponse, error) {
+	transaction, err := u.userRepo.GetTransactionByID(ctx, transactionID)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, httperror.New(http.StatusBadRequest, response.TransactionIDNotExist)
+		}
+		return nil, err
+	}
+
+	res := &body.GetTransactionByIDResponse{
+		ID:         transaction.ID,
+		WalletID:   transaction.WalletID,
+		CardNumber: transaction.CardNumber,
+		Invoice:    transaction.Invoice,
+		TotalPrice: transaction.TotalPrice,
+		ExpiredAt:  transaction.ExpiredAt,
+	}
+
+	res.Orders, err = u.userRepo.GetOrderDetailByTransactionID(ctx, res.ID.String())
+
+	if err != nil {
+		return nil, err
+	}
+
+	return res, nil
+}
+
+func (u *userUC) UpdateTransaction(ctx context.Context, transactionID string, requestBody body.SLPCallbackRequest) error {
+	transaction, err := u.userRepo.GetTransactionByID(ctx, transactionID)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return httperror.New(http.StatusBadRequest, response.TransactionIDNotExist)
+		}
+
+		return err
+	}
+
+	if transaction.PaidAt.Valid || transaction.CanceledAt.Valid {
+		return httperror.New(http.StatusBadRequest, response.TransactionAlreadyFinished)
+	}
+
+	orders, err := u.userRepo.GetOrderByTransactionID(ctx, transactionID)
+	if err != nil {
+		return err
+	}
+
+	if requestBody.Status == constant.SLPStatusPaid && requestBody.Message == constant.SlPMessagePaid {
+		err := u.txRepo.WithTransaction(func(tx postgre.Transaction) error {
+			transaction.PaidAt.Valid = true
+			transaction.PaidAt.Time = time.Now()
+			if err := u.userRepo.UpdateTransaction(ctx, tx, transaction); err != nil {
+				return err
+			}
+
+			for _, order := range orders {
+				order.OrderStatusID = constant.OrderStatusWaitingForSeller
+				if err := u.userRepo.UpdateOrder(ctx, tx, order); err != nil {
+					return err
+				}
+			}
+
+			if err := u.CreditToMarketplaceAccount(ctx, tx, transaction); err != nil {
+				return err
+			}
+
+			return nil
+		})
+
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (u *userUC) UpdateTransactionPaymentMethod(ctx context.Context, transactionID, cardNumber string) error {
+	transaction, err := u.userRepo.GetTransactionByID(ctx, transactionID)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return httperror.New(http.StatusBadRequest, response.TransactionIDNotExist)
+		}
+
+		return err
+	}
+
+	if transaction.PaidAt.Valid || transaction.CanceledAt.Valid {
+		return httperror.New(http.StatusBadRequest, response.TransactionAlreadyFinished)
+	}
+
+	if cardNumber != "" {
+		err := u.txRepo.WithTransaction(func(tx postgre.Transaction) error {
+			transaction.CardNumber = &cardNumber
+			if err := u.userRepo.UpdateTransaction(ctx, tx, transaction); err != nil {
+				return err
+			}
+			return nil
+		})
+
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (u *userUC) UpdateWalletTransaction(ctx context.Context, transactionID string, requestBody body.SLPCallbackRequest) error {
+	transaction, err := u.userRepo.GetTransactionByID(ctx, transactionID)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return httperror.New(http.StatusBadRequest, response.TransactionIDNotExist)
+		}
+
+		return err
+	}
+
+	wallet, err := u.userRepo.GetWalletUser(ctx, transaction.WalletID.String())
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return httperror.New(http.StatusBadRequest, response.WalletIsNotActivated)
+		}
+
+		return err
+	}
+
+	if transaction.PaidAt.Valid || transaction.CanceledAt.Valid {
+		return httperror.New(http.StatusBadRequest, response.TransactionAlreadyFinished)
+	}
+
+	if requestBody.Status == constant.SLPStatusCanceled && requestBody.Message == constant.SLPMessageCanceled {
+		err := u.txRepo.WithTransaction(func(tx postgre.Transaction) error {
+			transaction.CanceledAt.Valid = true
+			transaction.CanceledAt.Time = time.Now()
+			if err := u.userRepo.UpdateTransaction(ctx, tx, transaction); err != nil {
+				return err
+			}
+
+			return nil
+		})
+
+		if err != nil {
+			return err
+		}
+	}
+
+	if requestBody.Status == constant.SLPStatusPaid && requestBody.Message == constant.SlPMessagePaid {
+		err := u.txRepo.WithTransaction(func(tx postgre.Transaction) error {
+			transaction.PaidAt.Valid = true
+			transaction.PaidAt.Time = time.Now()
+			if err := u.userRepo.UpdateTransaction(ctx, tx, transaction); err != nil {
+				return err
+			}
+
+			walletHistory := &model.WalletHistory{}
+			walletHistory.TransactionID = transaction.ID
+			walletHistory.WalletID = wallet.ID
+			walletHistory.From = *transaction.CardNumber
+			walletHistory.To = transaction.WalletID.String()
+			walletHistory.Description = "Top up from " + *transaction.CardNumber
+			walletHistory.Amount = transaction.TotalPrice
+			walletHistory.CreatedAt = time.Now()
+			if err := u.userRepo.InsertWalletHistory(ctx, tx, walletHistory); err != nil {
+				return err
+			}
+
+			wallet.Balance += transaction.TotalPrice
+			wallet.UpdatedAt.Valid = true
+			wallet.UpdatedAt.Time = time.Now()
+
+			if err := u.userRepo.UpdateWalletBalance(ctx, tx, wallet); err != nil {
+				return err
+			}
+			return nil
+		})
+
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (u *userUC) CreditToMarketplaceAccount(ctx context.Context, tx postgre.Transaction, transaction *model.Transaction) error {
+	walletMarketplace, err := u.userRepo.GetWalletByUserID(ctx, constant.AdminMarketplaceID)
+	if err != nil {
+		return err
+	}
+
+	walletHistory := &model.WalletHistory{}
+	if transaction.WalletID == nil {
+		walletHistory.From = *transaction.CardNumber
+	}
+
+	if transaction.CardNumber == nil {
+		walletHistory.From = transaction.WalletID.String()
+	}
+
+	walletHistory.TransactionID = transaction.ID
+	walletHistory.WalletID = walletMarketplace.ID
+	walletHistory.To = walletMarketplace.ID.String()
+	walletHistory.Description = "Payment transaction " + transaction.ID.String()
+	walletHistory.Amount = transaction.TotalPrice
+	walletHistory.CreatedAt = time.Now()
+
+	if err := u.userRepo.InsertWalletHistory(ctx, tx, walletHistory); err != nil {
+		return err
+	}
+
+	walletMarketplace.Balance += transaction.TotalPrice
+	walletMarketplace.UpdatedAt.Valid = true
+	walletMarketplace.UpdatedAt.Time = time.Now()
+
+	if err := u.userRepo.UpdateWalletBalance(ctx, tx, walletMarketplace); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (u *userUC) GetWallet(ctx context.Context, userID string) (*model.Wallet, error) {
+	wallet, err := u.userRepo.GetWalletByUserID(ctx, userID)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, httperror.New(http.StatusBadRequest, response.WalletIsNotActivated)
+		}
+
+		return nil, err
+	}
+
+	return wallet, nil
+}
+
+func (u *userUC) GetWalletHistory(ctx context.Context, userID string, pgn *pagination.Pagination) (*pagination.Pagination, error) {
+	wallet, err := u.userRepo.GetWalletByUserID(ctx, userID)
+	if err != nil {
+		if err != sql.ErrNoRows {
+			return nil, err
+		}
+	}
+
+	var totalRows int64
+	if wallet != nil {
+		totalRows, err = u.userRepo.GetTotalWalletHistoryByWalletID(ctx, wallet.ID.String())
+		if err != nil {
+			return nil, err
+		}
+
+		walletHistory, err := u.userRepo.GetWalletHistoryByWalletID(ctx, pgn, wallet.ID.String())
+		if err != nil {
+			return nil, err
+		}
+
+		pgn.Rows = walletHistory
+	} else {
+		totalRows = 0
+		pgn.Rows = make([]*body.HistoryWalletResponse, 0)
+	}
+
+	totalPages := int(math.Ceil(float64(totalRows) / float64(pgn.Limit)))
+	pgn.TotalRows = totalRows
+	pgn.TotalPages = totalPages
+
+	return pgn, nil
+}
+
+func (u *userUC) GetDetailWalletHistory(ctx context.Context, walletHistoryID, userID string) (*body.DetailHistoryWalletResponse, error) {
+	walletHistory, err := u.userRepo.GetWalletHistoryByID(ctx, walletHistoryID)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, httperror.New(http.StatusBadRequest, response.WalletHistoryNotFound)
+		}
+		return nil, err
+	}
+
+	responseWallet := &body.DetailHistoryWalletResponse{
+		ID:          walletHistory.ID.String(),
+		From:        walletHistory.From,
+		To:          walletHistory.To,
+		Description: walletHistory.Description,
+		Amount:      walletHistory.Amount,
+		CreatedAt:   walletHistory.CreatedAt,
+	}
+
+	if walletHistory.WalletID.String() == walletHistory.From {
+		var transactionDetail *body.TransactionDetailResponse
+		transaction, err := u.userRepo.GetTransactionByID(ctx, walletHistory.TransactionID.String())
+		if err != nil {
+			return nil, err
+		}
+
+		transactionDetail = &body.TransactionDetailResponse{
+			ID:                   transaction.ID,
+			VoucherMarketplaceID: transaction.VoucherMarketplaceID,
+			WalletID:             transaction.WalletID,
+			CardNumber:           transaction.CardNumber,
+			Invoice:              transaction.Invoice,
+			TotalPrice:           transaction.TotalPrice,
+			PaidAt:               transaction.PaidAt,
+			CanceledAt:           transaction.CanceledAt,
+			ExpiredAt:            transaction.ExpiredAt,
+			Orders:               []*model.Order{},
+		}
+
+		orders, err := u.userRepo.GetOrdersByTransactionID(ctx, walletHistory.TransactionID.String(), userID)
+		if err != nil {
+			return nil, err
+		}
+
+		transactionDetail.Orders = orders
+		responseWallet.Transaction = transactionDetail
+	}
+
+	return responseWallet, nil
+}
+
+func (u *userUC) WalletStepUp(ctx context.Context, userID string, requestBody body.WalletStepUpRequest) (string, error) {
+	wallet, err := u.userRepo.GetWalletByUserID(ctx, userID)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return "", httperror.New(http.StatusBadRequest, response.WalletIsNotActivated)
+		}
+		return "", err
+	}
+
+	if wallet.Balance-float64(requestBody.Amount) < 0 {
+		return "", httperror.New(http.StatusBadRequest, response.WalletBalanceNotEnough)
+	}
+
+	if wallet.UnlockedAt.Valid && time.Until(wallet.UnlockedAt.Time) >= 0 {
+		return "", httperror.New(http.StatusBadRequest, response.WalletIsBlocked)
+	}
+
+	blocked := false
+	invalidPin := false
+	if bcrypt.CompareHashAndPassword([]byte(wallet.PIN), []byte(requestBody.Pin)) != nil {
+		invalidPin = true
+		wallet.AttemptCount++
+		wallet.AttemptAt.Valid = true
+		wallet.AttemptAt.Time = time.Now()
+
+		if wallet.AttemptCount >= 3 {
+			blocked = true
+			wallet.AttemptCount = 0
+			wallet.UnlockedAt.Valid = true
+			wallet.UnlockedAt.Time = time.Now().Add(time.Minute * 15)
+		}
+	}
+
+	if !invalidPin {
+		wallet.AttemptCount = 0
+		wallet.AttemptAt.Valid = true
+		wallet.AttemptAt.Time = time.Now()
+	}
+
+	if errWallet := u.userRepo.UpdateWallet(ctx, wallet); errWallet != nil {
+		return "", errWallet
+	}
+
+	if blocked {
+		return "", httperror.New(http.StatusBadRequest, response.WalletIsBlocked)
+	}
+
+	if invalidPin {
+		return "", httperror.New(http.StatusBadRequest, response.WalletPinIsInvalid)
+	}
+
+	walletToken, err := jwt.GenerateJWTWalletToken(userID, "level1", u.cfg)
+	if err != nil {
+		return "", err
+	}
+
+	return walletToken, nil
+}
+
+func (u *userUC) ChangeWalletPinStepUp(ctx context.Context, userID string, requestBody body.ChangeWalletPinStepUpRequest) (string, error) {
+	wallet, err := u.userRepo.GetWalletByUserID(ctx, userID)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return "", httperror.New(http.StatusBadRequest, response.WalletIsNotActivated)
+		}
+		return "", err
+	}
+
+	userModel, err := u.userRepo.GetUserPasswordByID(ctx, wallet.UserID.String())
+	if err != nil {
+		return "", err
+	}
+
+	if bcrypt.CompareHashAndPassword([]byte(*userModel.Password), []byte(requestBody.Password)) != nil {
+		return "", httperror.New(http.StatusBadRequest, response.InvalidPasswordMessage)
+	}
+
+	walletToken, err := jwt.GenerateJWTWalletToken(userID, "level2", u.cfg)
+	if err != nil {
+		return "", err
+	}
+
+	return walletToken, nil
+}
+
+func (u *userUC) ChangeWalletPin(ctx context.Context, userID, pin string) error {
+	wallet, err := u.userRepo.GetWalletByUserID(ctx, userID)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return httperror.New(http.StatusBadRequest, response.WalletIsNotActivated)
+		}
+		return err
+	}
+
+	hashedPin, err := bcrypt.GenerateFromPassword([]byte(pin), bcrypt.DefaultCost)
+	if err != nil {
+		return err
+	}
+
+	wallet.PIN = string(hashedPin)
+	if err := u.userRepo.UpdateWalletPin(ctx, wallet); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (u *userUC) CreateTransaction(ctx context.Context, userID string, requestBody body.CreateTransactionRequest) (string, error) {
+	transactionData := &model.Transaction{}
+	orderResponses := make([]*body.OrderResponse, 0)
+
+	userModel, errUser := u.userRepo.GetUserByID(ctx, userID)
+	if errUser != nil {
+		if errUser == sql.ErrNoRows {
+			return "", httperror.New(http.StatusUnauthorized, response.UnauthorizedMessage)
+		}
+		return "", errUser
+	}
+
+	if requestBody.WalletID != "" {
+		walletUser, errWallet := u.userRepo.GetWalletUser(ctx, requestBody.WalletID)
+		if errWallet != nil {
+			if errWallet == sql.ErrNoRows {
+				return "", httperror.New(http.StatusBadRequest, response.WalletIsNotActivated)
+			}
+			return "", errWallet
+		}
+
+		if walletUser.UserID != userModel.ID {
+			return "", httperror.New(http.StatusBadRequest, response.WalletIsNotActivated)
+		}
+
+		transactionData.WalletID = &walletUser.ID
+	}
+
+	if requestBody.CardNumber != "" {
+		SealabsPayUser, errSealabpay := u.userRepo.GetSealabsPayUser(ctx, userModel.ID.String(), requestBody.CardNumber)
+		if errSealabpay != nil {
+			return "", errSealabpay
+		}
+		transactionData.CardNumber = &SealabsPayUser.CardNumber
+	}
+
+	voucherMarketplace := &model.Voucher{}
+	if requestBody.VoucherMarketplaceID != "" {
+		var errVoucherMP error
+		voucherMarketplace, errVoucherMP = u.userRepo.GetVoucherMarketplaceByID(ctx, requestBody.VoucherMarketplaceID)
+		if errVoucherMP != nil {
+			if errVoucherMP != sql.ErrNoRows {
+				return "", errVoucherMP
+			}
+			return "", httperror.New(http.StatusBadRequest, response.VoucherMarketplaceNotFound)
+		}
+		transactionData.VoucherMarketplaceID = &voucherMarketplace.ID
+	}
+
+	voucherShopList := make([]*model.Voucher, 0)
+	promotionMap := make(map[string]int, 0)
+	qtyTotalProduct := make(map[string]int, 0)
+	promotionList := make([]*model.Promotion, 0)
+
+	data, err := u.txRepo.WithTransactionReturnData(func(tx postgre.Transaction) (interface{}, error) {
+		var totalDeliveryFee float64
+		if len(requestBody.CartItems) == 0 {
+			return nil, httperror.New(http.StatusBadRequest, response.CartIsEmpty)
+		}
+		for _, cart := range requestBody.CartItems {
+			orderData := &model.OrderModel{}
+			cartShop, err := u.userRepo.GetShopByID(ctx, cart.ShopID)
+			if err != nil {
+				if err == sql.ErrNoRows {
+					return nil, httperror.New(http.StatusBadRequest, response.UnknownShop)
+				}
+				return nil, err
+			}
+
+			voucherShop := &model.Voucher{}
+			var voucherShopID *uuid.UUID
+			if cart.VoucherShopID != "" {
+				var errVoucherShop error
+				voucherShop, errVoucherShop = u.userRepo.GetVoucherShopByID(ctx, cart.VoucherShopID, cartShop.ID.String())
+				if errVoucherShop != nil {
+					if errVoucherShop != sql.ErrNoRows {
+						return nil, err
+					}
+					if errVoucherShop == sql.ErrNoRows {
+						return "", httperror.New(http.StatusBadRequest, response.VoucherShopNotFound)
+					}
+				}
+				voucherShopID = &voucherShop.ID
+			}
+
+			courierShop, err := u.userRepo.GetCourierShopByID(ctx, cart.CourierID, cartShop.ID.String())
+			if err != nil {
+				return nil, httperror.New(http.StatusBadRequest, response.SelectShippingCourier)
+			}
+			orderResponse := &body.OrderResponse{
+				Items: make([]*body.OrderItemResponse, 0),
+			}
+			isAvail := true
+
+			if len(cart.ProductDetails) == 0 {
+				return nil, httperror.New(http.StatusBadRequest, response.CartIsEmpty)
+			}
+
+			for _, bodyProductDetail := range cart.ProductDetails {
+				productDetailData, err := u.userRepo.GetProductDetailByID(ctx, tx, bodyProductDetail.ID)
+				if err != nil {
+					return nil, err
+				}
+
+				cartData, err := u.userRepo.GetCartItemUser(ctx, userModel.ID.String(), productDetailData.ID.String())
+				if err != nil {
+					return nil, httperror.New(http.StatusBadRequest, response.CartItemNotExist)
+				}
+
+				qtyTotalProduct[productDetailData.ProductID.String()] += int(cartData.Quantity)
+			}
+
+			for _, bodyProductDetail := range cart.ProductDetails {
+				productDetailData, err := u.userRepo.GetProductDetailByID(ctx, tx, bodyProductDetail.ID)
+				if err != nil {
+					return nil, err
+				}
+
+				cartData, err := u.userRepo.GetCartItemUser(ctx, userModel.ID.String(), productDetailData.ID.String())
+				if err != nil {
+					return nil, httperror.New(http.StatusBadRequest, response.CartItemNotExist)
+				}
+
+				promo, errPromo := u.userRepo.GetProductPromotionByProductID(ctx, productDetailData.ProductID.String())
+				if errPromo != nil {
+					if errPromo != sql.ErrNoRows {
+						return nil, errPromo
+					}
+					if errPromo == sql.ErrNoRows {
+						promo = &model.Promotion{}
+					}
+				}
+				totalQuantity := qtyTotalProduct[productDetailData.ProductID.String()]
+				subPrice := productDetailData.Price
+
+				if (totalQuantity <= promo.MaxQuantity) && (totalQuantity <= promo.Quota) && (promo.ID != uuid.Nil) {
+					DiscountPromotion := &model.Discount{
+						DiscountPercentage: promo.DiscountPercentage,
+						DiscountFixPrice:   promo.DiscountFixPrice,
+						MinProductPrice:    promo.MinProductPrice,
+						MaxDiscountPrice:   promo.MaxDiscountPrice,
+					}
+					_, subPrice = util.CalculateDiscount(productDetailData.Price, DiscountPromotion)
+					if promotionMap[promo.ID.String()] == 0 {
+						promotionList = append(promotionList, promo)
+					}
+					promotionMap[promo.ID.String()] = 1
+				}
+				totalPrice := subPrice * float64(bodyProductDetail.Quantity)
+				if int(productDetailData.Stock)-bodyProductDetail.Quantity < 0 {
+					isAvail = false
+					errCart := u.userRepo.DeleteCartItemByID(ctx, tx, cartData)
+					if errCart != nil {
+						return nil, errCart
+					}
+				}
+
+				orderItem := &model.OrderItem{
+					ProductDetailID: productDetailData.ID,
+					Quantity:        bodyProductDetail.Quantity,
+					ItemPrice:       subPrice,
+					TotalPrice:      totalPrice,
+					Note:            bodyProductDetail.Note,
+				}
+				item := &body.OrderItemResponse{
+					Item:              orderItem,
+					ProductDetailData: productDetailData,
+					CartItemData:      cartData,
+				}
+				orderResponse.Items = append(orderResponse.Items, item)
+				orderData.TotalPrice += orderItem.TotalPrice
+			}
+
+			if !isAvail {
+				return nil, httperror.New(http.StatusBadRequest, response.ProductQuantityNotAvailable)
+			}
+
+			subOrderPrice := orderData.TotalPrice
+			if voucherShop.ID != uuid.Nil {
+				discountVoucher := &model.Discount{
+					DiscountPercentage: voucherShop.DiscountPercentage,
+					DiscountFixPrice:   voucherShop.DiscountFixPrice,
+					MinProductPrice:    voucherShop.MinProductPrice,
+					MaxDiscountPrice:   voucherShop.MaxDiscountPrice,
+				}
+				_, subOrderPrice = util.CalculateDiscount(subOrderPrice, discountVoucher)
+				voucherShopList = append(voucherShopList, voucherShop)
+			}
+			orderData.TotalPrice = subOrderPrice
+
+			buyerAddressString, errBAS := u.getAdressString(ctx, userModel.ID.String(), false)
+			if errBAS != nil {
+				return nil, errBAS
+			}
+			shopAddressString, errSAS := u.getAdressString(ctx, cartShop.UserID.String(), true)
+			if errSAS != nil {
+				return nil, errSAS
+			}
+
+			orderData.ShopID = cartShop.ID
+			orderData.UserID = userModel.ID
+			orderData.BuyerAddress = buyerAddressString
+			orderData.ShopAddress = shopAddressString
+			orderData.VoucherShopID = voucherShopID
+			orderData.CourierID = courierShop.ID
+			orderData.DeliveryFee = cart.CourierFee
+			orderData.OrderStatusID = 1
+
+			orderResponse.OrderData = orderData
+			transactionData.TotalPrice += orderData.TotalPrice
+			totalDeliveryFee += orderData.DeliveryFee
+
+			orderResponses = append(orderResponses, orderResponse)
+		}
+
+		if voucherMarketplace.ID != uuid.Nil {
+			discountVoucherMarketplace := &model.Discount{
+				DiscountPercentage: voucherMarketplace.DiscountPercentage,
+				DiscountFixPrice:   voucherMarketplace.DiscountFixPrice,
+				MinProductPrice:    voucherMarketplace.MinProductPrice,
+				MaxDiscountPrice:   voucherMarketplace.MaxDiscountPrice,
+			}
+			_, subTransactionPrice := util.CalculateDiscount(transactionData.TotalPrice, discountVoucherMarketplace)
+			transactionData.TotalPrice = subTransactionPrice
+		}
+		transactionData.TotalPrice += totalDeliveryFee
+		invoice, errInvoice := util.GenerateInvoice()
+		if errInvoice != nil {
+			return nil, errInvoice
+		}
+		transactionData.Invoice = &invoice
+
+		transactionData.ExpiredAt.Valid = true
+		transactionData.ExpiredAt.Time = time.Now().Add(time.Hour * 24)
+
+		transactionResponse := &body.TransactionResponse{
+			TransactionData: transactionData,
+			OrderResponses:  orderResponses,
+		}
+
+		transactionID, errTrans := u.userRepo.CreateTransaction(ctx, tx, transactionResponse.TransactionData)
+		if errTrans != nil {
+			return nil, errTrans
+		}
+
+		if voucherMarketplace.ID != uuid.Nil {
+			voucherMarketplace.Quota--
+			if errVoucherMarketplace := u.userRepo.UpdateVoucherQuota(ctx, tx, voucherMarketplace); errVoucherMarketplace != nil {
+				return nil, errVoucherMarketplace
+			}
+		}
+
+		for _, vs := range voucherShopList {
+			vs.Quota--
+			if errVoucherMarketplace := u.userRepo.UpdateVoucherQuota(ctx, tx, vs); errVoucherMarketplace != nil {
+				return nil, errVoucherMarketplace
+			}
+		}
+
+		for _, promo := range promotionList {
+			reduceQty := qtyTotalProduct[promo.ProductID.String()]
+			promo.Quota -= reduceQty
+			if errPromo := u.userRepo.UpdatePromotionQuota(ctx, tx, promo); errPromo != nil {
+				return nil, errPromo
+			}
+		}
+
+		for _, o := range transactionResponse.OrderResponses {
+			o.OrderData.TransactionID = *transactionID
+			orderID, errOrder := u.userRepo.CreateOrder(ctx, tx, o.OrderData)
+			if errOrder != nil {
+				return nil, errOrder
+			}
+
+			for _, i := range o.Items {
+				i.Item.OrderID = *orderID
+				_, errItem := u.userRepo.CreateOrderItem(ctx, tx, i.Item)
+				if errItem != nil {
+					return nil, errItem
+				}
+				i.ProductDetailData.Stock -= i.CartItemData.Quantity
+				errProduct := u.userRepo.UpdateProductDetailStock(ctx, tx, i.ProductDetailData)
+				if errProduct != nil {
+					return nil, errProduct
+				}
+				errCart := u.userRepo.DeleteCartItemByID(ctx, tx, i.CartItemData)
+				if errCart != nil {
+					return nil, errCart
+				}
+			}
+		}
+		return transactionID.String(), nil
+	})
+	if err != nil {
+		return "", err
+	}
+	return data.(string), nil
+}
+
+func (u *userUC) getAdressString(ctx context.Context, userID string, isShop bool) (string, error) {
+
+	AddressModel := &model.Address{}
+	var err error
+	if isShop {
+		AddressModel, err = u.userRepo.GetAddressBySellerID(ctx, userID)
+		if err != nil {
+			return "", err
+		}
+	}
+	if !isShop {
+		AddressModel, err = u.userRepo.GetAddressByBuyerID(ctx, userID)
+		if err != nil {
+			return "", err
+		}
+	}
+	resultAddress, errMarshal := json.Marshal(AddressModel)
+	if errMarshal != nil {
+		return "", errMarshal
+	}
+
+	return string(resultAddress), nil
+}
+
 func (u *userUC) DeleteSealabsPay(ctx context.Context, cardNumber string) error {
 	err := u.userRepo.DeleteSealabsPay(ctx, cardNumber)
 	if err != nil {

@@ -915,7 +915,13 @@ func (h *userHandlers) DeleteSealabsPay(c *gin.Context) {
 		return
 	}
 
-	if err := h.userUC.DeleteSealabsPay(c, requestBody.CardNumber); err != nil {
+	userID, exist := c.Get("userID")
+	if !exist {
+		response.ErrorResponse(c.Writer, response.UnauthorizedMessage, http.StatusUnauthorized)
+		return
+	}
+
+	if err := h.userUC.DeleteSealabsPay(c, userID.(string), requestBody.CardNumber); err != nil {
 		var e *httperror.Error
 		if !errors.As(err, &e) {
 			h.logger.Errorf("HandlerUser, Error: %s", err)

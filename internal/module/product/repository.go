@@ -27,6 +27,8 @@ type Repository interface {
 	GetFavoriteProducts(ctx context.Context, pgn *pagination.Pagination, query *body.GetProductQueryRequest, userID string) ([]*body.Products,
 		[]*model.Promotion, []*model.Voucher, error)
 	GetAllFavoriteTotalProduct(ctx context.Context, query *body.GetProductQueryRequest, userID string) (int64, error)
+	CountUserFavoriteProduct(ctx context.Context, userID, productID string) (int64, error)
+	CountSpecificFavoriteProduct(ctx context.Context, productID string) (int64, error)
 	CreateFavoriteProduct(ctx context.Context, tx postgre.Transaction, userID, productID string) error
 	DeleteFavoriteProduct(ctx context.Context, tx postgre.Transaction, userID, productID string) error
 	FindFavoriteProduct(ctx context.Context, userID, productID string) (bool, error)
@@ -38,6 +40,7 @@ type Repository interface {
 	CreateProductReview(ctx context.Context, tx postgre.Transaction, userID string, reqBody body.ReviewProductRequest) error
 	DeleteReview(ctx context.Context, tx postgre.Transaction, reviewID string) error
 	GetShopIDByUserID(ctx context.Context, userID string) (string, error)
+
 	CreateProduct(ctx context.Context, tx postgre.Transaction, requestBody body.CreateProductInfoForQuery) (string, error)
 	CreateProductDetail(ctx context.Context, tx postgre.Transaction, requestBody body.CreateProductDetailRequest, ProductID string) (string, error)
 	CreatePhoto(ctx context.Context, tx postgre.Transaction, productDetailID, url string) error

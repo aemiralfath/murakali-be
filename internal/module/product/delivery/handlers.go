@@ -185,6 +185,58 @@ func (h *productHandlers) GetFavoriteProducts(c *gin.Context) {
 	response.SuccessResponse(c.Writer, SearchProducts, http.StatusOK)
 }
 
+func (h *productHandlers) CheckProductIsFavorite(c *gin.Context) {
+	var requestBody body.GetProductRequest
+	if err := c.ShouldBind(&requestBody); err != nil {
+		response.ErrorResponse(c.Writer, response.BadRequestMessage, http.StatusBadRequest)
+		return
+	}
+
+	invalidFields, err := requestBody.Validate()
+	if err != nil {
+		response.ErrorResponseData(c.Writer, invalidFields, response.UnprocessableEntityMessage, http.StatusUnprocessableEntity)
+		return
+	}
+
+	userID, exist := c.Get("userID")
+	if !exist {
+		response.ErrorResponse(c.Writer, response.UnauthorizedMessage, http.StatusUnauthorized)
+		return
+	}
+
+	check := h.productUC.CheckProductIsFavorite(c, userID.(string), requestBody.ProductID)
+
+	response.SuccessResponse(c.Writer, check, http.StatusOK)
+}
+
+func (h *productHandlers) CountSpecificFavoriteProduct(c *gin.Context) {
+	var requestBody body.GetProductRequest
+	if err := c.ShouldBind(&requestBody); err != nil {
+		response.ErrorResponse(c.Writer, response.BadRequestMessage, http.StatusBadRequest)
+		return
+	}
+
+	invalidFields, err := requestBody.Validate()
+	if err != nil {
+		response.ErrorResponseData(c.Writer, invalidFields, response.UnprocessableEntityMessage, http.StatusUnprocessableEntity)
+		return
+	}
+
+	total, err := h.productUC.CountSpecificFavoriteProduct(c, requestBody.ProductID)
+	if err != nil {
+		var e *httperror.Error
+		if !errors.As(err, &e) {
+			h.logger.Errorf("HandlerProduct, Error: %s", err)
+			response.ErrorResponse(c.Writer, response.InternalServerErrorMessage, http.StatusInternalServerError)
+			return
+		}
+
+		response.ErrorResponse(c.Writer, e.Err.Error(), e.Status)
+		return
+	}
+	response.SuccessResponse(c.Writer, total, http.StatusOK)
+}
+
 func (h *productHandlers) CreateFavoriteProduct(c *gin.Context) {
 	var requestBody body.GetProductRequest
 	if err := c.ShouldBind(&requestBody); err != nil {

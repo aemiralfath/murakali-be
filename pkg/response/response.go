@@ -42,6 +42,7 @@ const (
 	SelectShippingCourier          = "Select shipping Courier"
 	UnknownShop                    = "Unknown shop."
 	CartItemNotExist               = "Cart Item not exist."
+	CartIsEmpty                    = "Cart is Empty."
 	ProductQuantityNotAvailable    = "Product quantity not available."
 	ShopAddressNotFound            = "Shop address not found."
 	UserNotHaveShop                = "User not register shop"
@@ -50,6 +51,7 @@ const (
 	WalletAlreadyActivated         = "Wallet already activated."
 	WalletIsNotActivated           = `Wallet is not activated.`
 	SealabsCardNotFound            = "Sealabs pay card not valid."
+	SealabsCardIsDefault           = "Default Sealabs card cannot be deleted."
 	SealabsCardAlreadyExist        = "Sealabs card already exist."
 	WalletIsBlocked                = "Wallet is temporarily blocked, please wait."
 	WalletPinIsInvalid             = "Wallet pin is invalid."
