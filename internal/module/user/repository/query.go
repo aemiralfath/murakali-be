@@ -174,7 +174,7 @@ const (
 	join "product" p on p.id = pd.product_id WHERE oi.order_id = $1 `
 
 	GetOrderByOrderID = `SELECT o.id,o.order_status_id,o.total_price,o.delivery_fee,o.resi_no,s.id,s.name,u2.phone_no,u2.username,v.code,o.created_at,t.invoice
-	,c.name,c.code,c.service,c.description,u.id,u.username,u.phone_no,o.is_withdraw,o.is_refund,o.shop_address, o.buyer_address
+	,c.name,c.code,c.service,c.description,u.username,u.phone_no,o.is_withdraw,o.is_refund,o.shop_address, o.buyer_address
 	from "order" o
 	join "shop" s on s.id = o.shop_id
 	join "courier" c on o.courier_id = c.id
