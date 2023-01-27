@@ -94,4 +94,10 @@ const (
 	EditCategoryQuery         = `UPDATE "category" set parent_id = $1, name = $2 , photo_url = $3,  updated_at = now() WHERE "id" = $4 AND "deleted_at" IS NULL`
 	CountProductCategoryQuery = `SELECT count(1) from product where category_id = $1 and deleted_at is null`
 	CountCategoryParentQuery  = `SELECT count(1) from category where parent_id = $1 and deleted_at is null`
+	GetBannerQuery            = `SELECT id,title,content,image_url,page_url,is_active FROM "banner"`
+	AddBannerQuery            = `INSERT INTO "banner" 
+	( title, content, image_url, page_url, is_active)
+	VALUES ($1, $2, $3, $4, $5)`
+	DeleteBannerQuery = `DELETE FROM "banner" WHERE id = $1`
+	EditBannerQuery   = `UPDATE "banner" set is_active = $1 WHERE "id" = $2`
 )

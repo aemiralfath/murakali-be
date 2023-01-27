@@ -1,14 +1,15 @@
 package table
 
 import (
+	"math/rand"
+	"murakali/internal/model"
+	"murakali/pkg/postgre"
+
 	"github.com/go-faker/faker/v4"
 	"github.com/google/uuid"
 	"github.com/gosimple/slug"
-	"math/rand"
 	"murakali/internal/constant"
-	"murakali/internal/model"
 	"murakali/internal/util"
-	"murakali/pkg/postgre"
 	"time"
 )
 

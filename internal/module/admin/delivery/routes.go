@@ -9,6 +9,8 @@ import (
 
 func MapAdminRoutes(adminGroup *gin.RouterGroup, h admin.Handlers, mw *middleware.MWManager) {
 	adminGroup.Use(mw.AuthJWTMiddleware())
+	adminGroup.GET("/banner", h.GetBanner)
+
 	adminGroup.Use(mw.AdminJWTMiddleware())
 
 	adminGroup.GET("/voucher", h.GetAllVoucher)
@@ -24,6 +26,10 @@ func MapAdminRoutes(adminGroup *gin.RouterGroup, h admin.Handlers, mw *middlewar
 	adminGroup.POST("/category", h.AddCategory)
 	adminGroup.PUT("/category", h.EditCategory)
 	adminGroup.DELETE("/category/:id", h.DeleteCategory)
+
+	adminGroup.POST("/banner", h.AddBanner)
+	adminGroup.PUT("/banner", h.EditBanner)
+	adminGroup.DELETE("/banner/:id", h.DeleteBanner)
 
 	adminGroup.POST("/picture", h.UploadProductPicture)
 }
