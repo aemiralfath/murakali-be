@@ -183,6 +183,17 @@ const (
 	join transaction t on o.transaction_id = t.id
 	left join "voucher" v on v.id = o.voucher_shop_id WHERE o.id = $1 ORDER BY o.created_at asc`
 
+	GetProductUnitSoldByOrderIDQuery = `
+	SELECT 
+  "product".id as product_id, 
+  "product".unit_sold,
+  "order_item".quantity
+		FROM "order_item"
+		JOIN "product_detail" ON "order_item"."product_detail_id" = "product_detail"."id"
+		JOIN "product" ON "product_detail"."product_id" = "product"."id"
+		WHERE "order_item"."order_id" = $1
+`
+
 	GetBuyerIDByOrderIDQuery = `SELECT o.user_id from "order" o where o.id = $1`
 
 	GetSellerIDByOrderIDQuery = `SELECT s.user_id from "order" o join shop s on o.shop_id = s.id where o.id = $1`
@@ -231,4 +242,5 @@ const (
 	CreateRefundThreadUserQuery = `INSERT INTO "refund_thread" 
 	(refund_id, user_id, is_seller, is_buyer, text)
 	VALUES ($1, $2, $3, $4, $5)`
+	UpdateProductUnitSoldQuery = `UPDATE "product" SET "unit_sold" = $1, "updated_at" = now() WHERE "id" = $2;`
 )
