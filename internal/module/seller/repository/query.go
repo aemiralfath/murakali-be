@@ -36,7 +36,7 @@ const (
 	"address_detail", "zip_code", "is_default", "is_shop_default", "created_at", "updated_at"
 	FROM "address" WHERE "user_id" = $1 AND "deleted_at" IS NULL AND is_shop_default is true`
 
-	GetOrderByOrderID = `SELECT o.id, o.transaction_id, o.order_status_id, o.is_withdraw,o.total_price,o.delivery_fee,o.resi_no,s.id,s.name,u2.phone_no,u2.username,v.code,o.created_at,t.invoice
+	GetOrderByOrderID = `SELECT o.id, o.transaction_id, o.order_status_id, o.is_withdraw,o.is_refund,o.total_price,o.delivery_fee,o.resi_no,s.id,s.name,u2.phone_no,u2.username,v.code,o.created_at,t.invoice
 	,c.name,c.code,c.service,c.description,u.username,u.phone_no
 	from "order" o
 	join "shop" s on s.id = o.shop_id
@@ -269,4 +269,24 @@ const (
 	`
 
 	GetWalletByUserIDQuery = `SELECT "id", "user_id", "balance", "pin", "attempt_count", "attempt_at", "unlocked_at", "active_date" FROM "wallet" WHERE "user_id" = $1 AND "deleted_at" IS NULL`
+
+	GetOrderModelByIDQuery = `SELECT "id", "transaction_id", "shop_id", "user_id", "courier_id", "voucher_shop_id", "order_status_id", "total_price",
+	"delivery_fee", "resi_no", "buyer_address", "shop_address", "cancel_notes", "is_withdraw", "is_refund", "created_at", "arrived_at"
+	FROM "order" WHERE "id" = $1`
+
+	GetRefundOrderByOrderIDQuery = `SELECT "id", "order_id", "is_seller_refund", "is_buyer_refund", "reason", "image", "accepted_at", "rejected_at", "refunded_at"
+	FROM "refund" WHERE "order_id" = $1`
+
+	GetRefundOrderByIDQuery = `SELECT "id", "order_id", "is_seller_refund", "is_buyer_refund", "reason", "image", "accepted_at", "rejected_at", "refunded_at"
+	FROM "refund" WHERE "id" = $1`
+
+	GetRefundThreadByRefundIDQuery = `SELECT "id", "refund_id", "user_id", "is_seller", "is_buyer", "text", "created_at"
+	FROM "refund_thread" WHERE "refund_id" = $1 ORDER BY "created_at" ASC`
+
+	CreateRefundThreadSellerQuery = `INSERT INTO "refund_thread" 
+	(refund_id, user_id, is_seller, is_buyer, text)
+	VALUES ($1, $2, $3, $4, $5)`
+
+	UpdateRefundAcceptQuery = `UPDATE "refund" SET "accepted_at" = now() WHERE "id" = $1;`
+	UpdateRefundRejectQuery = `UPDATE "refund" SET "rejected_at" = now() WHERE "id" = $1;`
 )

@@ -1,12 +1,13 @@
 package table
 
 import (
-	"github.com/go-faker/faker/v4"
-	"github.com/google/uuid"
-	"github.com/gosimple/slug"
 	"math/rand"
 	"murakali/internal/model"
 	"murakali/pkg/postgre"
+
+	"github.com/go-faker/faker/v4"
+	"github.com/google/uuid"
+	"github.com/gosimple/slug"
 )
 
 const InsertProductQuery = `INSERT INTO "product" (id, category_id, shop_id, sku, title, description, view_count, favorite_count, unit_sold, listed_status, thumbnail_url, rating_avg, min_price, max_price) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14);`

@@ -47,4 +47,7 @@ func MapUserRoutes(userGroup *gin.RouterGroup, h user.Handlers, mw *middleware.M
 	userGroup.POST("/wallet/step-up/pin", h.WalletStepUp)
 	userGroup.POST("/wallet/step-up/password", h.ChangeWalletPinStepUp)
 	userGroup.PATCH("/wallet/pin", h.ChangeWalletPin)
+	userGroup.POST("/refund", h.CreateRefundUser)
+	userGroup.GET("/refund/:refund_id", h.GetRefundOrder)
+	userGroup.POST("/refund-thread", h.CreateRefundThreadUser)
 }
