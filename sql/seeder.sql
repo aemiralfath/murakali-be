@@ -1,5 +1,3 @@
--- TODO: add transaction seeder
-
 INSERT INTO "banner" (id, title, content, image_url, page_url, is_active)
 VALUES ('9a4de0f5-0556-491b-ba1b-0873933262da', 'festival hari ibu', 'festival di hari ibu',
         'https://cf.shopee.co.id/file/776fa8ed99c660a7913666544a3c228d', 'https://shopee.co.id/m/festival-hari-ibu',
@@ -18,10 +16,6 @@ VALUES ('Waiting to Pay'),
        ('Completed'),
        ('Canceled'),
        ('Refunded');
-
-INSERT INTO "sealabs_pay" (card_number, user_id, name, is_default, active_date)
-VALUES ('2787884621261326', '7950eca2-58d5-44f0-b873-22b23d8107da', 'Emir SLP', true, '2024-12-31 23:59:59'),
-       ('2789760285732876', '7950eca2-58d5-44f0-b873-22b23d8107da', 'Sammy SLP', true, '2024-12-31 23:59:59');
 
 INSERT INTO product(id, category_id, shop_id, sku, title, description, view_count, favorite_count, unit_sold,
                     listed_status, thumbnail_url, rating_avg, min_price, max_price, created_at, updated_at, deleted_at)
