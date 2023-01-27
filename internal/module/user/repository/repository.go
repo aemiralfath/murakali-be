@@ -1508,6 +1508,24 @@ func (r *userRepo) UpdatePromotionQuota(ctx context.Context, tx postgre.Transact
 	return nil
 }
 
+func (r *userRepo) GetRefundOrderByOrderID(ctx context.Context, orderID string) (*model.Refund, error) {
+	var refundData model.Refund
+	if err := r.PSQL.QueryRowContext(ctx, GetRefundOrderByOrderIDQuery, orderID).Scan(
+		&refundData.ID,
+		&refundData.OrderID,
+		&refundData.IsSellerRefund,
+		&refundData.IsBuyerRefund,
+		&refundData.Reason,
+		&refundData.Image,
+		&refundData.AcceptedAt,
+		&refundData.RejectedAt,
+		&refundData.RefundedAt); err != nil {
+		return nil, err
+	}
+
+	return &refundData, nil
+}
+
 func (r *userRepo) CreateRefundUser(ctx context.Context, tx postgre.Transaction, refundData *model.Refund) error {
 	_, err := tx.ExecContext(
 		ctx,

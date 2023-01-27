@@ -1880,10 +1880,29 @@ func (u *userUC) CreateRefundUser(ctx context.Context, userID string, requestBod
 		return errOrderID
 	}
 
+	refundData, errRefundData := u.userRepo.GetRefundOrderByOrderID(ctx, orderID.String())
+	if errRefundData != nil {
+		if errRefundData != sql.ErrNoRows {
+			return errRefundData
+		}
+	}
+	if refundData != nil {
+		if !refundData.RejectedAt.Valid && !refundData.AcceptedAt.Valid {
+			return httperror.New(http.StatusBadRequest, response.OrderUnderProgressRefund)
+		}
+		compareToday := time.Now().Add(-24 * time.Hour)
+		if refundData.RejectedAt.Valid && refundData.RejectedAt.Time.Before(compareToday) {
+			return httperror.New(http.StatusBadRequest, response.OrderCannotToRefund)
+		}
+		if refundData.AcceptedAt.Valid {
+			return httperror.New(http.StatusBadRequest, response.OrderHasAcceptedToRefund)
+		}
+	}
+
 	*requestBody.IsSellerRefund = false
 	*requestBody.IsBuyerRefund = true
 
-	refundData := &model.Refund{
+	refundData = &model.Refund{
 		OrderID:        orderID,
 		IsSellerRefund: requestBody.IsSellerRefund,
 		IsBuyerRefund:  requestBody.IsBuyerRefund,
