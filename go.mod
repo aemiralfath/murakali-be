@@ -22,6 +22,7 @@ require (
 
 require (
 	github.com/creasty/defaults v1.5.1 // indirect
+	github.com/gocarina/gocsv v0.0.0-20230123225133-763e25b40669 // indirect
 	github.com/gorilla/schema v1.2.0 // indirect
 	github.com/gosimple/unidecode v1.0.1 // indirect
 )
