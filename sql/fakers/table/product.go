@@ -4,8 +4,10 @@ import (
 	"math/rand"
 	"murakali/internal/model"
 	"murakali/pkg/postgre"
+	"os"
 
 	"github.com/go-faker/faker/v4"
+	"github.com/gocarina/gocsv"
 	"github.com/google/uuid"
 	"github.com/gosimple/slug"
 	"murakali/internal/constant"
@@ -30,11 +32,18 @@ type ProductFaker struct {
 	UserID     string
 	CourierID  string
 	CardNumber string
+	CSVFile    string
 	ID         []string
 }
 
-func NewProductFaker(size int, shopID, categoryID, userID, courierID, cardNumber string, id []string) ISeeder {
-	return &ProductFaker{Size: size, ShopID: shopID, ID: id, CategoryID: categoryID, UserID: userID, CardNumber: cardNumber, CourierID: courierID}
+type ProductCSV struct {
+	Name     string  `csv:"name"`
+	Price    float64 `csv:"price"`
+	ImageURL string  `csv:"image_url"`
+}
+
+func NewProductFaker(size int, shopID, categoryID, userID, courierID, cardNumber, csvFile string, id []string) ISeeder {
+	return &ProductFaker{Size: size, ShopID: shopID, ID: id, CategoryID: categoryID, UserID: userID, CardNumber: cardNumber, CourierID: courierID, CSVFile: csvFile}
 }
 
 func (f *ProductFaker) GenerateData(tx postgre.Transaction) error {
@@ -54,29 +63,45 @@ func (f *ProductFaker) GenerateData(tx postgre.Transaction) error {
 			return err
 		}
 
-		if err := f.GenerateDataProduct(tx, id, categoryID, shopID); err != nil {
+		if err := f.GenerateDataProduct(tx, id, categoryID, shopID, nil); err != nil {
 			return err
 		}
 	}
 
-	for i := 0; i < f.Size; i++ {
-		if err := f.GenerateDataProduct(tx, uuid.New(), categoryID, shopID); err != nil {
+	if f.CSVFile != "" {
+		csvData, err := f.GetCSVData(f.CSVFile)
+		if err != nil {
 			return err
+		}
+
+		for i := 0; i < f.Size; i++ {
+			if err := f.GenerateDataProduct(tx, uuid.New(), categoryID, shopID, csvData[i]); err != nil {
+				return err
+			}
 		}
 	}
 
 	return nil
 }
 
-func (f *ProductFaker) GenerateDataProduct(tx postgre.Transaction, id, categoryID, shopID uuid.UUID) error {
-	data := f.GenerateProduct(id, categoryID, shopID)
+func (f *ProductFaker) GenerateDataProduct(tx postgre.Transaction, id, categoryID, shopID uuid.UUID, csvProduct *ProductCSV) error {
+	name := faker.Username()
+	price := float64((rand.Intn(1000-100) + 100) * 1000)
+	imageURL := "https://cf.shopee.co.id/file/76a0969b7d64065bc13493bf55df1849_tn"
+	if csvProduct != nil {
+		name = csvProduct.Name
+		price = csvProduct.Price
+		imageURL = csvProduct.ImageURL
+	}
+
+	data := f.GenerateProduct(id, categoryID, shopID, name, imageURL, price)
 	_, err := tx.Exec(InsertProductQuery, data.ID, data.CategoryID, data.ShopID, data.SKU, data.Title, data.Description, data.ViewCount, data.FavoriteCount, data.UnitSold, data.ListedStatus, data.ThumbnailURL, data.RatingAvg, data.MinPrice, data.MaxPrice)
 	if err != nil {
 		return err
 	}
 
 	productDetailID := uuid.New()
-	if err := f.GenerateDataProductDetail(tx, productDetailID, data.ID, data.MaxPrice); err != nil {
+	if err := f.GenerateDataProductDetail(tx, productDetailID, data.ID, data.MaxPrice, data.RatingAvg, imageURL); err != nil {
 		return err
 	}
 
@@ -92,26 +117,41 @@ func (f *ProductFaker) GenerateDataProduct(tx postgre.Transaction, id, categoryI
 	return nil
 }
 
-func (f *ProductFaker) GenerateDataProductDetail(tx postgre.Transaction, id, productID uuid.UUID, price float64) error {
+func (f *ProductFaker) GetCSVData(filename string) ([]*ProductCSV, error) {
+	clientsFile, err := os.OpenFile(filename, os.O_RDWR|os.O_CREATE, os.ModePerm)
+	if err != nil {
+		return nil, err
+	}
+	defer clientsFile.Close()
+
+	data := make([]*ProductCSV, 0)
+	if err := gocsv.UnmarshalFile(clientsFile, &data); err != nil {
+		return nil, err
+	}
+
+	return data, nil
+}
+
+func (f *ProductFaker) GenerateDataProductDetail(tx postgre.Transaction, id, productID uuid.UUID, price, ratingAvg float64, imageURL string) error {
 	data := f.GenerateProductDetail(id, productID, price)
 	_, err := tx.Exec(InsertProductDetailQuery, data.ID, data.ProductID, data.Price, data.Stock, data.Weight, data.Size, data.Hazardous, data.Condition, data.BulkPrice)
 	if err != nil {
 		return err
 	}
 
-	_, err = tx.Exec(InsertProductDetailPhoto, data.ID, "https://cf.shopee.co.id/file/76a0969b7d64065bc13493bf55df1849_tn")
+	_, err = tx.Exec(InsertProductDetailPhoto, data.ID, imageURL)
 	if err != nil {
 		return err
 	}
 
-	if err := f.GenerateTransactions(tx, data); err != nil {
+	if err := f.GenerateTransactions(tx, data, ratingAvg); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-func (f *ProductFaker) GenerateTransactions(tx postgre.Transaction, productDetail *model.ProductDetail) error {
+func (f *ProductFaker) GenerateTransactions(tx postgre.Transaction, productDetail *model.ProductDetail, ratingAvg float64) error {
 	txID := uuid.New()
 	deliveryFee := float64(8000)
 	randomTime := time.Now().AddDate(0, 0, -1*rand.Intn(31))
@@ -139,7 +179,7 @@ func (f *ProductFaker) GenerateTransactions(tx postgre.Transaction, productDetai
 		return errItem
 	}
 
-	_, errReview := tx.Exec(InsertOrderReviewQuery, f.UserID, productDetail.ProductID, faker.Paragraph(), rand.Intn(5-1)+1, randomTime)
+	_, errReview := tx.Exec(InsertOrderReviewQuery, f.UserID, productDetail.ProductID, faker.Paragraph(), ratingAvg, randomTime)
 	if errReview != nil {
 		return errReview
 	}
@@ -152,7 +192,7 @@ func (f *ProductFaker) GenerateProductDetail(id, productID uuid.UUID, price floa
 		ID:        id,
 		ProductID: productID,
 		Price:     price,
-		Stock:     float64(rand.Intn(20000)),
+		Stock:     float64(rand.Intn(50)),
 		Weight:    float64(rand.Intn(10-1)+1) * 100,
 		Size:      float64(rand.Intn(20000)),
 		Hazardous: false,
@@ -161,9 +201,7 @@ func (f *ProductFaker) GenerateProductDetail(id, productID uuid.UUID, price floa
 	}
 }
 
-func (f *ProductFaker) GenerateProduct(id, categoryID, shopID uuid.UUID) *model.Product {
-	name := faker.Username()
-	price := (rand.Intn(1000-100) + 100) * 1000
+func (f *ProductFaker) GenerateProduct(id, categoryID, shopID uuid.UUID, name, imageURL string, price float64) *model.Product {
 	return &model.Product{
 		ID:            id,
 		CategoryID:    categoryID,
@@ -175,9 +213,9 @@ func (f *ProductFaker) GenerateProduct(id, categoryID, shopID uuid.UUID) *model.
 		FavoriteCount: 0,
 		UnitSold:      1,
 		ListedStatus:  true,
-		ThumbnailURL:  "https://cf.shopee.co.id/file/76a0969b7d64065bc13493bf55df1849_tn",
-		RatingAvg:     0,
-		MinPrice:      float64(price),
-		MaxPrice:      float64(price),
+		ThumbnailURL:  imageURL,
+		RatingAvg:     float64(rand.Intn(6-1) + 1),
+		MinPrice:      price,
+		MaxPrice:      price,
 	}
 }

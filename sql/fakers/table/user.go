@@ -19,7 +19,7 @@ const InsertUserAddressQuery = `INSERT INTO "address"
 VALUES ($1, 'Home', 33, 327, 'Sumatera Selatan', 'Palembang', 'Ilir Timur II', '2 Ilir', 'no 91', '30118', $2, $3)`
 const CreateUserWallet = `INSERT INTO "wallet" (user_id, balance, pin, attempt_count, active_date)
 	VALUES ($1, 0, '$2a$10$haIhdlIHObH0yGMyCx5Zl.s5b7sV/x3GWact0Yd2xREXof3UAzUl6', 0, CURRENT_TIMESTAMP);`
-const CreateUserSLP = `INSERT INTO "sealabs_pay" (card_number, name, is_default, active_date, created_at) VALUES ($1, $2, $3, $4, $5)`
+const CreateUserSLP = `INSERT INTO "sealabs_pay" (card_number, user_id, name, is_default, active_date, created_at) VALUES ($1, $2, $3, $4, $5, $6)`
 
 type UserFaker struct {
 	Size       int
@@ -69,7 +69,7 @@ func (u *UserFaker) GenerateDataUser(tx postgre.Transaction, id uuid.UUID, email
 	}
 
 	if cardNumber != "" {
-		if _, err := tx.Exec(CreateUserSLP, cardNumber, faker.Name(), true, time.Now().AddDate(1, 0, 0), time.Now()); err != nil {
+		if _, err := tx.Exec(CreateUserSLP, cardNumber, data.ID, faker.Name(), true, time.Now().AddDate(1, 0, 0), time.Now()); err != nil {
 			return err
 		}
 	}
