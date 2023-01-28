@@ -462,6 +462,12 @@ func (h *productHandlers) ValidateQueryProduct(c *gin.Context) (*pagination.Pagi
 			Page:  pageFilter,
 			Sort:  "view_count" + " " + sortFilter,
 		}
+	case "listed_status":
+		pgn = &pagination.Pagination{
+			Limit: limitFilter,
+			Page:  pageFilter,
+			Sort:  "listed_status" + " " + sortFilter,
+		}
 	default:
 		pgn = &pagination.Pagination{
 			Limit: limitFilter,
