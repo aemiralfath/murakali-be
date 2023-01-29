@@ -1,6 +1,24 @@
 package repository
 
 const (
+	GetTotalAllSellerQuery = `SELECT count(s.id)
+	FROM "shop" s 
+	JOIN "user" u ON u.id = s.user_id
+	WHERE s.name ILIKE $1 AND s.deleted_at is null`
+
+	GetAllSellerQuery = `SELECT s.id, s.name,
+	 s.total_product,
+	 s.total_rating, 
+	 s.rating_avg,
+	  s.created_at,
+	   u.photo_url 
+	FROM "shop" s 
+	JOIN "user" u ON u.id = s.user_id
+	WHERE s.name ILIKE $1 AND s.deleted_at is null
+	ORDER BY s.created_at desc
+	LIMIT $2 OFFSET $3
+	`
+
 	GetTotalOrderQuery = `SELECT count(id) FROM "order" as "o" WHERE "o"."shop_id" = $1 and "o"."order_status_id"::text LIKE $2`
 
 	GetTotalOrderWithVoucherIDQuery = `SELECT count(id) FROM "order" as "o" WHERE "o"."shop_id" = $1 and "o"."order_status_id"::text LIKE $2 

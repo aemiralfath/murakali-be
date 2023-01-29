@@ -8,6 +8,8 @@ import (
 )
 
 type UseCase interface {
+	GetAllSeller(ctx context.Context, shopName string,
+		pgn *pagination.Pagination) (*pagination.Pagination, error)
 	GetOrder(ctx context.Context, userID, orderStatusID, voucherShopID string, pgn *pagination.Pagination) (*pagination.Pagination, error)
 	ChangeOrderStatus(ctx context.Context, userID string, requestBody body.ChangeOrderStatusRequest) error
 	CancelOrderStatus(ctx context.Context, userID string, requestBody body.CancelOrderStatus) error
