@@ -324,6 +324,26 @@ func (u *userUC) ChangeOrderStatus(ctx context.Context, userID string, requestBo
 	if err != nil {
 		return err
 	}
+
+	if requestBody.OrderStatusID == constant.OrderStatusCompleted {
+		if err = u.txRepo.WithTransaction(func(tx postgre.Transaction) error {
+			productUnitSolds, err := u.userRepo.GetProductUnitSoldByOrderID(ctx, tx, requestBody.OrderID)
+			if err != nil {
+				return err
+			}
+			for _, productUnitSold := range productUnitSolds {
+				newQty := (productUnitSold.Quantity + productUnitSold.UnitSold)
+				if err = u.userRepo.UpdateProductUnitSold(ctx, tx, productUnitSold.ProductID.String(), newQty); err != nil {
+					return err
+				}
+			}
+			return nil
+		},
+		); err != nil {
+			return err
+		}
+	}
+
 	return nil
 }
 
@@ -750,47 +770,27 @@ func (u *userUC) RegisterMerchant(ctx context.Context, userID, shopName string) 
 }
 
 func (u *userUC) GetUserProfile(ctx context.Context, userID string) (*body.ProfileResponse, error) {
-	profile := &body.ProfileResponse{}
-	key := fmt.Sprintf("profile:%s", userID)
-	profileRedis, err := u.userRepo.GetProfileRedis(ctx, key)
+	userModel, err := u.userRepo.GetUserByID(ctx, userID)
 	if err != nil {
-		userModel, err := u.userRepo.GetUserByID(ctx, userID)
-		if err != nil {
-			if err == sql.ErrNoRows {
-				return nil, httperror.New(http.StatusBadRequest, response.UserNotExistMessage)
-			}
-			return nil, err
+		if err == sql.ErrNoRows {
+			return nil, httperror.New(http.StatusBadRequest, response.UserNotExistMessage)
 		}
-
-		profileInfo := &body.ProfileResponse{
-			Role:        userModel.RoleID,
-			UserName:    userModel.Username,
-			Email:       userModel.Email,
-			PhoneNumber: userModel.PhoneNo,
-			FullName:    userModel.FullName,
-			Gender:      userModel.Gender,
-			BirthDate:   userModel.BirthDate.Time,
-			PhotoURL:    userModel.PhotoURL,
-			IsVerify:    userModel.IsVerify,
-		}
-
-		redisValue, err := json.Marshal(profileInfo)
-		if err != nil {
-			return nil, err
-		}
-
-		if err := u.userRepo.InsertProfileRedis(ctx, key, string(redisValue)); err != nil {
-			return nil, err
-		}
-
-		return profileInfo, nil
-	}
-
-	if err := json.Unmarshal([]byte(*profileRedis), profile); err != nil {
 		return nil, err
 	}
 
-	return profile, nil
+	profileInfo := &body.ProfileResponse{
+		Role:        userModel.RoleID,
+		UserName:    userModel.Username,
+		Email:       userModel.Email,
+		PhoneNumber: userModel.PhoneNo,
+		FullName:    userModel.FullName,
+		Gender:      userModel.Gender,
+		BirthDate:   userModel.BirthDate.Time,
+		PhotoURL:    userModel.PhotoURL,
+		IsVerify:    userModel.IsVerify,
+	}
+
+	return profileInfo, nil
 }
 
 func (u *userUC) UploadProfilePicture(ctx context.Context, imgURL, userID string) error {

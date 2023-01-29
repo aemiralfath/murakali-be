@@ -54,6 +54,8 @@ type Repository interface {
 	ChangeOrderStatus(ctx context.Context, requestBody body.ChangeOrderStatusRequest) error
 	GetOrdersByTransactionID(ctx context.Context, transactionID, userID string) ([]*model.Order, error)
 	GetTotalOrder(ctx context.Context, userID, orderStatusID string) (int64, error)
+	GetProductUnitSoldByOrderID(ctx context.Context, tx postgre.Transaction, orderID string) ([]*body.ProductUnitSoldOrderQty, error)
+	UpdateProductUnitSold(ctx context.Context, tx postgre.Transaction, productID string, newQty int64) error
 	GetOrders(ctx context.Context, userID, orderStatusID string, pgn *pagination.Pagination) ([]*model.Order, error)
 	GetOrderByOrderID(ctx context.Context, OrderID string) (*model.Order, error)
 	GetSellerIDByOrderID(ctx context.Context, orderID string) (string, error)
@@ -62,8 +64,6 @@ type Repository interface {
 	GetBuyerIDByOrderID(ctx context.Context, orderID string) (string, error)
 	GetCostRedis(ctx context.Context, key string) (*string, error)
 	InsertCostRedis(ctx context.Context, key string, value string) error
-	GetProfileRedis(ctx context.Context, key string) (*string, error)
-	InsertProfileRedis(ctx context.Context, key string, value string) error
 	GetWalletUser(ctx context.Context, walletID string) (*model.Wallet, error)
 	GetWalletHistoryByID(ctx context.Context, id string) (*model.WalletHistory, error)
 	GetWalletHistoryByWalletID(ctx context.Context, pgn *pagination.Pagination, walletID string) ([]*body.HistoryWalletResponse, error)

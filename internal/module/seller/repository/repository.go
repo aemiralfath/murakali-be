@@ -3,6 +3,7 @@ package repository
 import (
 	"context"
 	"database/sql"
+	"encoding/json"
 	"fmt"
 	"murakali/internal/constant"
 	"murakali/internal/model"
@@ -28,6 +29,191 @@ func NewSellerRepository(psql *sql.DB, client *redis.Client) seller.Repository {
 		PSQL:        psql,
 		RedisClient: client,
 	}
+}
+
+func (r *sellerRepo) GetPerformance(ctx context.Context, shopID string) (*body.SellerPerformance, error) {
+	var performance body.SellerPerformance
+
+	if err := r.PSQL.QueryRowContext(ctx, GetSellerPerformanceMetadataQuery, shopID).Scan(
+		&performance.ShopID,
+		&performance.ShopName,
+		&performance.ShopCreatedAt,
+		&performance.ReportUpdatedAt,
+	); err != nil {
+		if err != sql.ErrNoRows {
+			return nil, err
+		}
+	}
+
+	dailySales := make([]*body.DailySales, 0)
+	var res *sql.Rows
+	res, err := r.PSQL.QueryContext(
+		ctx, GetDailySalesQuery,
+		shopID)
+	if err != nil {
+		if err != sql.ErrNoRows {
+			return nil, err
+		}
+	}
+	defer res.Close()
+	for res.Next() {
+		var dailySale body.DailySales
+		if errScan := res.Scan(
+			&dailySale.Date,
+			&dailySale.TotalSales,
+		); errScan != nil {
+			return nil, errScan
+		}
+		dailySales = append(dailySales, &dailySale)
+	}
+	performance.DailySales = dailySales
+
+	dailyOrders := make([]*body.DailyOrder, 0)
+	var res1 *sql.Rows
+	res1, err = r.PSQL.QueryContext(
+		ctx, GetDailyOrderQuery,
+		shopID)
+	if err != nil {
+		if err != sql.ErrNoRows {
+			return nil, err
+		}
+	}
+	defer res1.Close()
+	for res1.Next() {
+		var dailyOrder body.DailyOrder
+		if errScan := res1.Scan(
+			&dailyOrder.Date,
+			&dailyOrder.SuccessOrder,
+			&dailyOrder.FailedOrder,
+		); errScan != nil {
+			return nil, errScan
+		}
+		dailyOrders = append(dailyOrders, &dailyOrder)
+	}
+	performance.DailyOrder = dailyOrders
+
+	var monthlyOrder body.MonthlyOrder
+	if err := r.PSQL.QueryRowContext(ctx, GetMonthlyOrderQuery, shopID).Scan(
+		&monthlyOrder.Month,
+		&monthlyOrder.SuccessOrder,
+		&monthlyOrder.FailedOrder,
+		&monthlyOrder.SuccessOrderPercentChange,
+		&monthlyOrder.FailedOrderPercentChange,
+	); err != nil {
+		if err != sql.ErrNoRows {
+			return nil, err
+		}
+	}
+	performance.MonthlyOrder = &monthlyOrder
+
+	var totalRating body.TotalRating
+	if err := r.PSQL.QueryRowContext(ctx, GetTotalRatingQuery, shopID).Scan(
+		&totalRating.Rating1,
+		&totalRating.Rating2,
+		&totalRating.Rating3,
+		&totalRating.Rating4,
+		&totalRating.Rating5,
+	); err != nil {
+		if err != sql.ErrNoRows {
+			return nil, err
+		}
+	}
+	performance.TotalRating = &totalRating
+
+	mostOrderedProduct := make([]*body.MostOrderedProduct, 0)
+	var res2 *sql.Rows
+	res2, err = r.PSQL.QueryContext(
+		ctx, GetMostOrderedProductQuery,
+		shopID)
+	if err != nil {
+		if err != sql.ErrNoRows {
+			return nil, err
+		}
+	}
+	defer res2.Close()
+	for res2.Next() {
+		var product body.MostOrderedProduct
+		if errScan := res2.Scan(
+			&product.ID,
+			&product.Title,
+			&product.ViewCount,
+			&product.UnitSold,
+			&product.ThumbnailURL,
+		); errScan != nil {
+			return nil, errScan
+		}
+		mostOrderedProduct = append(mostOrderedProduct, &product)
+	}
+	performance.MostOrderedProduct = mostOrderedProduct
+
+	numOrderByProvince := make([]*body.NumOrderByProvince, 0)
+	var res3 *sql.Rows
+	res3, err = r.PSQL.QueryContext(
+		ctx, GetNumOrderByProvince,
+		shopID)
+	if err != nil {
+		if err != sql.ErrNoRows {
+			return nil, err
+		}
+	}
+	defer res3.Close()
+	for res3.Next() {
+		var numOrder body.NumOrderByProvince
+		if errScan := res3.Scan(
+			&numOrder.ProvinceID,
+			&numOrder.NumOrders,
+		); errScan != nil {
+			return nil, errScan
+		}
+		numOrderByProvince = append(numOrderByProvince, &numOrder)
+	}
+	performance.NumOrderByProvince = numOrderByProvince
+
+	var totalSales body.TotalSales
+	if err := r.PSQL.QueryRowContext(ctx, GetTotalSalesQuery, shopID).Scan(
+		&totalSales.TotalSales,
+		&totalSales.WithdrawnSum,
+		&totalSales.WithdrawableSum,
+	); err != nil {
+		if err != sql.ErrNoRows {
+			return nil, err
+		}
+	}
+	performance.TotalSales = &totalSales
+
+	return &performance, nil
+}
+
+func (r *sellerRepo) GetPerformaceRedis(ctx context.Context, key string) (*body.SellerPerformance, error) {
+	res := r.RedisClient.Get(ctx, key)
+	if res.Err() != nil {
+		return nil, res.Err()
+	}
+
+	value, err := res.Result()
+	if err != nil {
+		return nil, err
+	}
+
+	var perfRes body.SellerPerformance
+	if err := json.Unmarshal([]byte(value), &perfRes); err != nil {
+		return nil, err
+	}
+
+	return &perfRes, nil
+}
+
+func (r *sellerRepo) InsertPerformaceRedis(ctx context.Context, key string, value *body.SellerPerformance) error {
+	valueStr, err := json.Marshal(value)
+	if err != nil {
+		return err
+	}
+
+	if err := r.RedisClient.Set(ctx, key, valueStr, time.Hour*12); err.Err() != nil {
+		return err.Err()
+	}
+
+	return nil
 }
 
 func (r *sellerRepo) GetTotalAllSeller(ctx context.Context, shopName string) (int64, error) {

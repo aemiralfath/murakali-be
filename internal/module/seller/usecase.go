@@ -8,6 +8,7 @@ import (
 )
 
 type UseCase interface {
+	GetPerformance(ctx context.Context, userID string, update bool) (*body.SellerPerformance, error)
 	GetAllSeller(ctx context.Context, shopName string,
 		pgn *pagination.Pagination) (*pagination.Pagination, error)
 	GetOrder(ctx context.Context, userID, orderStatusID, voucherShopID string, pgn *pagination.Pagination) (*pagination.Pagination, error)

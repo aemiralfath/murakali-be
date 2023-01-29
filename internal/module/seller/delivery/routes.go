@@ -16,6 +16,7 @@ func MapSellerRoutes(sellerGroup *gin.RouterGroup, h seller.Handlers, mw *middle
 
 	sellerGroup.Use(mw.AuthJWTMiddleware())
 	sellerGroup.Use(mw.SellerJWTMiddleware())
+	sellerGroup.GET("/performance", h.GetPerformance)
 	sellerGroup.GET("/information", h.GetSellerDetailInformation)
 	sellerGroup.PATCH("/information", h.UpdateSellerInformation)
 	sellerGroup.GET("/user/:user_id", h.GetSellerByUserID)
