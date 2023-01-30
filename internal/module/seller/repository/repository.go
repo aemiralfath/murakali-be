@@ -261,6 +261,29 @@ func (r *sellerRepo) GetAllSeller(ctx context.Context, pgn *pagination.Paginatio
 	return shops, err
 }
 
+func (r *sellerRepo) GetUserByID(ctx context.Context, id string) (*model.User, error) {
+	var userModel model.User
+	if err := r.PSQL.QueryRowContext(ctx, GetUserByIDQuery, id).
+		Scan(&userModel.ID, &userModel.RoleID, &userModel.Email, &userModel.Username, &userModel.PhoneNo,
+			&userModel.FullName, &userModel.Gender, &userModel.BirthDate, &userModel.IsVerify, &userModel.PhotoURL); err != nil {
+		return nil, err
+	}
+
+	return &userModel, nil
+}
+
+func (r *sellerRepo) GetShopByID(ctx context.Context, shopID string) (*model.Shop, error) {
+	var shopCart model.Shop
+	if err := r.PSQL.QueryRowContext(ctx, GetShopByIDQuery, shopID).Scan(
+		&shopCart.ID,
+		&shopCart.Name,
+		&shopCart.UserID); err != nil {
+		return nil, err
+	}
+
+	return &shopCart, nil
+}
+
 func (r *sellerRepo) GetTotalOrder(ctx context.Context, shopID, orderStatusID, voucherShopID string) (int64, error) {
 	var total int64
 
@@ -1413,8 +1436,8 @@ func (r *sellerRepo) GetRefundOrderByID(ctx context.Context, refundID string) (*
 	return &refundData, nil
 }
 
-func (r *sellerRepo) GetRefundThreadByRefundID(ctx context.Context, refundID string) ([]*model.RefundThread, error) {
-	refundThreadList := make([]*model.RefundThread, 0)
+func (r *sellerRepo) GetRefundThreadByRefundID(ctx context.Context, refundID string) ([]*body.RThread, error) {
+	refundThreadList := make([]*body.RThread, 0)
 	res, err := r.PSQL.QueryContext(ctx, GetRefundThreadByRefundIDQuery, refundID)
 
 	if err != nil {
@@ -1423,11 +1446,14 @@ func (r *sellerRepo) GetRefundThreadByRefundID(ctx context.Context, refundID str
 	defer res.Close()
 
 	for res.Next() {
-		var refundThreadData model.RefundThread
+		var refundThreadData body.RThread
 		if err := res.Scan(
 			&refundThreadData.ID,
 			&refundThreadData.RefundID,
 			&refundThreadData.UserID,
+			&refundThreadData.UserName,
+			&refundThreadData.ShopName,
+			&refundThreadData.PhotoURL,
 			&refundThreadData.IsSeller,
 			&refundThreadData.IsBuyer,
 			&refundThreadData.Text,
@@ -1435,11 +1461,17 @@ func (r *sellerRepo) GetRefundThreadByRefundID(ctx context.Context, refundID str
 		); err != nil {
 			return nil, err
 		}
+		if !refundThreadData.IsSeller {
+			Tstring := ""
+			refundThreadData.ShopName = &Tstring
+		}
+		if !refundThreadData.IsBuyer {
+			refundThreadData.UserName = ""
+		}
 		refundThreadList = append(refundThreadList, &refundThreadData)
 	}
 	return refundThreadList, nil
 }
-
 func (r *sellerRepo) CreateRefundThreadSeller(ctx context.Context, refundThreadData *model.RefundThread) error {
 	if _, err := r.PSQL.ExecContext(ctx, CreateRefundThreadSellerQuery,
 		refundThreadData.RefundID,
