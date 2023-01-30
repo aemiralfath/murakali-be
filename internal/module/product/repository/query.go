@@ -23,7 +23,10 @@ const (
 	) as "v" ON "v"."shop_id" = "s"."id"
 	INNER JOIN "category" as "c" ON "c"."id" = "p"."category_id"
 	WHERE "p"."deleted_at" IS NULL
-	ORDER BY "p"."unit_sold" DESC LIMIT $1 OFFSET $2;
+	ORDER BY "p"."unit_sold" DESC,
+	"p"."rating_avg" DESC,
+	"p"."view_count" DESC
+	LIMIT $1 OFFSET $2;
 	`
 	GetProductInfoQuery = `select
 	pr.id,pr.sku,pr.title,pr.description,pr.view_count,pr.favorite_count,pr.unit_sold,pr.listed_status,pr.thumbnail_url,pr.rating_avg,pr.min_price,pr.max_price,pr.shop_id

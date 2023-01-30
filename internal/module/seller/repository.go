@@ -13,6 +13,8 @@ type Repository interface {
 	GetPerformance(ctx context.Context, shopID string) (*body.SellerPerformance, error)
 	GetPerformaceRedis(ctx context.Context, key string) (*body.SellerPerformance, error)
 	InsertPerformaceRedis(ctx context.Context, key string, value *body.SellerPerformance) error
+	GetTotalAllSeller(ctx context.Context, shopName string) (int64, error)
+	GetAllSeller(ctx context.Context, pgn *pagination.Pagination, shopName string) ([]*body.SellerResponse, error)
 	GetTotalOrder(ctx context.Context, userID, orderStatusID, voucherShopID string) (int64, error)
 	GetOrders(ctx context.Context, userID, orderStatusID, voucherShopID string, pgn *pagination.Pagination) ([]*model.Order, error)
 	GetShopIDByUser(ctx context.Context, userID string) (string, error)
@@ -71,7 +73,9 @@ type Repository interface {
 	GetOrderModelByID(ctx context.Context, OrderID string) (*model.OrderModel, error)
 	GetRefundOrderByOrderID(ctx context.Context, orderID string) (*model.Refund, error)
 	GetRefundOrderByID(ctx context.Context, refundID string) (*model.Refund, error)
-	GetRefundThreadByRefundID(ctx context.Context, refundID string) ([]*model.RefundThread, error)
+	GetUserByID(ctx context.Context, id string) (*model.User, error)
+	GetShopByID(ctx context.Context, shopID string) (*model.Shop, error)
+	GetRefundThreadByRefundID(ctx context.Context, refundID string) ([]*body.RThread, error)
 	CreateRefundThreadSeller(ctx context.Context, refundThreadData *model.RefundThread) error
 	UpdateRefundAccept(ctx context.Context, refundDataID string) error
 	UpdateRefundReject(ctx context.Context, refundDataID string) error

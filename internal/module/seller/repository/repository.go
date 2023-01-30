@@ -216,6 +216,74 @@ func (r *sellerRepo) InsertPerformaceRedis(ctx context.Context, key string, valu
 	return nil
 }
 
+func (r *sellerRepo) GetTotalAllSeller(ctx context.Context, shopName string) (int64, error) {
+	var total int64
+
+	if err := r.PSQL.QueryRowContext(ctx, GetTotalAllSellerQuery, fmt.Sprintf("%%%s%%", shopName)).Scan(&total); err != nil {
+		return 0, err
+	}
+
+	return total, nil
+}
+
+func (r *sellerRepo) GetAllSeller(ctx context.Context, pgn *pagination.Pagination, shopName string) ([]*body.SellerResponse, error) {
+	shops := make([]*body.SellerResponse, 0)
+	res, err := r.PSQL.QueryContext(
+		ctx, GetAllSellerQuery, fmt.Sprintf("%%%s%%", shopName), pgn.GetLimit(),
+		pgn.GetOffset())
+
+	if err != nil {
+		return nil, err
+	}
+	defer res.Close()
+
+	for res.Next() {
+		var shopData body.SellerResponse
+		if errScan := res.Scan(
+			&shopData.ID,
+			&shopData.Name,
+			&shopData.TotalProduct,
+			&shopData.TotalRating,
+			&shopData.RatingAVG,
+			&shopData.CreatedAt,
+			&shopData.PhotoURL,
+		); errScan != nil {
+			return nil, err
+		}
+
+		shops = append(shops, &shopData)
+	}
+
+	if res.Err() != nil {
+		return nil, err
+	}
+
+	return shops, err
+}
+
+func (r *sellerRepo) GetUserByID(ctx context.Context, id string) (*model.User, error) {
+	var userModel model.User
+	if err := r.PSQL.QueryRowContext(ctx, GetUserByIDQuery, id).
+		Scan(&userModel.ID, &userModel.RoleID, &userModel.Email, &userModel.Username, &userModel.PhoneNo,
+			&userModel.FullName, &userModel.Gender, &userModel.BirthDate, &userModel.IsVerify, &userModel.PhotoURL); err != nil {
+		return nil, err
+	}
+
+	return &userModel, nil
+}
+
+func (r *sellerRepo) GetShopByID(ctx context.Context, shopID string) (*model.Shop, error) {
+	var shopCart model.Shop
+	if err := r.PSQL.QueryRowContext(ctx, GetShopByIDQuery, shopID).Scan(
+		&shopCart.ID,
+		&shopCart.Name,
+		&shopCart.UserID); err != nil {
+		return nil, err
+	}
+
+	return &shopCart, nil
+}
+
 func (r *sellerRepo) GetTotalOrder(ctx context.Context, shopID, orderStatusID, voucherShopID string) (int64, error) {
 	var total int64
 
@@ -1368,8 +1436,8 @@ func (r *sellerRepo) GetRefundOrderByID(ctx context.Context, refundID string) (*
 	return &refundData, nil
 }
 
-func (r *sellerRepo) GetRefundThreadByRefundID(ctx context.Context, refundID string) ([]*model.RefundThread, error) {
-	refundThreadList := make([]*model.RefundThread, 0)
+func (r *sellerRepo) GetRefundThreadByRefundID(ctx context.Context, refundID string) ([]*body.RThread, error) {
+	refundThreadList := make([]*body.RThread, 0)
 	res, err := r.PSQL.QueryContext(ctx, GetRefundThreadByRefundIDQuery, refundID)
 
 	if err != nil {
@@ -1378,11 +1446,14 @@ func (r *sellerRepo) GetRefundThreadByRefundID(ctx context.Context, refundID str
 	defer res.Close()
 
 	for res.Next() {
-		var refundThreadData model.RefundThread
+		var refundThreadData body.RThread
 		if err := res.Scan(
 			&refundThreadData.ID,
 			&refundThreadData.RefundID,
 			&refundThreadData.UserID,
+			&refundThreadData.UserName,
+			&refundThreadData.ShopName,
+			&refundThreadData.PhotoURL,
 			&refundThreadData.IsSeller,
 			&refundThreadData.IsBuyer,
 			&refundThreadData.Text,
@@ -1390,11 +1461,17 @@ func (r *sellerRepo) GetRefundThreadByRefundID(ctx context.Context, refundID str
 		); err != nil {
 			return nil, err
 		}
+		if !refundThreadData.IsSeller {
+			Tstring := ""
+			refundThreadData.ShopName = &Tstring
+		}
+		if !refundThreadData.IsBuyer {
+			refundThreadData.UserName = ""
+		}
 		refundThreadList = append(refundThreadList, &refundThreadData)
 	}
 	return refundThreadList, nil
 }
-
 func (r *sellerRepo) CreateRefundThreadSeller(ctx context.Context, refundThreadData *model.RefundThread) error {
 	if _, err := r.PSQL.ExecContext(ctx, CreateRefundThreadSellerQuery,
 		refundThreadData.RefundID,

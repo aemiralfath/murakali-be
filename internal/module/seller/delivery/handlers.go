@@ -57,6 +57,30 @@ func (h *sellerHandlers) GetPerformance(c *gin.Context) {
 	response.SuccessResponse(c.Writer, gotPerformance, http.StatusOK)
 }
 
+func (h *sellerHandlers) GetAllSeller(c *gin.Context) {
+	pgn := &pagination.Pagination{}
+	shopName := strings.TrimSpace(c.DefaultQuery("search", ""))
+	if shopName == "" {
+		shopName = ""
+	}
+	h.ValidateQueryPagination(c, pgn)
+
+	shops, err := h.sellerUC.GetAllSeller(c, shopName, pgn)
+	if err != nil {
+		var e *httperror.Error
+		if !errors.As(err, &e) {
+			h.logger.Errorf("HandlerSeller, Error: %s", err)
+			response.ErrorResponse(c.Writer, response.InternalServerErrorMessage, http.StatusInternalServerError)
+			return
+		}
+
+		response.ErrorResponse(c.Writer, e.Err.Error(), e.Status)
+		return
+	}
+
+	response.SuccessResponse(c.Writer, shops, http.StatusOK)
+}
+
 func (h *sellerHandlers) GetOrder(c *gin.Context) {
 	userID, exist := c.Get("userID")
 	if !exist {

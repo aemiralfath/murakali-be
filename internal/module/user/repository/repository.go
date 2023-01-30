@@ -556,6 +556,8 @@ func (r *userRepo) GetOrders(ctx context.Context, userID, orderStatusID string, 
 			&order.ShopName,
 			&order.VoucherCode,
 			&order.CreatedAt,
+			&order.IsRefund,
+			&order.IsWithdraw,
 		); errScan != nil {
 			return nil, err
 		}
@@ -1614,8 +1616,8 @@ func (r *userRepo) GetRefundOrderByID(ctx context.Context, refundID string) (*mo
 	return &refundData, nil
 }
 
-func (r *userRepo) GetRefundThreadByRefundID(ctx context.Context, refundID string) ([]*model.RefundThread, error) {
-	refundThreadList := make([]*model.RefundThread, 0)
+func (r *userRepo) GetRefundThreadByRefundID(ctx context.Context, refundID string) ([]*body.RThread, error) {
+	refundThreadList := make([]*body.RThread, 0)
 	res, err := r.PSQL.QueryContext(ctx, GetRefundThreadByRefundIDQuery, refundID)
 
 	if err != nil {
@@ -1624,17 +1626,27 @@ func (r *userRepo) GetRefundThreadByRefundID(ctx context.Context, refundID strin
 	defer res.Close()
 
 	for res.Next() {
-		var refundThreadData model.RefundThread
+		var refundThreadData body.RThread
 		if err := res.Scan(
 			&refundThreadData.ID,
 			&refundThreadData.RefundID,
 			&refundThreadData.UserID,
+			&refundThreadData.UserName,
+			&refundThreadData.ShopName,
+			&refundThreadData.PhotoURL,
 			&refundThreadData.IsSeller,
 			&refundThreadData.IsBuyer,
 			&refundThreadData.Text,
 			&refundThreadData.CreatedAt,
 		); err != nil {
 			return nil, err
+		}
+		if !refundThreadData.IsSeller {
+			Tstring := ""
+			refundThreadData.ShopName = &Tstring
+		}
+		if !refundThreadData.IsBuyer {
+			refundThreadData.UserName = ""
 		}
 		refundThreadList = append(refundThreadList, &refundThreadData)
 	}

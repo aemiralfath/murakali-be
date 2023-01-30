@@ -103,6 +103,6 @@ type Repository interface {
 	CreateRefundUser(ctx context.Context, tx postgre.Transaction, refundData *model.Refund) error
 	UpdateOrderRefund(ctx context.Context, tx postgre.Transaction, orderID string, isRefund bool) error
 	GetRefundOrderByID(ctx context.Context, refundID string) (*model.Refund, error)
-	GetRefundThreadByRefundID(ctx context.Context, refundID string) ([]*model.RefundThread, error)
+	GetRefundThreadByRefundID(ctx context.Context, refundID string) ([]*body.RThread, error)
 	CreateRefundThreadUser(ctx context.Context, refundThreadData *model.RefundThread) error
 }
