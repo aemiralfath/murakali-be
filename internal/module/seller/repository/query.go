@@ -1,6 +1,156 @@
 package repository
 
 const (
+	GetSellerPerformanceMetadataQuery = `
+	SELECT id AS shop_id, name AS shop_name, created_at AS shop_created_at, NOW() as report_updated_at
+	FROM shop
+	WHERE shop.id = $1 AND shop.deleted_at IS NULL
+	`
+
+	GetDailySalesQuery = `
+	WITH calendar AS (
+		SELECT 
+			generate_series(date(NOW()) - INTERVAL '30 days', date(NOW()), '1 day')::date AS date
+	)
+	, daily_sales AS (
+		SELECT
+			shop_id,
+			order_status_id,
+			DATE(created_at) AS date,
+			SUM(total_price) AS total_sales
+		FROM "order"
+		WHERE
+			created_at >= (NOW() - INTERVAL '30 days') AND
+			order_status_id = 7 AND
+			shop_id = $1
+		GROUP BY shop_id, date, order_status_id
+	)
+	
+	SELECT 
+		calendar.date,
+		COALESCE(daily_sales.total_sales, 0) AS total_sales
+	FROM calendar
+	LEFT JOIN daily_sales ON calendar.date = daily_sales.date 
+	ORDER BY calendar.date
+	`
+
+	GetDailyOrderQuery = `
+	WITH calendar AS (
+		SELECT
+			generate_series(date(NOW()) - INTERVAL '30 days', date(NOW()), '1 day')::date AS date
+	)
+	, daily_order AS (
+		SELECT
+			DATE(created_at) AS date,
+			SUM(CASE WHEN order_status_id = 7 THEN 1 ELSE 0 END) AS success_order,
+			SUM(CASE WHEN order_status_id IN (8,9) THEN 1 ELSE 0 END) AS failed_order
+		FROM "order"
+		WHERE
+			created_at >= (NOW() - INTERVAL '30 days') AND
+			shop_id = $1
+		GROUP BY date
+	)
+	
+	SELECT 
+		calendar.date, 
+		COALESCE(daily_order.success_order, 0) as success_order,
+		COALESCE(daily_order.failed_order, 0) as failed_order
+		FROM calendar
+		LEFT JOIN daily_order ON calendar.date = daily_order.date
+	`
+
+	GetMonthlyOrderQuery = `
+	WITH month_order AS (
+		SELECT 
+			date_trunc('month', created_at) AS month,
+			SUM(CASE WHEN order_status_id = 7 THEN 1 ELSE 0 END) AS success_order,
+			SUM(CASE WHEN order_status_id IN (8,9) THEN 1 ELSE 0 END) AS failed_order
+		FROM "order"
+		WHERE 
+			created_at >= (NOW() - INTERVAL '2 month') AND
+			shop_id = $1
+		GROUP BY month
+	)
+	
+	SELECT 
+		month,
+		success_order,
+		failed_order,
+		NULL AS success_order_percent_change,
+		NULL AS failed_order_percent_change
+	FROM month_order
+	ORDER BY month
+	`
+
+	GetTotalRatingQuery = `
+	SELECT 
+		SUM(CASE WHEN rating BETWEEN 1 AND 1.99 THEN 1 ELSE 0 END) as rating_1,
+		SUM(CASE WHEN rating BETWEEN 2 AND 2.99 THEN 1 ELSE 0 END) as rating_2,
+		SUM(CASE WHEN rating BETWEEN 3 AND 3.99 THEN 1 ELSE 0 END) as rating_3,
+		SUM(CASE WHEN rating BETWEEN 4 AND 4.99 THEN 1 ELSE 0 END) as rating_4,
+		SUM(CASE WHEN rating BETWEEN 5 AND 5.99 THEN 1 ELSE 0 END) as rating_5
+	FROM review
+	INNER JOIN product ON product.id = review.product_id
+	WHERE shop_id = $1 AND review.deleted_at IS NULL
+	GROUP BY shop_id
+	`
+
+	GetMostOrderedProductQuery = `
+	SELECT 
+    id, title, view_count, unit_sold, thumbnail_url
+	FROM product
+	WHERE shop_id = $1 AND deleted_at IS NULL
+	ORDER BY unit_sold DESC
+	LIMIT 5 
+	`
+
+	GetNumOrderByProvince = `
+	WITH provinces AS (
+		SELECT
+		generate_series(1, 34) AS province_id)
+			SELECT
+				provinces.province_id,
+				COALESCE(num_orders, 0) as num_orders
+			FROM provinces
+			LEFT JOIN (
+				SELECT
+					(json_extract_path_text(buyer_address::json, 'province_id')::integer) as province_id,
+					COUNT(1) as num_orders
+				FROM "order"
+				WHERE shop_id = $1
+				GROUP BY province_id
+			) as orders ON provinces.province_id = orders.province_id
+			ORDER BY num_orders DESC;
+	`
+
+	GetTotalSalesQuery = `
+	SELECT 
+		SUM(total_price) as total_sales,
+		SUM(CASE WHEN is_withdraw = true THEN total_price ELSE 0 END) as withdrawn_sum,
+		SUM(CASE WHEN is_withdraw = false THEN total_price ELSE 0 END) as withdrawable_sum
+	FROM "order"
+	WHERE shop_id = $1
+	GROUP BY shop_id;
+	`
+
+	GetTotalAllSellerQuery = `SELECT count(s.id)
+	FROM "shop" s 
+	JOIN "user" u ON u.id = s.user_id
+	WHERE s.name ILIKE $1 AND s.deleted_at is null`
+
+	GetAllSellerQuery = `SELECT s.id, s.name,
+	 s.total_product,
+	 s.total_rating, 
+	 s.rating_avg,
+	  s.created_at,
+	   u.photo_url 
+	FROM "shop" s 
+	JOIN "user" u ON u.id = s.user_id
+	WHERE s.name ILIKE $1 AND s.deleted_at is null
+	ORDER BY s.created_at desc
+	LIMIT $2 OFFSET $3
+	`
+
 	GetUserByIDQuery   = `SELECT "id", "role_id", "email", "username", "phone_no", "fullname", "gender", "birth_date", "is_verify","photo_url" FROM "user" WHERE "id" = $1`
 	GetShopByIDQuery   = `SELECT "id", "name", "user_id" FROM "shop" WHERE "id" = $1 AND "deleted_at" IS NULL;`
 	GetTotalOrderQuery = `SELECT count(id) FROM "order" as "o" WHERE "o"."shop_id" = $1 and "o"."order_status_id"::text LIKE $2`

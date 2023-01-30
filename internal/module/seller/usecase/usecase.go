@@ -34,6 +34,34 @@ func NewSellerUseCase(cfg *config.Config, txRepo *postgre.TxRepo, sellerRepo sel
 	return &sellerUC{cfg: cfg, txRepo: txRepo, sellerRepo: sellerRepo}
 }
 
+func (u *sellerUC) GetPerformance(ctx context.Context, userID string, update bool) (*body.SellerPerformance, error) {
+	shopID, err := u.sellerRepo.GetShopIDByUserID(ctx, userID)
+	if err != nil {
+		return nil, err
+	}
+
+	key := fmt.Sprintf("performance:%s", shopID)
+	if !update {
+		fmt.Println("!!!!! Ndak Update?", update)
+		gotPerformanceRedis, _ := u.sellerRepo.GetPerformaceRedis(ctx, key)
+		if gotPerformanceRedis != nil {
+			return gotPerformanceRedis, nil
+		}
+	}
+
+	gotPerformance, err := u.sellerRepo.GetPerformance(ctx, shopID)
+	if err != nil {
+		return nil, err
+	}
+
+	err = u.sellerRepo.InsertPerformaceRedis(ctx, key, gotPerformance)
+	if err != nil {
+		return nil, err
+	}
+
+	return gotPerformance, nil
+}
+
 func (u *sellerUC) WithdrawalOrderBalance(ctx context.Context, orderID string) error {
 	order, err := u.sellerRepo.GetOrderByOrderID(ctx, orderID)
 	if err != nil {
@@ -131,6 +159,27 @@ func (u *sellerUC) WithdrawalOrderBalance(ctx context.Context, orderID string) e
 	}
 
 	return nil
+}
+
+func (u *sellerUC) GetAllSeller(ctx context.Context, shopName string,
+	pgn *pagination.Pagination) (*pagination.Pagination, error) {
+
+	totalRows, err := u.sellerRepo.GetTotalAllSeller(ctx, shopName)
+	if err != nil {
+		return nil, err
+	}
+
+	totalPages := int(math.Ceil(float64(totalRows) / float64(pgn.Limit)))
+	pgn.TotalRows = totalRows
+	pgn.TotalPages = totalPages
+
+	shop, err := u.sellerRepo.GetAllSeller(ctx, pgn, shopName)
+	if err != nil {
+		return nil, err
+	}
+
+	pgn.Rows = shop
+	return pgn, nil
 }
 
 func (u *sellerUC) GetOrder(ctx context.Context, userID, orderStatusID, voucherShopID string,

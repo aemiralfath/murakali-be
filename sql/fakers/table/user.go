@@ -19,17 +19,19 @@ const InsertUserAddressQuery = `INSERT INTO "address"
 VALUES ($1, 'Home', 33, 327, 'Sumatera Selatan', 'Palembang', 'Ilir Timur II', '2 Ilir', 'no 91', '30118', $2, $3)`
 const CreateUserWallet = `INSERT INTO "wallet" (user_id, balance, pin, attempt_count, active_date)
 	VALUES ($1, 0, '$2a$10$haIhdlIHObH0yGMyCx5Zl.s5b7sV/x3GWact0Yd2xREXof3UAzUl6', 0, CURRENT_TIMESTAMP);`
+const CreateUserSLP = `INSERT INTO "sealabs_pay" (card_number, user_id, name, is_default, active_date, created_at) VALUES ($1, $2, $3, $4, $5, $6)`
 
 type UserFaker struct {
-	Size   int
-	RoleID int
-	Gender string
-	UserID []string
-	Email  []string
+	Size       int
+	RoleID     int
+	Gender     string
+	UserID     []string
+	Email      []string
+	CardNumber []string
 }
 
-func NewUserFaker(size, roleID int, gender string, userID, email []string) ISeeder {
-	return &UserFaker{Size: size, RoleID: roleID, Gender: gender, UserID: userID, Email: email}
+func NewUserFaker(size, roleID int, gender string, userID, email, cardNumber []string) ISeeder {
+	return &UserFaker{Size: size, RoleID: roleID, Gender: gender, UserID: userID, Email: email, CardNumber: cardNumber}
 }
 
 func (u *UserFaker) GenerateData(tx postgre.Transaction) error {
@@ -39,13 +41,13 @@ func (u *UserFaker) GenerateData(tx postgre.Transaction) error {
 			return err
 		}
 
-		if err := u.GenerateDataUser(tx, id, val); err != nil {
+		if err := u.GenerateDataUser(tx, id, val, u.CardNumber[i]); err != nil {
 			return err
 		}
 	}
 
 	for i := 0; i < u.Size; i++ {
-		if err := u.GenerateDataUser(tx, uuid.New(), faker.Email()); err != nil {
+		if err := u.GenerateDataUser(tx, uuid.New(), faker.Email(), ""); err != nil {
 			return err
 		}
 	}
@@ -53,7 +55,7 @@ func (u *UserFaker) GenerateData(tx postgre.Transaction) error {
 	return nil
 }
 
-func (u *UserFaker) GenerateDataUser(tx postgre.Transaction, id uuid.UUID, email string) error {
+func (u *UserFaker) GenerateDataUser(tx postgre.Transaction, id uuid.UUID, email, cardNumber string) error {
 	data := u.GenerateUser(id, email)
 	_, err := tx.Exec(InsertUserQuery,
 		data.ID, data.RoleID, data.Username, data.Email, data.PhoneNo, data.FullName, data.Password, data.Gender,
@@ -64,6 +66,12 @@ func (u *UserFaker) GenerateDataUser(tx postgre.Transaction, id uuid.UUID, email
 
 	if _, err := tx.Exec(CreateUserWallet, id); err != nil {
 		return err
+	}
+
+	if cardNumber != "" {
+		if _, err := tx.Exec(CreateUserSLP, cardNumber, data.ID, faker.Name(), true, time.Now().AddDate(1, 0, 0), time.Now()); err != nil {
+			return err
+		}
 	}
 
 	if errEmail := u.GenerateEmailHistory(tx, data.Email); errEmail != nil {
