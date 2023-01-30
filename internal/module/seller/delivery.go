@@ -4,6 +4,7 @@ import "github.com/gin-gonic/gin"
 
 type Handlers interface {
 	GetPerformance(c *gin.Context)
+	GetAllSeller(c *gin.Context)
 	GetOrder(c *gin.Context)
 	ChangeOrderStatus(c *gin.Context)
 	GetOrderByOrderID(c *gin.Context)

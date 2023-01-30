@@ -216,6 +216,51 @@ func (r *sellerRepo) InsertPerformaceRedis(ctx context.Context, key string, valu
 	return nil
 }
 
+func (r *sellerRepo) GetTotalAllSeller(ctx context.Context, shopName string) (int64, error) {
+	var total int64
+
+	if err := r.PSQL.QueryRowContext(ctx, GetTotalAllSellerQuery, fmt.Sprintf("%%%s%%", shopName)).Scan(&total); err != nil {
+		return 0, err
+	}
+
+	return total, nil
+}
+
+func (r *sellerRepo) GetAllSeller(ctx context.Context, pgn *pagination.Pagination, shopName string) ([]*body.SellerResponse, error) {
+	shops := make([]*body.SellerResponse, 0)
+	res, err := r.PSQL.QueryContext(
+		ctx, GetAllSellerQuery, fmt.Sprintf("%%%s%%", shopName), pgn.GetLimit(),
+		pgn.GetOffset())
+
+	if err != nil {
+		return nil, err
+	}
+	defer res.Close()
+
+	for res.Next() {
+		var shopData body.SellerResponse
+		if errScan := res.Scan(
+			&shopData.ID,
+			&shopData.Name,
+			&shopData.TotalProduct,
+			&shopData.TotalRating,
+			&shopData.RatingAVG,
+			&shopData.CreatedAt,
+			&shopData.PhotoURL,
+		); errScan != nil {
+			return nil, err
+		}
+
+		shops = append(shops, &shopData)
+	}
+
+	if res.Err() != nil {
+		return nil, err
+	}
+
+	return shops, err
+}
+
 func (r *sellerRepo) GetTotalOrder(ctx context.Context, shopID, orderStatusID, voucherShopID string) (int64, error) {
 	var total int64
 
