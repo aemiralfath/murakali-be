@@ -1,6 +1,8 @@
 package repository
 
 const (
+	GetUserByIDQuery   = `SELECT "id", "role_id", "email", "username", "phone_no", "fullname", "gender", "birth_date", "is_verify","photo_url" FROM "user" WHERE "id" = $1`
+	GetShopByIDQuery   = `SELECT "id", "name", "user_id" FROM "shop" WHERE "id" = $1 AND "deleted_at" IS NULL;`
 	GetTotalOrderQuery = `SELECT count(id) FROM "order" as "o" WHERE "o"."shop_id" = $1 and "o"."order_status_id"::text LIKE $2`
 
 	GetTotalOrderWithVoucherIDQuery = `SELECT count(id) FROM "order" as "o" WHERE "o"."shop_id" = $1 and "o"."order_status_id"::text LIKE $2 
@@ -280,8 +282,11 @@ const (
 	GetRefundOrderByIDQuery = `SELECT "id", "order_id", "is_seller_refund", "is_buyer_refund", "reason", "image", "accepted_at", "rejected_at", "refunded_at"
 	FROM "refund" WHERE "id" = $1`
 
-	GetRefundThreadByRefundIDQuery = `SELECT "id", "refund_id", "user_id", "is_seller", "is_buyer", "text", "created_at"
-	FROM "refund_thread" WHERE "refund_id" = $1 ORDER BY "created_at" ASC`
+	GetRefundThreadByRefundIDQuery = `SELECT "rt"."id", "rt"."refund_id", "rt"."user_id", "u"."username", "s"."name", "u"."photo_url", "rt"."is_seller", "rt"."is_buyer", "rt"."text", "rt"."created_at"
+	FROM "refund_thread" as "rt"
+    LEFT JOIN "user" as "u" ON "u"."id" = "rt"."user_id"
+    LEFT JOIN "shop" as "s" ON "s"."user_id" = "u"."id"
+	WHERE "refund_id" = $1 ORDER BY "created_at" ASC`
 
 	CreateRefundThreadSellerQuery = `INSERT INTO "refund_thread" 
 	(refund_id, user_id, is_seller, is_buyer, text)

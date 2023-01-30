@@ -33,7 +33,7 @@ const (
 
 	GetTotalOrderQuery = `SELECT count(id) FROM "order" WHERE "user_id" = $1 and "order_status_id"::text LIKE $2`
 
-	GetOrdersQuery = `SELECT o.id,o.order_status_id,o.total_price,o.delivery_fee,o.resi_no,s.id,s.name,v.code,o.created_at
+	GetOrdersQuery = `SELECT o.id,o.order_status_id,o.total_price,o.delivery_fee,o.resi_no,s.id,s.name,v.code,o.created_at,o.is_refund,o.is_withdraw
 	from "order" o
 	join "shop" s on s.id = o.shop_id
 	left join "voucher" v on v.id = o.voucher_shop_id 
@@ -225,8 +225,11 @@ const (
 	GetRefundOrderByIDQuery = `SELECT "id", "order_id", "is_seller_refund", "is_buyer_refund", "reason", "image", "accepted_at", "rejected_at", "refunded_at"
 	FROM "refund" WHERE "id" = $1`
 
-	GetRefundThreadByRefundIDQuery = `SELECT "id", "refund_id", "user_id", "is_seller", "is_buyer", "text", "created_at"
-	FROM "refund_thread" WHERE "refund_id" = $1 ORDER BY "created_at" ASC`
+	GetRefundThreadByRefundIDQuery = `SELECT "rt"."id", "rt"."refund_id", "rt"."user_id", "u"."username", "s"."name", "u"."photo_url", "rt"."is_seller", "rt"."is_buyer", "rt"."text", "rt"."created_at"
+	FROM "refund_thread" as "rt"
+    LEFT JOIN "user" as "u" ON "u"."id" = "rt"."user_id"
+    LEFT JOIN "shop" as "s" ON "s"."user_id" = "u"."id"
+	WHERE "refund_id" = $1 ORDER BY "created_at" ASC`
 
 	CreateRefundThreadUserQuery = `INSERT INTO "refund_thread" 
 	(refund_id, user_id, is_seller, is_buyer, text)
