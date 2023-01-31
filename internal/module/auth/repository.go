@@ -22,4 +22,7 @@ type Repository interface {
 	UpdateUser(ctx context.Context, tx postgre.Transaction, user *model.User) error
 	DeleteOTPValue(ctx context.Context, email string) (int64, error)
 	CreateUserGoogle(ctx context.Context, tx postgre.Transaction, user *model.User) (*model.User, error)
+	InsertSessionRedis(ctx context.Context, duration int, key, status string) error
+	GetSessionKeyRedis(ctx context.Context, key string) ([]string, error)
+	GetSessionRedis(ctx context.Context, key string) (string, error)
 }

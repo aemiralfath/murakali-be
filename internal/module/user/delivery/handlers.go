@@ -1106,6 +1106,7 @@ func (h *userHandlers) ChangePassword(c *gin.Context) {
 	}
 
 	c.SetSameSite(http.SameSiteNoneMode)
+	c.SetCookie(constant.RefreshTokenCookie, "", -1, "/", h.cfg.Server.Domain, true, true)
 	c.SetCookie(constant.ChangePasswordTokenCookie, "", -1, "/", h.cfg.Server.Domain, true, true)
 	response.SuccessResponse(c.Writer, nil, http.StatusOK)
 }
