@@ -182,7 +182,7 @@ func (u *sellerUC) GetAllSeller(ctx context.Context, shopName string,
 	return pgn, nil
 }
 
-func (u *sellerUC) GetOrder(ctx context.Context, userID, orderStatusID, voucherShopID string,
+func (u *sellerUC) GetOrder(ctx context.Context, userID, orderStatusID, voucherShopID, sortQuery string,
 	pgn *pagination.Pagination) (*pagination.Pagination, error) {
 	shopID, err := u.sellerRepo.GetShopIDByUser(ctx, userID)
 	if err != nil {
@@ -198,7 +198,7 @@ func (u *sellerUC) GetOrder(ctx context.Context, userID, orderStatusID, voucherS
 	pgn.TotalRows = totalRows
 	pgn.TotalPages = totalPages
 
-	orders, err := u.sellerRepo.GetOrders(ctx, shopID, orderStatusID, voucherShopID, pgn)
+	orders, err := u.sellerRepo.GetOrders(ctx, shopID, orderStatusID, voucherShopID, sortQuery, pgn)
 	if err != nil {
 		return nil, err
 	}

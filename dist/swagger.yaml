@@ -1819,6 +1819,21 @@ paths:
         Get Seller Order
       tags:
         - Seller
+      parameters:
+        - in: query
+          name: sort_by
+          schema:
+            type: string
+            enum: [is_withdraw, created_at]
+            description: >-
+              query for sort order
+        - in: query
+          name: sort
+          schema:
+            type: string
+            enum: [asc, desc]
+            description: >-
+              query for sort order descrending or ascending
       security:
         - BEARER: []
       responses:
