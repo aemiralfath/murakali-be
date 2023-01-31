@@ -13,7 +13,7 @@ type UseCase interface {
 	VerifyOTP(ctx context.Context, body body2.VerifyOTPRequest) (string, error)
 	ResetPasswordVerifyOTP(ctx context.Context, body body2.ResetPasswordVerifyOTPRequest) (string, error)
 	Login(ctx context.Context, body body2.LoginRequest) (*model.Token, error)
-	RefreshToken(ctx context.Context, id string) (*model.AccessToken, error)
+	RefreshToken(ctx context.Context, refreshToken, id string) (*model.AccessToken, error)
 	ResetPasswordEmail(ctx context.Context, body body2.ResetPasswordEmailRequest) (*model.User, error)
 	ResetPasswordUser(ctx context.Context, email string, body *body2.ResetPasswordUserRequest) (*model.User, error)
 	CheckUniqueUsername(ctx context.Context, username string) (bool, error)

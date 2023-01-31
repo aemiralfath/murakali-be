@@ -79,7 +79,7 @@ func (h *authHandlers) RefreshToken(c *gin.Context) {
 		return
 	}
 
-	accessToken, err := h.authUC.RefreshToken(c, claims["id"].(string))
+	accessToken, err := h.authUC.RefreshToken(c, refreshToken, claims["id"].(string))
 	if err != nil {
 		var e *httperror.Error
 		if !errors.As(err, &e) {
