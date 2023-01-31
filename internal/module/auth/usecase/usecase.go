@@ -58,10 +58,28 @@ func (u *authUC) Login(ctx context.Context, requestBody body.LoginRequest) (*mod
 		return nil, err
 	}
 
+	if err := u.authRepo.InsertSessionRedis(ctx, u.cfg.JWT.AccessExpMin, fmt.Sprintf("session:%s:%s", user.ID.String(), accessToken.Token), constant.TRUE); err != nil {
+		return nil, err
+	}
+
+	if err := u.authRepo.InsertSessionRedis(ctx, u.cfg.JWT.RefreshExpMin, fmt.Sprintf("session:%s:%s", user.ID.String(), refreshToken.Token), constant.TRUE); err != nil {
+		return nil, err
+	}
+
 	return &model.Token{AccessToken: accessToken, RefreshToken: refreshToken}, nil
 }
 
-func (u *authUC) RefreshToken(ctx context.Context, id string) (*model.AccessToken, error) {
+func (u *authUC) RefreshToken(ctx context.Context, refreshToken, id string) (*model.AccessToken, error) {
+	key := fmt.Sprintf("session:%s:%s", id, refreshToken)
+	session, err := u.authRepo.GetSessionRedis(ctx, key)
+	if err != nil {
+		return nil, httperror.New(http.StatusForbidden, response.ForbiddenMessage)
+	}
+
+	if session != constant.TRUE {
+		return nil, httperror.New(http.StatusForbidden, response.ForbiddenMessage)
+	}
+
 	user, err := u.authRepo.GetUserByID(ctx, id)
 	if err != nil {
 		if err == sql.ErrNoRows {
@@ -73,6 +91,10 @@ func (u *authUC) RefreshToken(ctx context.Context, id string) (*model.AccessToke
 
 	accessToken, err := jwt.GenerateJWTAccessToken(user.ID.String(), user.RoleID, u.cfg)
 	if err != nil {
+		return nil, err
+	}
+
+	if err := u.authRepo.InsertSessionRedis(ctx, u.cfg.JWT.AccessExpMin, fmt.Sprintf("session:%s:%s", user.ID.String(), accessToken.Token), constant.TRUE); err != nil {
 		return nil, err
 	}
 
@@ -265,6 +287,17 @@ func (u *authUC) ResetPasswordUser(ctx context.Context, email string, requestBod
 		return nil, err
 	}
 
+	keys, errKey := u.authRepo.GetSessionKeyRedis(ctx, fmt.Sprintf("session:%s:*", user.ID.String()))
+	if errKey != nil {
+		return nil, errKey
+	}
+
+	for _, key := range keys {
+		if err := u.authRepo.InsertSessionRedis(ctx, u.cfg.JWT.AccessExpMin, key, constant.FALSE); err != nil {
+			return nil, err
+		}
+	}
+
 	return user, nil
 }
 
@@ -446,6 +479,14 @@ func (u *authUC) GoogleAuth(ctx context.Context, state string, userAuth *oauth.G
 
 	refreshToken, err := jwt.GenerateJWTRefreshToken(user.ID.String(), u.cfg)
 	if err != nil {
+		return nil, err
+	}
+
+	if err := u.authRepo.InsertSessionRedis(ctx, u.cfg.JWT.AccessExpMin, fmt.Sprintf("session:%s:%s", user.ID.String(), accessToken.Token), constant.TRUE); err != nil {
+		return nil, err
+	}
+
+	if err := u.authRepo.InsertSessionRedis(ctx, u.cfg.JWT.RefreshExpMin, fmt.Sprintf("session:%s:%s", user.ID.String(), refreshToken.Token), constant.TRUE); err != nil {
 		return nil, err
 	}
 

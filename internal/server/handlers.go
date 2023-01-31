@@ -89,7 +89,7 @@ func (s *Server) MapHandlers() error {
 	sellerGroup := v1.Group("/seller")
 	adminGroup := v1.Group("/admin")
 
-	mw := middleware.NewMiddlewareManager(s.cfg, []string{"*"}, s.log)
+	mw := middleware.NewMiddlewareManager(s.cfg, []string{"*"}, s.log, s.redisClient)
 	authDelivery.MapAuthRoutes(authGroup, authHandlers)
 	userDelivery.MapUserRoutes(userGroup, userHandlers, mw)
 	productDelivery.MapProductRoutes(productGroup, productHandlers, mw)

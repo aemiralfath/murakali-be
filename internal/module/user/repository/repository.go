@@ -1664,3 +1664,26 @@ func (r *userRepo) CreateRefundThreadUser(ctx context.Context, refundThreadData 
 	}
 	return nil
 }
+
+func (r *userRepo) InsertSessionRedis(ctx context.Context, duration int, key, status string) error {
+	if err := r.RedisClient.Set(ctx, key, status, time.Duration(duration)*time.Minute); err != nil {
+		return err.Err()
+	}
+
+	return nil
+}
+
+func (r *userRepo) GetSessionKeyRedis(ctx context.Context, key string) ([]string, error) {
+	keys := make([]string, 0)
+
+	iter := r.RedisClient.Scan(ctx, 0, key, 0).Iterator()
+	for iter.Next(ctx) {
+		keys = append(keys, iter.Val())
+	}
+
+	if err := iter.Err(); err != nil {
+		return keys, err
+	}
+
+	return keys, nil
+}

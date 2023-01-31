@@ -888,6 +888,17 @@ func (u *userUC) ChangePassword(ctx context.Context, userID, newPassword string)
 		return err
 	}
 
+	keys, errKey := u.userRepo.GetSessionKeyRedis(ctx, fmt.Sprintf("session:%s:*", userID))
+	if errKey != nil {
+		return errKey
+	}
+
+	for _, key := range keys {
+		if err := u.userRepo.InsertSessionRedis(ctx, u.cfg.JWT.AccessExpMin, key, constant.FALSE); err != nil {
+			return err
+		}
+	}
+
 	return nil
 }
 

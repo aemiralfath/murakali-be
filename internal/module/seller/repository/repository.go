@@ -472,18 +472,21 @@ func (r *sellerRepo) GetOrderByOrderID(ctx context.Context, orderID string) (*mo
 	return &order, nil
 }
 
-func (r *sellerRepo) GetOrders(ctx context.Context, shopID, orderStatusID, voucherShopID string, pgn *pagination.Pagination) ([]*model.Order, error) {
+func (r *sellerRepo) GetOrders(ctx context.Context, shopID, orderStatusID, voucherShopID, sortQuery string, pgn *pagination.Pagination) ([]*model.Order, error) {
 	orders := make([]*model.Order, 0)
 
 	var res *sql.Rows
 	var err error
+
+	queryOrderBySomething := fmt.Sprintf(OrderBySomething, sortQuery, pgn.GetLimit(),
+		pgn.GetOffset())
+
 	if voucherShopID == "" {
 		res, err = r.PSQL.QueryContext(
-			ctx, GetOrdersQuery,
+			ctx, GetOrdersQuery+queryOrderBySomething,
 			shopID,
 			fmt.Sprintf("%%%s%%", orderStatusID),
-			pgn.GetLimit(),
-			pgn.GetOffset())
+		)
 
 		if err != nil {
 			return nil, err
