@@ -1009,7 +1009,7 @@ func (r *sellerRepo) GetAllPromotionSeller(ctx context.Context, shopID, promoSta
 		q += FilterHasEndedQuery
 	}
 
-	res, err := r.PSQL.QueryContext(ctx, q, shopID)
+	res, err := r.PSQL.QueryContext(ctx, q+OrderByCreatedAt, shopID)
 	if err != nil {
 		return nil, err
 	}
