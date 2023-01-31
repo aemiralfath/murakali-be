@@ -16,7 +16,7 @@ type Repository interface {
 	GetTotalAllSeller(ctx context.Context, shopName string) (int64, error)
 	GetAllSeller(ctx context.Context, pgn *pagination.Pagination, shopName string) ([]*body.SellerResponse, error)
 	GetTotalOrder(ctx context.Context, userID, orderStatusID, voucherShopID string) (int64, error)
-	GetOrders(ctx context.Context, userID, orderStatusID, voucherShopID string, pgn *pagination.Pagination) ([]*model.Order, error)
+	GetOrders(ctx context.Context, userID, orderStatusID, voucherShopID, sortQuery string, pgn *pagination.Pagination) ([]*model.Order, error)
 	GetShopIDByUser(ctx context.Context, userID string) (string, error)
 	GetShopIDByOrder(ctx context.Context, OrderID string) (string, error)
 	ChangeOrderStatus(ctx context.Context, requestBody body.ChangeOrderStatusRequest) error
