@@ -78,5 +78,6 @@ type Repository interface {
 	GetRefundThreadByRefundID(ctx context.Context, refundID string) ([]*body.RThread, error)
 	CreateRefundThreadSeller(ctx context.Context, refundThreadData *model.RefundThread) error
 	UpdateRefundAccept(ctx context.Context, refundDataID string) error
-	UpdateRefundReject(ctx context.Context, refundDataID string) error
+	UpdateRefundReject(ctx context.Context, tx postgre.Transaction, refundDataID string) error
+	UpdateOrderRefundRejected(ctx context.Context, tx postgre.Transaction, orderData *model.OrderModel) error
 }

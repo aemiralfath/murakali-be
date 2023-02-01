@@ -159,7 +159,7 @@ const (
 	AND "o"."voucher_shop_id" = $3
 	`
 
-	GetOrdersQuery = `SELECT o.id, o.is_withdraw, o.order_status_id,o.total_price,o.delivery_fee,o.resi_no,s.id,s.name,v.code,o.created_at
+	GetOrdersQuery = `SELECT o.id, o.is_withdraw, o.is_refund, o.order_status_id,o.total_price,o.delivery_fee,o.resi_no,s.id,s.name,v.code,o.created_at
 	from "order" o
 	join "shop" s on s.id = o.shop_id
 	left join "voucher" v on v.id = o.voucher_shop_id 
@@ -167,7 +167,7 @@ const (
 	and "order_status_id"::text LIKE $2 
 	`
 
-	GetOrdersWithVoucherIDQuery = `SELECT o.id, o.is_withdraw,o.order_status_id,o.total_price,o.delivery_fee,o.resi_no,s.id,s.name,v.code,o.created_at
+	GetOrdersWithVoucherIDQuery = `SELECT o.id, o.is_withdraw, o.is_refund, o.order_status_id,o.total_price,o.delivery_fee,o.resi_no,s.id,s.name,v.code,o.created_at
 	from "order" o
 	join "shop" s on s.id = o.shop_id
 	left join "voucher" v on v.id = o.voucher_shop_id 
@@ -427,10 +427,10 @@ const (
 	FROM "order" WHERE "id" = $1`
 
 	GetRefundOrderByOrderIDQuery = `SELECT "id", "order_id", "is_seller_refund", "is_buyer_refund", "reason", "image", "accepted_at", "rejected_at", "refunded_at"
-	FROM "refund" WHERE "order_id" = $1`
+	FROM "refund" WHERE "order_id" = $1 ORDER BY "rejected_at" DESC LIMIT 1`
 
 	GetRefundOrderByIDQuery = `SELECT "id", "order_id", "is_seller_refund", "is_buyer_refund", "reason", "image", "accepted_at", "rejected_at", "refunded_at"
-	FROM "refund" WHERE "id" = $1`
+	FROM "refund" WHERE "id" = $1 ORDER BY "rejected_at" DESC LIMIT 1`
 
 	GetRefundThreadByRefundIDQuery = `SELECT "rt"."id", "rt"."refund_id", "rt"."user_id", "u"."username", "s"."name", "u"."photo_url", "rt"."is_seller", "rt"."is_buyer", "rt"."text", "rt"."created_at"
 	FROM "refund_thread" as "rt"
@@ -444,4 +444,6 @@ const (
 
 	UpdateRefundAcceptQuery = `UPDATE "refund" SET "accepted_at" = now() WHERE "id" = $1;`
 	UpdateRefundRejectQuery = `UPDATE "refund" SET "rejected_at" = now() WHERE "id" = $1;`
+
+	UpdateOrderRefundRejectedQuery = `UPDATE "order" SET "is_refund" = FALSE WHERE "id" = $1`
 )
