@@ -944,7 +944,7 @@ func (u *sellerUC) GetDetailPromotionSellerByID(ctx context.Context,
 	return promotionShop, nil
 }
 
-func (u sellerUC) GetProductWithoutPromotionSeller(ctx context.Context, userID string, pgn *pagination.Pagination) (*pagination.Pagination, error) {
+func (u sellerUC) GetProductWithoutPromotionSeller(ctx context.Context, userID, productName string, pgn *pagination.Pagination) (*pagination.Pagination, error) {
 	shopID, err := u.sellerRepo.GetShopIDByUserID(ctx, userID)
 	if err != nil {
 		if err == sql.ErrNoRows {
@@ -953,7 +953,7 @@ func (u sellerUC) GetProductWithoutPromotionSeller(ctx context.Context, userID s
 		return nil, err
 	}
 
-	totalRows, err := u.sellerRepo.GetTotalProductWithoutPromotionSeller(ctx, shopID)
+	totalRows, err := u.sellerRepo.GetTotalProductWithoutPromotionSeller(ctx, shopID, productName)
 	if err != nil {
 		return nil, err
 	}
@@ -962,7 +962,7 @@ func (u sellerUC) GetProductWithoutPromotionSeller(ctx context.Context, userID s
 	pgn.TotalRows = totalRows
 	pgn.TotalPages = totalPages
 
-	ProductWoutPromotion, err := u.sellerRepo.GetProductWithoutPromotionSeller(ctx, shopID, pgn)
+	ProductWoutPromotion, err := u.sellerRepo.GetProductWithoutPromotionSeller(ctx, shopID, productName, pgn)
 	if err != nil {
 		return nil, err
 	}

@@ -6,7 +6,7 @@ const (
 	GetCartHoverHomeQuery = `
 	SELECT "p"."title" as "title", "p"."thumbnail_url" as "thumbnail_url", "pd"."price" as "price", "promo"."discount_percentage" as "discount_percentage",
 	"promo"."discount_fix_price" as "discount_fix_price", "promo"."min_product_price" as "min_product_price", "promo"."max_discount_price" as "max_discount_price",
-	"cart"."quantity" as "quantity", array_agg("vd"."name") as "variant_name", array_agg("vd"."type") as "variant_type"
+	"promo"."quota" as "promo_quota", "cart"."quantity" as "quantity", array_agg("vd"."name") as "variant_name", array_agg("vd"."type") as "variant_type"
 	FROM
 	"cart_item" as "cart"
 	INNER JOIN "product_detail" as "pd" ON "pd"."id" = "cart"."product_detail_id"
@@ -20,7 +20,7 @@ const (
 	WHERE 
 	"cart"."user_id" = $1 AND "cart"."deleted_at" IS NULL
 	GROUP BY "cart"."id", "pd"."id", "p"."id", "promo"."discount_percentage", "promo"."discount_fix_price", "promo"."min_product_price",
-		"promo"."max_discount_price"
+		"promo"."max_discount_price", promo_quota
 	ORDER BY "cart"."created_at" DESC
 	LIMIT $2;
 	`
@@ -29,7 +29,7 @@ const (
 		"pd"."price" as "product_price", "pd"."stock" as "product_stock", "pd"."weight" as "product_weight",
 		"promo"."discount_percentage" as "promo_discount_percentage", "promo"."discount_fix_price" as "promo_discount_fix_price",
 		"promo"."min_product_price" as "promo_min_product_price", "promo"."max_discount_price" as "promo_max_discount_price", 
-		array_agg("vd"."name") as "variant_name", array_agg("vd"."type") as "variant_type"
+		"promo"."quota" as "quota", array_agg("vd"."name") as "variant_name", array_agg("vd"."type") as "variant_type"
 	FROM "cart_item" as "ci"
 	INNER JOIN "product_detail" as "pd" ON "pd"."id" = "ci"."product_detail_id"
 	LEFT JOIN "variant" as "v" ON "v"."product_detail_id" = "pd"."id"
@@ -42,7 +42,7 @@ const (
 	) as "promo" ON "promo"."product_id" = "p"."id"
 	WHERE "ci"."user_id" = $1 AND "ci"."deleted_at" IS NULL
 	GROUP BY "ci"."id", "pd"."id", "p"."id", "s"."id", "promo"."discount_percentage", "promo"."discount_fix_price", "promo"."min_product_price",
-		"promo"."max_discount_price"
+		"promo"."max_discount_price", "promo"."quota"
 	ORDER BY "ci"."created_at" DESC LIMIT $2 OFFSET $3;
 	`
 	GetProductDetailByIDQuery = `

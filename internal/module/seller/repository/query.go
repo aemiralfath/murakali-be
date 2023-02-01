@@ -406,7 +406,8 @@ const (
 		INNER JOIN "category" as "c" ON "c"."id" = "p"."category_id"
 		LEFT JOIN "promotion" as "promo" ON "promo"."product_id" = "p"."id"
 		WHERE "p"."shop_id" = $1 AND ("promo"."id" is NULL OR
-	("promo"."actived_date" < now() AND "promo"."expired_date" < now()));
+	("promo"."actived_date" < now() AND "promo"."expired_date" < now()))
+	AND "p"."title" ILIKE $2;
 	`
 	GetProductWithoutPromotionQuery = `
 	SELECT "p"."id", "p"."title", "p"."min_price", "c"."name", "p"."thumbnail_url", "p"."unit_sold", "p"."rating_avg" FROM "product" as "p"
@@ -414,7 +415,8 @@ const (
 		LEFT JOIN "promotion" as "promo" ON "promo"."product_id" = "p"."id"
 		WHERE "p"."shop_id" = $1 AND ("promo"."id" is NULL OR
 		("promo"."actived_date" < now() AND "promo"."expired_date" < now()))
-		LIMIT $2 OFFSET $3;
+		AND "p"."title" ILIKE $2
+		LIMIT $3 OFFSET $4;
 	`
 
 	GetWalletByUserIDQuery = `SELECT "id", "user_id", "balance", "pin", "attempt_count", "attempt_at", "unlocked_at", "active_date" FROM "wallet" WHERE "user_id" = $1 AND "deleted_at" IS NULL`
