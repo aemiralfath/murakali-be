@@ -13,7 +13,7 @@ const (
 	INNER JOIN "product" as "p" ON "p"."id" = "pd"."product_id"
 	LEFT JOIN (
 		SELECT * FROM "promotion"
-		WHERE now() BETWEEN "promotion"."actived_date" AND "promotion"."expired_date" 
+		WHERE (now() BETWEEN "promotion"."actived_date" AND "promotion"."expired_date") AND "promotion"."quota" > 0 
 	) as "promo" ON "promo"."product_id" = "p"."id"
 	LEFT JOIN "variant" as "v" ON "v"."product_detail_id" = "pd"."id"
 	LEFT JOIN "variant_detail" as "vd" ON "vd"."id" = "v"."variant_detail_id"
@@ -38,7 +38,7 @@ const (
 	INNER JOIN "shop" as "s" ON "s"."id" = "p"."shop_id"
 	LEFT JOIN (
 		SELECT * FROM "promotion"
-		WHERE now() BETWEEN "promotion"."actived_date" AND "promotion"."expired_date" 
+		WHERE (now() BETWEEN "promotion"."actived_date" AND "promotion"."expired_date") AND "promotion"."quota" > 0 
 	) as "promo" ON "promo"."product_id" = "p"."id"
 	WHERE "ci"."user_id" = $1 AND "ci"."deleted_at" IS NULL
 	GROUP BY "ci"."id", "pd"."id", "p"."id", "s"."id", "promo"."discount_percentage", "promo"."discount_fix_price", "promo"."min_product_price",
