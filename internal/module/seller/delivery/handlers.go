@@ -935,10 +935,15 @@ func (h *sellerHandlers) GetProductWithoutPromotionSeller(c *gin.Context) {
 		return
 	}
 
+	productName := strings.TrimSpace(c.DefaultQuery("search", ""))
+	if productName == "" {
+		productName = ""
+	}
+
 	pgn := &pagination.Pagination{}
 	h.ValidateQueryPagination(c, pgn)
 
-	productWithoutPromotion, err := h.sellerUC.GetProductWithoutPromotionSeller(c, userID.(string), pgn)
+	productWithoutPromotion, err := h.sellerUC.GetProductWithoutPromotionSeller(c, userID.(string), productName, pgn)
 	if err != nil {
 		var e *httperror.Error
 		if !errors.As(err, &e) {
