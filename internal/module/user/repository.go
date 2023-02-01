@@ -107,4 +107,5 @@ type Repository interface {
 	CreateRefundThreadUser(ctx context.Context, refundThreadData *model.RefundThread) error
 	InsertSessionRedis(ctx context.Context, duration int, key, status string) error
 	GetSessionKeyRedis(ctx context.Context, key string) ([]string, error)
+	GetRejectedRefund(ctx context.Context) ([]*model.RefundOrder, error)
 }

@@ -42,7 +42,6 @@ func (u *sellerUC) GetPerformance(ctx context.Context, userID string, update boo
 
 	key := fmt.Sprintf("performance:%s", shopID)
 	if !update {
-		fmt.Println("!!!!! Ndak Update?", update)
 		gotPerformanceRedis, _ := u.sellerRepo.GetPerformaceRedis(ctx, key)
 		if gotPerformanceRedis != nil {
 			return gotPerformanceRedis, nil
@@ -475,7 +474,7 @@ func (u *sellerUC) UpdateResiNumberInOrderSeller(ctx context.Context, userID, or
 func (u *sellerUC) UpdateOnDeliveryOrder(ctx context.Context) error {
 	orders, err := u.sellerRepo.GetOrdersOnDelivery(ctx)
 	if err != nil {
-		return nil
+		return err
 	}
 
 	for _, order := range orders {
@@ -493,7 +492,7 @@ func (u *sellerUC) UpdateOnDeliveryOrder(ctx context.Context) error {
 func (u *sellerUC) UpdateExpiredAtOrder(ctx context.Context) error {
 	transactions, err := u.sellerRepo.GetTransactionsExpired(ctx)
 	if err != nil {
-		return nil
+		return err
 	}
 
 	for _, transaction := range transactions {

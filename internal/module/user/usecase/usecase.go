@@ -315,7 +315,6 @@ func (u *userUC) ChangeOrderStatus(ctx context.Context, userID string, requestBo
 		return httperror.New(http.StatusUnauthorized, response.UnauthorizedMessage)
 	}
 
-	// Buyer can only set order to -> "Received" & "Completed"
 	if requestBody.OrderStatusID != constant.OrderStatusReceived && requestBody.OrderStatusID != constant.OrderStatusCompleted {
 		return httperror.New(http.StatusBadRequest, response.BadRequestMessage)
 	}
@@ -332,7 +331,7 @@ func (u *userUC) ChangeOrderStatus(ctx context.Context, userID string, requestBo
 				return err
 			}
 			for _, productUnitSold := range productUnitSolds {
-				newQty := (productUnitSold.Quantity + productUnitSold.UnitSold)
+				newQty := productUnitSold.Quantity + productUnitSold.UnitSold
 				if err = u.userRepo.UpdateProductUnitSold(ctx, tx, productUnitSold.ProductID.String(), newQty); err != nil {
 					return err
 				}
@@ -454,6 +453,22 @@ func (u *userUC) DeleteAddressByID(ctx context.Context, userID, addressID string
 
 	if err := u.userRepo.DeleteAddress(ctx, address.ID.String()); err != nil {
 		return err
+	}
+
+	return nil
+}
+
+func (u *userUC) CompletedRejectedRefund(ctx context.Context) error {
+	orderRefund, err := u.userRepo.GetRejectedRefund(ctx)
+	if err != nil {
+		return err
+	}
+
+	for _, refund := range orderRefund {
+		if errUpdate := u.ChangeOrderStatus(ctx, refund.Order.UserID.String(),
+			body.ChangeOrderStatusRequest{OrderID: refund.Order.ID.String(), OrderStatusID: constant.OrderStatusCompleted}); errUpdate != nil {
+			return errUpdate
+		}
 	}
 
 	return nil

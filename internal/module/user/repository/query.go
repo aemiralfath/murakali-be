@@ -164,6 +164,14 @@ const (
 	OrderBySomething            = ` 
 	ORDER BY %s LIMIT %d OFFSET %d`
 
+	GetRejectedRefundQuery = `
+		SELECT DISTINCT ON ("o"."id") "r"."id", "o"."id", "o"."user_id"  FROM "order" as "o" 
+			INNER JOIN "refund" as "r" ON "o"."id" = "r"."order_id" 
+			WHERE "o"."order_status_id" = $1 AND "r"."is_buyer_refund" IS TRUE AND "r"."rejected_at" IS NOT NULL AND 
+			now() >= ("r"."rejected_at" + interval '24 hour')::timestamptz
+			ORDER BY "o"."id", "r"."rejected_at" DESC
+	`
+
 	GetOrderDetailQuery2 = `SELECT pd.id,pd.product_id,p.title, pd.weight,
 	(select ph.url from "photo" ph 
 			join product_detail pd on pd.id = ph.product_detail_id 
