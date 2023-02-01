@@ -225,7 +225,7 @@ const (
 	FROM "order" WHERE "id" = $1`
 
 	GetRefundOrderByOrderIDQuery = `SELECT "id", "order_id", "is_seller_refund", "is_buyer_refund", "reason", "image", "accepted_at", "rejected_at", "refunded_at"
-	FROM "refund" WHERE "order_id" = $1`
+	FROM "refund" WHERE "order_id" = $1 ORDER BY "rejected_at" DESC LIMIT 1`
 
 	CreateRefundUserQuery = `INSERT INTO "refund" 
 	(order_id, is_seller_refund, is_buyer_refund, reason, image)
@@ -234,7 +234,7 @@ const (
 	UpdateOrderRefundQuery = `UPDATE "order" SET "is_refund" = $1 WHERE "id" = $2`
 
 	GetRefundOrderByIDQuery = `SELECT "id", "order_id", "is_seller_refund", "is_buyer_refund", "reason", "image", "accepted_at", "rejected_at", "refunded_at"
-	FROM "refund" WHERE "id" = $1`
+	FROM "refund" WHERE "id" = $1 ORDER BY "rejected_at" DESC LIMIT 1`
 
 	GetRefundThreadByRefundIDQuery = `SELECT "rt"."id", "rt"."refund_id", "rt"."user_id", "u"."username", "s"."name", "u"."photo_url", "rt"."is_seller", "rt"."is_buyer", "rt"."text", "rt"."created_at"
 	FROM "refund_thread" as "rt"

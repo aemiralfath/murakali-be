@@ -1907,7 +1907,7 @@ func (u *userUC) CreateRefundUser(ctx context.Context, userID string, requestBod
 		return err
 	}
 
-	if orderData.UserID.String() != userID {
+	if orderData.UserID.String() != userID || orderData.OrderStatusID != 6 {
 		return httperror.New(http.StatusBadRequest, response.InvalidRefund)
 	}
 
@@ -1977,44 +1977,50 @@ func (u *userUC) GetRefundOrder(ctx context.Context, userID string, orderID stri
 
 	refundData, err := u.userRepo.GetRefundOrderByOrderID(ctx, orderID)
 	if err != nil {
-		return nil, err
+		if err != sql.ErrNoRows {
+			return nil, err
+		}
 	}
 
-	var userModel *model.User
-	var errUser error
-	fmt.Println("refund Data:", refundData)
-	if *refundData.IsBuyerRefund {
-		fmt.Println("masuk buyer")
-		fmt.Println("masuk buyer")
-		fmt.Println("masuk buyer")
-		userModel, errUser = u.userRepo.GetUserByID(ctx, orderData.UserID.String())
-		if errUser != nil {
-			return nil, errUser
+	username := ""
+	photoURL := ""
+	refundDataID := uuid.Nil
+	if refundData != nil {
+		var userModel *model.User
+		var errUser error
+		if *refundData.IsBuyerRefund {
+			userModel, errUser = u.userRepo.GetUserByID(ctx, orderData.UserID.String())
+			if errUser != nil {
+				return nil, errUser
+			}
 		}
+		if *refundData.IsSellerRefund {
+			shopModel, errShop := u.userRepo.GetShopByID(ctx, orderData.ShopID.String())
+			if errShop != nil {
+				return nil, errShop
+			}
 
+			userModel, errUser = u.userRepo.GetUserByID(ctx, shopModel.UserID.String())
+			if errUser != nil {
+				return nil, errUser
+			}
+			userModel.Username = &shopModel.Name
+		}
+		username = *userModel.Username
+		photoURL = *userModel.PhotoURL
+		refundDataID = refundData.ID
 	}
 
-	if *refundData.IsSellerRefund {
-		shopModel, errShop := u.userRepo.GetShopByID(ctx, orderData.ShopID.String())
-		if errShop != nil {
-			return nil, errShop
+	refundThreadData, errThread := u.userRepo.GetRefundThreadByRefundID(ctx, refundDataID.String())
+	if errThread != nil {
+		if errThread != sql.ErrNoRows {
+			return nil, errThread
 		}
-
-		userModel, errUser = u.userRepo.GetUserByID(ctx, shopModel.UserID.String())
-		if errUser != nil {
-			return nil, errUser
-		}
-		userModel.Username = &shopModel.Name
-	}
-
-	refundThreadData, err := u.userRepo.GetRefundThreadByRefundID(ctx, refundData.ID.String())
-	if err != nil {
-		return nil, err
 	}
 
 	refundThreadResponse := &body.GetRefundThreadResponse{
-		UserName:      *userModel.Username,
-		PhotoURL:      *userModel.PhotoURL,
+		UserName:      username,
+		PhotoURL:      photoURL,
 		RefundData:    refundData,
 		RefundThreads: refundThreadData,
 	}
@@ -2033,7 +2039,7 @@ func (u *userUC) CreateRefundThreadUser(ctx context.Context, userID string, requ
 		return err
 	}
 
-	if orderData.UserID.String() != userID {
+	if orderData.UserID.String() != userID || orderData.OrderStatusID != 6 {
 		return httperror.New(http.StatusBadRequest, response.InvalidRefund)
 	}
 

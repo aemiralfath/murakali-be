@@ -512,6 +512,7 @@ func (r *sellerRepo) GetOrders(ctx context.Context, shopID, orderStatusID, vouch
 		if errScan := res.Scan(
 			&order.OrderID,
 			&order.IsWithdraw,
+			&order.IsRefund,
 			&order.OrderStatus,
 			&order.TotalPrice,
 			&order.DeliveryFee,
@@ -1009,7 +1010,7 @@ func (r *sellerRepo) GetAllPromotionSeller(ctx context.Context, shopID, promoSta
 		q += FilterHasEndedQuery
 	}
 
-	res, err := r.PSQL.QueryContext(ctx, q, shopID)
+	res, err := r.PSQL.QueryContext(ctx, q+OrderByCreatedAt, shopID)
 	if err != nil {
 		return nil, err
 	}
@@ -1495,9 +1496,18 @@ func (r *sellerRepo) UpdateRefundAccept(ctx context.Context, refundDataID string
 	return nil
 }
 
-func (r *sellerRepo) UpdateRefundReject(ctx context.Context, refundDataID string) error {
-	if _, err := r.PSQL.ExecContext(ctx, UpdateRefundRejectQuery, refundDataID); err != nil {
+func (r *sellerRepo) UpdateRefundReject(ctx context.Context, tx postgre.Transaction, refundDataID string) error {
+	if _, err := tx.ExecContext(ctx, UpdateRefundRejectQuery, refundDataID); err != nil {
 		return err
 	}
+	return nil
+}
+
+func (r *sellerRepo) UpdateOrderRefundRejected(ctx context.Context, tx postgre.Transaction, orderData *model.OrderModel) error {
+	_, err := tx.ExecContext(ctx, UpdateOrderRefundRejectedQuery, orderData.ID)
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
