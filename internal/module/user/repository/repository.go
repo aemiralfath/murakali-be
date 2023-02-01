@@ -1173,7 +1173,7 @@ func (r *userRepo) CheckShopUnique(ctx context.Context, shopName string) (int64,
 }
 
 func (r *userRepo) AddShop(ctx context.Context, userID, shopName string) error {
-	if _, err := r.PSQL.ExecContext(ctx, AddShopQuery, userID, shopName); err != nil {
+	if _, err := r.PSQL.ExecContext(ctx, AddShopQuery, userID, shopName, 0, 0, 0); err != nil {
 		return err
 	}
 

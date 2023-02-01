@@ -113,7 +113,7 @@ const (
 	CreateEmailHistoryQuery        = `INSERT INTO "email_history" (email) VALUES ($1)`
 	CheckShopByIdQuery             = `SELECT count(id) from "shop" WHERE "user_id" = $1 and deleted_at IS NULL`
 	CheckShopUniqueQuery           = `SELECT count(name) from "shop" WHERE "name" = $1 and deleted_at IS NULL`
-	AddShopQuery                   = `INSERT INTO "shop" (user_id,name) VALUES ($1,$2) `
+	AddShopQuery                   = `INSERT INTO "shop" (user_id,name, total_product, total_rating, rating_avg) VALUES ($1, $2, $3, $4, $5)`
 	UpdateRoleQuery                = `UPDATE "user" SET "role_id" = 2,updated_at = now() where id = $1`
 	UpdateProfileImageQuery        = `UPDATE "user" SET "photo_url" = $1,updated_at = now() where id = $2`
 	UpdatePasswordQuery            = `UPDATE "user" SET "password" = $1 WHERE "id" = $2`
