@@ -2070,3 +2070,41 @@ func (u *userUC) CreateRefundThreadUser(ctx context.Context, userID string, requ
 
 	return nil
 }
+
+func (u *userUC) ChangeWalletPinStepUpEmail(ctx context.Context, userID string) error {
+	userInfo, err := u.userRepo.GetUserByID(ctx, userID)
+	if err != nil {
+		return err
+	}
+
+	_, err = u.userRepo.GetWalletByUserID(ctx, userID)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return httperror.New(http.StatusBadRequest, response.WalletIsNotActivated)
+		}
+		return err
+	}
+
+	err = u.SendOTPChangeWalletPinEmail(ctx, userInfo.Email)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (u *userUC) SendOTPChangeWalletPinEmail(ctx context.Context, email string) error {
+	otp, err := util.GenerateRandomAlpaNumeric(6)
+	if err != nil {
+		return err
+	}
+
+	if err := u.userRepo.InsertNewOTPKey(ctx, email, otp); err != nil {
+		return err
+	}
+
+	subject := "Change Wallet Pin Verification!"
+	msg := smtp.VerificationEmailBody(otp)
+	go smtp.SendEmail(u.cfg, email, subject, msg)
+
+	return nil
+}
