@@ -1911,6 +1911,18 @@ func (u *userUC) CreateRefundUser(ctx context.Context, userID string, requestBod
 		return httperror.New(http.StatusBadRequest, response.InvalidRefund)
 	}
 
+	userWallet, errWallet := u.userRepo.GetWalletByUserID(ctx, userID)
+	if errWallet != nil {
+		if errWallet != sql.ErrNoRows {
+			return errWallet
+		}
+		return httperror.New(http.StatusBadRequest, response.WalletIsNotActivated)
+	}
+
+	if userWallet.ActiveDate.Valid == false {
+		return httperror.New(http.StatusBadRequest, response.WalletIsNotActivated)
+	}
+
 	if orderData.IsRefund {
 		return httperror.New(http.StatusBadRequest, response.OrderUnderProgressRefund)
 	}
