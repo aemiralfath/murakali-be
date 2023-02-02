@@ -1687,3 +1687,50 @@ func (r *userRepo) GetSessionKeyRedis(ctx context.Context, key string) ([]string
 
 	return keys, nil
 }
+
+func (r *userRepo) InsertNewOTPKeyChangeWalletPin(ctx context.Context, email, otp string) error {
+	key := fmt.Sprintf("wallet:%s:%s", constant.OtpKey, email)
+
+	duration, err := time.ParseDuration(constant.OtpDuration)
+	if err != nil {
+		return err
+	}
+
+	if err := r.RedisClient.Set(ctx, key, otp, duration); err.Err() != nil {
+		return err.Err()
+	}
+
+	return nil
+}
+
+func (r *userRepo) GetOTPValueChangeWalletPin(ctx context.Context, email string) (string, error) {
+	key := fmt.Sprintf("wallet:%s:%s", constant.OtpKey, email)
+
+	res := r.RedisClient.Get(ctx, key)
+	if res.Err() != nil {
+		return "", res.Err()
+	}
+
+	value, err := res.Result()
+	if err != nil {
+		return "", err
+	}
+
+	return value, nil
+}
+
+func (r *userRepo) DeleteOTPValueChangeWalletPin(ctx context.Context, email string) (int64, error) {
+	key := fmt.Sprintf("wallet:%s:%s", constant.OtpKey, email)
+
+	res := r.RedisClient.Del(ctx, key)
+	if res.Err() != nil {
+		return -1, res.Err()
+	}
+
+	value, err := res.Result()
+	if err != nil {
+		return -1, err
+	}
+
+	return value, nil
+}

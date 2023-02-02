@@ -41,6 +41,7 @@ type Handlers interface {
 	CreateWalletPayment(c *gin.Context)
 	ChangeWalletPinStepUp(c *gin.Context)
 	ChangeWalletPinStepUpEmail(c *gin.Context)
+	ChangeWalletPinStepUpVerify(c *gin.Context)
 	ChangeWalletPin(c *gin.Context)
 	CreateRefundUser(c *gin.Context)
 	GetRefundOrder(c *gin.Context)
