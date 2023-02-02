@@ -1124,7 +1124,7 @@ func (u *userUC) GetRedirectURL(transaction *model.Transaction, sign string) (st
 }
 
 func (u *userUC) GetTransactionByUserID(ctx context.Context, userID string, status int, pgn *pagination.Pagination) (*pagination.Pagination, error) {
-	totalRows, err := u.userRepo.GetTotalTransactionByUserID(ctx, userID)
+	totalRows, err := u.userRepo.GetTotalTransactionByUserID(ctx, userID, status)
 	if err != nil {
 		return nil, err
 	}

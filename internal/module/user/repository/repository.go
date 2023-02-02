@@ -200,9 +200,18 @@ func (r *userRepo) UpdateProductUnitSold(ctx context.Context, tx postgre.Transac
 	return nil
 }
 
-func (r *userRepo) GetTotalTransactionByUserID(ctx context.Context, userID string) (int64, error) {
+func (r *userRepo) GetTotalTransactionByUserID(ctx context.Context, userID string, status int) (int64, error) {
 	var total int64
-	if err := r.PSQL.QueryRowContext(ctx, GetTotalTransactionByUserIDQuery, userID).Scan(&total); err != nil {
+
+	var query string
+	switch status {
+	case constant.OrderStatusWaitingToPay:
+		query = GetTotalTransactionByUserIDNotPaidQuery
+	default:
+		query = GetTotalTransactionByUserIDQuery
+	}
+
+	if err := r.PSQL.QueryRowContext(ctx, query, userID).Scan(&total); err != nil {
 		if err == sql.ErrNoRows {
 			return 0, nil
 		}

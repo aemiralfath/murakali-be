@@ -250,7 +250,7 @@ const (
 	JOIN "user" u ON u.id = s.user_id
 	WHERE s.user_id = $1 AND s.deleted_at is null`
 
-	UpdateShopInformationByUserIDQuery = `UPDATE "shop" SET "name" = $1 WHERE "user_id" = $2`
+	UpdateShopInformationByUserIDQuery = `UPDATE "shop" SET "name" = $1, "updated_at" = now() WHERE "user_id" = $2`
 
 	GetCourierByIDQuery                            = `SELECT id FROM "courier" WHERE id = $1 AND deleted_at IS NULL`
 	GetShopIDByUserIDQuery                         = `SELECT id from "shop" WHERE user_id = $1 AND deleted_at IS NULL `

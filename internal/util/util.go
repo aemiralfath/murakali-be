@@ -113,12 +113,14 @@ func CalculateDiscount(price float64, disc *model.Discount) (float64, float64) {
 	if disc.MaxDiscountPrice == nil {
 		return 0, price
 	}
+
 	var maxDiscountPrice float64
 	var minProductPrice float64
 	var discountPercentage float64
 	var discountFixPrice float64
 
 	var resultDiscount float64
+	tempPrice := price
 
 	maxDiscountPrice = *disc.MaxDiscountPrice
 	if maxDiscountPrice == 0 {
@@ -143,5 +145,10 @@ func CalculateDiscount(price float64, disc *model.Discount) (float64, float64) {
 			resultDiscount = math.Min(resultDiscount, maxDiscountPrice)
 		}
 	}
-	return resultDiscount, price - resultDiscount
+	price -= resultDiscount
+	if price <= 0 {
+		price = 0
+		resultDiscount = tempPrice
+	}
+	return resultDiscount, price
 }

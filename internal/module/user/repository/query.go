@@ -54,6 +54,13 @@ const (
 	AND o.user_id = $1
 	GROUP BY o.user_id`
 
+	GetTotalTransactionByUserIDNotPaidQuery = `SELECT count(t.id) 
+	FROM "transaction" t, "order" o
+	WHERE t.id = o.transaction_id
+	AND o.user_id = $1
+	AND t.paid_at IS NULL AND t.canceled_at IS NULL
+	GROUP BY o.user_id`
+
 	GetTransactionByUserIDQuery = `
 	SELECT t.id,t.voucher_marketplace_id,t.wallet_id,t.card_number,t.invoice,t.total_price,t.paid_at,t.canceled_at,t.expired_at
 	from "transaction" t, "order" o
@@ -170,10 +177,7 @@ const (
 	`
 
 	GetOrderDetailQuery2 = `SELECT pd.id,pd.product_id,p.title, pd.weight,
-	(select ph.url from "photo" ph 
-			join product_detail pd on pd.id = ph.product_detail_id 
-			join "order_item" oi on pd.id = oi.product_detail_id limit 1
-		),oi.quantity,oi.item_price,oi.total_price
+	p.thumbnail_url,oi.quantity,oi.item_price,oi.total_price
 	from  "product_detail" pd 
 	join "order_item" oi on pd.id = oi.product_detail_id 
 	join "product" p on p.id = pd.product_id WHERE oi.order_id = $1 `

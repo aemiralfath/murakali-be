@@ -13,7 +13,7 @@ import (
 type Repository interface {
 	GetTransactionByID(ctx context.Context, transactionID string) (*model.Transaction, error)
 	GetTransactionByUserID(ctx context.Context, userID string, status int, pgn *pagination.Pagination) ([]*model.Transaction, error)
-	GetTotalTransactionByUserID(ctx context.Context, userID string) (int64, error)
+	GetTotalTransactionByUserID(ctx context.Context, userID string, status int) (int64, error)
 	GetUserByID(ctx context.Context, id string) (*model.User, error)
 	GetUserPasswordByID(ctx context.Context, id string) (*model.User, error)
 	GetTotalAddress(ctx context.Context, userID, name string) (int64, error)
