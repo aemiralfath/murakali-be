@@ -5,7 +5,7 @@ const (
 	GetCategoriesByNameQuery     = `SELECT "id", "parent_id", "name", "photo_url" FROM "category" WHERE "name" = $1 AND "deleted_at" IS NULL`
 	GetCategoriesByParentIdQuery = `SELECT "id", "parent_id", "name", "photo_url" FROM "category" WHERE "parent_id" = $1 AND "deleted_at" IS NULL`
 	GetBannersQuery              = `SELECT "id", "title", "content", "image_url", "page_url", "is_active" FROM "banner" WHERE "is_active" = TRUE`
-	GetTotalProductQuery         = `SELECT count(id) FROM "product" WHERE "deleted_at" IS NULL`
+	GetTotalProductQuery         = `SELECT count(id) FROM "product" 	WHERE listed_status = true `
 	GetRecommendedProductsQuery  = `
 	SELECT "p"."id" as "id", "p"."title" as "title", "p"."unit_sold" as "unit_sold", "p"."rating_avg" as "rating_avg", "p"."thumbnail_url" as "thumbnail_url",
 		"p"."min_price" as "min_price", "p"."max_price" as "max_price", "promo"."discount_percentage" as "promo_discount_percentage",  "promo"."discount_fix_price" as "promo_discount_fix_price",
@@ -22,7 +22,7 @@ const (
 		WHERE now() BETWEEN "voucher"."actived_date" AND "voucher"."expired_date" AND "voucher"."quota" > 0
 	) as "v" ON "v"."shop_id" = "s"."id"
 	INNER JOIN "category" as "c" ON "c"."id" = "p"."category_id"
-	WHERE "p"."deleted_at" IS NULL
+	WHERE "p"."listed_status" = true
 	ORDER BY "p"."unit_sold" DESC,
 	"p"."rating_avg" DESC,
 	"p"."view_count" DESC
