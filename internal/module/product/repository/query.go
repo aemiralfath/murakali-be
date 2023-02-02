@@ -310,7 +310,7 @@ const (
 
 	GetListedStatusQuery = `SELECT listed_status from "product" WHERE id = $1 AND deleted_at IS NULL `
 
-	UpdateListedStatusQuery = `UPDATE "product" SET "listed_status" = $1 WHERE "id" = $2`
+	UpdateListedStatusQuery = `UPDATE "product" SET "listed_status" = $1, "updated_at" = now() WHERE "id" = $2 `
 
 	UpdateProductQuery = `UPDATE 
 	"product" SET 
@@ -318,7 +318,8 @@ const (
 	"thumbnail_url"= $3,
 	"min_price"=$4,
 	"max_price"=$5,
-	"listed_status"=$6
+	"listed_status"=$6, 
+	"updated_at" = now()
 	WHERE "id" = $7`
 
 	UpdateProductDetailQuery = `UPDATE 
@@ -329,7 +330,8 @@ const (
 	"size"= $4,
 	"hazardous"=$5,
 	"condition"=$6,
-	"bulk_price"=$7
+	"bulk_price"=$7,
+	"updated_at" = now()
 	WHERE "id" = $8 AND
 	"product_id" = $9`
 
@@ -347,6 +349,6 @@ const (
 	and deleted_at IS NULL;`
 
 	UpdateVariantQuery = `UPDATE 
-	"variant" SET  "variant_detail_id" = $1
+	"variant" SET  "variant_detail_id" = $1, "updated_at" = now()
 	WHERE "id" = $2`
 )
