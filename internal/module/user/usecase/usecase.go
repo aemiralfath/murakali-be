@@ -630,11 +630,22 @@ func (u *userUC) AddSealabsPay(ctx context.Context, request body.AddSealabsPayRe
 	if err != nil {
 		return err
 	}
+	deletedSLPCount, err := u.userRepo.CheckDeletedSealabsPay(ctx, request.CardNumber, userid)
+	if err != nil {
+		return err
+	}
 
 	if slpCount == 0 {
-		err = u.userRepo.AddSealabsPay(ctx, request, userid)
-		if err != nil {
-			return httperror.New(http.StatusBadRequest, response.SealabsCardAlreadyExist)
+		if deletedSLPCount != 0 {
+			err = u.userRepo.UpdateUserSealabsPay(ctx, request, userid)
+			if err != nil {
+				return httperror.New(http.StatusBadRequest, response.SealabsCardAlreadyExist)
+			}
+		} else {
+			err = u.userRepo.AddSealabsPay(ctx, request, userid)
+			if err != nil {
+				return httperror.New(http.StatusBadRequest, response.SealabsCardAlreadyExist)
+			}
 		}
 	} else {
 		cardNumber, err := u.userRepo.CheckDefaultSealabsPay(ctx, userid)
@@ -648,9 +659,16 @@ func (u *userUC) AddSealabsPay(ctx context.Context, request body.AddSealabsPayRe
 			if u.userRepo.SetDefaultSealabsPayTrans(ctx, tx, cardNumber) != nil {
 				return err
 			}
-			err = u.userRepo.AddSealabsPayTrans(ctx, tx, request, userid)
-			if err != nil {
-				return err
+			if deletedSLPCount != 0 {
+				err = u.userRepo.UpdateUserSealabsPayTrans(ctx, tx, request, userid)
+				if err != nil {
+					return err
+				}
+			} else {
+				err = u.userRepo.AddSealabsPayTrans(ctx, tx, request, userid)
+				if err != nil {
+					return err
+				}
 			}
 			return nil
 		})
