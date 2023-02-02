@@ -89,7 +89,6 @@ const (
 	AND  "c".name ILIKE $2
 	AND ("p".rating_avg BETWEEN $3 AND $4)
 	AND ("p".min_price BETWEEN $5 AND $6)
-	AND "p"."deleted_at" IS NULL 
 	`
 
 	GetProductsWithProvinceQuery = `
@@ -122,12 +121,11 @@ const (
 	AND  "c".name ILIKE $2
 	AND ("p".rating_avg BETWEEN $3 AND $4)
 	AND ("p".min_price BETWEEN $5 AND $6)
-	AND "p"."deleted_at" IS NULL 
 	AND ("a"."province_id"::text =any($7))
 	`
 
 	OrderBySomething = ` 
-	ORDER BY %s, "p"."updated_at" DESC  LIMIT %d OFFSET %d`
+	ORDER BY %s LIMIT %d OFFSET %d`
 
 	WhereShopIds = ` 
 		AND "s"."id" = '%s'
@@ -150,7 +148,7 @@ const (
 	AND  "c".name ILIKE $2
 	AND ("p".rating_avg BETWEEN $3 AND $4)
 	AND ("p".min_price BETWEEN $5 AND $6)
-	AND "p"."deleted_at" IS NULL`
+	`
 
 	GetAllTotalProductWithProvinceQuery = `
 	SELECT count("p"."id") FROM "product" as "p" 
@@ -162,7 +160,6 @@ const (
 	AND  "c".name ILIKE $2
 	AND ("p".rating_avg BETWEEN $3 AND $4)
 	AND ("p".min_price BETWEEN $5 AND $6)
-	AND "p"."deleted_at" IS NULL
 	AND ("a"."province_id"::text =any($7))`
 
 	GetFavoriteProductsQuery = `
@@ -211,7 +208,7 @@ const (
 	SELECT count(user_id) FROM "favorite" WHERE "user_id" = $1  AND "product_id"  = $2 
 	`
 	CountSpecificFavoriteProduct = `
-	SELECT count(user_id) FROM "favorite" WHERE "product_id"  = $1 
+	SELECT count(user_id) FROM "favorite" WHERE "product_id" = $1 
 	`
 	CreateFavoriteProductQuery = `
 	INSERT INTO "favorite" ("user_id", "product_id")
