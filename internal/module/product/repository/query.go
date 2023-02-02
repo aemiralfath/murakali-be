@@ -208,7 +208,7 @@ const (
 	SELECT count(user_id) FROM "favorite" WHERE "user_id" = $1  AND "product_id"  = $2 
 	`
 	CountSpecificFavoriteProduct = `
-	SELECT count(user_id) FROM "favorite" WHERE "product_id"  $1 
+	SELECT count(user_id) FROM "favorite" WHERE "product_id" = $1 
 	`
 	CreateFavoriteProductQuery = `
 	INSERT INTO "favorite" ("user_id", "product_id")
