@@ -534,6 +534,17 @@ func (h *userHandlers) GetOrder(c *gin.Context) {
 	orderStatusID := c.DefaultQuery("order_status", "")
 	h.ValidateQueryOrder(c, pgn)
 
+	sort := c.DefaultQuery("sort", "")
+	sort = strings.ToLower(sort)
+	var sortFilter string
+	switch sort {
+	case constant.ASC:
+		sortFilter = sort
+	default:
+		sortFilter = constant.DESC
+	}
+	pgn.Sort = "o.created_at " + sortFilter
+
 	orders, err := h.userUC.GetOrder(c, userID.(string), orderStatusID, pgn)
 	if err != nil {
 		var e *httperror.Error

@@ -39,7 +39,6 @@ const (
 	left join "voucher" v on v.id = o.voucher_shop_id 
 	WHERE o.user_id = $1 
 	and "order_status_id"::text LIKE $2 
-	ORDER BY o.created_at asc LIMIT $3 OFFSET $4
 	`
 
 	GetOrderDetailProductVariant = `
