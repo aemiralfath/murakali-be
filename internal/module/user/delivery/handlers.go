@@ -1220,9 +1220,11 @@ func (h *userHandlers) ChangeWalletPin(c *gin.Context) {
 		return
 	}
 
-	if claims["scope"].(string) != "level2" {
-		response.ErrorResponse(c.Writer, response.ForbiddenMessage, http.StatusForbidden)
-		return
+	if claims["scope"] != nil {
+		if claims["scope"].(string) != "level2" {
+			response.ErrorResponse(c.Writer, response.ForbiddenMessage, http.StatusForbidden)
+			return
+		}
 	}
 
 	var requestBody body.ChangeWalletPinRequest

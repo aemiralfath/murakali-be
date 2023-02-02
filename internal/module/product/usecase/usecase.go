@@ -30,6 +30,13 @@ func NewProductUseCase(cfg *config.Config, txRepo *postgre.TxRepo, productRepo p
 }
 
 func (u *productUC) UpdateProductMetadata(ctx context.Context) error {
+	//productFav, err := u.productRepo.GetFavoriteProduct(ctx)
+	//if err != nil {
+	//	return err
+	//}
+	//
+	//productRating, err := u.productRepo.Get
+
 	return nil
 }
 
