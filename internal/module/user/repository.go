@@ -108,4 +108,7 @@ type Repository interface {
 	InsertSessionRedis(ctx context.Context, duration int, key, status string) error
 	GetSessionKeyRedis(ctx context.Context, key string) ([]string, error)
 	GetRejectedRefund(ctx context.Context) ([]*model.RefundOrder, error)
+	InsertNewOTPKeyChangeWalletPin(ctx context.Context, email, otp string) error
+	GetOTPValueChangeWalletPin(ctx context.Context, email string) (string, error)
+	DeleteOTPValueChangeWalletPin(ctx context.Context, email string) (int64, error)
 }
