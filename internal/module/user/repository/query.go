@@ -54,6 +54,13 @@ const (
 	AND o.user_id = $1
 	GROUP BY o.user_id`
 
+	GetTotalTransactionByUserIDNotPaidQuery = `SELECT count(t.id) 
+	FROM "transaction" t, "order" o
+	WHERE t.id = o.transaction_id
+	AND o.user_id = $1
+	AND t.paid_at IS NULL AND t.canceled_at IS NULL
+	GROUP BY o.user_id`
+
 	GetTransactionByUserIDQuery = `
 	SELECT t.id,t.voucher_marketplace_id,t.wallet_id,t.card_number,t.invoice,t.total_price,t.paid_at,t.canceled_at,t.expired_at
 	from "transaction" t, "order" o
