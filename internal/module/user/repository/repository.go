@@ -532,12 +532,12 @@ func (r *userRepo) InsertCostRedis(ctx context.Context, key, value string) error
 func (r *userRepo) GetOrders(ctx context.Context, userID, orderStatusID string, pgn *pagination.Pagination) ([]*model.Order, error) {
 	orders := make([]*model.Order, 0)
 
+	queryOrderBySomething := fmt.Sprintf(OrderBySomething, pgn.GetSort(), pgn.GetLimit(), pgn.GetOffset())
+
 	res, err := r.PSQL.QueryContext(
-		ctx, GetOrdersQuery,
+		ctx, GetOrdersQuery+queryOrderBySomething,
 		userID,
-		fmt.Sprintf("%%%s%%", orderStatusID),
-		pgn.GetLimit(),
-		pgn.GetOffset())
+		fmt.Sprintf("%%%s%%", orderStatusID))
 
 	if err != nil {
 		return nil, err
@@ -758,11 +758,12 @@ func (r *userRepo) GetTransactionByUserID(ctx context.Context, userID string, st
 		query = GetTransactionByUserIDQuery
 	}
 
-	res, err := r.PSQL.QueryContext(
-		ctx, query,
-		userID,
-		pgn.GetLimit(),
+	queryOrderBySomething := fmt.Sprintf(OrderBySomething, pgn.GetSort(), pgn.GetLimit(),
 		pgn.GetOffset())
+
+	res, err := r.PSQL.QueryContext(
+		ctx, query+queryOrderBySomething,
+		userID)
 
 	if err != nil {
 		return nil, err
