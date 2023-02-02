@@ -31,3 +31,9 @@ type ProductFavorite struct {
 	Product *Product `json:"product" db:"product" binding:"omitempty"`
 	Count   *int     `json:"count" db:"count" binding:"omitempty"`
 }
+
+type ProductRating struct {
+	Product *Product `json:"product" db:"product" binding:"omitempty"`
+	Count   *int     `json:"count" db:"count" binding:"omitempty"`
+	Avg     *float64 `json:"avg" db:"avg" binding:"omitempty"`
+}

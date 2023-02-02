@@ -54,7 +54,12 @@ func main() {
 		appLogger.Warn("FatalConfig: %v", err)
 	}
 
-	// product -> fav count, rating_avg
+	_, err = cronJob.AddFunc("@every 1h", func() {
+		updateProductMetadata(cfg, appLogger)
+	})
+	if err != nil {
+		appLogger.Warn("FatalConfig: %v", err)
+	}
 
 	// shop -> total_product, total_rating, rating avg
 
@@ -88,6 +93,30 @@ func updateOnDelivery(cfg *config.Config, appLogger logger.Logger) {
 	}
 
 	appLogger.Infof("update delivery success")
+}
+
+func updateProductMetadata(cfg *config.Config, appLogger logger.Logger) {
+	appLogger.Info("cron update product metadata")
+	url := fmt.Sprintf("https://%s/api/v1/product/metadata", cfg.Server.Domain)
+	req, err := http.NewRequest("POST", url, http.NoBody)
+	if err != nil {
+		appLogger.Warnf("request error: ", err.Error())
+		return
+	}
+
+	res, err := http.DefaultClient.Do(req)
+	if err != nil {
+		appLogger.Warn("response error: ", err.Error())
+		return
+	}
+	defer res.Body.Close()
+
+	if res.StatusCode != http.StatusOK {
+		appLogger.Warn("status code error: ", res.StatusCode)
+		return
+	}
+
+	appLogger.Infof("update product metadata success")
 }
 
 func updateExpiredAt(cfg *config.Config, appLogger logger.Logger) {

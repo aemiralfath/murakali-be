@@ -56,4 +56,7 @@ type Repository interface {
 	UpdateVariant(ctx context.Context, tx postgre.Transaction, variantID, variantDetailID string) error
 	DeleteProductDetail(ctx context.Context, tx postgre.Transaction, productDetailID string) error
 	GetFavoriteProduct(ctx context.Context) ([]*model.ProductFavorite, error)
+	GetRatingProduct(ctx context.Context) ([]*model.ProductRating, error)
+	UpdateProductFavorite(ctx context.Context, productID string, favCount int) error
+	UpdateProductRating(ctx context.Context, productID string, ratingAvg float64) error
 }

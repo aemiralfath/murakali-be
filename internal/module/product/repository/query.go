@@ -308,6 +308,17 @@ const (
 	(product_id, courier_id)
 	 VALUES ($1, $2) RETURNING "id";`
 
+	GetRatingProductQuery = `SELECT 
+    	"p"."id", "p"."title", count("r"."id"), avg("r"."rating")  
+	FROM "product" as "p" INNER JOIN "review" as "r" on "p"."id" = "r"."product_id" 
+	WHERE "r"."deleted_at" IS NULL AND "r"."created_at" >= (now() - interval '1 hour') GROUP BY "p"."id"`
+
+	GetFavoriteProductQuery = `SELECT 
+    "p"."id", "p"."title", count("p"."id") 
+	FROM "product" as "p" INNER JOIN "favorite" as "f" on "p"."id" = "f"."product_id" 
+	WHERE "f"."created_at" >= (now() - interval '1 hour')
+	GROUP BY "p"."id"`
+
 	GetListedStatusQuery = `SELECT listed_status from "product" WHERE id = $1 AND deleted_at IS NULL `
 
 	UpdateListedStatusQuery = `UPDATE "product" SET "listed_status" = $1 WHERE "id" = $2`
@@ -320,6 +331,9 @@ const (
 	"max_price"=$5,
 	"listed_status"=$6
 	WHERE "id" = $7`
+
+	UpdateProductFavoriteQuery = `UPDATE "product" SET "favorite_count" = $1 WHERE "id" = $2`
+	UpdateProductRatingQuery   = `UPDATE "product" SET "rating_avg" = $1 WHERE "id" = $2`
 
 	UpdateProductDetailQuery = `UPDATE 
 	"product_detail" SET 
