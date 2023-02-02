@@ -2118,13 +2118,11 @@ func (u *userUC) ChangeWalletPinStepUpVerify(ctx context.Context, requestBody bo
 		return "", httperror.New(http.StatusBadRequest, response.OTPAlreadyExpiredMessage)
 	}
 
-	fmt.Println("value", value)
-
 	if value != requestBody.OTP {
 		return "", httperror.New(http.StatusBadRequest, response.OTPIsNotValidMessage)
 	}
 
-	changeWalletPinToken, err := jwt.GenerateJWTChangePasswordToken(userInfo.ID.String(), u.cfg)
+	changeWalletPinToken, err := jwt.GenerateJWTWalletToken(userID, "level2", u.cfg)
 	if err != nil {
 		return "", err
 	}
@@ -2146,7 +2144,6 @@ func (u *userUC) SendOTPChangeWalletPinEmail(ctx context.Context, email string) 
 	if err := u.userRepo.InsertNewOTPKeyChangeWalletPin(ctx, email, otp); err != nil {
 		return err
 	}
-	fmt.Println("otp", otp)
 
 	subject := "Change Wallet Pin Verification!"
 	msg := smtp.VerificationEmailBody(otp)

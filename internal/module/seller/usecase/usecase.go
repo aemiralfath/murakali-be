@@ -42,7 +42,6 @@ func (u *sellerUC) GetPerformance(ctx context.Context, userID string, update boo
 
 	key := fmt.Sprintf("performance:%s", shopID)
 	if !update {
-		fmt.Println("!!!!! Ndak Update?", update)
 		gotPerformanceRedis, _ := u.sellerRepo.GetPerformaceRedis(ctx, key)
 		if gotPerformanceRedis != nil {
 			return gotPerformanceRedis, nil
