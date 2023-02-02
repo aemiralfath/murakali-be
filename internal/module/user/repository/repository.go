@@ -1095,9 +1095,9 @@ func (r *userRepo) CheckUserSealabsPay(ctx context.Context, userid string) (int,
 	return temp, nil
 }
 
-func (r *userRepo) CheckDeletedSealabsPay(ctx context.Context, cardNumber string) (int, error) {
+func (r *userRepo) CheckDeletedSealabsPay(ctx context.Context, cardNumber string, userid string) (int, error) {
 	var temp int
-	if err := r.PSQL.QueryRowContext(ctx, CheckDeletedSealabsPayQuery, cardNumber).
+	if err := r.PSQL.QueryRowContext(ctx, CheckDeletedSealabsPayQuery, cardNumber, userid).
 		Scan(&temp); err != nil {
 		return 0, err
 	}
@@ -1138,7 +1138,7 @@ func (r *userRepo) AddSealabsPayTrans(ctx context.Context, tx postgre.Transactio
 }
 
 func (r *userRepo) UpdateUserSealabsPayTrans(ctx context.Context, tx postgre.Transaction, request body.AddSealabsPayRequest, userid string) error {
-	if _, err := tx.ExecContext(ctx, UpdateUserSealabsPayQuery, userid, request.Name, request.CardNumber); err != nil {
+	if _, err := tx.ExecContext(ctx, UpdateUserSealabsPayQuery, request.CardNumber); err != nil {
 		return err
 	}
 
@@ -1155,7 +1155,7 @@ func (r *userRepo) AddSealabsPay(ctx context.Context, request body.AddSealabsPay
 }
 
 func (r *userRepo) UpdateUserSealabsPay(ctx context.Context, request body.AddSealabsPayRequest, userid string) error {
-	if _, err := r.PSQL.ExecContext(ctx, UpdateUserSealabsPayQuery, userid, request.Name, request.CardNumber); err != nil {
+	if _, err := r.PSQL.ExecContext(ctx, UpdateUserSealabsPayQuery, request.CardNumber); err != nil {
 		return err
 	}
 
