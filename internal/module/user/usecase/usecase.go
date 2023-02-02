@@ -2082,3 +2082,75 @@ func (u *userUC) CreateRefundThreadUser(ctx context.Context, userID string, requ
 
 	return nil
 }
+
+func (u *userUC) ChangeWalletPinStepUpEmail(ctx context.Context, userID string) error {
+	userInfo, err := u.userRepo.GetUserByID(ctx, userID)
+	if err != nil {
+		return err
+	}
+
+	walletUser, err := u.userRepo.GetWalletByUserID(ctx, userID)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return httperror.New(http.StatusBadRequest, response.WalletIsNotActivated)
+		}
+		return err
+	}
+
+	if !walletUser.ActiveDate.Valid {
+		return httperror.New(http.StatusBadRequest, response.WalletIsNotActivated)
+	}
+
+	err = u.SendOTPChangeWalletPinEmail(ctx, userInfo.Email)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (u *userUC) ChangeWalletPinStepUpVerify(ctx context.Context, requestBody body.VerifyOTPRequest, userID string) (string, error) {
+	userInfo, err := u.userRepo.GetUserByID(ctx, userID)
+	if err != nil {
+		return "", err
+	}
+	value, err := u.userRepo.GetOTPValueChangeWalletPin(ctx, userInfo.Email)
+	if err != nil {
+		return "", httperror.New(http.StatusBadRequest, response.OTPAlreadyExpiredMessage)
+	}
+
+	fmt.Println("value", value)
+
+	if value != requestBody.OTP {
+		return "", httperror.New(http.StatusBadRequest, response.OTPIsNotValidMessage)
+	}
+
+	changeWalletPinToken, err := jwt.GenerateJWTChangePasswordToken(userInfo.ID.String(), u.cfg)
+	if err != nil {
+		return "", err
+	}
+
+	_, err = u.userRepo.DeleteOTPValueChangeWalletPin(ctx, userInfo.Email)
+	if err != nil {
+		return "", err
+	}
+
+	return changeWalletPinToken, nil
+}
+
+func (u *userUC) SendOTPChangeWalletPinEmail(ctx context.Context, email string) error {
+	otp, err := util.GenerateRandomAlpaNumeric(6)
+	if err != nil {
+		return err
+	}
+
+	if err := u.userRepo.InsertNewOTPKeyChangeWalletPin(ctx, email, otp); err != nil {
+		return err
+	}
+	fmt.Println("otp", otp)
+
+	subject := "Change Wallet Pin Verification!"
+	msg := smtp.VerificationEmailBody(otp)
+	go smtp.SendEmail(u.cfg, email, subject, msg)
+
+	return nil
+}
