@@ -1393,6 +1393,18 @@ func (h *userHandlers) GetTransactions(c *gin.Context) {
 
 	pgn, status := h.ValidateTransactionQuery(c)
 
+	sort := c.DefaultQuery("sort", "")
+	sort = strings.ToLower(sort)
+	var sortFilter string
+	switch sort {
+	case constant.ASC:
+		sortFilter = sort
+	default:
+		sortFilter = constant.DESC
+	}
+
+	pgn.Sort = "t.expired_at " + sortFilter
+
 	transactions, err := h.userUC.GetTransactionByUserID(c, userID.(string), status, pgn)
 	if err != nil {
 		var e *httperror.Error

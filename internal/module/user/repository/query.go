@@ -61,7 +61,6 @@ const (
 	WHERE t.id = o.transaction_id
 	AND o.user_id = $1
 	GROUP BY t.id
-	ORDER BY t.expired_at DESC LIMIT $2 OFFSET $3
 	`
 
 	GetTransactionByUserIDNotPaidQuery = `
@@ -71,7 +70,6 @@ const (
 	AND o.user_id = $1
 	AND t.paid_at IS NULL AND t.canceled_at IS NULL
 	GROUP BY t.id
-	ORDER BY t.expired_at DESC LIMIT $2 OFFSET $3
 	`
 
 	GetOrdersByTransactionIDQuery = `SELECT o.id,o.order_status_id,o.total_price,o.delivery_fee,o.resi_no,s.id,s.name,v.code,o.created_at

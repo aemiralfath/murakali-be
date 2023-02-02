@@ -758,11 +758,12 @@ func (r *userRepo) GetTransactionByUserID(ctx context.Context, userID string, st
 		query = GetTransactionByUserIDQuery
 	}
 
-	res, err := r.PSQL.QueryContext(
-		ctx, query,
-		userID,
-		pgn.GetLimit(),
+	queryOrderBySomething := fmt.Sprintf(OrderBySomething, pgn.GetSort(), pgn.GetLimit(),
 		pgn.GetOffset())
+
+	res, err := r.PSQL.QueryContext(
+		ctx, query+queryOrderBySomething,
+		userID)
 
 	if err != nil {
 		return nil, err
