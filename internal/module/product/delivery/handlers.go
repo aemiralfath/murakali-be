@@ -524,6 +524,22 @@ func (h *productHandlers) ValidateQueryProduct(c *gin.Context) (*pagination.Pagi
 	return pgn, query
 }
 
+func (h *productHandlers) UpdateProductMetadata(c *gin.Context) {
+	if err := h.productUC.UpdateProductMetadata(c); err != nil {
+		var e *httperror.Error
+		if !errors.As(err, &e) {
+			h.logger.Errorf("HandlerProduct, Error: %s", err)
+			response.ErrorResponse(c.Writer, response.InternalServerErrorMessage, http.StatusInternalServerError)
+			return
+		}
+
+		response.ErrorResponse(c.Writer, e.Err.Error(), e.Status)
+		return
+	}
+
+	response.SuccessResponse(c.Writer, nil, http.StatusOK)
+}
+
 func (h *productHandlers) CreateProduct(c *gin.Context) {
 	userID, exist := c.Get("userID")
 	if !exist {

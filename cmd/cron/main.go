@@ -55,6 +55,7 @@ func main() {
 	}
 
 	// product -> fav count, rating_avg
+
 	// shop -> total_product, total_rating, rating avg
 
 	go cronJob.Start()

@@ -29,6 +29,10 @@ func NewProductUseCase(cfg *config.Config, txRepo *postgre.TxRepo, productRepo p
 	return &productUC{cfg: cfg, txRepo: txRepo, productRepo: productRepo}
 }
 
+func (u *productUC) UpdateProductMetadata(ctx context.Context) error {
+	return nil
+}
+
 func (u *productUC) GetCategories(ctx context.Context) ([]*body.CategoryResponse, error) {
 	categories, err := u.productRepo.GetCategories(ctx)
 	if err != nil {
