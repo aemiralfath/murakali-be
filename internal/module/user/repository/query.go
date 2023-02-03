@@ -62,20 +62,18 @@ const (
 	GROUP BY o.user_id`
 
 	GetTransactionByUserIDQuery = `
-	SELECT t.id,t.voucher_marketplace_id,t.wallet_id,t.card_number,t.invoice,t.total_price,t.paid_at,t.canceled_at,t.expired_at
+	SELECT DISTINCT ON (t.id) t.id,t.voucher_marketplace_id,t.wallet_id,t.card_number,t.invoice,t.total_price,t.paid_at,t.canceled_at,t.expired_at
 	from "transaction" t, "order" o
 	WHERE t.id = o.transaction_id
 	AND o.user_id = $1
-	GROUP BY t.id
 	`
 
 	GetTransactionByUserIDNotPaidQuery = `
-	SELECT t.id,t.voucher_marketplace_id,t.wallet_id,t.card_number,t.invoice,t.total_price,t.paid_at,t.canceled_at,t.expired_at
+	SELECT DISTINCT ON (t.id) t.id,t.voucher_marketplace_id,t.wallet_id,t.card_number,t.invoice,t.total_price,t.paid_at,t.canceled_at,t.expired_at
 	from "transaction" t, "order" o
 	WHERE t.id = o.transaction_id
 	AND o.user_id = $1
 	AND t.paid_at IS NULL AND t.canceled_at IS NULL
-	GROUP BY t.id
 	`
 
 	GetOrdersByTransactionIDQuery = `SELECT o.id,o.order_status_id,o.total_price,o.delivery_fee,o.resi_no,s.id,s.name,v.code,o.created_at

@@ -767,7 +767,7 @@ func (r *userRepo) GetTransactionByUserID(ctx context.Context, userID string, st
 		query = GetTransactionByUserIDQuery
 	}
 
-	queryOrderBySomething := fmt.Sprintf(OrderBySomething, pgn.GetSort(), pgn.GetLimit(),
+	queryOrderBySomething := fmt.Sprintf(OrderBySomething, fmt.Sprintf("t.id, %s", pgn.GetSort()), pgn.GetLimit(),
 		pgn.GetOffset())
 
 	res, err := r.PSQL.QueryContext(
