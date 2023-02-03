@@ -25,6 +25,7 @@ require (
 	github.com/creasty/defaults v1.5.1 // indirect
 	github.com/gorilla/schema v1.2.0 // indirect
 	github.com/gosimple/unidecode v1.0.1 // indirect
+	github.com/stretchr/objx v0.5.0 // indirect
 )
 
 require (
