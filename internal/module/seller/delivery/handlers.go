@@ -1089,5 +1089,4 @@ func (h *sellerHandlers) UpdateRefundReject(c *gin.Context) {
 	}
 
 	response.SuccessResponse(c.Writer, nil, http.StatusOK)
-
 }

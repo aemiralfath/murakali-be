@@ -93,29 +93,29 @@ func (r *sellerRepo) GetPerformance(ctx context.Context, shopID string) (*body.S
 	performance.DailyOrder = dailyOrders
 
 	var monthlyOrder body.MonthlyOrder
-	if err := r.PSQL.QueryRowContext(ctx, GetMonthlyOrderQuery, shopID).Scan(
+	if errRow := r.PSQL.QueryRowContext(ctx, GetMonthlyOrderQuery, shopID).Scan(
 		&monthlyOrder.Month,
 		&monthlyOrder.SuccessOrder,
 		&monthlyOrder.FailedOrder,
 		&monthlyOrder.SuccessOrderPercentChange,
 		&monthlyOrder.FailedOrderPercentChange,
-	); err != nil {
+	); errRow != nil {
 		if err != sql.ErrNoRows {
-			return nil, err
+			return nil, errRow
 		}
 	}
 	performance.MonthlyOrder = &monthlyOrder
 
 	var totalRating body.TotalRating
-	if err := r.PSQL.QueryRowContext(ctx, GetTotalRatingQuery, shopID).Scan(
+	if errRow := r.PSQL.QueryRowContext(ctx, GetTotalRatingQuery, shopID).Scan(
 		&totalRating.Rating1,
 		&totalRating.Rating2,
 		&totalRating.Rating3,
 		&totalRating.Rating4,
 		&totalRating.Rating5,
-	); err != nil {
+	); errRow != nil {
 		if err != sql.ErrNoRows {
-			return nil, err
+			return nil, errRow
 		}
 	}
 	performance.TotalRating = &totalRating
@@ -472,7 +472,8 @@ func (r *sellerRepo) GetOrderByOrderID(ctx context.Context, orderID string) (*mo
 	return &order, nil
 }
 
-func (r *sellerRepo) GetOrders(ctx context.Context, shopID, orderStatusID, voucherShopID, sortQuery string, pgn *pagination.Pagination) ([]*model.Order, error) {
+func (r *sellerRepo) GetOrders(ctx context.Context, shopID, orderStatusID, voucherShopID, sortQuery string,
+	pgn *pagination.Pagination) ([]*model.Order, error) {
 	orders := make([]*model.Order, 0)
 
 	var res *sql.Rows

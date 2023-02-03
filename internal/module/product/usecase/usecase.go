@@ -422,11 +422,7 @@ func (u *productUC) GetFavoriteProducts(
 func (u *productUC) CheckProductIsFavorite(
 	ctx context.Context, userID, productID string) bool {
 	totalRows, _ := u.productRepo.CountUserFavoriteProduct(ctx, userID, productID)
-	if totalRows > 0 {
-		return true
-	}
-
-	return false
+	return totalRows > 0
 }
 
 func (u *productUC) CountSpecificFavoriteProduct(

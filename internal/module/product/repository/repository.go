@@ -1066,7 +1066,8 @@ func (r *productRepo) GetMaxMinPriceByID(ctx context.Context, productID string) 
 
 func (r *productRepo) GetShopProductRating(ctx context.Context, shopID string) (*model.ShopProductRating, error) {
 	var shopProductRating model.ShopProductRating
-	if err := r.PSQL.QueryRowContext(ctx, GetShopProductRating, shopID).Scan(&shopProductRating.ShopID, &shopProductRating.Count, &shopProductRating.Avg); err != nil {
+	if err := r.PSQL.QueryRowContext(ctx, GetShopProductRating, shopID).Scan(&shopProductRating.ShopID,
+		&shopProductRating.Count, &shopProductRating.Avg); err != nil {
 		return nil, err
 	}
 	return &shopProductRating, nil
