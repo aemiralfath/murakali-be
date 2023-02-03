@@ -100,7 +100,7 @@ func (r *sellerRepo) GetPerformance(ctx context.Context, shopID string) (*body.S
 		&monthlyOrder.SuccessOrderPercentChange,
 		&monthlyOrder.FailedOrderPercentChange,
 	); errRow != nil {
-		if err != sql.ErrNoRows {
+		if errRow != sql.ErrNoRows {
 			return nil, errRow
 		}
 	}
@@ -114,7 +114,7 @@ func (r *sellerRepo) GetPerformance(ctx context.Context, shopID string) (*body.S
 		&totalRating.Rating4,
 		&totalRating.Rating5,
 	); errRow != nil {
-		if err != sql.ErrNoRows {
+		if errRow != sql.ErrNoRows {
 			return nil, errRow
 		}
 	}
