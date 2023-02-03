@@ -58,7 +58,6 @@ func (u *productUC) UpdateProductMetadata(ctx context.Context) error {
 
 	var errShop error
 	for _, id := range shopID {
-		// shop -> total_product, rating avg
 		shopProductRating, errShop := u.productRepo.GetShopProductRating(ctx, id)
 		if errShop == nil {
 			errShop = u.productRepo.UpdateShopProductRating(ctx, shopProductRating)
