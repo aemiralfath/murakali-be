@@ -90,7 +90,7 @@ type Repository interface {
 	UpdateWalletBalance(ctx context.Context, tx postgre.Transaction, wallet *model.Wallet) error
 	UpdateWallet(ctx context.Context, wallet *model.Wallet) error
 	CheckUserSealabsPay(ctx context.Context, userid string) (int, error)
-	CheckDeletedSealabsPay(ctx context.Context, cardNumber string) (int, error)
+	CheckDeletedSealabsPay(ctx context.Context, cardNumber string, userid string) (int, error)
 	AddSealabsPay(ctx context.Context, request body.AddSealabsPayRequest, userid string) error
 	UpdateUserSealabsPay(ctx context.Context, request body.AddSealabsPayRequest, userid string) error
 	UpdateUserSealabsPayTrans(ctx context.Context, tx postgre.Transaction, request body.AddSealabsPayRequest, userid string) error
