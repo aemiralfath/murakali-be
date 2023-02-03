@@ -53,4 +53,5 @@ type UseCase interface {
 	CreateRefundUser(ctx context.Context, userID string, requestBody body.CreateRefundUserRequest) error
 	GetRefundOrder(ctx context.Context, userID string, refundID string) (*body.GetRefundThreadResponse, error)
 	CreateRefundThreadUser(ctx context.Context, userID string, requestBody *body.CreateRefundThreadRequest) error
+	CompletedRejectedRefund(ctx context.Context) error
 }

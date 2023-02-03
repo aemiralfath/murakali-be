@@ -767,7 +767,7 @@ func (r *userRepo) GetTransactionByUserID(ctx context.Context, userID string, st
 		query = GetTransactionByUserIDQuery
 	}
 
-	queryOrderBySomething := fmt.Sprintf(OrderBySomething, pgn.GetSort(), pgn.GetLimit(),
+	queryOrderBySomething := fmt.Sprintf(OrderBySomething, fmt.Sprintf("t.id, %s", pgn.GetSort()), pgn.GetLimit(),
 		pgn.GetOffset())
 
 	res, err := r.PSQL.QueryContext(
@@ -1183,7 +1183,7 @@ func (r *userRepo) CheckShopUnique(ctx context.Context, shopName string) (int64,
 }
 
 func (r *userRepo) AddShop(ctx context.Context, userID, shopName string) error {
-	if _, err := r.PSQL.ExecContext(ctx, AddShopQuery, userID, shopName); err != nil {
+	if _, err := r.PSQL.ExecContext(ctx, AddShopQuery, userID, shopName, 0, 0, 0); err != nil {
 		return err
 	}
 
@@ -1435,6 +1435,31 @@ func (r *userRepo) ChangeOrderStatus(ctx context.Context, requestBody body.Chang
 	}
 
 	return nil
+}
+
+func (r *userRepo) GetRejectedRefund(ctx context.Context) ([]*model.RefundOrder, error) {
+	orderRefund := make([]*model.RefundOrder, 0)
+	res, err := r.PSQL.QueryContext(ctx, GetRejectedRefundQuery, constant.OrderStatusReceived)
+	if err != nil {
+		return nil, err
+	}
+	defer res.Close()
+
+	for res.Next() {
+		refund := model.RefundOrder{}
+		refund.Order = &model.OrderModel{}
+		if errScan := res.Scan(&refund.ID, &refund.Order.ID, &refund.Order.UserID); errScan != nil {
+			return nil, errScan
+		}
+
+		orderRefund = append(orderRefund, &refund)
+	}
+
+	if res.Err() != nil {
+		return nil, res.Err()
+	}
+
+	return orderRefund, nil
 }
 
 func (r *userRepo) GetOrderByTransactionID(ctx context.Context, transactionID string) ([]*model.OrderModel, error) {

@@ -1079,6 +1079,22 @@ func (h *userHandlers) VerifyOTP(c *gin.Context) {
 	response.SuccessResponse(c.Writer, nil, http.StatusOK)
 }
 
+func (h *userHandlers) CompletedRejectedRefund(c *gin.Context) {
+	if err := h.userUC.CompletedRejectedRefund(c); err != nil {
+		var e *httperror.Error
+		if !errors.As(err, &e) {
+			h.logger.Errorf("HandlerUser, Error: %s", err)
+			response.ErrorResponse(c.Writer, response.InternalServerErrorMessage, http.StatusInternalServerError)
+			return
+		}
+
+		response.ErrorResponse(c.Writer, e.Err.Error(), e.Status)
+		return
+	}
+
+	response.SuccessResponse(c.Writer, nil, http.StatusOK)
+}
+
 func (h *userHandlers) ChangePassword(c *gin.Context) {
 	changePasswordToken, err := c.Cookie(constant.ChangePasswordTokenCookie)
 	if err != nil {
@@ -1215,9 +1231,11 @@ func (h *userHandlers) ChangeWalletPin(c *gin.Context) {
 		return
 	}
 
-	if claims["scope"].(string) != "level2" {
-		response.ErrorResponse(c.Writer, response.ForbiddenMessage, http.StatusForbidden)
-		return
+	if claims["scope"] != nil {
+		if claims["scope"].(string) != "level2" {
+			response.ErrorResponse(c.Writer, response.ForbiddenMessage, http.StatusForbidden)
+			return
+		}
 	}
 
 	var requestBody body.ChangeWalletPinRequest

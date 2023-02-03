@@ -10,6 +10,8 @@ import (
 func MapUserRoutes(userGroup *gin.RouterGroup, h user.Handlers, mw *middleware.MWManager) {
 	userGroup.POST("/transaction/slp-payment/:id", h.SLPPaymentCallback)
 	userGroup.POST("/transaction/wallet-payment/:id", h.WalletPaymentCallback)
+	userGroup.POST("/rejected-refund", h.CompletedRejectedRefund)
+
 	userGroup.Use(mw.AuthJWTMiddleware())
 	userGroup.GET("/address", h.GetAddress)
 	userGroup.POST("/address", h.CreateAddress)

@@ -46,4 +46,5 @@ type Handlers interface {
 	CreateRefundUser(c *gin.Context)
 	GetRefundOrder(c *gin.Context)
 	CreateRefundThreadUser(c *gin.Context)
+	CompletedRejectedRefund(c *gin.Context)
 }

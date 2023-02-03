@@ -474,7 +474,7 @@ func (u *sellerUC) UpdateResiNumberInOrderSeller(ctx context.Context, userID, or
 func (u *sellerUC) UpdateOnDeliveryOrder(ctx context.Context) error {
 	orders, err := u.sellerRepo.GetOrdersOnDelivery(ctx)
 	if err != nil {
-		return nil
+		return err
 	}
 
 	for _, order := range orders {
@@ -492,7 +492,7 @@ func (u *sellerUC) UpdateOnDeliveryOrder(ctx context.Context) error {
 func (u *sellerUC) UpdateExpiredAtOrder(ctx context.Context) error {
 	transactions, err := u.sellerRepo.GetTransactionsExpired(ctx)
 	if err != nil {
-		return nil
+		return err
 	}
 
 	for _, transaction := range transactions {

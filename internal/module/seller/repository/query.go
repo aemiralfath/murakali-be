@@ -202,13 +202,10 @@ const (
 	GetSellerIDByOrderIDQuery = `SELECT s.user_id from "order" o join shop s on o.shop_id = s.id where o.id = $1`
 
 	GetOrderDetailQuery = `SELECT pd.id,pd.product_id,p.title, pd.weight,
-		(select ph.url from "photo" ph 
-			join product_detail pd on pd.id = ph.product_detail_id 
-			join "order_item" oi on pd.id = oi.product_detail_id limit 1
-		),oi.quantity,oi.item_price,oi.total_price
-	from  "product_detail" pd 
-	join "order_item" oi on pd.id = oi.product_detail_id 
-	join "product" p on p.id = pd.product_id WHERE oi.order_id = $1 `
+        p.thumbnail_url,oi.quantity,oi.item_price,oi.total_price
+    from  "product_detail" pd 
+    join "order_item" oi on pd.id = oi.product_detail_id 
+    join "product" p on p.id = pd.product_id WHERE oi.order_id = $1 `
 
 	GetOrderDetailProductVariant = `
 		SELECT "vd"."name" as "name", "vd"."type" as "type" 

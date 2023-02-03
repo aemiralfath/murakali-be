@@ -29,6 +29,42 @@ func NewProductUseCase(cfg *config.Config, txRepo *postgre.TxRepo, productRepo p
 	return &productUC{cfg: cfg, txRepo: txRepo, productRepo: productRepo}
 }
 
+func (u *productUC) UpdateProductMetadata(ctx context.Context) error {
+	productFav, err := u.productRepo.GetFavoriteProduct(ctx)
+	if err != nil {
+		return err
+	}
+
+	productRating, err := u.productRepo.GetRatingProduct(ctx)
+	if err != nil {
+		return err
+	}
+
+	var errFav error
+	for _, favorite := range productFav {
+		if err := u.productRepo.UpdateProductFavorite(ctx, favorite.Product.ID.String(), *favorite.Count); err != nil {
+			errFav = err
+		}
+	}
+
+	var errRating error
+	for _, rating := range productRating {
+		if err := u.productRepo.UpdateProductRating(ctx, rating.Product.ID.String(), *rating.Avg); err != nil {
+			errRating = err
+		}
+	}
+
+	if errFav != nil {
+		return errFav
+	}
+
+	if errRating != nil {
+		return errRating
+	}
+
+	return nil
+}
+
 func (u *productUC) GetCategories(ctx context.Context) ([]*body.CategoryResponse, error) {
 	categories, err := u.productRepo.GetCategories(ctx)
 	if err != nil {

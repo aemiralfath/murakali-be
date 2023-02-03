@@ -62,20 +62,18 @@ const (
 	GROUP BY o.user_id`
 
 	GetTransactionByUserIDQuery = `
-	SELECT t.id,t.voucher_marketplace_id,t.wallet_id,t.card_number,t.invoice,t.total_price,t.paid_at,t.canceled_at,t.expired_at
+	SELECT DISTINCT ON (t.id) t.id,t.voucher_marketplace_id,t.wallet_id,t.card_number,t.invoice,t.total_price,t.paid_at,t.canceled_at,t.expired_at
 	from "transaction" t, "order" o
 	WHERE t.id = o.transaction_id
 	AND o.user_id = $1
-	GROUP BY t.id
 	`
 
 	GetTransactionByUserIDNotPaidQuery = `
-	SELECT t.id,t.voucher_marketplace_id,t.wallet_id,t.card_number,t.invoice,t.total_price,t.paid_at,t.canceled_at,t.expired_at
+	SELECT DISTINCT ON (t.id) t.id,t.voucher_marketplace_id,t.wallet_id,t.card_number,t.invoice,t.total_price,t.paid_at,t.canceled_at,t.expired_at
 	from "transaction" t, "order" o
 	WHERE t.id = o.transaction_id
 	AND o.user_id = $1
 	AND t.paid_at IS NULL AND t.canceled_at IS NULL
-	GROUP BY t.id
 	`
 
 	GetOrdersByTransactionIDQuery = `SELECT o.id,o.order_status_id,o.total_price,o.delivery_fee,o.resi_no,s.id,s.name,v.code,o.created_at
@@ -117,7 +115,7 @@ const (
 	CreateEmailHistoryQuery        = `INSERT INTO "email_history" (email) VALUES ($1)`
 	CheckShopByIdQuery             = `SELECT count(id) from "shop" WHERE "user_id" = $1 and deleted_at IS NULL`
 	CheckShopUniqueQuery           = `SELECT count(name) from "shop" WHERE "name" = $1 and deleted_at IS NULL`
-	AddShopQuery                   = `INSERT INTO "shop" (user_id,name) VALUES ($1,$2) `
+	AddShopQuery                   = `INSERT INTO "shop" (user_id,name, total_product, total_rating, rating_avg) VALUES ($1, $2, $3, $4, $5)`
 	UpdateRoleQuery                = `UPDATE "user" SET "role_id" = 2,updated_at = now() where id = $1`
 	UpdateProfileImageQuery        = `UPDATE "user" SET "photo_url" = $1,updated_at = now() where id = $2`
 	UpdatePasswordQuery            = `UPDATE "user" SET "password" = $1 WHERE "id" = $2`
@@ -167,6 +165,14 @@ const (
 	UpdateUserSealabsPayQuery   = `UPDATE "sealabs_pay" set updated_at = now(),deleted_at = null,is_default = true where card_number = $1`
 	OrderBySomething            = ` 
 	ORDER BY %s LIMIT %d OFFSET %d`
+
+	GetRejectedRefundQuery = `
+		SELECT DISTINCT ON ("o"."id") "r"."id", "o"."id", "o"."user_id"  FROM "order" as "o" 
+			INNER JOIN "refund" as "r" ON "o"."id" = "r"."order_id" 
+			WHERE "o"."order_status_id" = $1 AND "r"."is_buyer_refund" IS TRUE AND "r"."rejected_at" IS NOT NULL AND 
+			now() >= ("r"."rejected_at" + interval '24 hour')::timestamptz
+			ORDER BY "o"."id", "r"."rejected_at" DESC
+	`
 
 	GetOrderDetailQuery2 = `SELECT pd.id,pd.product_id,p.title, pd.weight,
 	p.thumbnail_url,oi.quantity,oi.item_price,oi.total_price
