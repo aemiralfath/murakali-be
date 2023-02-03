@@ -58,11 +58,13 @@ func (u *authUC) Login(ctx context.Context, requestBody body.LoginRequest) (*mod
 		return nil, err
 	}
 
-	if err := u.authRepo.InsertSessionRedis(ctx, u.cfg.JWT.AccessExpMin, fmt.Sprintf("session:%s:%s", user.ID.String(), accessToken.Token), constant.TRUE); err != nil {
+	if err := u.authRepo.InsertSessionRedis(ctx, u.cfg.JWT.AccessExpMin, fmt.Sprintf("session:%s:%s",
+		user.ID.String(), accessToken.Token), constant.TRUE); err != nil {
 		return nil, err
 	}
 
-	if err := u.authRepo.InsertSessionRedis(ctx, u.cfg.JWT.RefreshExpMin, fmt.Sprintf("session:%s:%s", user.ID.String(), refreshToken.Token), constant.TRUE); err != nil {
+	if err := u.authRepo.InsertSessionRedis(ctx, u.cfg.JWT.RefreshExpMin, fmt.Sprintf("session:%s:%s",
+		user.ID.String(), refreshToken.Token), constant.TRUE); err != nil {
 		return nil, err
 	}
 
@@ -94,7 +96,8 @@ func (u *authUC) RefreshToken(ctx context.Context, refreshToken, id string) (*mo
 		return nil, err
 	}
 
-	if err := u.authRepo.InsertSessionRedis(ctx, u.cfg.JWT.AccessExpMin, fmt.Sprintf("session:%s:%s", user.ID.String(), accessToken.Token), constant.TRUE); err != nil {
+	if err := u.authRepo.InsertSessionRedis(ctx, u.cfg.JWT.AccessExpMin, fmt.Sprintf("session:%s:%s",
+		user.ID.String(), accessToken.Token), constant.TRUE); err != nil {
 		return nil, err
 	}
 
@@ -482,11 +485,13 @@ func (u *authUC) GoogleAuth(ctx context.Context, state string, userAuth *oauth.G
 		return nil, err
 	}
 
-	if err := u.authRepo.InsertSessionRedis(ctx, u.cfg.JWT.AccessExpMin, fmt.Sprintf("session:%s:%s", user.ID.String(), accessToken.Token), constant.TRUE); err != nil {
+	if err := u.authRepo.InsertSessionRedis(ctx, u.cfg.JWT.AccessExpMin, fmt.Sprintf("session:%s:%s",
+		user.ID.String(), accessToken.Token), constant.TRUE); err != nil {
 		return nil, err
 	}
 
-	if err := u.authRepo.InsertSessionRedis(ctx, u.cfg.JWT.RefreshExpMin, fmt.Sprintf("session:%s:%s", user.ID.String(), refreshToken.Token), constant.TRUE); err != nil {
+	if err := u.authRepo.InsertSessionRedis(ctx, u.cfg.JWT.RefreshExpMin, fmt.Sprintf("session:%s:%s",
+		user.ID.String(), refreshToken.Token), constant.TRUE); err != nil {
 		return nil, err
 	}
 

@@ -37,3 +37,9 @@ type ProductRating struct {
 	Count   *int     `json:"count" db:"count" binding:"omitempty"`
 	Avg     *float64 `json:"avg" db:"avg" binding:"omitempty"`
 }
+
+type ShopProductRating struct {
+	ShopID *string  `json:"shop_id" db:"shop_id" binding:"omitempty"`
+	Count  *int     `json:"count" db:"count" binding:"omitempty"`
+	Avg    *float64 `json:"avg" db:"avg" binding:"omitempty"`
+}
