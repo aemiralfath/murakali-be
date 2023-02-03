@@ -31,4 +31,5 @@ type UseCase interface {
 	UpdateListedStatus(ctx context.Context, productID string) error
 	UpdateProductListedStatusBulk(ctx context.Context, product body.UpdateProductListedStatusBulkRequest) error
 	UpdateProduct(ctx context.Context, requestBody body.UpdateProductRequest, userID, productID string) error
+	UpdateProductMetadata(ctx context.Context) error
 }

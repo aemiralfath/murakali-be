@@ -29,6 +29,54 @@ func NewProductRepository(psql *sql.DB, client *redis.Client) product.Repository
 	}
 }
 
+func (r *productRepo) GetFavoriteProduct(ctx context.Context) ([]*model.ProductFavorite, error) {
+	productFav := make([]*model.ProductFavorite, 0)
+	res, err := r.PSQL.QueryContext(ctx, GetFavoriteProductQuery)
+	if err != nil {
+		return nil, err
+	}
+	defer res.Close()
+
+	for res.Next() {
+		favorite := model.ProductFavorite{}
+		favorite.Product = &model.Product{}
+		if errScan := res.Scan(&favorite.Product.ID, &favorite.Product.Title, &favorite.Count); errScan != nil {
+			return nil, errScan
+		}
+		productFav = append(productFav, &favorite)
+	}
+
+	if res.Err() != nil {
+		return nil, err
+	}
+
+	return productFav, nil
+}
+
+func (r *productRepo) GetRatingProduct(ctx context.Context) ([]*model.ProductRating, error) {
+	productRating := make([]*model.ProductRating, 0)
+	res, err := r.PSQL.QueryContext(ctx, GetRatingProductQuery)
+	if err != nil {
+		return nil, err
+	}
+	defer res.Close()
+
+	for res.Next() {
+		rating := model.ProductRating{}
+		rating.Product = &model.Product{}
+		if errScan := res.Scan(&rating.Product.ID, &rating.Product.Title, &rating.Count, &rating.Avg); errScan != nil {
+			return nil, errScan
+		}
+		productRating = append(productRating, &rating)
+	}
+
+	if res.Err() != nil {
+		return nil, err
+	}
+
+	return productRating, nil
+}
+
 func (r *productRepo) GetCategories(ctx context.Context) ([]*model.Category, error) {
 	categories := make([]*model.Category, 0)
 	res, err := r.PSQL.QueryContext(
@@ -46,7 +94,7 @@ func (r *productRepo) GetCategories(ctx context.Context) ([]*model.Category, err
 			&category.Name,
 			&category.PhotoURL,
 		); errScan != nil {
-			return nil, err
+			return nil, errScan
 		}
 		categories = append(categories, &category)
 	}
@@ -293,7 +341,7 @@ func (r *productRepo) GetProductDetail(ctx context.Context, productID string, pr
 		}
 		detail.ProductURL = productURLs
 
-		if promo != nil {
+		if promo != nil && (*promo.PromotionQuota) > 0 {
 			discountedPrice := 0.0
 			if promo.PromotionDiscountPercentage != nil {
 				discountedPrice = *detail.NormalPrice - (*detail.NormalPrice * (*promo.PromotionDiscountPercentage / float64(100)))
@@ -304,7 +352,8 @@ func (r *productRepo) GetProductDetail(ctx context.Context, productID string, pr
 			if *detail.NormalPrice >= *promo.PromotionMinProductPrice {
 				if promo.PromotionDiscountFixPrice != nil && *promo.PromotionDiscountFixPrice > *promo.PromotionMaxDiscountPrice {
 					discountedPrice = *detail.NormalPrice - *promo.PromotionDiscountFixPrice
-				} else if discountedPrice > *promo.PromotionMaxDiscountPrice {
+				}
+				if discountedPrice > *promo.PromotionMaxDiscountPrice {
 					discountedPrice = *detail.NormalPrice - *promo.PromotionMaxDiscountPrice
 				}
 				detail.DiscountPrice = &discountedPrice
@@ -942,6 +991,22 @@ func (r *productRepo) UpdateProduct(ctx context.Context, tx postgre.Transaction,
 		requestBody.MaxPrice,
 		requestBody.ListedStatus,
 		productID)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (r *productRepo) UpdateProductFavorite(ctx context.Context, productID string, favCount int) error {
+	_, err := r.PSQL.ExecContext(ctx, UpdateProductFavoriteQuery, favCount, productID)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (r *productRepo) UpdateProductRating(ctx context.Context, productID string, ratingAvg float64) error {
+	_, err := r.PSQL.ExecContext(ctx, UpdateProductRatingQuery, ratingAvg, productID)
 	if err != nil {
 		return err
 	}

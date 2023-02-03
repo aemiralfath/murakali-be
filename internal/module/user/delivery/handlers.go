@@ -534,6 +534,17 @@ func (h *userHandlers) GetOrder(c *gin.Context) {
 	orderStatusID := c.DefaultQuery("order_status", "")
 	h.ValidateQueryOrder(c, pgn)
 
+	sort := c.DefaultQuery("sort", "")
+	sort = strings.ToLower(sort)
+	var sortFilter string
+	switch sort {
+	case constant.ASC:
+		sortFilter = sort
+	default:
+		sortFilter = constant.DESC
+	}
+	pgn.Sort = "o.created_at " + sortFilter
+
 	orders, err := h.userUC.GetOrder(c, userID.(string), orderStatusID, pgn)
 	if err != nil {
 		var e *httperror.Error
@@ -1068,6 +1079,22 @@ func (h *userHandlers) VerifyOTP(c *gin.Context) {
 	response.SuccessResponse(c.Writer, nil, http.StatusOK)
 }
 
+func (h *userHandlers) CompletedRejectedRefund(c *gin.Context) {
+	if err := h.userUC.CompletedRejectedRefund(c); err != nil {
+		var e *httperror.Error
+		if !errors.As(err, &e) {
+			h.logger.Errorf("HandlerUser, Error: %s", err)
+			response.ErrorResponse(c.Writer, response.InternalServerErrorMessage, http.StatusInternalServerError)
+			return
+		}
+
+		response.ErrorResponse(c.Writer, e.Err.Error(), e.Status)
+		return
+	}
+
+	response.SuccessResponse(c.Writer, nil, http.StatusOK)
+}
+
 func (h *userHandlers) ChangePassword(c *gin.Context) {
 	changePasswordToken, err := c.Cookie(constant.ChangePasswordTokenCookie)
 	if err != nil {
@@ -1204,9 +1231,11 @@ func (h *userHandlers) ChangeWalletPin(c *gin.Context) {
 		return
 	}
 
-	if claims["scope"].(string) != "level2" {
-		response.ErrorResponse(c.Writer, response.ForbiddenMessage, http.StatusForbidden)
-		return
+	if claims["scope"] != nil {
+		if claims["scope"].(string) != "level2" {
+			response.ErrorResponse(c.Writer, response.ForbiddenMessage, http.StatusForbidden)
+			return
+		}
 	}
 
 	var requestBody body.ChangeWalletPinRequest
@@ -1393,6 +1422,18 @@ func (h *userHandlers) GetTransactions(c *gin.Context) {
 
 	pgn, status := h.ValidateTransactionQuery(c)
 
+	sort := c.DefaultQuery("sort", "")
+	sort = strings.ToLower(sort)
+	var sortFilter string
+	switch sort {
+	case constant.ASC:
+		sortFilter = sort
+	default:
+		sortFilter = constant.DESC
+	}
+
+	pgn.Sort = "t.expired_at " + sortFilter
+
 	transactions, err := h.userUC.GetTransactionByUserID(c, userID.(string), status, pgn)
 	if err != nil {
 		var e *httperror.Error
@@ -1566,4 +1607,64 @@ func (h *userHandlers) CreateTransaction(c *gin.Context) {
 	}
 
 	response.SuccessResponse(c.Writer, body.CreateTransactionResponse{TransactionID: transactionID}, http.StatusOK)
+}
+
+func (h *userHandlers) ChangeWalletPinStepUpEmail(c *gin.Context) {
+	userID, exist := c.Get("userID")
+	if !exist {
+		response.ErrorResponse(c.Writer, response.UnauthorizedMessage, http.StatusUnauthorized)
+		return
+	}
+
+	err := h.userUC.ChangeWalletPinStepUpEmail(c, userID.(string))
+	if err != nil {
+		var e *httperror.Error
+		if !errors.As(err, &e) {
+			h.logger.Errorf("HandlerUser, Error: %s", err)
+			response.ErrorResponse(c.Writer, response.InternalServerErrorMessage, http.StatusInternalServerError)
+			return
+		}
+
+		response.ErrorResponse(c.Writer, e.Err.Error(), e.Status)
+		return
+	}
+
+	response.SuccessResponse(c.Writer, nil, http.StatusOK)
+}
+
+func (h *userHandlers) ChangeWalletPinStepUpVerify(c *gin.Context) {
+	userID, exist := c.Get("userID")
+	if !exist {
+		response.ErrorResponse(c.Writer, response.UnauthorizedMessage, http.StatusUnauthorized)
+		return
+	}
+
+	var requestBody body.VerifyOTPRequest
+	if err := c.ShouldBind(&requestBody); err != nil {
+		response.ErrorResponse(c.Writer, response.BadRequestMessage, http.StatusBadRequest)
+		return
+	}
+
+	invalidFields, err := requestBody.Validate()
+	if err != nil {
+		response.ErrorResponseData(c.Writer, invalidFields, response.UnprocessableEntityMessage, http.StatusUnprocessableEntity)
+		return
+	}
+
+	changeWalletPinToken, err := h.userUC.ChangeWalletPinStepUpVerify(c, requestBody, userID.(string))
+	if err != nil {
+		var e *httperror.Error
+		if !errors.As(err, &e) {
+			h.logger.Errorf("HandlerUser, Error: %s", err)
+			response.ErrorResponse(c.Writer, response.InternalServerErrorMessage, http.StatusInternalServerError)
+			return
+		}
+
+		response.ErrorResponse(c.Writer, e.Err.Error(), e.Status)
+		return
+	}
+
+	c.SetSameSite(http.SameSiteNoneMode)
+	c.SetCookie(constant.ChangeWalletPinTokenCookie, changeWalletPinToken, h.cfg.JWT.RefreshExpMin*60, "/", h.cfg.Server.Domain, true, true)
+	response.SuccessResponse(c.Writer, nil, http.StatusOK)
 }

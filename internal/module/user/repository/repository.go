@@ -200,9 +200,18 @@ func (r *userRepo) UpdateProductUnitSold(ctx context.Context, tx postgre.Transac
 	return nil
 }
 
-func (r *userRepo) GetTotalTransactionByUserID(ctx context.Context, userID string) (int64, error) {
+func (r *userRepo) GetTotalTransactionByUserID(ctx context.Context, userID string, status int) (int64, error) {
 	var total int64
-	if err := r.PSQL.QueryRowContext(ctx, GetTotalTransactionByUserIDQuery, userID).Scan(&total); err != nil {
+
+	var query string
+	switch status {
+	case constant.OrderStatusWaitingToPay:
+		query = GetTotalTransactionByUserIDNotPaidQuery
+	default:
+		query = GetTotalTransactionByUserIDQuery
+	}
+
+	if err := r.PSQL.QueryRowContext(ctx, query, userID).Scan(&total); err != nil {
 		if err == sql.ErrNoRows {
 			return 0, nil
 		}
@@ -532,12 +541,12 @@ func (r *userRepo) InsertCostRedis(ctx context.Context, key, value string) error
 func (r *userRepo) GetOrders(ctx context.Context, userID, orderStatusID string, pgn *pagination.Pagination) ([]*model.Order, error) {
 	orders := make([]*model.Order, 0)
 
+	queryOrderBySomething := fmt.Sprintf(OrderBySomething, pgn.GetSort(), pgn.GetLimit(), pgn.GetOffset())
+
 	res, err := r.PSQL.QueryContext(
-		ctx, GetOrdersQuery,
+		ctx, GetOrdersQuery+queryOrderBySomething,
 		userID,
-		fmt.Sprintf("%%%s%%", orderStatusID),
-		pgn.GetLimit(),
-		pgn.GetOffset())
+		fmt.Sprintf("%%%s%%", orderStatusID))
 
 	if err != nil {
 		return nil, err
@@ -758,11 +767,12 @@ func (r *userRepo) GetTransactionByUserID(ctx context.Context, userID string, st
 		query = GetTransactionByUserIDQuery
 	}
 
-	res, err := r.PSQL.QueryContext(
-		ctx, query,
-		userID,
-		pgn.GetLimit(),
+	queryOrderBySomething := fmt.Sprintf(OrderBySomething, fmt.Sprintf("t.id, %s", pgn.GetSort()), pgn.GetLimit(),
 		pgn.GetOffset())
+
+	res, err := r.PSQL.QueryContext(
+		ctx, query+queryOrderBySomething,
+		userID)
 
 	if err != nil {
 		return nil, err
@@ -1085,9 +1095,9 @@ func (r *userRepo) CheckUserSealabsPay(ctx context.Context, userid string) (int,
 	return temp, nil
 }
 
-func (r *userRepo) CheckDeletedSealabsPay(ctx context.Context, cardNumber string) (int, error) {
+func (r *userRepo) CheckDeletedSealabsPay(ctx context.Context, cardNumber string, userid string) (int, error) {
 	var temp int
-	if err := r.PSQL.QueryRowContext(ctx, CheckDeletedSealabsPayQuery, cardNumber).
+	if err := r.PSQL.QueryRowContext(ctx, CheckDeletedSealabsPayQuery, cardNumber, userid).
 		Scan(&temp); err != nil {
 		return 0, err
 	}
@@ -1128,7 +1138,7 @@ func (r *userRepo) AddSealabsPayTrans(ctx context.Context, tx postgre.Transactio
 }
 
 func (r *userRepo) UpdateUserSealabsPayTrans(ctx context.Context, tx postgre.Transaction, request body.AddSealabsPayRequest, userid string) error {
-	if _, err := tx.ExecContext(ctx, UpdateUserSealabsPayQuery, userid, request.Name, request.CardNumber); err != nil {
+	if _, err := tx.ExecContext(ctx, UpdateUserSealabsPayQuery, request.CardNumber); err != nil {
 		return err
 	}
 
@@ -1145,7 +1155,7 @@ func (r *userRepo) AddSealabsPay(ctx context.Context, request body.AddSealabsPay
 }
 
 func (r *userRepo) UpdateUserSealabsPay(ctx context.Context, request body.AddSealabsPayRequest, userid string) error {
-	if _, err := r.PSQL.ExecContext(ctx, UpdateUserSealabsPayQuery, userid, request.Name, request.CardNumber); err != nil {
+	if _, err := r.PSQL.ExecContext(ctx, UpdateUserSealabsPayQuery, request.CardNumber); err != nil {
 		return err
 	}
 
@@ -1173,7 +1183,7 @@ func (r *userRepo) CheckShopUnique(ctx context.Context, shopName string) (int64,
 }
 
 func (r *userRepo) AddShop(ctx context.Context, userID, shopName string) error {
-	if _, err := r.PSQL.ExecContext(ctx, AddShopQuery, userID, shopName); err != nil {
+	if _, err := r.PSQL.ExecContext(ctx, AddShopQuery, userID, shopName, 0, 0, 0); err != nil {
 		return err
 	}
 
@@ -1425,6 +1435,31 @@ func (r *userRepo) ChangeOrderStatus(ctx context.Context, requestBody body.Chang
 	}
 
 	return nil
+}
+
+func (r *userRepo) GetRejectedRefund(ctx context.Context) ([]*model.RefundOrder, error) {
+	orderRefund := make([]*model.RefundOrder, 0)
+	res, err := r.PSQL.QueryContext(ctx, GetRejectedRefundQuery, constant.OrderStatusReceived)
+	if err != nil {
+		return nil, err
+	}
+	defer res.Close()
+
+	for res.Next() {
+		refund := model.RefundOrder{}
+		refund.Order = &model.OrderModel{}
+		if errScan := res.Scan(&refund.ID, &refund.Order.ID, &refund.Order.UserID); errScan != nil {
+			return nil, errScan
+		}
+
+		orderRefund = append(orderRefund, &refund)
+	}
+
+	if res.Err() != nil {
+		return nil, res.Err()
+	}
+
+	return orderRefund, nil
 }
 
 func (r *userRepo) GetOrderByTransactionID(ctx context.Context, transactionID string) ([]*model.OrderModel, error) {
@@ -1686,4 +1721,51 @@ func (r *userRepo) GetSessionKeyRedis(ctx context.Context, key string) ([]string
 	}
 
 	return keys, nil
+}
+
+func (r *userRepo) InsertNewOTPKeyChangeWalletPin(ctx context.Context, email, otp string) error {
+	key := fmt.Sprintf("wallet:%s:%s", constant.OtpKey, email)
+
+	duration, err := time.ParseDuration(constant.OtpDuration)
+	if err != nil {
+		return err
+	}
+
+	if err := r.RedisClient.Set(ctx, key, otp, duration); err.Err() != nil {
+		return err.Err()
+	}
+
+	return nil
+}
+
+func (r *userRepo) GetOTPValueChangeWalletPin(ctx context.Context, email string) (string, error) {
+	key := fmt.Sprintf("wallet:%s:%s", constant.OtpKey, email)
+
+	res := r.RedisClient.Get(ctx, key)
+	if res.Err() != nil {
+		return "", res.Err()
+	}
+
+	value, err := res.Result()
+	if err != nil {
+		return "", err
+	}
+
+	return value, nil
+}
+
+func (r *userRepo) DeleteOTPValueChangeWalletPin(ctx context.Context, email string) (int64, error) {
+	key := fmt.Sprintf("wallet:%s:%s", constant.OtpKey, email)
+
+	res := r.RedisClient.Del(ctx, key)
+	if res.Err() != nil {
+		return -1, res.Err()
+	}
+
+	value, err := res.Result()
+	if err != nil {
+		return -1, err
+	}
+
+	return value, nil
 }

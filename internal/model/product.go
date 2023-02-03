@@ -26,3 +26,14 @@ type Product struct {
 	UpdatedAt     sql.NullTime `json:"updated_at" db:"updated_at" binding:"omitempty"`
 	DeletedAt     sql.NullTime `json:"deleted_at" db:"deleted_at" binding:"omitempty"`
 }
+
+type ProductFavorite struct {
+	Product *Product `json:"product" db:"product" binding:"omitempty"`
+	Count   *int     `json:"count" db:"count" binding:"omitempty"`
+}
+
+type ProductRating struct {
+	Product *Product `json:"product" db:"product" binding:"omitempty"`
+	Count   *int     `json:"count" db:"count" binding:"omitempty"`
+	Avg     *float64 `json:"avg" db:"avg" binding:"omitempty"`
+}

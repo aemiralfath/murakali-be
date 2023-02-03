@@ -40,6 +40,7 @@ type PromoResponse struct {
 	MaxDiscountPrice   *float64 `json:"max_discount_price" db:"max_discount_price"`
 	ResultDiscount     float64  `json:"result_discount" db:"result_discount"`
 	SubPrice           float64  `json:"sub_price" db:"sub_price"`
+	Quota              *int     `json:"quota" db:"quota"`
 }
 
 type CartItemRequest struct {

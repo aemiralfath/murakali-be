@@ -26,4 +26,5 @@ type Handlers interface {
 	UpdateListedStatusBulk(c *gin.Context)
 	UpdateProduct(c *gin.Context)
 	UploadProductPicture(c *gin.Context)
+	UpdateProductMetadata(c *gin.Context)
 }

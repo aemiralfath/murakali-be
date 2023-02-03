@@ -1335,19 +1335,19 @@ func (r *sellerRepo) UpdateProductDetailStock(ctx context.Context, tx postgre.Tr
 	return nil
 }
 
-func (r *sellerRepo) GetTotalProductWithoutPromotionSeller(ctx context.Context, shopID string) (int64, error) {
+func (r *sellerRepo) GetTotalProductWithoutPromotionSeller(ctx context.Context, shopID, productName string) (int64, error) {
 	var total int64
-	if err := r.PSQL.QueryRowContext(ctx, GetTotalProductWithoutPromotionQuery, shopID).Scan(&total); err != nil {
+	if err := r.PSQL.QueryRowContext(ctx, GetTotalProductWithoutPromotionQuery, shopID, fmt.Sprintf("%%%s%%", productName)).Scan(&total); err != nil {
 		return -1, err
 	}
 
 	return total, nil
 }
-func (r *sellerRepo) GetProductWithoutPromotionSeller(ctx context.Context, shopID string,
+func (r *sellerRepo) GetProductWithoutPromotionSeller(ctx context.Context, shopID, productName string,
 	pgn *pagination.Pagination) ([]*body.GetProductWithoutPromotion, error) {
 	var productWoutPromos []*body.GetProductWithoutPromotion
 
-	res, err := r.PSQL.QueryContext(ctx, GetProductWithoutPromotionQuery, shopID, pgn.Limit, pgn.GetOffset())
+	res, err := r.PSQL.QueryContext(ctx, GetProductWithoutPromotionQuery, shopID, fmt.Sprintf("%%%s%%", productName), pgn.Limit, pgn.GetOffset())
 	if err != nil {
 		return nil, err
 	}

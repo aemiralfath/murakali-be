@@ -120,12 +120,19 @@ func (u *adminUC) RefundOrder(ctx context.Context, refundID string) error {
 			}
 		}
 
+		totalReduce := order.TotalPrice
+		if refund.IsSellerRefund != nil {
+			if *refund.IsSellerRefund {
+				totalReduce += order.DeliveryFee
+			}
+		}
+
 		walletMarketplace, err := u.adminRepo.GetWalletByUserID(ctx, tx, constant.AdminMarketplaceID)
 		if err != nil {
 			return err
 		}
 
-		walletMarketplace.Balance -= order.TotalPrice
+		walletMarketplace.Balance -= totalReduce
 		walletMarketplace.UpdatedAt.Valid = true
 		walletMarketplace.UpdatedAt.Time = time.Now()
 		if errWallet := u.adminRepo.UpdateWalletBalance(ctx, tx, walletMarketplace); errWallet != nil {
@@ -137,7 +144,7 @@ func (u *adminUC) RefundOrder(ctx context.Context, refundID string) error {
 			return err
 		}
 
-		walletUser.Balance += order.TotalPrice
+		walletUser.Balance += totalReduce
 		walletUser.UpdatedAt.Valid = true
 		walletUser.UpdatedAt.Time = time.Now()
 		if err := u.adminRepo.UpdateWalletBalance(ctx, tx, walletUser); err != nil {
@@ -150,7 +157,7 @@ func (u *adminUC) RefundOrder(ctx context.Context, refundID string) error {
 			From:          walletMarketplace.ID.String(),
 			To:            walletUser.ID.String(),
 			Description:   "Refund order " + order.ID.String(),
-			Amount:        order.TotalPrice,
+			Amount:        totalReduce,
 			CreatedAt:     time.Now(),
 		}
 		if err := u.adminRepo.InsertWalletHistory(ctx, tx, walletMarketplaceHistory); err != nil {
@@ -163,7 +170,7 @@ func (u *adminUC) RefundOrder(ctx context.Context, refundID string) error {
 			From:          walletMarketplace.ID.String(),
 			To:            walletUser.ID.String(),
 			Description:   "Refund order " + order.ID.String(),
-			Amount:        order.TotalPrice,
+			Amount:        totalReduce,
 			CreatedAt:     time.Now(),
 		}
 		if err := u.adminRepo.InsertWalletHistory(ctx, tx, walletUserHistory); err != nil {

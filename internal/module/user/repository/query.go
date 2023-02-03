@@ -39,7 +39,6 @@ const (
 	left join "voucher" v on v.id = o.voucher_shop_id 
 	WHERE o.user_id = $1 
 	and "order_status_id"::text LIKE $2 
-	ORDER BY o.created_at asc LIMIT $3 OFFSET $4
 	`
 
 	GetOrderDetailProductVariant = `
@@ -55,23 +54,26 @@ const (
 	AND o.user_id = $1
 	GROUP BY o.user_id`
 
+	GetTotalTransactionByUserIDNotPaidQuery = `SELECT count(t.id) 
+	FROM "transaction" t, "order" o
+	WHERE t.id = o.transaction_id
+	AND o.user_id = $1
+	AND t.paid_at IS NULL AND t.canceled_at IS NULL
+	GROUP BY o.user_id`
+
 	GetTransactionByUserIDQuery = `
-	SELECT t.id,t.voucher_marketplace_id,t.wallet_id,t.card_number,t.invoice,t.total_price,t.paid_at,t.canceled_at,t.expired_at
+	SELECT DISTINCT ON (t.id) t.id,t.voucher_marketplace_id,t.wallet_id,t.card_number,t.invoice,t.total_price,t.paid_at,t.canceled_at,t.expired_at
 	from "transaction" t, "order" o
 	WHERE t.id = o.transaction_id
 	AND o.user_id = $1
-	GROUP BY t.id
-	ORDER BY t.expired_at DESC LIMIT $2 OFFSET $3
 	`
 
 	GetTransactionByUserIDNotPaidQuery = `
-	SELECT t.id,t.voucher_marketplace_id,t.wallet_id,t.card_number,t.invoice,t.total_price,t.paid_at,t.canceled_at,t.expired_at
+	SELECT DISTINCT ON (t.id) t.id,t.voucher_marketplace_id,t.wallet_id,t.card_number,t.invoice,t.total_price,t.paid_at,t.canceled_at,t.expired_at
 	from "transaction" t, "order" o
 	WHERE t.id = o.transaction_id
 	AND o.user_id = $1
 	AND t.paid_at IS NULL AND t.canceled_at IS NULL
-	GROUP BY t.id
-	ORDER BY t.expired_at DESC LIMIT $2 OFFSET $3
 	`
 
 	GetOrdersByTransactionIDQuery = `SELECT o.id,o.order_status_id,o.total_price,o.delivery_fee,o.resi_no,s.id,s.name,v.code,o.created_at
@@ -113,7 +115,7 @@ const (
 	CreateEmailHistoryQuery        = `INSERT INTO "email_history" (email) VALUES ($1)`
 	CheckShopByIdQuery             = `SELECT count(id) from "shop" WHERE "user_id" = $1 and deleted_at IS NULL`
 	CheckShopUniqueQuery           = `SELECT count(name) from "shop" WHERE "name" = $1 and deleted_at IS NULL`
-	AddShopQuery                   = `INSERT INTO "shop" (user_id,name) VALUES ($1,$2) `
+	AddShopQuery                   = `INSERT INTO "shop" (user_id,name, total_product, total_rating, rating_avg) VALUES ($1, $2, $3, $4, $5)`
 	UpdateRoleQuery                = `UPDATE "user" SET "role_id" = 2,updated_at = now() where id = $1`
 	UpdateProfileImageQuery        = `UPDATE "user" SET "photo_url" = $1,updated_at = now() where id = $2`
 	UpdatePasswordQuery            = `UPDATE "user" SET "password" = $1 WHERE "id" = $2`
@@ -159,16 +161,21 @@ const (
 	FROM "order" WHERE "transaction_id" = $1
 	AND "user_id" = $2`
 	CheckUserSealabsPayQuery    = `SELECT count(1) from sealabs_pay where user_id = $1 and deleted_at is null`
-	CheckDeletedSealabsPayQuery = `SELECT count(1) from sealabs_pay where card_number = $1 and deleted_at is not null`
-	UpdateUserSealabsPayQuery   = `UPDATE "sealabs_pay" set user_id = $1, name = $2 ,updated_at = now(),deleted_at = null,is_default = true where card_number = $3`
+	CheckDeletedSealabsPayQuery = `SELECT count(1) from sealabs_pay where card_number = $1 and user_id = $2 and deleted_at is not null`
+	UpdateUserSealabsPayQuery   = `UPDATE "sealabs_pay" set updated_at = now(),deleted_at = null,is_default = true where card_number = $1`
 	OrderBySomething            = ` 
 	ORDER BY %s LIMIT %d OFFSET %d`
 
+	GetRejectedRefundQuery = `
+		SELECT DISTINCT ON ("o"."id") "r"."id", "o"."id", "o"."user_id"  FROM "order" as "o" 
+			INNER JOIN "refund" as "r" ON "o"."id" = "r"."order_id" 
+			WHERE "o"."order_status_id" = $1 AND "r"."is_buyer_refund" IS TRUE AND "r"."rejected_at" IS NOT NULL AND 
+			now() >= ("r"."rejected_at" + interval '24 hour')::timestamptz
+			ORDER BY "o"."id", "r"."rejected_at" DESC
+	`
+
 	GetOrderDetailQuery2 = `SELECT pd.id,pd.product_id,p.title, pd.weight,
-	(select ph.url from "photo" ph 
-			join product_detail pd on pd.id = ph.product_detail_id 
-			join "order_item" oi on pd.id = oi.product_detail_id limit 1
-		),oi.quantity,oi.item_price,oi.total_price
+	p.thumbnail_url,oi.quantity,oi.item_price,oi.total_price
 	from  "product_detail" pd 
 	join "order_item" oi on pd.id = oi.product_detail_id 
 	join "product" p on p.id = pd.product_id WHERE oi.order_id = $1 `

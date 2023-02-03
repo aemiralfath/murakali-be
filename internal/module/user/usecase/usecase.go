@@ -315,7 +315,6 @@ func (u *userUC) ChangeOrderStatus(ctx context.Context, userID string, requestBo
 		return httperror.New(http.StatusUnauthorized, response.UnauthorizedMessage)
 	}
 
-	// Buyer can only set order to -> "Received" & "Completed"
 	if requestBody.OrderStatusID != constant.OrderStatusReceived && requestBody.OrderStatusID != constant.OrderStatusCompleted {
 		return httperror.New(http.StatusBadRequest, response.BadRequestMessage)
 	}
@@ -332,7 +331,7 @@ func (u *userUC) ChangeOrderStatus(ctx context.Context, userID string, requestBo
 				return err
 			}
 			for _, productUnitSold := range productUnitSolds {
-				newQty := (productUnitSold.Quantity + productUnitSold.UnitSold)
+				newQty := productUnitSold.Quantity + productUnitSold.UnitSold
 				if err = u.userRepo.UpdateProductUnitSold(ctx, tx, productUnitSold.ProductID.String(), newQty); err != nil {
 					return err
 				}
@@ -454,6 +453,22 @@ func (u *userUC) DeleteAddressByID(ctx context.Context, userID, addressID string
 
 	if err := u.userRepo.DeleteAddress(ctx, address.ID.String()); err != nil {
 		return err
+	}
+
+	return nil
+}
+
+func (u *userUC) CompletedRejectedRefund(ctx context.Context) error {
+	orderRefund, err := u.userRepo.GetRejectedRefund(ctx)
+	if err != nil {
+		return err
+	}
+
+	for _, refund := range orderRefund {
+		if errUpdate := u.ChangeOrderStatus(ctx, refund.Order.UserID.String(),
+			body.ChangeOrderStatusRequest{OrderID: refund.Order.ID.String(), OrderStatusID: constant.OrderStatusCompleted}); errUpdate != nil {
+			return errUpdate
+		}
 	}
 
 	return nil
@@ -630,11 +645,22 @@ func (u *userUC) AddSealabsPay(ctx context.Context, request body.AddSealabsPayRe
 	if err != nil {
 		return err
 	}
+	deletedSLPCount, err := u.userRepo.CheckDeletedSealabsPay(ctx, request.CardNumber, userid)
+	if err != nil {
+		return err
+	}
 
 	if slpCount == 0 {
-		err = u.userRepo.AddSealabsPay(ctx, request, userid)
-		if err != nil {
-			return httperror.New(http.StatusBadRequest, response.SealabsCardAlreadyExist)
+		if deletedSLPCount != 0 {
+			err = u.userRepo.UpdateUserSealabsPay(ctx, request, userid)
+			if err != nil {
+				return httperror.New(http.StatusBadRequest, response.SealabsCardAlreadyExist)
+			}
+		} else {
+			err = u.userRepo.AddSealabsPay(ctx, request, userid)
+			if err != nil {
+				return httperror.New(http.StatusBadRequest, response.SealabsCardAlreadyExist)
+			}
 		}
 	} else {
 		cardNumber, err := u.userRepo.CheckDefaultSealabsPay(ctx, userid)
@@ -648,9 +674,16 @@ func (u *userUC) AddSealabsPay(ctx context.Context, request body.AddSealabsPayRe
 			if u.userRepo.SetDefaultSealabsPayTrans(ctx, tx, cardNumber) != nil {
 				return err
 			}
-			err = u.userRepo.AddSealabsPayTrans(ctx, tx, request, userid)
-			if err != nil {
-				return err
+			if deletedSLPCount != 0 {
+				err = u.userRepo.UpdateUserSealabsPayTrans(ctx, tx, request, userid)
+				if err != nil {
+					return err
+				}
+			} else {
+				err = u.userRepo.AddSealabsPayTrans(ctx, tx, request, userid)
+				if err != nil {
+					return err
+				}
 			}
 			return nil
 		})
@@ -1109,7 +1142,7 @@ func (u *userUC) GetRedirectURL(transaction *model.Transaction, sign string) (st
 }
 
 func (u *userUC) GetTransactionByUserID(ctx context.Context, userID string, status int, pgn *pagination.Pagination) (*pagination.Pagination, error) {
-	totalRows, err := u.userRepo.GetTotalTransactionByUserID(ctx, userID)
+	totalRows, err := u.userRepo.GetTotalTransactionByUserID(ctx, userID, status)
 	if err != nil {
 		return nil, err
 	}
@@ -1911,6 +1944,18 @@ func (u *userUC) CreateRefundUser(ctx context.Context, userID string, requestBod
 		return httperror.New(http.StatusBadRequest, response.InvalidRefund)
 	}
 
+	userWallet, errWallet := u.userRepo.GetWalletByUserID(ctx, userID)
+	if errWallet != nil {
+		if errWallet != sql.ErrNoRows {
+			return errWallet
+		}
+		return httperror.New(http.StatusBadRequest, response.WalletIsNotActivated)
+	}
+
+	if userWallet.ActiveDate.Valid == false {
+		return httperror.New(http.StatusBadRequest, response.WalletIsNotActivated)
+	}
+
 	if orderData.IsRefund {
 		return httperror.New(http.StatusBadRequest, response.OrderUnderProgressRefund)
 	}
@@ -2067,6 +2112,75 @@ func (u *userUC) CreateRefundThreadUser(ctx context.Context, userID string, requ
 	if err != nil {
 		return err
 	}
+
+	return nil
+}
+
+func (u *userUC) ChangeWalletPinStepUpEmail(ctx context.Context, userID string) error {
+	userInfo, err := u.userRepo.GetUserByID(ctx, userID)
+	if err != nil {
+		return err
+	}
+
+	walletUser, err := u.userRepo.GetWalletByUserID(ctx, userID)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return httperror.New(http.StatusBadRequest, response.WalletIsNotActivated)
+		}
+		return err
+	}
+
+	if !walletUser.ActiveDate.Valid {
+		return httperror.New(http.StatusBadRequest, response.WalletIsNotActivated)
+	}
+
+	err = u.SendOTPChangeWalletPinEmail(ctx, userInfo.Email)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (u *userUC) ChangeWalletPinStepUpVerify(ctx context.Context, requestBody body.VerifyOTPRequest, userID string) (string, error) {
+	userInfo, err := u.userRepo.GetUserByID(ctx, userID)
+	if err != nil {
+		return "", err
+	}
+	value, err := u.userRepo.GetOTPValueChangeWalletPin(ctx, userInfo.Email)
+	if err != nil {
+		return "", httperror.New(http.StatusBadRequest, response.OTPAlreadyExpiredMessage)
+	}
+
+	if value != requestBody.OTP {
+		return "", httperror.New(http.StatusBadRequest, response.OTPIsNotValidMessage)
+	}
+
+	changeWalletPinToken, err := jwt.GenerateJWTWalletToken(userID, "level2", u.cfg)
+	if err != nil {
+		return "", err
+	}
+
+	_, err = u.userRepo.DeleteOTPValueChangeWalletPin(ctx, userInfo.Email)
+	if err != nil {
+		return "", err
+	}
+
+	return changeWalletPinToken, nil
+}
+
+func (u *userUC) SendOTPChangeWalletPinEmail(ctx context.Context, email string) error {
+	otp, err := util.GenerateRandomAlpaNumeric(6)
+	if err != nil {
+		return err
+	}
+
+	if err := u.userRepo.InsertNewOTPKeyChangeWalletPin(ctx, email, otp); err != nil {
+		return err
+	}
+
+	subject := "Change Wallet Pin Verification!"
+	msg := smtp.VerificationEmailBody(otp)
+	go smtp.SendEmail(u.cfg, email, subject, msg)
 
 	return nil
 }
