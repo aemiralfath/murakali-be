@@ -2065,7 +2065,7 @@ func (u *userUC) GetRefundOrder(ctx context.Context, userID string, orderID stri
 
 	refundThreadResponse := &body.GetRefundThreadResponse{
 		UserName:      username,
-		PhotoURL:      photoURL,
+		PhotoURL:      &photoURL,
 		RefundData:    refundData,
 		RefundThreads: refundThreadData,
 	}

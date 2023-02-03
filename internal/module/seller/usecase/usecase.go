@@ -1035,7 +1035,7 @@ func (u *sellerUC) GetRefundOrderSeller(ctx context.Context, userID string, orde
 
 	refundThreadResponse := &body.GetRefundThreadResponse{
 		UserName:      username,
-		PhotoURL:      photoURL,
+		PhotoURL:      &photoURL,
 		RefundData:    refundData,
 		RefundThreads: refundThreadData,
 	}
