@@ -1683,6 +1683,10 @@ func (r *userRepo) GetRefundThreadByRefundID(ctx context.Context, refundID strin
 		if !refundThreadData.IsBuyer {
 			refundThreadData.UserName = ""
 		}
+		if refundThreadData.PhotoURL == nil {
+			photo := ""
+			refundThreadData.PhotoURL = &photo
+		}
 		refundThreadList = append(refundThreadList, &refundThreadData)
 	}
 	return refundThreadList, nil
