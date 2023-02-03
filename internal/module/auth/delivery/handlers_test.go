@@ -118,7 +118,7 @@ func TestAuthHandlers_Login(t *testing.T) {
 			expected: http.StatusUnprocessableEntity,
 		},
 		{
-			name: "register error internal",
+			name: "login error internal",
 			body: body.LoginRequest{
 				Email:    "emir@gmail.com",
 				Password: "Tested8*",
@@ -129,7 +129,7 @@ func TestAuthHandlers_Login(t *testing.T) {
 			expected: http.StatusInternalServerError,
 		},
 		{
-			name: "register error custom",
+			name: "login error custom",
 			body: body.LoginRequest{
 				Email:    "emir@gmail.com",
 				Password: "Tested8*",
