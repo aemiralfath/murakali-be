@@ -22,7 +22,7 @@ func (r *RegisterMerchant) Validate() (UnprocessableEntity, error) {
 	r.ShopName = strings.TrimSpace(r.ShopName)
 	if r.ShopName == "" {
 		unprocessableEntity = true
-		entity.Fields["card_number"] = FieldCannotBeEmptyMessage
+		entity.Fields["shop_name"] = FieldCannotBeEmptyMessage
 	}
 
 	if unprocessableEntity {
