@@ -48,10 +48,24 @@ func (u *productUC) UpdateProductMetadata(ctx context.Context) error {
 	}
 
 	var errRating error
+	shopID := make(map[string]string, 0)
 	for _, rating := range productRating {
+		shopID[rating.Product.ShopID.String()] = rating.Product.ShopID.String()
 		if err := u.productRepo.UpdateProductRating(ctx, rating.Product.ID.String(), *rating.Avg); err != nil {
 			errRating = err
 		}
+	}
+
+	var errShop error
+	for _, id := range shopID {
+		// shop -> total_product, rating avg
+		shopProductRating, errShop := u.productRepo.GetShopProductRating(ctx, id)
+		if errShop == nil {
+			errShop = u.productRepo.UpdateShopProductRating(ctx, shopProductRating)
+		}
+	}
+	if errShop != nil {
+		return errShop
 	}
 
 	if errFav != nil {

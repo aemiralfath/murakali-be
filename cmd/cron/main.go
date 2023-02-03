@@ -61,8 +61,6 @@ func main() {
 		appLogger.Warn("FatalConfig: %v", err)
 	}
 
-	// shop -> total_product, total_rating, rating avg
-
 	go cronJob.Start()
 
 	sig := make(chan os.Signal, 1)
