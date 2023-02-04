@@ -417,7 +417,17 @@ func (u *authUC) CheckUniquePhoneNo(ctx context.Context, phoneNo string) (bool, 
 	return false, nil
 }
 
-func (u *authUC) GoogleAuth(ctx context.Context, state string, userAuth *oauth.GoogleUserResult) (*model.GoogleAuthToken, error) {
+func (u *authUC) GoogleAuth(ctx context.Context, code, state string) (*model.GoogleAuthToken, error) {
+	tokenRes, err := oauth.GetGoogleOauthToken(u.cfg, code)
+	if err != nil {
+		return nil, httperror.New(http.StatusForbidden, response.ForbiddenMessage)
+	}
+
+	userAuth, err := oauth.GetGoogleUser(tokenRes.AccessToken, tokenRes.IDToken)
+	if err != nil {
+		return nil, httperror.New(http.StatusForbidden, response.ForbiddenMessage)
+	}
+
 	user, err := u.authRepo.GetUserByEmail(ctx, userAuth.Email)
 	if err != nil || !user.IsVerify {
 		if err == sql.ErrNoRows {
