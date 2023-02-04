@@ -468,6 +468,13 @@ func TestCartHandlers_DeleteCartItems(t *testing.T) {
 			authorized: true,
 		},
 		{
+			name:       "get delete cart unauthorized",
+			body:       nil,
+			mock:       func(s *mocks.UseCase) {},
+			expected:   http.StatusUnauthorized,
+			authorized: false,
+		},
+		{
 			name: "delete cart  error internal",
 			body: nil,
 			mock: func(s *mocks.UseCase) {
@@ -537,6 +544,7 @@ func TestCartHandlers_GetVoucherShop(t *testing.T) {
 		body     interface{}
 		mock     func(s *mocks.UseCase)
 		expected int
+		parseID  bool
 	}{
 		{
 			name: "success get voucher ",
@@ -545,6 +553,14 @@ func TestCartHandlers_GetVoucherShop(t *testing.T) {
 				s.On("GetVoucherShop", mock.Anything, mock.Anything, mock.Anything).Return(&pagination.Pagination{}, nil)
 			},
 			expected: http.StatusOK,
+			parseID:  true,
+		},
+		{
+			name:     "error parse id ",
+			body:     nil,
+			mock:     func(s *mocks.UseCase) {},
+			expected: http.StatusBadRequest,
+			parseID:  false,
 		},
 		{
 			name: "get voucher  error internal",
@@ -553,6 +569,7 @@ func TestCartHandlers_GetVoucherShop(t *testing.T) {
 				s.On("GetVoucherShop", mock.Anything, mock.Anything, mock.Anything).Return(nil, errors.New("test"))
 			},
 			expected: http.StatusInternalServerError,
+			parseID:  true,
 		},
 		{
 			name: "get voucher  error custom",
@@ -561,6 +578,7 @@ func TestCartHandlers_GetVoucherShop(t *testing.T) {
 				s.On("GetVoucherShop", mock.Anything, mock.Anything, mock.Anything).Return(nil, httperror.New(http.StatusBadRequest, "test"))
 			},
 			expected: http.StatusBadRequest,
+			parseID:  true,
 		},
 	}
 
@@ -572,11 +590,21 @@ func TestCartHandlers_GetVoucherShop(t *testing.T) {
 			r := httptest.NewRequest(http.MethodGet, "/api/v1/cart/voucher/:shop_id", nil)
 			r.Header = make(http.Header)
 			c.Request = r
-			c.Params = []gin.Param{
-				{
-					Key:   "shop_id",
-					Value: "989d94b7-58fc-4a76-ae01-1c1b47a0755c",
-				},
+
+			if tc.parseID {
+				c.Params = []gin.Param{
+					{
+						Key:   "shop_id",
+						Value: "989d94b7-58fc-4a76-ae01-1c1b47a0755c",
+					},
+				}
+			} else {
+				c.Params = []gin.Param{
+					{
+						Key:   "shop_id",
+						Value: "123456",
+					},
+				}
 			}
 
 			s := mocks.NewUseCase(t)
