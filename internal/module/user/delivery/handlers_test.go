@@ -13,6 +13,7 @@ import (
 	"murakali/internal/module/user/delivery/body"
 	"murakali/internal/module/user/mocks"
 	"murakali/pkg/httperror"
+	jwt2 "murakali/pkg/jwt"
 	"murakali/pkg/logger"
 	"murakali/pkg/pagination"
 	"net/http"
@@ -22,6 +23,7 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/golang-jwt/jwt/v4"
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
@@ -2425,7 +2427,7 @@ func TestUserHandlers_AddSealabsPay(t *testing.T) {
 	}
 }
 
-func Test_userHandlers_PatchSealabsPay(t *testing.T) {
+func TestUserHandlers_PatchSealabsPay(t *testing.T) {
 	testCase := []struct {
 		name       string
 		param      string
@@ -2711,7 +2713,7 @@ func TestUserHandlers_GetUserProfile(t *testing.T) {
 	}
 }
 
-// func Test_userHandlers_UploadProfilePicture(t *testing.T) {
+// func TestUserHandlers_UploadProfilePicture(t *testing.T) {
 // 	// invalidRequestBody := struct {
 // 	// 	Img int `form:"file"`
 // 	// }{123}
@@ -2857,7 +2859,7 @@ func TestUserHandlers_VerifyPasswordChange(t *testing.T) {
 	}
 }
 
-func Test_userHandlers_VerifyOTP(t *testing.T) {
+func TestUserHandlers_VerifyOTP(t *testing.T) {
 	invalidRequestBody := struct {
 		OTP int `json:"otp"`
 	}{123}
@@ -3041,65 +3043,88 @@ func TestUserHandlers_CompletedRejectedRefund(t *testing.T) {
 	}
 }
 
-func Test_userHandlers_ChangePassword(t *testing.T) {
-	// invalidRequestBody := struct {
-	// 	NewPassword int `json:"password"`
-	// }{123}
+func TestUserHandlers_ChangePassword(t *testing.T) {
+	invalidRequestBody := struct {
+		NewPassword int `json:"password"`
+	}{123}
 
 	testCase := []struct {
-		name     string
-		cookie   string
-		body     interface{}
-		mock     func(s *mocks.UseCase)
-		expected int
+		name string
+
+		body      interface{}
+		mock      func(s *mocks.UseCase)
+		expected  int
+		isCookie  bool
+		cookieKey string
 	}{
-		// {
-		// 	name:   "Success Change Password",
-		// 	cookie: "8302755e-25c5-4523-8498-7dc8b9e3a098",
-		// 	body: body.ChangePasswordRequest{
-		// 		NewPassword: "Tested9*",
-		// 	},
-		// 	mock: func(s *mocks.UseCase) {
-		// 		s.On("ChangePassword", mock.Anything, mock.Anything, mock.Anything).Return(nil)
-		// 	},
-		// 	expected: http.StatusOK,
-		// },
 		{
-			name:     "Error Cookie",
-			cookie:   "",
-			body:     nil,
-			mock:     func(s *mocks.UseCase) {},
-			expected: http.StatusForbidden,
+			name: "Success Change Password",
+			body: body.ChangePasswordRequest{
+				NewPassword: "Tested9*",
+			},
+			mock: func(s *mocks.UseCase) {
+				s.On("ChangePassword", mock.Anything, mock.Anything, mock.Anything).Return(nil)
+			},
+			expected:  http.StatusOK,
+			isCookie:  true,
+			cookieKey: "",
 		},
 		{
-			name:     "Error Cookie",
-			cookie:   "test",
-			body:     nil,
-			mock:     func(s *mocks.UseCase) {},
-			expected: http.StatusForbidden,
+			name:      "Error Get Cookie",
+			body:      nil,
+			mock:      func(s *mocks.UseCase) {},
+			expected:  http.StatusForbidden,
+			isCookie:  false,
+			cookieKey: "",
 		},
-		// {
-		// 	name:   "Change Password Internal Error",
-		// 	cookie: "8302755e-25c5-4523-8498-7dc8b9e3a098",
-		// 	body: body.ChangePasswordRequest{
-		// 		NewPassword: "Tested9*",
-		// 	},
-		// 	mock: func(s *mocks.UseCase) {
-		// 		s.On("ChangePassword", mock.Anything, mock.Anything, mock.Anything).Return(errors.New("test"))
-		// 	},
-		// 	expected: http.StatusInternalServerError,
-		// },
-		// {
-		// 	name:   "Change Password Error Custom",
-		// 	cookie: "8302755e-25c5-4523-8498-7dc8b9e3a098",
-		// 	body: body.ChangePasswordRequest{
-		// 		NewPassword: "Tested9*",
-		// 	},
-		// 	mock: func(s *mocks.UseCase) {
-		// 		s.On("ChangePassword", mock.Anything, mock.Anything, mock.Anything).Return(httperror.New(http.StatusBadRequest, "test"))
-		// 	},
-		// 	expected: http.StatusBadRequest,
-		// },
+		{
+			name:      "Error ExtractJWT",
+			body:      nil,
+			mock:      func(s *mocks.UseCase) {},
+			expected:  http.StatusForbidden,
+			isCookie:  true,
+			cookieKey: "test",
+		},
+		{
+			name:      "Invalid Request Body ShouldBind Error",
+			body:      invalidRequestBody,
+			mock:      func(s *mocks.UseCase) {},
+			expected:  http.StatusBadRequest,
+			isCookie:  true,
+			cookieKey: "",
+		},
+		{
+			name:      "Invalid Request Body Invalidate",
+			body:      body.ChangePasswordRequest{},
+			mock:      func(s *mocks.UseCase) {},
+			expected:  http.StatusUnprocessableEntity,
+			isCookie:  true,
+			cookieKey: "",
+		},
+		{
+			name: "Change Password Internal Error",
+			body: body.ChangePasswordRequest{
+				NewPassword: "Tested9*",
+			},
+			mock: func(s *mocks.UseCase) {
+				s.On("ChangePassword", mock.Anything, mock.Anything, mock.Anything).Return(errors.New("test"))
+			},
+			expected:  http.StatusInternalServerError,
+			isCookie:  true,
+			cookieKey: "",
+		},
+		{
+			name: "Change Password Error Custom",
+			body: body.ChangePasswordRequest{
+				NewPassword: "Tested9*",
+			},
+			mock: func(s *mocks.UseCase) {
+				s.On("ChangePassword", mock.Anything, mock.Anything, mock.Anything).Return(httperror.New(http.StatusBadRequest, "test"))
+			},
+			expected:  http.StatusBadRequest,
+			isCookie:  true,
+			cookieKey: "",
+		},
 	}
 
 	for _, tc := range testCase {
@@ -3115,9 +3140,16 @@ func Test_userHandlers_ChangePassword(t *testing.T) {
 			r := httptest.NewRequest(http.MethodPatch, "/api/v1/user/password", bytes.NewBuffer(jsonValue))
 			r.Header = make(http.Header)
 
+			if tc.isCookie {
+				tokenString, _ := jwt.NewWithClaims(jwt.SigningMethodHS256, &jwt2.ChangePasswordClaims{}).SignedString([]byte(tc.cookieKey))
+				r.AddCookie(&http.Cookie{Name: constant.ChangePasswordTokenCookie, Value: tokenString})
+
+			}
 			c.Request = r
 			c.Request.Header.Set("Content-Type", "application/json")
 			MockJsonPatch(c, tc.body)
+
+			s := mocks.NewUseCase(t)
 
 			cfg := &config.Config{
 				Logger: config.LoggerConfig{
@@ -3128,24 +3160,6 @@ func Test_userHandlers_ChangePassword(t *testing.T) {
 					Level:             "info",
 				},
 			}
-
-			if tc.cookie != "" {
-				// changePasswordToken, errToken := jwt.GenerateJWTChangePasswordToken(tc.cookie, cfg)
-				// if errToken != nil {
-				// 	log.Errorf("HandlerUser_Test, Error: %s", errToken)
-				// 	return
-				// }
-				c.Request.Header.Set("Cookie", fmt.Sprintf("%s=%s", constant.ChangePasswordTokenCookie, tc.cookie))
-				changePasswordToken, err := c.Cookie(constant.ChangePasswordTokenCookie)
-				fmt.Println("test token", changePasswordToken)
-				if err != nil {
-					fmt.Println(err)
-					return
-				}
-			}
-
-			c.Request = r
-			s := mocks.NewUseCase(t)
 
 			appLogger := logger.NewAPILogger(cfg)
 			appLogger.InitLogger()
@@ -3160,7 +3174,7 @@ func Test_userHandlers_ChangePassword(t *testing.T) {
 	}
 }
 
-func Test_userHandlers_WalletStepUp(t *testing.T) {
+func TestUserHandlers_WalletStepUp(t *testing.T) {
 	invalidRequestBody := struct {
 		Pin int `json:"pin"`
 	}{123}
@@ -3391,35 +3405,177 @@ func TestUserHandlers_ChangeWalletPinStepUp(t *testing.T) {
 	}
 }
 
-// func Test_userHandlers_ChangeWalletPin(t *testing.T) {
-// 	type fields struct {
-// 		cfg    *config.Config
-// 		userUC user.UseCase
-// 		logger logger.Logger
-// 	}
-// 	type args struct {
-// 		c *gin.Context
-// 	}
-// 	tests := []struct {
-// 		name   string
-// 		fields fields
-// 		args   args
-// 	}{
-// 		// TODO: Add test cases.
-// 	}
-// 	for _, tt := range tests {
-// 		t.Run(tt.name, func(t *testing.T) {
-// 			h := &userHandlers{
-// 				cfg:    tt.fields.cfg,
-// 				userUC: tt.fields.userUC,
-// 				logger: tt.fields.logger,
-// 			}
-// 			h.ChangeWalletPin(tt.args.c)
-// 		})
-// 	}
-// }
+func TestUserHandlers_ChangeWalletPin(t *testing.T) {
+	invalidRequestBody := struct {
+		Pin int `json:"pin"`
+	}{123}
 
-func Test_userHandlers_CreateSLPPayment(t *testing.T) {
+	testCase := []struct {
+		name       string
+		body       interface{}
+		mock       func(s *mocks.UseCase)
+		expected   int
+		authorized bool
+		isCookie   bool
+		cookieKey  string
+		scope      string
+	}{
+		{
+			name: "Success Change Wallet Pin",
+			body: body.ChangeWalletPinRequest{
+				Pin: "123456",
+			},
+			mock: func(s *mocks.UseCase) {
+				s.On("ChangeWalletPin", mock.Anything, mock.Anything, mock.Anything).Return(nil)
+			},
+			expected:   http.StatusOK,
+			authorized: true,
+			isCookie:   true,
+			cookieKey:  "",
+			scope:      "level2",
+		},
+		{
+			name:       "Unauthorized User",
+			body:       nil,
+			mock:       func(s *mocks.UseCase) {},
+			expected:   http.StatusUnauthorized,
+			authorized: false,
+			isCookie:   false,
+			cookieKey:  "",
+			scope:      "",
+		},
+		{
+			name:       "Error Get Cookie",
+			body:       nil,
+			mock:       func(s *mocks.UseCase) {},
+			expected:   http.StatusForbidden,
+			authorized: true,
+			isCookie:   false,
+			cookieKey:  "",
+			scope:      "",
+		},
+		{
+			name:       "Error ExtractJWT",
+			body:       nil,
+			mock:       func(s *mocks.UseCase) {},
+			expected:   http.StatusForbidden,
+			authorized: true,
+			isCookie:   true,
+			cookieKey:  "test",
+			scope:      "",
+		},
+		{
+			name:       "Error Scope",
+			body:       nil,
+			mock:       func(s *mocks.UseCase) {},
+			expected:   http.StatusForbidden,
+			authorized: true,
+			isCookie:   true,
+			cookieKey:  "",
+			scope:      "level1",
+		},
+		{
+			name:       "Invalid Request Body ShouldBind Error",
+			body:       invalidRequestBody,
+			mock:       func(s *mocks.UseCase) {},
+			expected:   http.StatusBadRequest,
+			authorized: true,
+			isCookie:   true,
+			cookieKey:  "",
+			scope:      "level2",
+		},
+		{
+			name:       "Invalid Request Body Invalidate",
+			body:       body.ChangeWalletPinRequest{},
+			mock:       func(s *mocks.UseCase) {},
+			expected:   http.StatusUnprocessableEntity,
+			authorized: true,
+			isCookie:   true,
+			cookieKey:  "",
+			scope:      "level2",
+		},
+		{
+			name: "Change Wallet Pin Internal Error",
+			body: body.ChangeWalletPinRequest{
+				Pin: "123456",
+			},
+			mock: func(s *mocks.UseCase) {
+				s.On("ChangeWalletPin", mock.Anything, mock.Anything, mock.Anything).Return(errors.New("test"))
+			},
+			expected:   http.StatusInternalServerError,
+			authorized: true,
+			isCookie:   true,
+			cookieKey:  "",
+			scope:      "level2",
+		},
+		{
+			name: "Change Wallet Pin Error Custom",
+			body: body.ChangeWalletPinRequest{
+				Pin: "123456",
+			},
+			mock: func(s *mocks.UseCase) {
+				s.On("ChangeWalletPin", mock.Anything, mock.Anything, mock.Anything).Return(httperror.New(http.StatusBadRequest, "test"))
+			},
+			expected:   http.StatusBadRequest,
+			authorized: true,
+			isCookie:   true,
+			cookieKey:  "",
+			scope:      "level2",
+		},
+	}
+
+	for _, tc := range testCase {
+		t.Run(tc.name, func(t *testing.T) {
+
+			jsonValue, err := json.Marshal(tc.body)
+			if err != nil {
+				t.Error(err)
+			}
+
+			rr := httptest.NewRecorder()
+			c, _ := gin.CreateTestContext(rr)
+			r := httptest.NewRequest(http.MethodPatch, "/api/v1/user/wallet/pin", bytes.NewBuffer(jsonValue))
+			r.Header = make(http.Header)
+
+			if tc.isCookie {
+				tokenString, _ := jwt.NewWithClaims(jwt.SigningMethodHS256, &jwt2.WalletClaims{Scope: tc.scope}).SignedString([]byte(tc.cookieKey))
+				r.AddCookie(&http.Cookie{Name: constant.ChangeWalletPinTokenCookie, Value: tokenString})
+
+			}
+			c.Request = r
+			c.Request.Header.Set("Content-Type", "application/json")
+			MockJsonPatch(c, tc.body)
+
+			if tc.authorized {
+				c.Set("userID", "123456")
+			}
+
+			s := mocks.NewUseCase(t)
+
+			cfg := &config.Config{
+				Logger: config.LoggerConfig{
+					Development:       true,
+					DisableCaller:     false,
+					DisableStacktrace: false,
+					Encoding:          "json",
+					Level:             "info",
+				},
+			}
+
+			appLogger := logger.NewAPILogger(cfg)
+			appLogger.InitLogger()
+
+			h := NewUserHandlers(cfg, s, appLogger)
+
+			tc.mock(s)
+			h.ChangeWalletPin(c)
+
+			assert.Equal(t, rr.Code, tc.expected)
+		})
+	}
+}
+
+func TestUserHandlers_CreateSLPPayment(t *testing.T) {
 	invalidRequestBody := struct {
 		TransactionID int `json:"transaction_id"`
 	}{123}
@@ -3516,35 +3672,154 @@ func Test_userHandlers_CreateSLPPayment(t *testing.T) {
 	}
 }
 
-// func Test_userHandlers_CreateWalletPayment(t *testing.T) {
-// 	type fields struct {
-// 		cfg    *config.Config
-// 		userUC user.UseCase
-// 		logger logger.Logger
-// 	}
-// 	type args struct {
-// 		c *gin.Context
-// 	}
-// 	tests := []struct {
-// 		name   string
-// 		fields fields
-// 		args   args
-// 	}{
-// 		// TODO: Add test cases.
-// 	}
-// 	for _, tt := range tests {
-// 		t.Run(tt.name, func(t *testing.T) {
-// 			h := &userHandlers{
-// 				cfg:    tt.fields.cfg,
-// 				userUC: tt.fields.userUC,
-// 				logger: tt.fields.logger,
-// 			}
-// 			h.CreateWalletPayment(tt.args.c)
-// 		})
-// 	}
-// }
+func TestUserHandlers_CreateWalletPayment(t *testing.T) {
+	invalidRequestBody := struct {
+		TransactionID int `json:"transaction_id"`
+	}{123}
 
-func Test_userHandlers_SLPPaymentCallback(t *testing.T) {
+	testCase := []struct {
+		name      string
+		body      interface{}
+		mock      func(s *mocks.UseCase)
+		expected  int
+		isCookie  bool
+		cookieKey string
+		scope     string
+	}{
+		{
+			name: "Success Change Wallet Pin",
+			body: body.CreatePaymentRequest{
+				TransactionID: "8302755e-25c5-4523-8498-7dc8b9e3a098",
+			},
+			mock: func(s *mocks.UseCase) {
+				s.On("CreateWalletPayment", mock.Anything, mock.Anything).Return(nil)
+			},
+			expected:  http.StatusOK,
+			isCookie:  true,
+			cookieKey: "",
+			scope:     "level1",
+		},
+		{
+			name:      "Error Get Cookie",
+			body:      nil,
+			mock:      func(s *mocks.UseCase) {},
+			expected:  http.StatusForbidden,
+			isCookie:  false,
+			cookieKey: "",
+			scope:     "",
+		},
+		{
+			name:      "Error ExtractJWT",
+			body:      nil,
+			mock:      func(s *mocks.UseCase) {},
+			expected:  http.StatusForbidden,
+			isCookie:  true,
+			cookieKey: "test",
+			scope:     "",
+		},
+		{
+			name:      "Error Scope",
+			body:      nil,
+			mock:      func(s *mocks.UseCase) {},
+			expected:  http.StatusForbidden,
+			isCookie:  true,
+			cookieKey: "",
+			scope:     "error",
+		},
+		{
+			name:      "Invalid Request Body ShouldBind Error",
+			body:      invalidRequestBody,
+			mock:      func(s *mocks.UseCase) {},
+			expected:  http.StatusBadRequest,
+			isCookie:  true,
+			cookieKey: "",
+			scope:     "level1",
+		},
+		{
+			name:      "Invalid Request Body Invalidate",
+			body:      body.CreatePaymentRequest{},
+			mock:      func(s *mocks.UseCase) {},
+			expected:  http.StatusUnprocessableEntity,
+			isCookie:  true,
+			cookieKey: "",
+			scope:     "level1",
+		},
+		{
+			name: "Change Wallet Pin Internal Error",
+			body: body.CreatePaymentRequest{
+				TransactionID: "8302755e-25c5-4523-8498-7dc8b9e3a098",
+			},
+			mock: func(s *mocks.UseCase) {
+				s.On("CreateWalletPayment", mock.Anything, mock.Anything).Return(errors.New("test"))
+			},
+			expected:  http.StatusInternalServerError,
+			isCookie:  true,
+			cookieKey: "",
+			scope:     "level1",
+		},
+		{
+			name: "Change Wallet Pin Error Custom",
+			body: body.CreatePaymentRequest{
+				TransactionID: "8302755e-25c5-4523-8498-7dc8b9e3a098",
+			},
+			mock: func(s *mocks.UseCase) {
+				s.On("CreateWalletPayment", mock.Anything, mock.Anything).Return(httperror.New(http.StatusBadRequest, "test"))
+			},
+			expected:  http.StatusBadRequest,
+			isCookie:  true,
+			cookieKey: "",
+			scope:     "level1",
+		},
+	}
+
+	for _, tc := range testCase {
+		t.Run(tc.name, func(t *testing.T) {
+
+			jsonValue, err := json.Marshal(tc.body)
+			if err != nil {
+				t.Error(err)
+			}
+
+			rr := httptest.NewRecorder()
+			c, _ := gin.CreateTestContext(rr)
+			r := httptest.NewRequest(http.MethodPost, "/api/v1/user/transaction/wallet-payment", bytes.NewBuffer(jsonValue))
+			r.Header = make(http.Header)
+
+			if tc.isCookie {
+				tokenString, _ := jwt.NewWithClaims(jwt.SigningMethodHS256, &jwt2.WalletClaims{Scope: tc.scope}).SignedString([]byte(tc.cookieKey))
+				r.AddCookie(&http.Cookie{Name: constant.WalletTokenCookie, Value: tokenString})
+
+			}
+			c.Request = r
+			c.Request.Header.Set("Content-Type", "application/json")
+			MockJsonPost(c, tc.body)
+
+			s := mocks.NewUseCase(t)
+
+			cfg := &config.Config{
+				Logger: config.LoggerConfig{
+					Development:       true,
+					DisableCaller:     false,
+					DisableStacktrace: false,
+					Encoding:          "json",
+					Level:             "info",
+				},
+			}
+
+			appLogger := logger.NewAPILogger(cfg)
+			appLogger.InitLogger()
+
+			h := NewUserHandlers(cfg, s, appLogger)
+
+			tc.mock(s)
+			h.CreateWalletPayment(c)
+
+			assert.Equal(t, rr.Code, tc.expected)
+		})
+	}
+}
+
+func TestUserHandlers_SLPPaymentCallback(t *testing.T) {
 	invalidRequestBody := struct {
 		TxnID int `json:"txn_id"`
 	}{123}
@@ -3665,7 +3940,7 @@ func Test_userHandlers_SLPPaymentCallback(t *testing.T) {
 	}
 }
 
-func Test_userHandlers_WalletPaymentCallback(t *testing.T) {
+func TestUserHandlers_WalletPaymentCallback(t *testing.T) {
 	invalidRequestBody := struct {
 		TxnID int `json:"txn_id"`
 	}{123}
@@ -3786,7 +4061,7 @@ func Test_userHandlers_WalletPaymentCallback(t *testing.T) {
 	}
 }
 
-func Test_userHandlers_GetTransactions(t *testing.T) {
+func TestUserHandlers_GetTransactions(t *testing.T) {
 	testCase := []struct {
 		name       string
 		queries    map[string]interface{}
@@ -3878,7 +4153,7 @@ func Test_userHandlers_GetTransactions(t *testing.T) {
 	}
 }
 
-func Test_userHandlers_GetTransaction(t *testing.T) {
+func TestUserHandlers_GetTransaction(t *testing.T) {
 	testCase := []struct {
 		name       string
 		param      string
@@ -3970,7 +4245,7 @@ func Test_userHandlers_GetTransaction(t *testing.T) {
 	}
 }
 
-func Test_userHandlers_CreateRefundUser(t *testing.T) {
+func TestUserHandlers_CreateRefundUser(t *testing.T) {
 	invalidRequestBody := struct {
 		OrderID int `json:"order_id"`
 	}{123}
@@ -4097,7 +4372,7 @@ func Test_userHandlers_CreateRefundUser(t *testing.T) {
 	}
 }
 
-func Test_userHandlers_GetRefundOrder(t *testing.T) {
+func TestUserHandlers_GetRefundOrder(t *testing.T) {
 	testCase := []struct {
 		name       string
 		param      string
@@ -4197,7 +4472,7 @@ func Test_userHandlers_GetRefundOrder(t *testing.T) {
 	}
 }
 
-func Test_userHandlers_CreateRefundThreadUser(t *testing.T) {
+func TestUserHandlers_CreateRefundThreadUser(t *testing.T) {
 	invalidRequestBody := struct {
 		RefundID int `json:"refund_id"`
 	}{123}
@@ -4320,7 +4595,7 @@ func Test_userHandlers_CreateRefundThreadUser(t *testing.T) {
 	}
 }
 
-func Test_userHandlers_CreateTransaction(t *testing.T) {
+func TestUserHandlers_CreateTransaction(t *testing.T) {
 	invalidRequestBody := struct {
 		WalletID int `json:"wallet_id"`
 	}{123}
@@ -4448,7 +4723,7 @@ func Test_userHandlers_CreateTransaction(t *testing.T) {
 	}
 }
 
-func Test_userHandlers_ChangeWalletPinStepUpEmail(t *testing.T) {
+func TestUserHandlers_ChangeWalletPinStepUpEmail(t *testing.T) {
 	testCase := []struct {
 		name       string
 		mock       func(s *mocks.UseCase)
@@ -4528,7 +4803,7 @@ func Test_userHandlers_ChangeWalletPinStepUpEmail(t *testing.T) {
 	}
 }
 
-func Test_userHandlers_ChangeWalletPinStepUpVerify(t *testing.T) {
+func TestUserHandlers_ChangeWalletPinStepUpVerify(t *testing.T) {
 	invalidRequestBody := struct {
 		OTP int `json:"otp" form:"otp"`
 	}{123}
