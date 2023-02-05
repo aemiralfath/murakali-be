@@ -269,18 +269,6 @@ func TestCartHandlers_AddCartItems(t *testing.T) {
 			expected:   http.StatusInternalServerError,
 			authorized: true,
 		},
-		// {
-		// 	name: "login error custom",
-		// 	body: body.AddCartItemRequest{
-		// 		ProductDetailID: "123456",
-		// 		Quantity:        12,
-		// 	},
-		// 	mock: func(s *mocks.UseCase) {
-		// 		s.On("AddCartItems", mock.Anything, mock.Anything, mock.Anything).Return(httperror.New(http.StatusBadRequest, "test"))
-		// 	},
-		// 	expected:   http.StatusBadGateway,
-		// 	authorized: true,
-		// },
 	}
 
 	for _, tc := range testCase {
@@ -390,18 +378,6 @@ func TestCartHandlers_UpdateCartItems(t *testing.T) {
 			expected:   http.StatusInternalServerError,
 			authorized: true,
 		},
-		// {
-		// 	name: "login error custom",
-		// 	body: body.AddCartItemRequest{
-		// 		ProductDetailID: "123456",
-		// 		Quantity:        12,
-		// 	},
-		// 	mock: func(s *mocks.UseCase) {
-		// 		s.On("AddCartItems", mock.Anything, mock.Anything, mock.Anything).Return(httperror.New(http.StatusBadRequest, "test"))
-		// 	},
-		// 	expected:   http.StatusBadGateway,
-		// 	authorized: true,
-		// },
 	}
 
 	for _, tc := range testCase {
