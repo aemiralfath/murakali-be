@@ -162,7 +162,6 @@ func (u *sellerUC) WithdrawalOrderBalance(ctx context.Context, orderID string) e
 
 func (u *sellerUC) GetAllSeller(ctx context.Context, shopName string,
 	pgn *pagination.Pagination) (*pagination.Pagination, error) {
-
 	totalRows, err := u.sellerRepo.GetTotalAllSeller(ctx, shopName)
 	if err != nil {
 		return nil, err
@@ -944,7 +943,8 @@ func (u *sellerUC) GetDetailPromotionSellerByID(ctx context.Context,
 	return promotionShop, nil
 }
 
-func (u sellerUC) GetProductWithoutPromotionSeller(ctx context.Context, userID, productName string, pgn *pagination.Pagination) (*pagination.Pagination, error) {
+func (u sellerUC) GetProductWithoutPromotionSeller(ctx context.Context, userID, productName string,
+	pgn *pagination.Pagination) (*pagination.Pagination, error) {
 	shopID, err := u.sellerRepo.GetShopIDByUserID(ctx, userID)
 	if err != nil {
 		if err == sql.ErrNoRows {
@@ -972,7 +972,7 @@ func (u sellerUC) GetProductWithoutPromotionSeller(ctx context.Context, userID, 
 	return pgn, nil
 }
 
-func (u *sellerUC) GetRefundOrderSeller(ctx context.Context, userID string, orderID string) (*body.GetRefundThreadResponse, error) {
+func (u *sellerUC) GetRefundOrderSeller(ctx context.Context, userID, orderID string) (*body.GetRefundThreadResponse, error) {
 	shopID, err := u.sellerRepo.GetShopIDByUserID(ctx, userID)
 	if err != nil {
 		if err == sql.ErrNoRows {
@@ -1035,7 +1035,7 @@ func (u *sellerUC) GetRefundOrderSeller(ctx context.Context, userID string, orde
 
 	refundThreadResponse := &body.GetRefundThreadResponse{
 		UserName:      username,
-		PhotoURL:      photoURL,
+		PhotoURL:      &photoURL,
 		RefundData:    refundData,
 		RefundThreads: refundThreadData,
 	}

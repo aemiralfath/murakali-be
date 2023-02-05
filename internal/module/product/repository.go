@@ -59,4 +59,6 @@ type Repository interface {
 	GetRatingProduct(ctx context.Context) ([]*model.ProductRating, error)
 	UpdateProductFavorite(ctx context.Context, productID string, favCount int) error
 	UpdateProductRating(ctx context.Context, productID string, ratingAvg float64) error
+	UpdateShopProductRating(ctx context.Context, shop *model.ShopProductRating) error
+	GetShopProductRating(ctx context.Context, shopID string) (*model.ShopProductRating, error)
 }
