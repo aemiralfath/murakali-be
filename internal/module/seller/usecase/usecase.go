@@ -1021,8 +1021,15 @@ func (u *sellerUC) GetRefundOrderSeller(ctx context.Context, userID string, orde
 			}
 			userModel.Username = &shopModel.Name
 		}
-		username = *userModel.Username
-		photoURL = *userModel.PhotoURL
+
+		if userModel.Username != nil {
+			username = *userModel.Username
+		}
+
+		if userModel.PhotoURL != nil {
+			photoURL = *userModel.PhotoURL
+		}
+
 		refundDataID = refundData.ID
 	}
 
