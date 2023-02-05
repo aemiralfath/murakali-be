@@ -36,18 +36,20 @@ func TestUserUC_CreateAddress(t *testing.T) {
 				AddressDetail: "Jalan Mayor Ruslam",
 				ZipCode:       "31413",
 				IsDefault:     true,
-				IsShopDefault: false,
+				IsShopDefault: true,
 			},
 			mock: func(t *testing.T, r *mocks.Repository) {
 				r.On("GetUserByID", mock.Anything, mock.Anything).Return(&model.User{}, nil)
 				r.On("GetDefaultUserAddress", mock.Anything, mock.Anything).Return(&model.Address{IsDefault: true}, nil)
 				r.On("UpdateDefaultAddress", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
+				r.On("GetDefaultShopAddress", mock.Anything, mock.Anything).Return(&model.Address{IsShopDefault: true}, nil)
+				r.On("UpdateDefaultShopAddress", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
 				r.On("CreateAddress", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
 			},
 			expectedErr: nil,
 		},
 	}
-	
+
 	for _, tc := range testCase {
 		t.Run(tc.name, func(t *testing.T) {
 			sql, mock, _ := sqlmock.New()
