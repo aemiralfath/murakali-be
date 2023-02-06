@@ -1870,8 +1870,8 @@ func (u *userUC) CreateTransaction(ctx context.Context, userID string, requestBo
 
 		for _, vs := range voucherShopList {
 			vs.Quota--
-			if errVoucherMarketplace := u.userRepo.UpdateVoucherQuota(ctx, tx, vs); errVoucherMarketplace != nil {
-				return nil, errVoucherMarketplace
+			if errVoucherShop := u.userRepo.UpdateVoucherQuota(ctx, tx, vs); errVoucherShop != nil {
+				return nil, errVoucherShop
 			}
 		}
 
