@@ -998,6 +998,17 @@ func TestCartHandlers_CreateFavoriteProduct(t *testing.T) {
 			authorized: false,
 		},
 		{
+			name: "create product  error custom",
+			body: body.GetProductRequest{
+				ProductID: "123456",
+			},
+			mock: func(s *mocks.UseCase) {
+				s.On("CreateFavoriteProduct", mock.Anything, mock.Anything, mock.Anything).Return(httperror.New(http.StatusBadRequest, "test"))
+			},
+			expected:   http.StatusBadRequest,
+			authorized: true,
+		},
+		{
 			name: "invalid request",
 			body: body.GetProductRequest{
 				ProductID: "   ",
@@ -1094,6 +1105,17 @@ func TestCartHandlers_DeleteFavoriteProduct(t *testing.T) {
 			mock:       func(s *mocks.UseCase) {},
 			expected:   http.StatusUnauthorized,
 			authorized: false,
+		},
+		{
+			name: "delete product  error custom",
+			body: body.GetProductRequest{
+				ProductID: "123456",
+			},
+			mock: func(s *mocks.UseCase) {
+				s.On("DeleteFavoriteProduct", mock.Anything, mock.Anything, mock.Anything).Return(httperror.New(http.StatusBadRequest, "test"))
+			},
+			expected:   http.StatusBadRequest,
+			authorized: true,
 		},
 		{
 			name: "invalid request",
