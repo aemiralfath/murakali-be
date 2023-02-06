@@ -7,6 +7,7 @@ import (
 	"murakali/internal/constant"
 	"murakali/internal/model"
 	"murakali/pkg/postgre"
+	"strconv"
 	"time"
 )
 
@@ -41,13 +42,14 @@ func (u *UserFaker) GenerateData(tx postgre.Transaction) error {
 			return err
 		}
 
-		if err := u.GenerateDataUser(tx, id, val, u.CardNumber[i]); err != nil {
+		if err := u.GenerateDataUser(tx, id, val, u.CardNumber[i], u.CardNumber[i]); err != nil {
 			return err
 		}
 	}
 
 	for i := 0; i < u.Size; i++ {
-		if err := u.GenerateDataUser(tx, uuid.New(), faker.Email(), ""); err != nil {
+		iString := strconv.Itoa(i)
+		if err := u.GenerateDataUser(tx, uuid.New(), faker.Email(), iString, ""); err != nil {
 			return err
 		}
 	}
@@ -55,8 +57,8 @@ func (u *UserFaker) GenerateData(tx postgre.Transaction) error {
 	return nil
 }
 
-func (u *UserFaker) GenerateDataUser(tx postgre.Transaction, id uuid.UUID, email, cardNumber string) error {
-	data := u.GenerateUser(id, email)
+func (u *UserFaker) GenerateDataUser(tx postgre.Transaction, id uuid.UUID, email, phoneNo, cardNumber string) error {
+	data := u.GenerateUser(id, email, phoneNo)
 	_, err := tx.Exec(InsertUserQuery,
 		data.ID, data.RoleID, data.Username, data.Email, data.PhoneNo, data.FullName, data.Password, data.Gender,
 		data.PhotoURL, data.BirthDate, data.IsSSO, data.IsVerify)
@@ -107,16 +109,17 @@ func (u *UserFaker) GenerateUserAddress(tx postgre.Transaction, userID string) e
 	return nil
 }
 
-func (u *UserFaker) GenerateUser(id uuid.UUID, email string) *model.User {
+func (u *UserFaker) GenerateUser(id uuid.UUID, email, phoneNo string) *model.User {
 	fullName := faker.Name()
 	username := faker.Username()
 	password := "$2a$10$cNhdZVN.pgsfK1xUQ00p7eK5Fh7iClrtJB9SY5un.H55Mi/dtQzCa"
-	photoURL := "https://res.cloudinary.com/dhpao1zxi/image/upload/v1671705602/ldtzmxqeyb4nwu5p6y76.jpg"
+	photoURL := "https://res.cloudinary.com/dhpao1zxi/image/upload/v1675678498/seeder_mgcsz6.png"
 
 	return &model.User{
 		ID:        id,
 		RoleID:    u.RoleID,
 		Username:  &username,
+		PhoneNo:   &phoneNo,
 		Email:     email,
 		FullName:  &fullName,
 		Password:  &password,
