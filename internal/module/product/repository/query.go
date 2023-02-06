@@ -87,6 +87,7 @@ const (
 	INNER JOIN "user" as "u" ON "u"."id" = "s"."user_id"
 	INNER JOIN "address" as "a" ON "u"."id" = "a"."user_id"
 	WHERE "p".title ILIKE $1 
+	AND "a"."is_shop_default" = true
 	AND  "c".name ILIKE $2
 	AND ("p".rating_avg BETWEEN $3 AND $4)
 	AND ("p".min_price BETWEEN $5 AND $6)
@@ -120,6 +121,7 @@ const (
 	INNER JOIN "user" as "u" ON "u"."id" = "s"."user_id"
 	INNER JOIN "address" as "a" ON "u"."id" = "a"."user_id"
 	WHERE "p".title ILIKE $1 
+	AND "a"."is_shop_default" = true
 	AND  "c".name ILIKE $2
 	AND ("p".rating_avg BETWEEN $3 AND $4)
 	AND ("p".min_price BETWEEN $5 AND $6)
@@ -147,6 +149,7 @@ const (
 	INNER JOIN "user" as "u" ON "u"."id" = "s"."user_id"
 	INNER JOIN "address" as "a" ON "u"."id" = "a"."user_id"
 	WHERE "p".title ILIKE $1 
+	AND "a"."is_shop_default" = true
 	AND  "c".name ILIKE $2
 	AND ("p".rating_avg BETWEEN $3 AND $4)
 	AND ("p".min_price BETWEEN $5 AND $6)
@@ -159,6 +162,7 @@ const (
 	INNER JOIN "user" as "u" ON "u"."id" = "s"."user_id"
 	INNER JOIN "address" as "a" ON "u"."id" = "a"."user_id"
 	WHERE "p".title ILIKE $1 
+	AND "a"."is_shop_default" = true
 	AND  "c".name ILIKE $2
 	AND ("p".rating_avg BETWEEN $3 AND $4)
 	AND ("p".min_price BETWEEN $5 AND $6)
