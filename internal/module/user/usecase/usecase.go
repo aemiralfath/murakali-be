@@ -587,14 +587,14 @@ func (u *userUC) EditEmailUser(ctx context.Context, userID string, requestBody b
 	userModel.UpdatedAt.Time = time.Now()
 	userModel.UpdatedAt.Valid = true
 	err = u.txRepo.WithTransaction(func(tx postgre.Transaction) error {
-		if u.userRepo.UpdateUserEmail(ctx, tx, userModel) != nil {
-			return err
+		if errUpdateEmail := u.userRepo.UpdateUserEmail(ctx, tx, userModel); errUpdateEmail != nil {
+			return errUpdateEmail
 		}
 
-		if u.userRepo.CreateEmailHistory(ctx, tx, userModel.Email) != nil {
-			return err
+		if errEmailHistory := u.userRepo.CreateEmailHistory(ctx, tx, userModel.Email); errEmailHistory != nil {
+			return errEmailHistory
 		}
-		return err
+		return nil
 	})
 	if err != nil {
 		return nil, err
@@ -671,18 +671,19 @@ func (u *userUC) AddSealabsPay(ctx context.Context, request body.AddSealabsPayRe
 			return httperror.New(http.StatusBadRequest, response.SealabsCardAlreadyExist)
 		}
 		err = u.txRepo.WithTransaction(func(tx postgre.Transaction) error {
-			if u.userRepo.SetDefaultSealabsPayTrans(ctx, tx, cardNumber) != nil {
-				return err
+			errTx := u.userRepo.SetDefaultSealabsPayTrans(ctx, tx, cardNumber)
+			if errTx != nil {
+				return errTx
 			}
 			if deletedSLPCount != 0 {
-				err = u.userRepo.UpdateUserSealabsPayTrans(ctx, tx, request, userid)
-				if err != nil {
-					return err
+				errTx = u.userRepo.UpdateUserSealabsPayTrans(ctx, tx, request, userid)
+				if errTx != nil {
+					return errTx
 				}
 			} else {
-				err = u.userRepo.AddSealabsPayTrans(ctx, tx, request, userid)
-				if err != nil {
-					return err
+				errTx = u.userRepo.AddSealabsPayTrans(ctx, tx, request, userid)
+				if errTx != nil {
+					return errTx
 				}
 			}
 			return nil
@@ -700,7 +701,7 @@ func (u *userUC) PatchSealabsPay(ctx context.Context, cardNumber, userid string)
 		return err
 	}
 
-	if u.userRepo.SetDefaultSealabsPay(ctx, cardNumber, userid) != nil {
+	if err = u.userRepo.SetDefaultSealabsPay(ctx, cardNumber, userid); err != nil {
 		return err
 	}
 	return nil
@@ -1680,6 +1681,10 @@ func (u *userUC) CreateTransaction(ctx context.Context, userID string, requestBo
 				return nil, err
 			}
 
+			if cartShop.UserID == userModel.ID {
+				return nil, httperror.New(http.StatusBadRequest, response.InvalidBuyOwnProducts)
+			}
+
 			voucherShop := &model.Voucher{}
 			var voucherShopID *uuid.UUID
 			if cart.VoucherShopID != "" {
@@ -1952,7 +1957,7 @@ func (u *userUC) CreateRefundUser(ctx context.Context, userID string, requestBod
 		return httperror.New(http.StatusBadRequest, response.WalletIsNotActivated)
 	}
 
-	if userWallet.ActiveDate.Valid == false {
+	if !userWallet.ActiveDate.Valid {
 		return httperror.New(http.StatusBadRequest, response.WalletIsNotActivated)
 	}
 
