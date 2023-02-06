@@ -1143,7 +1143,7 @@ func (r *userRepo) AddSealabsPayTrans(ctx context.Context, tx postgre.Transactio
 }
 
 func (r *userRepo) UpdateUserSealabsPayTrans(ctx context.Context, tx postgre.Transaction, request body.AddSealabsPayRequest, userid string) error {
-	if _, err := tx.ExecContext(ctx, UpdateUserSealabsPayQuery, request.CardNumber); err != nil {
+	if _, err := tx.ExecContext(ctx, UpdateUserSealabsPayQuery, request.Name, request.CardNumber); err != nil {
 		return err
 	}
 
@@ -1160,7 +1160,7 @@ func (r *userRepo) AddSealabsPay(ctx context.Context, request body.AddSealabsPay
 }
 
 func (r *userRepo) UpdateUserSealabsPay(ctx context.Context, request body.AddSealabsPayRequest, userid string) error {
-	if _, err := r.PSQL.ExecContext(ctx, UpdateUserSealabsPayQuery, request.CardNumber); err != nil {
+	if _, err := r.PSQL.ExecContext(ctx, UpdateUserSealabsPayQuery, request.Name, request.CardNumber); err != nil {
 		return err
 	}
 
