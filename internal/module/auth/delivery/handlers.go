@@ -9,7 +9,6 @@ import (
 	"murakali/pkg/httperror"
 	"murakali/pkg/jwt"
 	"murakali/pkg/logger"
-	"murakali/pkg/oauth"
 	"murakali/pkg/response"
 	"net/http"
 	"regexp"
@@ -121,7 +120,7 @@ func (h *authHandlers) RegisterEmail(c *gin.Context) {
 		return
 	}
 
-	response.SuccessResponse(c.Writer, nil, http.StatusCreated)
+	response.SuccessResponse(c.Writer, nil, http.StatusOK)
 }
 
 func (h *authHandlers) RegisterUser(c *gin.Context) {
@@ -223,7 +222,7 @@ func (h *authHandlers) ResetPasswordEmail(c *gin.Context) {
 		return
 	}
 
-	response.SuccessResponse(c.Writer, nil, http.StatusCreated)
+	response.SuccessResponse(c.Writer, nil, http.StatusOK)
 }
 
 func (h *authHandlers) ResetPasswordUser(c *gin.Context) {
@@ -266,7 +265,7 @@ func (h *authHandlers) ResetPasswordUser(c *gin.Context) {
 
 	c.SetSameSite(http.SameSiteNoneMode)
 	c.SetCookie(constant.ResetPasswordTokenCookie, "", -1, "/", h.cfg.Server.Domain, true, true)
-	response.SuccessResponse(c.Writer, nil, http.StatusCreated)
+	response.SuccessResponse(c.Writer, nil, http.StatusOK)
 }
 
 func (h *authHandlers) ResetPasswordVerifyOTP(c *gin.Context) {
@@ -365,19 +364,7 @@ func (h *authHandlers) GoogleAuth(c *gin.Context) {
 		return
 	}
 
-	tokenRes, err := oauth.GetGoogleOauthToken(h.cfg, code)
-	if err != nil {
-		response.ErrorResponseData(c.Writer, errResponse, response.ForbiddenMessage, http.StatusForbidden)
-		return
-	}
-
-	user, err := oauth.GetGoogleUser(tokenRes.AccessToken, tokenRes.IDToken)
-	if err != nil {
-		response.ErrorResponseData(c.Writer, errResponse, response.ForbiddenMessage, http.StatusForbidden)
-		return
-	}
-
-	token, err := h.authUC.GoogleAuth(c, pathURL, user)
+	token, err := h.authUC.GoogleAuth(c, code, pathURL)
 	if err != nil {
 		var e *httperror.Error
 		if !errors.As(err, &e) {

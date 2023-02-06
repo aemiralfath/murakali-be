@@ -151,7 +151,7 @@ func (h *userHandlers) ValidateTransactionQuery(c *gin.Context) (*pagination.Pag
 
 	limitFilter, err := strconv.Atoi(limit)
 	if err != nil || limitFilter < 1 {
-		limitFilter = 18
+		limitFilter = 5
 	}
 
 	pageFilter, err = strconv.Atoi(page)
@@ -696,7 +696,7 @@ func (h *userHandlers) ValidateQueryOrder(c *gin.Context, pgn *pagination.Pagina
 
 	limitFilter, err := strconv.Atoi(limit)
 	if err != nil || limitFilter < 1 {
-		limitFilter = 10
+		limitFilter = 5
 	}
 
 	pageFilter, err = strconv.Atoi(page)

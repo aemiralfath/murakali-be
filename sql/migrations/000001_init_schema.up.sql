@@ -624,6 +624,20 @@ CREATE INDEX ON "product" ("sku");
 
 CREATE INDEX ON "product" ("title");
 
+CREATE INDEX ON "product" ("min_price");
+
+CREATE INDEX ON "product" ("view_count");
+
+CREATE INDEX ON "product" ("unit_sold");
+
+CREATE INDEX ON "product" ("listed_status");
+
+CREATE INDEX ON "product" ("rating_avg");
+
+CREATE INDEX ON "product" ("max_price");
+
+CREATE INDEX ON "product" ("created_at" DESC);
+
 CREATE INDEX ON "product_detail" ("product_id");
 
 CREATE INDEX ON "variant" ("product_detail_id");

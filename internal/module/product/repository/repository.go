@@ -519,14 +519,13 @@ func (r *productRepo) GetProducts(ctx context.Context, pgn *pagination.Paginatio
 			&promo.DiscountFixPrice,
 			&promo.MinProductPrice,
 			&promo.MaxDiscountPrice,
-			&voucher.DiscountPercentage,
-			&voucher.DiscountFixPrice,
 			&productData.ShopName,
 			&productData.CategoryName,
 			&productData.ShopProvince,
 			&productData.ListedStatus,
 			&productData.CreatedAt,
 			&productData.UpdatedAt,
+			&productData.SKU,
 		); errScan != nil {
 			return nil, nil, nil, err
 		}
