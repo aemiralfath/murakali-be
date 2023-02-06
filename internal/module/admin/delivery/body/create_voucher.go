@@ -17,9 +17,8 @@ type CreateVoucherRequest struct {
 	DiscountFixPrice   float64 `json:"discount_fix_price"`
 	MinProductPrice    float64 `json:"min_product_price"`
 	MaxDiscountPrice   float64 `json:"max_discount_price"`
-
-	ActiveDateTime  time.Time
-	ExpiredDateTime time.Time
+	ActiveDateTime     time.Time
+	ExpiredDateTime    time.Time
 }
 
 func (r *CreateVoucherRequest) Validate() (UnprocessableEntity, error) {
