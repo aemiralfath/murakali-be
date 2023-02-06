@@ -479,7 +479,6 @@ func TestProductUseCase_GetProducts(t *testing.T) {
 }
 
 func TestProductUseCase_GetAllProductImage(t *testing.T) {
-
 	testCase := []struct {
 		name        string
 		body        interface{}
@@ -548,27 +547,6 @@ func TestProductUseCase_GetAllProductImage(t *testing.T) {
 			},
 			expectedErr: fmt.Errorf("test"),
 		},
-		// {
-		// 	name: "get  get  product error",
-		// 	body: nil,
-		// 	mock: func(t *testing.T, r *mocks.Repository) {
-		// 		r.On("GetAllTotalProduct", mock.Anything, mock.Anything).
-		// 			Return(int64(0), fmt.Errorf("test"))
-		// 	},
-		// 	expectedErr: fmt.Errorf("test"),
-		// },
-		// {
-		// 	name: "success  get  product",
-		// 	body: nil,
-		// 	mock: func(t *testing.T, r *mocks.Repository) {
-		// 		r.On("GetAllTotalProduct", mock.Anything, mock.Anything).
-		// 			Return(int64(1), nil)
-		// 		r.On("GetProducts", mock.Anything, mock.Anything, mock.Anything).
-		// 			Return(nil, nil, nil, fmt.Errorf("test"))
-
-		// 	},
-		// 	expectedErr: fmt.Errorf("test"),
-		// },
 	}
 
 	for _, tc := range testCase {
