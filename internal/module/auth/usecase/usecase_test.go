@@ -339,8 +339,7 @@ func TestAuthUseCase_ResetPasswordEmail(t *testing.T) {
 	}
 }
 
-func TestAuthUseCase_ResetPasswordUser(t *testing.T) {
-
+func TestAuthUseCase_VerifyOTP(t *testing.T) {
 	testCase := []struct {
 		name        string
 		body        interface{}
@@ -348,7 +347,98 @@ func TestAuthUseCase_ResetPasswordUser(t *testing.T) {
 		expectedErr error
 	}{
 		{
-			name: "error check email histoery",
+			name: "success reset password verify otp",
+			body: nil,
+			mock: func(t *testing.T, r *mocks.Repository) {
+				r.On("GetOTPValue", mock.Anything, mock.Anything).Return("654321", nil)
+				r.On("DeleteOTPValue", mock.Anything, mock.Anything).Return(int64(1), nil)
+			},
+			expectedErr: fmt.Errorf("OTP already expired."),
+		},
+		{
+			name: "error verify otp",
+			body: nil,
+			mock: func(t *testing.T, r *mocks.Repository) {
+				r.On("GetOTPValue", mock.Anything, mock.Anything).Return("210832", fmt.Errorf("OTP already expired."))
+
+			},
+			expectedErr: fmt.Errorf("OTP already expired."),
+		},
+	}
+
+	for _, tc := range testCase {
+		t.Run(tc.name, func(t *testing.T) {
+			sql, mock, _ := sqlmock.New()
+			mock.ExpectBegin()
+			r := mocks.NewRepository(t)
+			u := NewAuthUseCase(&config.Config{}, &postgre.TxRepo{PSQL: sql}, r)
+
+			tc.mock(t, r)
+			_, err := u.VerifyOTP(context.Background(), body.VerifyOTPRequest{OTP: "654321"})
+			if err != nil {
+				assert.Equal(t, err.Error(), tc.expectedErr.Error())
+			}
+		})
+	}
+}
+
+func TestAuthUseCase_ResetPasswordVerifyOTP(t *testing.T) {
+	testCase := []struct {
+		name        string
+		body        interface{}
+		mock        func(t *testing.T, r *mocks.Repository)
+		expectedErr error
+	}{
+
+		{
+			name: "error reset password verify otp",
+			body: nil,
+			mock: func(t *testing.T, r *mocks.Repository) {
+				r.On("GetOTPHashedValue", mock.Anything, mock.Anything).Return("", fmt.Errorf("test"))
+
+			},
+			expectedErr: fmt.Errorf("OTP already expired."),
+		},
+	}
+
+	for _, tc := range testCase {
+		t.Run(tc.name, func(t *testing.T) {
+			sql, mock, _ := sqlmock.New()
+			mock.ExpectBegin()
+			r := mocks.NewRepository(t)
+			u := NewAuthUseCase(&config.Config{}, &postgre.TxRepo{PSQL: sql}, r)
+
+			tc.mock(t, r)
+			_, err := u.ResetPasswordVerifyOTP(context.Background(), body.ResetPasswordVerifyOTPRequest{Code: "123456"})
+			if err != nil {
+				assert.Equal(t, err.Error(), tc.expectedErr.Error())
+			}
+		})
+	}
+}
+func TestAuthUseCase_ResetPasswordUser(t *testing.T) {
+	var pass string = "123456"
+	var username string = "sammy"
+	testCase := []struct {
+		name        string
+		body        interface{}
+		mock        func(t *testing.T, r *mocks.Repository)
+		expectedErr error
+	}{
+		{
+			name: "error  get user by email user nil",
+			body: nil,
+			mock: func(t *testing.T, r *mocks.Repository) {
+				r.On("CheckEmailHistory", mock.Anything, mock.Anything).Return(&model.EmailHistory{}, nil)
+				r.On("GetUserByEmail", mock.Anything, mock.Anything).Return(&model.User{IsVerify: true, Password: &pass, Username: &username}, nil)
+				r.On("UpdatePassword", mock.Anything, mock.Anything, mock.Anything).Return(&model.User{IsVerify: true, Password: &pass, Username: &username}, nil)
+				r.On("GetSessionKeyRedis", mock.Anything, mock.Anything, mock.Anything).Return([]string{""}, nil)
+				r.On("InsertSessionRedis", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
+			},
+			expectedErr: httperror.New(http.StatusBadRequest, response.UserNotVerifyMessage),
+		},
+		{
+			name: "error check email history",
 			body: nil,
 			mock: func(t *testing.T, r *mocks.Repository) {
 				r.On("CheckEmailHistory", mock.Anything, mock.Anything).Return(nil, fmt.Errorf("test"))
@@ -402,7 +492,7 @@ func TestAuthUseCase_ResetPasswordUser(t *testing.T) {
 			u := NewAuthUseCase(&config.Config{}, &postgre.TxRepo{PSQL: sql}, r)
 
 			tc.mock(t, r)
-			_, err := u.ResetPasswordUser(context.Background(), "sammy@gmail.com", &body.ResetPasswordUserRequest{})
+			_, err := u.ResetPasswordUser(context.Background(), "sammy@gmail.com", &body.ResetPasswordUserRequest{Password: pass})
 			if err != nil {
 				assert.Equal(t, err.Error(), tc.expectedErr.Error())
 			}
