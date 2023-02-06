@@ -601,6 +601,24 @@ func TestAdminHandlers_UpdateVoucher(t *testing.T) {
 			authorized: false,
 		},
 		{
+			name: "Field Invalid Voucher",
+			body: body.UpdateVoucherRequest{
+				VoucherID:          "8302755e-25c5-4523-8498-7dc8b9e3a098",
+				Quota:              123,
+				ActivedDate:        "",
+				ExpiredDate:        "02-01-2006 15:04:05",
+				DiscountPercentage: 123,
+				DiscountFixPrice:   123,
+				MinProductPrice:    123,
+				MaxDiscountPrice:   123,
+				ActiveDateTime:     time.Now(),
+				ExpiredDateTime:    time.Now(),
+			},
+			mock:       func(s *mocks.UseCase) {},
+			expected:   http.StatusUnprocessableEntity,
+			authorized: false,
+		},
+		{
 			name: "Success Update Voucher",
 			body: body.UpdateVoucherRequest{
 				VoucherID:          "8302755e-25c5-4523-8498-7dc8b9e3a098",
@@ -783,6 +801,14 @@ func TestAdminHandlers_GetCategories(t *testing.T) {
 			expected:   http.StatusInternalServerError,
 			authorized: true,
 		},
+		{
+			name: "custom err Get Categories",
+			mock: func(s *mocks.UseCase) {
+				s.On("GetCategories", mock.Anything).Return(nil, httperror.New(http.StatusBadRequest, "test"))
+			},
+			expected:   http.StatusBadRequest,
+			authorized: true,
+		},
 	}
 
 	for _, tc := range testCase {
@@ -860,6 +886,19 @@ func TestAdminHandlers_AddCategory(t *testing.T) {
 				s.On("AddCategory", mock.Anything, mock.Anything).Return(nil)
 			},
 			expected:   http.StatusOK,
+			authorized: true,
+		},
+		{
+			name: "Success Create Voucher",
+			body: body.CategoryRequest{
+				ID:       "123",
+				ParentID: "123",
+				Name:     "",
+				PhotoURL: "http://example.com",
+				Level:    "1",
+			},
+			mock:       func(s *mocks.UseCase) {},
+			expected:   http.StatusUnprocessableEntity,
 			authorized: true,
 		},
 		{
@@ -1155,6 +1194,19 @@ func TestAdminHandlers_EditCategory(t *testing.T) {
 				s.On("EditCategory", mock.Anything, mock.Anything).Return(nil)
 			},
 			expected:   http.StatusOK,
+			authorized: true,
+		},
+		{
+			name: "invalid Create Voucher",
+			body: body.CategoryRequest{
+				ID:       "123",
+				ParentID: "123",
+				Name:     "",
+				PhotoURL: "http://example.com",
+				Level:    "1",
+			},
+			mock:       func(s *mocks.UseCase) {},
+			expected:   http.StatusUnprocessableEntity,
 			authorized: true,
 		},
 		{
@@ -1561,6 +1613,15 @@ func TestAdminHandlers_RefundOrder(t *testing.T) {
 				s.On("RefundOrder", mock.Anything, mock.Anything).Return(fmt.Errorf("error"))
 			},
 			expected:   http.StatusInternalServerError,
+			authorized: true,
+		},
+		{
+			name:  "Custom Refund Order",
+			param: "8302755e-25c5-4523-8498-7dc8b9e3a098",
+			mock: func(s *mocks.UseCase) {
+				s.On("RefundOrder", mock.Anything, mock.Anything).Return(httperror.New(http.StatusBadRequest, "test"))
+			},
+			expected:   http.StatusBadRequest,
 			authorized: true,
 		},
 	}
