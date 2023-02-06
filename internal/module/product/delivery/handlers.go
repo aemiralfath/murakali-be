@@ -532,7 +532,6 @@ func (h *productHandlers) UpdateProductMetadata(c *gin.Context) {
 			response.ErrorResponse(c.Writer, response.InternalServerErrorMessage, http.StatusInternalServerError)
 			return
 		}
-
 		response.ErrorResponse(c.Writer, e.Err.Error(), e.Status)
 		return
 	}
@@ -695,7 +694,6 @@ func (h *productHandlers) UploadProductPicture(c *gin.Context) {
 	response.SuccessResponse(c.Writer, imgURL, http.StatusOK)
 }
 
-// get product review by product id
 func (h *productHandlers) GetProductReviews(c *gin.Context) {
 	productID := c.Param("product_id")
 	pgn, query := h.ValidateQueryReview(c)
