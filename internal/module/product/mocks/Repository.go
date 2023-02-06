@@ -780,6 +780,29 @@ func (_m *Repository) GetShopIDByUserID(ctx context.Context, userID string) (str
 	return r0, r1
 }
 
+// GetShopProductRating provides a mock function with given fields: ctx, shopID
+func (_m *Repository) GetShopProductRating(ctx context.Context, shopID string) (*model.ShopProductRating, error) {
+	ret := _m.Called(ctx, shopID)
+
+	var r0 *model.ShopProductRating
+	if rf, ok := ret.Get(0).(func(context.Context, string) *model.ShopProductRating); ok {
+		r0 = rf(ctx, shopID)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*model.ShopProductRating)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context, string) error); ok {
+		r1 = rf(ctx, shopID)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // GetTotalAllReviewProduct provides a mock function with given fields: ctx, productID, query
 func (_m *Repository) GetTotalAllReviewProduct(ctx context.Context, productID string, query *body.GetReviewQueryRequest) (int64, error) {
 	ret := _m.Called(ctx, productID, query)
@@ -908,6 +931,20 @@ func (_m *Repository) UpdateProductRating(ctx context.Context, productID string,
 	var r0 error
 	if rf, ok := ret.Get(0).(func(context.Context, string, float64) error); ok {
 		r0 = rf(ctx, productID, ratingAvg)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
+// UpdateShopProductRating provides a mock function with given fields: ctx, shop
+func (_m *Repository) UpdateShopProductRating(ctx context.Context, shop *model.ShopProductRating) error {
+	ret := _m.Called(ctx, shop)
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(context.Context, *model.ShopProductRating) error); ok {
+		r0 = rf(ctx, shop)
 	} else {
 		r0 = ret.Error(0)
 	}

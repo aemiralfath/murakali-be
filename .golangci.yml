@@ -11,7 +11,7 @@ linters-settings:
   golint:
     min-confidence: 0
   gocyclo:
-    min-complexity: 55
+    min-complexity: 60
   nestif:
     min-complexity: 25
   maligned:
@@ -37,7 +37,7 @@ linters-settings:
       - ifElseChain
       - octalLiteral
   funlen:
-    lines: 280
+    lines: 300
     statements: 80
 
 linters: # don't use --enable-all

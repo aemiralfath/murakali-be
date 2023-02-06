@@ -308,8 +308,14 @@ const (
 	(product_id, courier_id)
 	 VALUES ($1, $2) RETURNING "id";`
 
+	GetShopProductRating = `
+		SELECT s.id, COUNT(p.id), AVG(p.rating_avg) FROM product p 
+		INNER JOIN shop s on s.id = p.shop_id 
+		WHERE s.id = $1
+		GROUP BY s.id`
+
 	GetRatingProductQuery = `SELECT 
-    	"p"."id", "p"."title", count("r"."id"), avg("r"."rating")  
+    	"p"."id", "p"."title", "p"."shop_id", count("r"."id"), avg("r"."rating")  
 	FROM "product" as "p" INNER JOIN "review" as "r" on "p"."id" = "r"."product_id" 
 	WHERE "r"."deleted_at" IS NULL AND "r"."created_at" >= (now() - interval '1 hour') GROUP BY "p"."id"`
 
@@ -322,6 +328,8 @@ const (
 	GetListedStatusQuery = `SELECT listed_status from "product" WHERE id = $1 AND deleted_at IS NULL `
 
 	UpdateListedStatusQuery = `UPDATE "product" SET "listed_status" = $1, "updated_at" = now() WHERE "id" = $2 `
+
+	UpdateShopProductRating = `UPDATE "shop" SET "total_product" = $1, "rating_avg" = $2 WHERE "id" = $3`
 
 	UpdateProductQuery = `UPDATE 
 	"product" SET 

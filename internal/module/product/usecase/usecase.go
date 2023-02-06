@@ -48,10 +48,23 @@ func (u *productUC) UpdateProductMetadata(ctx context.Context) error {
 	}
 
 	var errRating error
+	shopID := make(map[string]string, 0)
 	for _, rating := range productRating {
+		shopID[rating.Product.ShopID.String()] = rating.Product.ShopID.String()
 		if err := u.productRepo.UpdateProductRating(ctx, rating.Product.ID.String(), *rating.Avg); err != nil {
 			errRating = err
 		}
+	}
+
+	var errShop error
+	for _, id := range shopID {
+		shopProductRating, errShop := u.productRepo.GetShopProductRating(ctx, id)
+		if errShop == nil {
+			errShop = u.productRepo.UpdateShopProductRating(ctx, shopProductRating)
+		}
+	}
+	if errShop != nil {
+		return errShop
 	}
 
 	if errFav != nil {
@@ -409,11 +422,7 @@ func (u *productUC) GetFavoriteProducts(
 func (u *productUC) CheckProductIsFavorite(
 	ctx context.Context, userID, productID string) bool {
 	totalRows, _ := u.productRepo.CountUserFavoriteProduct(ctx, userID, productID)
-	if totalRows > 0 {
-		return true
-	}
-
-	return false
+	return totalRows > 0
 }
 
 func (u *productUC) CountSpecificFavoriteProduct(
