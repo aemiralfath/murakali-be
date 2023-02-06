@@ -9,7 +9,6 @@ import (
 	"murakali/internal/constant"
 	"murakali/internal/model"
 	body2 "murakali/internal/module/location/delivery/body"
-	"murakali/internal/module/user"
 	"murakali/internal/module/user/delivery/body"
 	"murakali/internal/module/user/mocks"
 	"murakali/pkg/pagination"
@@ -3145,33 +3144,348 @@ func Test_userUC_ChangeWalletPinStepUp(t *testing.T) {
 }
 
 func Test_userUC_ChangeWalletPin(t *testing.T) {
-	type fields struct {
-		cfg      *config.Config
-		txRepo   *postgre.TxRepo
-		userRepo user.Repository
-	}
-	type args struct {
-		ctx    context.Context
-		userID string
-		pin    string
-	}
-	tests := []struct {
-		name    string
-		fields  fields
-		args    args
-		wantErr bool
+	testCase := []struct {
+		name        string
+		userID      string
+		pin         string
+		mock        func(t *testing.T, r *mocks.Repository)
+		expectedErr error
 	}{
-		// TODO: Add test cases.
+		{
+			name:   "success ChangeWalletPin",
+			userID: "123456",
+			pin:    "123456",
+			mock: func(t *testing.T, r *mocks.Repository) {
+				r.On("GetWalletByUserID", mock.Anything, mock.Anything).Return(&model.Wallet{
+					ID:      uuid.Nil,
+					Balance: 100000,
+					PIN:     "123456",
+				}, nil)
+				r.On("UpdateWalletPin", mock.Anything, mock.Anything).Return(nil)
+			},
+			expectedErr: nil,
+		},
+		{
+			name:   "error ChangeWalletPin",
+			userID: "123456",
+			pin:    "123456",
+			mock: func(t *testing.T, r *mocks.Repository) {
+				r.On("GetWalletByUserID", mock.Anything, mock.Anything).Return(nil, errors.New("test"))
+			},
+			expectedErr: errors.New("test"),
+		},
+		{
+			name:   "error ChangeWalletPin sql no rows",
+			userID: "123456",
+			pin:    "123456",
+			mock: func(t *testing.T, r *mocks.Repository) {
+				r.On("GetWalletByUserID", mock.Anything, mock.Anything).Return(nil, sql.ErrNoRows)
+			},
+			expectedErr: errors.New(response.WalletIsNotActivated),
+		},
 	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			u := &userUC{
-				cfg:      tt.fields.cfg,
-				txRepo:   tt.fields.txRepo,
-				userRepo: tt.fields.userRepo,
+
+	for _, tc := range testCase {
+		t.Run(tc.name, func(t *testing.T) {
+			r := mocks.NewRepository(t)
+			u := NewUserUseCase(&config.Config{}, &postgre.TxRepo{}, r)
+
+			tc.mock(t, r)
+			err := u.ChangeWalletPin(context.Background(), tc.userID, tc.pin)
+			if err != nil {
+				assert.Equal(t, err.Error(), tc.expectedErr.Error())
 			}
-			if err := u.ChangeWalletPin(tt.args.ctx, tt.args.userID, tt.args.pin); (err != nil) != tt.wantErr {
-				t.Errorf("userUC.ChangeWalletPin() error = %v, wantErr %v", err, tt.wantErr)
+		})
+	}
+}
+
+func Test_userUC_CreateTransaction(t *testing.T) {
+	testCase := []struct {
+		name        string
+		userID      string
+		requestBody body.CreateTransactionRequest
+		mock        func(t *testing.T, r *mocks.Repository)
+		expectedErr error
+	}{
+		{
+			name:   "success CreateTransaction",
+			userID: "ab80c496-387b-4989-bf3b-a6f68a05940d",
+			requestBody: body.CreateTransactionRequest{
+				WalletID:             "c737a0f0-00e0-4dd5-89eb-dc44a9ea3413",
+				CardNumber:           "",
+				VoucherMarketplaceID: "f483bf6b-6293-428b-b87a-5892aacb4efa",
+				CartItems: []body.CartItem{
+					{
+						ShopID:        "33ee7825-461b-40ca-8d6e-09ce7f2851fb",
+						VoucherShopID: "b558e7e0-a39b-420e-ada4-ce4b180e7e9a",
+						CourierID:     "1",
+						CourierFee:    100,
+						ProductDetails: []body.ProductDetail{
+							{
+								ID:       "c62f09d8-290d-496c-8413-e7d40ceaed05",
+								Quantity: 1,
+								SubPrice: 100,
+								Note:     "noted",
+							},
+						},
+					},
+				},
+			},
+			mock: func(t *testing.T, r *mocks.Repository) {
+				tempUserID, _ := uuid.Parse("ab80c496-387b-4989-bf3b-a6f68a05940d")
+				tempShopID, _ := uuid.Parse("33ee7825-461b-40ca-8d6e-09ce7f2851fb")
+				tempPromoID, _ := uuid.Parse("7975f81f-5c51-46b8-8ea0-8362cc419c9d")
+				tempProductID, _ := uuid.Parse("bd0b620f-1b07-46c7-aede-4de60d493450")
+				tempProductDetailID, _ := uuid.Parse("e8590820-a776-470f-88e2-65961f0bd80e")
+				r.On("GetUserByID", mock.Anything, mock.Anything).Return(&model.User{
+					ID: tempUserID,
+				}, nil)
+				r.On("GetWalletUser", mock.Anything, mock.Anything).Return(&model.Wallet{
+					UserID: tempUserID,
+				}, nil)
+
+				tempVoucherID, _ := uuid.Parse("f483bf6b-6293-428b-b87a-5892aacb4efa")
+				tempVoucherID1, _ := uuid.Parse("f483bf6b-6293-428b-b87a-5892aacb4efa")
+				tempVDiscountPercentage := float64(0)
+				tempVDiscountFixPrice := float64(10)
+				tempVMinProductPrice := float64(1)
+				tempVMaxDiscountPrice := float64(100000)
+				r.On("GetVoucherMarketplaceByID", mock.Anything, mock.Anything).Return(&model.Voucher{
+					ID:                 tempVoucherID,
+					ShopID:             uuid.Nil,
+					Code:               "ABC",
+					Quota:              10,
+					ActivedDate:        time.Now(),
+					ExpiredDate:        time.Now().Add(time.Hour),
+					DiscountPercentage: &tempVDiscountPercentage,
+					DiscountFixPrice:   &tempVDiscountFixPrice,
+					MinProductPrice:    &tempVMinProductPrice,
+					MaxDiscountPrice:   &tempVMaxDiscountPrice,
+					CreatedAt:          time.Now(),
+					UpdatedAt:          sql.NullTime{},
+					DeletedAt:          sql.NullTime{},
+				}, nil)
+				r.On("GetShopByID", mock.Anything, mock.Anything).Return(&model.Shop{
+					ID:     tempShopID,
+					UserID: tempShopID,
+				}, nil)
+				r.On("GetVoucherShopByID", mock.Anything, mock.Anything, mock.Anything).Return(&model.Voucher{
+					ID:                 tempVoucherID1,
+					ShopID:             tempShopID,
+					Code:               "ABCD",
+					Quota:              2,
+					ActivedDate:        time.Now(),
+					ExpiredDate:        time.Now().Add(time.Hour),
+					DiscountPercentage: &tempVDiscountPercentage,
+					DiscountFixPrice:   &tempVDiscountFixPrice,
+					MinProductPrice:    &tempVMinProductPrice,
+					MaxDiscountPrice:   &tempVMaxDiscountPrice,
+					CreatedAt:          time.Now(),
+					UpdatedAt:          sql.NullTime{},
+					DeletedAt:          sql.NullTime{},
+				}, nil)
+				r.On("GetCourierShopByID", mock.Anything, mock.Anything, mock.Anything).Return(&model.Courier{
+					ID:          uuid.Nil,
+					Name:        "jne",
+					Code:        "JNE",
+					Service:     "sell",
+					Description: "asdkajsd",
+					CreatedAt:   time.Now(),
+					UpdatedAt:   sql.NullTime{},
+				}, nil)
+
+				r.On("GetProductDetailByID", mock.Anything, mock.Anything, mock.Anything).Once().Return(&model.ProductDetail{
+					ID: tempProductDetailID,
+				}, nil)
+				r.On("GetCartItemUser", mock.Anything, mock.Anything, mock.Anything).Once().Return(&model.CartItem{}, nil)
+
+				r.On("GetProductDetailByID", mock.Anything, mock.Anything, mock.Anything).Once().Return(&model.ProductDetail{
+					ID:        tempProductDetailID,
+					ProductID: tempProductID,
+					Price:     10000,
+					Stock:     10,
+					Weight:    100,
+					Size:      100,
+					Hazardous: false,
+					Condition: "good",
+					BulkPrice: false,
+					CreatedAt: time.Now(),
+					UpdatedAt: sql.NullTime{},
+					DeletedAt: sql.NullTime{},
+				}, nil)
+				r.On("GetCartItemUser", mock.Anything, mock.Anything, mock.Anything).Once().Return(&model.CartItem{}, nil)
+				r.On("GetProductPromotionByProductID", mock.Anything, mock.Anything).Once().Return(&model.Promotion{
+					ID:                 tempPromoID,
+					Name:               "asd",
+					ProductID:          tempProductID,
+					DiscountPercentage: &tempVDiscountPercentage,
+					DiscountFixPrice:   &tempVDiscountFixPrice,
+					MinProductPrice:    &tempVMinProductPrice,
+					MaxDiscountPrice:   &tempVMaxDiscountPrice,
+					Quota:              3,
+					MaxQuantity:        1,
+					ActivedDate:        time.Now(),
+					ExpiredDate:        time.Now(),
+					CreatedAt:          time.Now(),
+					UpdatedAt:          sql.NullTime{},
+					DeletedAt:          sql.NullTime{},
+				}, nil)
+
+				tempTransactionID, _ := uuid.Parse("b7938be2-0d48-4ba8-af6b-465b79eb0891")
+				tempOrderID, _ := uuid.Parse("ccbcbe3e-3cb1-4aae-abb8-e42d6bc587c0")
+				r.On("GetAddressByBuyerID", mock.Anything, mock.Anything).Once().Return(&model.Address{}, nil)
+				r.On("GetAddressBySellerID", mock.Anything, mock.Anything).Once().Return(&model.Address{}, nil)
+				r.On("CreateTransaction", mock.Anything, mock.Anything, mock.Anything).Once().Return(&tempTransactionID, nil)
+				r.On("UpdateVoucherQuota", mock.Anything, mock.Anything, mock.Anything).Once().Return(nil)
+				r.On("UpdateVoucherQuota", mock.Anything, mock.Anything, mock.Anything).Once().Return(nil)
+				r.On("UpdatePromotionQuota", mock.Anything, mock.Anything, mock.Anything).Once().Return(nil)
+				r.On("CreateOrder", mock.Anything, mock.Anything, mock.Anything).Once().Return(&tempOrderID, nil)
+				r.On("CreateOrderItem", mock.Anything, mock.Anything, mock.Anything).Once().Return(&tempProductDetailID, nil)
+				r.On("UpdateProductDetailStock", mock.Anything, mock.Anything, mock.Anything).Once().Return(nil)
+				r.On("DeleteCartItemByID", mock.Anything, mock.Anything, mock.Anything).Once().Return(nil)
+			},
+			expectedErr: nil,
+		},
+	}
+
+	for _, tc := range testCase {
+		t.Run(tc.name, func(t *testing.T) {
+			sql, mock, _ := sqlmock.New()
+			mock.ExpectBegin()
+
+			r := mocks.NewRepository(t)
+			u := NewUserUseCase(&config.Config{}, &postgre.TxRepo{PSQL: sql}, r)
+
+			tc.mock(t, r)
+			_, err := u.CreateTransaction(context.Background(), tc.userID, tc.requestBody)
+			if err != nil {
+				assert.Equal(t, err.Error(), tc.expectedErr.Error())
+			}
+		})
+	}
+}
+
+func Test_userUC_GetRefundOrder(t *testing.T) {
+	testCase := []struct {
+		name        string
+		userID      string
+		orderID     string
+		mock        func(t *testing.T, r *mocks.Repository)
+		expectedErr bool
+	}{
+		{name: "error GetOrderModelByID error",
+			userID:  "123456",
+			orderID: "abc",
+			mock: func(t *testing.T, r *mocks.Repository) {
+				r.On("GetOrderModelByID", mock.Anything, mock.Anything).Return(nil, errors.New("test"))
+			},
+			expectedErr: true,
+		}, {name: "error orderData string not equal to userID",
+			userID:  "123456",
+			orderID: "abc",
+			mock: func(t *testing.T, r *mocks.Repository) {
+				testUUID, _ := uuid.Parse("123")
+				r.On("GetOrderModelByID", mock.Anything, mock.Anything).Return(&model.OrderModel{
+					UserID: testUUID,
+				}, nil)
+			},
+			expectedErr: true,
+		}, {name: "GetRefundByOrderID error",
+			userID:  "ab80c496-387b-4989-bf3b-a6f68a05940d",
+			orderID: "abc",
+			mock: func(t *testing.T, r *mocks.Repository) {
+				testUUID, _ := uuid.Parse("ab80c496-387b-4989-bf3b-a6f68a05940d")
+				r.On("GetOrderModelByID", mock.Anything, mock.Anything).Return(&model.OrderModel{
+					UserID: testUUID,
+				}, nil)
+				r.On("GetRefundOrderByOrderID", mock.Anything, mock.Anything).Return(nil, errors.New("hello"))
+			},
+			expectedErr: true,
+		}, {name: "GetUserByID error",
+			userID:  "ab80c496-387b-4989-bf3b-a6f68a05940d",
+			orderID: "abc",
+			mock: func(t *testing.T, r *mocks.Repository) {
+				testUUID, _ := uuid.Parse("ab80c496-387b-4989-bf3b-a6f68a05940d")
+				mockBool := true
+				r.On("GetOrderModelByID", mock.Anything, mock.Anything).Return(&model.OrderModel{
+					UserID: testUUID,
+				}, nil)
+				r.On("GetRefundOrderByOrderID", mock.Anything, mock.Anything).Return(&model.Refund{
+					IsBuyerRefund: &mockBool,
+				}, sql.ErrNoRows)
+				r.On("GetUserByID", mock.Anything, mock.Anything).Return(nil, errors.New("halo"))
+			},
+			expectedErr: true,
+		}, {name: "GetShopByID error",
+			userID:  "ab80c496-387b-4989-bf3b-a6f68a05940d",
+			orderID: "abc",
+			mock: func(t *testing.T, r *mocks.Repository) {
+				testUUID, _ := uuid.Parse("ab80c496-387b-4989-bf3b-a6f68a05940d")
+				mockBool := true
+				mockBoolFalse := false
+				r.On("GetOrderModelByID", mock.Anything, mock.Anything).Return(&model.OrderModel{
+					UserID: testUUID,
+				}, nil)
+				r.On("GetRefundOrderByOrderID", mock.Anything, mock.Anything).Return(&model.Refund{
+					IsSellerRefund: &mockBool,
+					IsBuyerRefund:  &mockBoolFalse,
+				}, sql.ErrNoRows)
+				r.On("GetShopByID", mock.Anything, mock.Anything).Return(nil, errors.New("halo"))
+			},
+			expectedErr: true,
+		}, {name: "GetUserByID error",
+			userID:  "ab80c496-387b-4989-bf3b-a6f68a05940d",
+			orderID: "abc",
+			mock: func(t *testing.T, r *mocks.Repository) {
+				testUUID, _ := uuid.Parse("ab80c496-387b-4989-bf3b-a6f68a05940d")
+				mockBool := true
+				mockBoolFalse := false
+				r.On("GetOrderModelByID", mock.Anything, mock.Anything).Return(&model.OrderModel{
+					UserID: testUUID,
+				}, nil)
+				r.On("GetRefundOrderByOrderID", mock.Anything, mock.Anything).Return(&model.Refund{
+					IsSellerRefund: &mockBool,
+					IsBuyerRefund:  &mockBoolFalse,
+				}, sql.ErrNoRows)
+				r.On("GetShopByID", mock.Anything, mock.Anything).Return(&model.Shop{}, nil)
+				r.On("GetUserByID", mock.Anything, mock.Anything).Return(nil, errors.New("abc"))
+			},
+			expectedErr: true,
+		}, {name: "GetRefundThreadByRefundID error",
+			userID:  "ab80c496-387b-4989-bf3b-a6f68a05940d",
+			orderID: "abc",
+			mock: func(t *testing.T, r *mocks.Repository) {
+				testUUID, _ := uuid.Parse("ab80c496-387b-4989-bf3b-a6f68a05940d")
+				mockBool := true
+				mockBoolFalse := false
+				mockString := "abc"
+				r.On("GetOrderModelByID", mock.Anything, mock.Anything).Return(&model.OrderModel{
+					UserID: testUUID,
+				}, nil)
+				r.On("GetRefundOrderByOrderID", mock.Anything, mock.Anything).Return(&model.Refund{
+					IsSellerRefund: &mockBool,
+					IsBuyerRefund:  &mockBoolFalse,
+				}, sql.ErrNoRows)
+				r.On("GetShopByID", mock.Anything, mock.Anything).Return(&model.Shop{}, nil)
+				r.On("GetUserByID", mock.Anything, mock.Anything).Return(&model.User{
+					Username: &mockString,
+					PhotoURL: &mockString,
+				}, nil)
+				r.On("GetRefundThreadByRefundID", mock.Anything, mock.Anything).Return(nil, errors.New("abc"))
+			},
+			expectedErr: true,
+		},
+	}
+	for _, tc := range testCase {
+		t.Run(tc.name, func(t *testing.T) {
+			r := mocks.NewRepository(t)
+			u := NewUserUseCase(&config.Config{}, &postgre.TxRepo{}, r)
+			tc.mock(t, r)
+			_, err := u.GetRefundOrder(context.Background(), tc.userID, tc.orderID)
+			if tc.expectedErr {
+				assert.NotNil(t, err.Error())
+			} else {
+				assert.Nil(t, err)
 			}
 		})
 	}
