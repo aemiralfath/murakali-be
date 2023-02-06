@@ -106,7 +106,7 @@ func (f *ProductFaker) GenerateDataProduct(tx postgre.Transaction, id, categoryI
 	}
 
 	variantDetailID := uuid.New()
-	if _, err := tx.Exec(InsertVariantDetailQuery, variantDetailID, "warna", "hitam"); err != nil {
+	if _, err := tx.Exec(InsertVariantDetailQuery, variantDetailID, "size", "medium"); err != nil {
 		return err
 	}
 

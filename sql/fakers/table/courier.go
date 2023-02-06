@@ -24,7 +24,7 @@ func (f *CourierFaker) GenerateData(tx postgre.Transaction) error {
 			return err
 		}
 
-		if _, err := tx.Exec(InsertCourierQuery, id, f.Name[i], f.Code[i], f.Service[i], "Layanan Reguler"); err != nil {
+		if _, err := tx.Exec(InsertCourierQuery, id, f.Name[i], f.Code[i], f.Service[i], "Regular Service"); err != nil {
 			return err
 		}
 	}
