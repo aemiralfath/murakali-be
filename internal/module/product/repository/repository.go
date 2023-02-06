@@ -64,7 +64,7 @@ func (r *productRepo) GetRatingProduct(ctx context.Context) ([]*model.ProductRat
 	for res.Next() {
 		rating := model.ProductRating{}
 		rating.Product = &model.Product{}
-		if errScan := res.Scan(&rating.Product.ID, &rating.Product.Title, &rating.Count, &rating.Avg); errScan != nil {
+		if errScan := res.Scan(&rating.Product.ID, &rating.Product.Title, &rating.Product.ShopID, &rating.Count, &rating.Avg); errScan != nil {
 			return nil, errScan
 		}
 		productRating = append(productRating, &rating)
@@ -519,14 +519,13 @@ func (r *productRepo) GetProducts(ctx context.Context, pgn *pagination.Paginatio
 			&promo.DiscountFixPrice,
 			&promo.MinProductPrice,
 			&promo.MaxDiscountPrice,
-			&voucher.DiscountPercentage,
-			&voucher.DiscountFixPrice,
 			&productData.ShopName,
 			&productData.CategoryName,
 			&productData.ShopProvince,
 			&productData.ListedStatus,
 			&productData.CreatedAt,
 			&productData.UpdatedAt,
+			&productData.SKU,
 		); errScan != nil {
 			return nil, nil, nil, err
 		}
@@ -1064,11 +1063,28 @@ func (r *productRepo) GetMaxMinPriceByID(ctx context.Context, productID string) 
 	return &rangePrice, nil
 }
 
+func (r *productRepo) GetShopProductRating(ctx context.Context, shopID string) (*model.ShopProductRating, error) {
+	var shopProductRating model.ShopProductRating
+	if err := r.PSQL.QueryRowContext(ctx, GetShopProductRating, shopID).Scan(&shopProductRating.ShopID,
+		&shopProductRating.Count, &shopProductRating.Avg); err != nil {
+		return nil, err
+	}
+	return &shopProductRating, nil
+}
+
 func (r *productRepo) UpdateVariant(ctx context.Context, tx postgre.Transaction, variantID, variantDetailID string) error {
 	_, err := tx.ExecContext(ctx,
 		UpdateVariantQuery,
 		variantDetailID,
 		variantID)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (r *productRepo) UpdateShopProductRating(ctx context.Context, shop *model.ShopProductRating) error {
+	_, err := r.PSQL.ExecContext(ctx, UpdateShopProductRating, shop.Count, shop.Avg, shop.ShopID)
 	if err != nil {
 		return err
 	}

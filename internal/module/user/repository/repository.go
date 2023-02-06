@@ -396,8 +396,13 @@ func (r *userRepo) GetOrderByOrderID(ctx context.Context, orderID string) (*mode
 		return nil, err
 	}
 
-	json.Unmarshal([]byte(strBuyerAddress), &order.BuyerAddress)
-	json.Unmarshal([]byte(strShopAddress), &order.SellerAddress)
+	if err := json.Unmarshal([]byte(strBuyerAddress), &order.BuyerAddress); err != nil {
+		return nil, err
+	}
+
+	if err := json.Unmarshal([]byte(strShopAddress), &order.SellerAddress); err != nil {
+		return nil, err
+	}
 
 	orderDetail := make([]*model.OrderDetail, 0)
 
@@ -1095,7 +1100,7 @@ func (r *userRepo) CheckUserSealabsPay(ctx context.Context, userid string) (int,
 	return temp, nil
 }
 
-func (r *userRepo) CheckDeletedSealabsPay(ctx context.Context, cardNumber string, userid string) (int, error) {
+func (r *userRepo) CheckDeletedSealabsPay(ctx context.Context, cardNumber, userid string) (int, error) {
 	var temp int
 	if err := r.PSQL.QueryRowContext(ctx, CheckDeletedSealabsPayQuery, cardNumber, userid).
 		Scan(&temp); err != nil {
@@ -1138,7 +1143,7 @@ func (r *userRepo) AddSealabsPayTrans(ctx context.Context, tx postgre.Transactio
 }
 
 func (r *userRepo) UpdateUserSealabsPayTrans(ctx context.Context, tx postgre.Transaction, request body.AddSealabsPayRequest, userid string) error {
-	if _, err := tx.ExecContext(ctx, UpdateUserSealabsPayQuery, request.CardNumber); err != nil {
+	if _, err := tx.ExecContext(ctx, UpdateUserSealabsPayQuery, request.Name, request.CardNumber); err != nil {
 		return err
 	}
 
@@ -1155,7 +1160,7 @@ func (r *userRepo) AddSealabsPay(ctx context.Context, request body.AddSealabsPay
 }
 
 func (r *userRepo) UpdateUserSealabsPay(ctx context.Context, request body.AddSealabsPayRequest, userid string) error {
-	if _, err := r.PSQL.ExecContext(ctx, UpdateUserSealabsPayQuery, request.CardNumber); err != nil {
+	if _, err := r.PSQL.ExecContext(ctx, UpdateUserSealabsPayQuery, request.Name, request.CardNumber); err != nil {
 		return err
 	}
 
@@ -1682,6 +1687,10 @@ func (r *userRepo) GetRefundThreadByRefundID(ctx context.Context, refundID strin
 		}
 		if !refundThreadData.IsBuyer {
 			refundThreadData.UserName = ""
+		}
+		if refundThreadData.PhotoURL == nil {
+			photo := ""
+			refundThreadData.PhotoURL = &photo
 		}
 		refundThreadList = append(refundThreadList, &refundThreadData)
 	}

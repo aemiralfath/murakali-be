@@ -58,11 +58,13 @@ func (u *authUC) Login(ctx context.Context, requestBody body.LoginRequest) (*mod
 		return nil, err
 	}
 
-	if err := u.authRepo.InsertSessionRedis(ctx, u.cfg.JWT.AccessExpMin, fmt.Sprintf("session:%s:%s", user.ID.String(), accessToken.Token), constant.TRUE); err != nil {
+	if err := u.authRepo.InsertSessionRedis(ctx, u.cfg.JWT.AccessExpMin, fmt.Sprintf("session:%s:%s",
+		user.ID.String(), accessToken.Token), constant.TRUE); err != nil {
 		return nil, err
 	}
 
-	if err := u.authRepo.InsertSessionRedis(ctx, u.cfg.JWT.RefreshExpMin, fmt.Sprintf("session:%s:%s", user.ID.String(), refreshToken.Token), constant.TRUE); err != nil {
+	if err := u.authRepo.InsertSessionRedis(ctx, u.cfg.JWT.RefreshExpMin, fmt.Sprintf("session:%s:%s",
+		user.ID.String(), refreshToken.Token), constant.TRUE); err != nil {
 		return nil, err
 	}
 
@@ -94,7 +96,8 @@ func (u *authUC) RefreshToken(ctx context.Context, refreshToken, id string) (*mo
 		return nil, err
 	}
 
-	if err := u.authRepo.InsertSessionRedis(ctx, u.cfg.JWT.AccessExpMin, fmt.Sprintf("session:%s:%s", user.ID.String(), accessToken.Token), constant.TRUE); err != nil {
+	if err := u.authRepo.InsertSessionRedis(ctx, u.cfg.JWT.AccessExpMin, fmt.Sprintf("session:%s:%s",
+		user.ID.String(), accessToken.Token), constant.TRUE); err != nil {
 		return nil, err
 	}
 
@@ -414,7 +417,17 @@ func (u *authUC) CheckUniquePhoneNo(ctx context.Context, phoneNo string) (bool, 
 	return false, nil
 }
 
-func (u *authUC) GoogleAuth(ctx context.Context, state string, userAuth *oauth.GoogleUserResult) (*model.GoogleAuthToken, error) {
+func (u *authUC) GoogleAuth(ctx context.Context, code, state string) (*model.GoogleAuthToken, error) {
+	tokenRes, err := oauth.GetGoogleOauthToken(u.cfg, code)
+	if err != nil {
+		return nil, httperror.New(http.StatusForbidden, response.ForbiddenMessage)
+	}
+
+	userAuth, err := oauth.GetGoogleUser(tokenRes.AccessToken, tokenRes.IDToken)
+	if err != nil {
+		return nil, httperror.New(http.StatusForbidden, response.ForbiddenMessage)
+	}
+
 	user, err := u.authRepo.GetUserByEmail(ctx, userAuth.Email)
 	if err != nil || !user.IsVerify {
 		if err == sql.ErrNoRows {
@@ -482,11 +495,13 @@ func (u *authUC) GoogleAuth(ctx context.Context, state string, userAuth *oauth.G
 		return nil, err
 	}
 
-	if err := u.authRepo.InsertSessionRedis(ctx, u.cfg.JWT.AccessExpMin, fmt.Sprintf("session:%s:%s", user.ID.String(), accessToken.Token), constant.TRUE); err != nil {
+	if err := u.authRepo.InsertSessionRedis(ctx, u.cfg.JWT.AccessExpMin, fmt.Sprintf("session:%s:%s",
+		user.ID.String(), accessToken.Token), constant.TRUE); err != nil {
 		return nil, err
 	}
 
-	if err := u.authRepo.InsertSessionRedis(ctx, u.cfg.JWT.RefreshExpMin, fmt.Sprintf("session:%s:%s", user.ID.String(), refreshToken.Token), constant.TRUE); err != nil {
+	if err := u.authRepo.InsertSessionRedis(ctx, u.cfg.JWT.RefreshExpMin, fmt.Sprintf("session:%s:%s",
+		user.ID.String(), refreshToken.Token), constant.TRUE); err != nil {
 		return nil, err
 	}
 

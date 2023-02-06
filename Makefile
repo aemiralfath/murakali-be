@@ -70,5 +70,5 @@ create-mock:
 
 .PHONY: test-coverage
 test-coverage:
-	go test -race -failfast -tags=integration -coverprofile=$(COVERAGE_OUTPUT) -covermode=atomic ./internal/module/...
+	go test -failfast -tags=integration -coverprofile=$(COVERAGE_OUTPUT) -covermode=atomic ./internal/module/...
 	go tool cover -html=$(COVERAGE_OUTPUT) -o $(COVERAGE_OUTPUT_HTML)

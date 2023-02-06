@@ -34,8 +34,11 @@ const (
 	ASC   = "asc"
 	DESC  = "desc"
 
-	LoginOauth    = "/login"
-	RegisterOauth = "/register"
+	LoginOauth     = "/login"
+	RegisterOauth  = "/register"
+	ONGKIR_API_URL = "https://api.rajaongkir.com/starter"
+	KODE_POS_URL   = "https://kode-pos-murakali.vercel.app/"
+	ONGKIR_API_KEY = "9bc050f97d720a0477556cfa4d8f6de5"
 
 	OrderStatusWaitingToPay     = 1
 	OrderStatusWaitingForSeller = 2

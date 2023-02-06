@@ -65,27 +65,24 @@ const (
 		"p"."min_price" as "min_price", "p"."max_price" as "max_price", "p"."view_count" as "view_count", 
 		"promo"."discount_percentage" as "promo_discount_percentage",  "promo"."discount_fix_price" as "promo_discount_fix_price",
 		"promo"."min_product_price" as "promo_min_product_price",  "promo"."max_discount_price" as "promo_max_discount_price",
-		"v"."discount_percentage" as "voucher_discount_percentage",  "v"."discount_fix_price" as "voucher_discount_fix_price", 
 		"s"."name" as "shop_name", 
 		"c"."name" as "category_name",
 		"a"."province" as "province",
 		"p".listed_status,
 		"p"."created_at",
-		"p"."updated_at"
+		"p"."updated_at",
+		"p"."sku"
 	FROM "product" as "p"
 	LEFT JOIN (
 		SELECT * FROM "promotion"
 		WHERE (now() BETWEEN "promotion"."actived_date" AND "promotion"."expired_date") AND "promotion"."quota" > 0
 	) as "promo" ON "promo"."product_id" = "p"."id"
 	INNER JOIN "shop" as "s" ON "s"."id" = "p"."shop_id"
-	LEFT JOIN (
-		SELECT * FROM "voucher"
-		WHERE (now() BETWEEN "voucher"."actived_date" AND "voucher"."expired_date") AND "voucher"."quota" > 0
-	) as "v" ON "v"."shop_id" = "s"."id"
 	INNER JOIN "category" as "c" ON "c"."id" = "p"."category_id"
 	INNER JOIN "user" as "u" ON "u"."id" = "s"."user_id"
 	INNER JOIN "address" as "a" ON "u"."id" = "a"."user_id"
 	WHERE "p".title ILIKE $1 
+	AND "a"."is_shop_default" = true
 	AND  "c".name ILIKE $2
 	AND ("p".rating_avg BETWEEN $3 AND $4)
 	AND ("p".min_price BETWEEN $5 AND $6)
@@ -97,27 +94,24 @@ const (
 		"p"."min_price" as "min_price", "p"."max_price" as "max_price", "p"."view_count" as "view_count", 
 		"promo"."discount_percentage" as "promo_discount_percentage",  "promo"."discount_fix_price" as "promo_discount_fix_price",
 		"promo"."min_product_price" as "promo_min_product_price",  "promo"."max_discount_price" as "promo_max_discount_price",
-		"v"."discount_percentage" as "voucher_discount_percentage",  "v"."discount_fix_price" as "voucher_discount_fix_price", 
 		"s"."name" as "shop_name", 
 		"c"."name" as "category_name",
 		"a"."province" as "province",
 		"p".listed_status,
 		"p"."created_at",
-		"p"."updated_at"
+		"p"."updated_at",
+		"p"."sku"
 	FROM "product" as "p"
 	LEFT JOIN (
 		SELECT * FROM "promotion"
 		WHERE (now() BETWEEN "promotion"."actived_date" AND "promotion"."expired_date") AND "promotion"."quota" > 0
 	) as "promo" ON "promo"."product_id" = "p"."id"
 	INNER JOIN "shop" as "s" ON "s"."id" = "p"."shop_id"
-	LEFT JOIN (
-		SELECT * FROM "voucher"
-		WHERE (now() BETWEEN "voucher"."actived_date" AND "voucher"."expired_date") AND "voucher"."quota" > 0
-	) as "v" ON "v"."shop_id" = "s"."id"
 	INNER JOIN "category" as "c" ON "c"."id" = "p"."category_id"
 	INNER JOIN "user" as "u" ON "u"."id" = "s"."user_id"
 	INNER JOIN "address" as "a" ON "u"."id" = "a"."user_id"
 	WHERE "p".title ILIKE $1 
+	AND "a"."is_shop_default" = true
 	AND  "c".name ILIKE $2
 	AND ("p".rating_avg BETWEEN $3 AND $4)
 	AND ("p".min_price BETWEEN $5 AND $6)
@@ -145,6 +139,7 @@ const (
 	INNER JOIN "user" as "u" ON "u"."id" = "s"."user_id"
 	INNER JOIN "address" as "a" ON "u"."id" = "a"."user_id"
 	WHERE "p".title ILIKE $1 
+	AND "a"."is_shop_default" = true
 	AND  "c".name ILIKE $2
 	AND ("p".rating_avg BETWEEN $3 AND $4)
 	AND ("p".min_price BETWEEN $5 AND $6)
@@ -157,6 +152,7 @@ const (
 	INNER JOIN "user" as "u" ON "u"."id" = "s"."user_id"
 	INNER JOIN "address" as "a" ON "u"."id" = "a"."user_id"
 	WHERE "p".title ILIKE $1 
+	AND "a"."is_shop_default" = true
 	AND  "c".name ILIKE $2
 	AND ("p".rating_avg BETWEEN $3 AND $4)
 	AND ("p".min_price BETWEEN $5 AND $6)
@@ -308,8 +304,14 @@ const (
 	(product_id, courier_id)
 	 VALUES ($1, $2) RETURNING "id";`
 
+	GetShopProductRating = `
+		SELECT s.id, COUNT(p.id), AVG(p.rating_avg) FROM product p 
+		INNER JOIN shop s on s.id = p.shop_id 
+		WHERE s.id = $1
+		GROUP BY s.id`
+
 	GetRatingProductQuery = `SELECT 
-    	"p"."id", "p"."title", count("r"."id"), avg("r"."rating")  
+    	"p"."id", "p"."title", "p"."shop_id", count("r"."id"), avg("r"."rating")  
 	FROM "product" as "p" INNER JOIN "review" as "r" on "p"."id" = "r"."product_id" 
 	WHERE "r"."deleted_at" IS NULL AND "r"."created_at" >= (now() - interval '1 hour') GROUP BY "p"."id"`
 
@@ -322,6 +324,8 @@ const (
 	GetListedStatusQuery = `SELECT listed_status from "product" WHERE id = $1 AND deleted_at IS NULL `
 
 	UpdateListedStatusQuery = `UPDATE "product" SET "listed_status" = $1, "updated_at" = now() WHERE "id" = $2 `
+
+	UpdateShopProductRating = `UPDATE "shop" SET "total_product" = $1, "rating_avg" = $2 WHERE "id" = $3`
 
 	UpdateProductQuery = `UPDATE 
 	"product" SET 

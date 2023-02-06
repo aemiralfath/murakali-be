@@ -325,14 +325,14 @@ func (u *userUC) ChangeOrderStatus(ctx context.Context, userID string, requestBo
 	}
 
 	if requestBody.OrderStatusID == constant.OrderStatusCompleted {
-		if err = u.txRepo.WithTransaction(func(tx postgre.Transaction) error {
-			productUnitSolds, err := u.userRepo.GetProductUnitSoldByOrderID(ctx, tx, requestBody.OrderID)
-			if err != nil {
-				return err
+		if err := u.txRepo.WithTransaction(func(tx postgre.Transaction) error {
+			productUnitSolds, errGet := u.userRepo.GetProductUnitSoldByOrderID(ctx, tx, requestBody.OrderID)
+			if errGet != nil {
+				return errGet
 			}
 			for _, productUnitSold := range productUnitSolds {
 				newQty := productUnitSold.Quantity + productUnitSold.UnitSold
-				if err = u.userRepo.UpdateProductUnitSold(ctx, tx, productUnitSold.ProductID.String(), newQty); err != nil {
+				if err := u.userRepo.UpdateProductUnitSold(ctx, tx, productUnitSold.ProductID.String(), newQty); err != nil {
 					return err
 				}
 			}
@@ -1806,11 +1806,11 @@ func (u *userUC) CreateTransaction(ctx context.Context, userID string, requestBo
 			}
 			orderData.TotalPrice = subOrderPrice
 
-			buyerAddressString, errBAS := u.getAdressString(ctx, userModel.ID.String(), false)
+			buyerAddressString, errBAS := u.getAddressString(ctx, userModel.ID.String(), false)
 			if errBAS != nil {
 				return nil, errBAS
 			}
-			shopAddressString, errSAS := u.getAdressString(ctx, cartShop.UserID.String(), true)
+			shopAddressString, errSAS := u.getAddressString(ctx, cartShop.UserID.String(), true)
 			if errSAS != nil {
 				return nil, errSAS
 			}
@@ -1915,8 +1915,7 @@ func (u *userUC) CreateTransaction(ctx context.Context, userID string, requestBo
 	return data.(string), nil
 }
 
-func (u *userUC) getAdressString(ctx context.Context, userID string, isShop bool) (string, error) {
-
+func (u *userUC) getAddressString(ctx context.Context, userID string, isShop bool) (string, error) {
 	AddressModel := &model.Address{}
 	var err error
 	if isShop {
@@ -2015,7 +2014,7 @@ func (u *userUC) CreateRefundUser(ctx context.Context, userID string, requestBod
 	return nil
 }
 
-func (u *userUC) GetRefundOrder(ctx context.Context, userID string, orderID string) (*body.GetRefundThreadResponse, error) {
+func (u *userUC) GetRefundOrder(ctx context.Context, userID, orderID string) (*body.GetRefundThreadResponse, error) {
 	orderData, err := u.userRepo.GetOrderModelByID(ctx, orderID)
 	if err != nil {
 		return nil, err
@@ -2077,7 +2076,7 @@ func (u *userUC) GetRefundOrder(ctx context.Context, userID string, orderID stri
 
 	refundThreadResponse := &body.GetRefundThreadResponse{
 		UserName:      username,
-		PhotoURL:      photoURL,
+		PhotoURL:      &photoURL,
 		RefundData:    refundData,
 		RefundThreads: refundThreadData,
 	}
