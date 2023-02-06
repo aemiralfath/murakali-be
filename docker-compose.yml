@@ -1,0 +1,99 @@
+version: "3.8"
+services:
+  api:
+    container_name: murakali_api
+    image: golang:1.19
+    restart: "no"
+    volumes:
+      - ./:/murakali-be
+    working_dir: /murakali-be
+    command: /bin/bash -c "go run ./cmd/api/main.go"
+    ports:
+      - "8080:8080"
+    env_file: .env
+    depends_on:
+      - postgres
+      - redis
+      - adminer
+
+  cron:
+    container_name: murakali_cron
+    image: golang:1.19
+    restart: "no"
+    volumes:
+      - ./:/murakali-cron
+    working_dir: /murakali-cron
+    command: /bin/bash -c "go run ./cmd/cron/main.go"
+    ports:
+      - "8084:8080"
+    env_file: .env
+    depends_on:
+      - api
+
+  adminer:
+    container_name: murakali_adminer
+    image: adminer:standalone
+    restart: on-failure
+    ports:
+      - "8081:8080"
+
+  seeder:
+      container_name: seeder_service
+      image: golang:1.19
+      restart: "no"
+      volumes:
+        - ./:/murakali-seeder
+      working_dir: /murakali-seeder
+      command: /bin/bash -c "go run ./cmd/seeder/main.go"
+      ports:
+        - "8083:8080"
+      env_file: .env
+      depends_on:
+        - postgres
+        - adminer
+
+  postgres:
+    container_name: murakali_postgres
+    image: postgres:alpine
+    restart: on-failure
+    ports:
+      - "5431:5432/tcp"
+    networks:
+        default:
+          aliases:
+            - postgres_murakali
+    env_file: .env
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_DB=${POSTGRES_DB}
+
+  redis:
+    container_name: murakali_redis
+    image: "redis:alpine"
+    restart: on-failure
+    env_file: .env
+    command: redis-server --requirepass ${REDIS_PASSWORD}
+    ports:
+      - "6378:6379/tcp"
+    networks:
+      default:
+        aliases:
+          - redis_murakali
+
+  migrate-up:
+    image: migrate/migrate
+    restart: on-failure
+    volumes:
+      - ./sql/migrations:/migrations
+    env_file: .env
+    command:
+      [
+        '-path',
+        '/migrations',
+        '-database',
+        'postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres/${POSTGRES_DB}?sslmode=disable',
+        'up',
+      ]
+    depends_on:
+      - postgres

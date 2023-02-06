@@ -1,0 +1,87 @@
+fast: false
+linters-settings:
+  govet:
+    check-shadowing: true
+    enable:
+      - atomic
+      - cgocall
+      - loopclosure
+      - stdmethods
+      - structtag
+  golint:
+    min-confidence: 0
+  gocyclo:
+    min-complexity: 60
+  nestif:
+    min-complexity: 25
+  maligned:
+    suggest-new: true
+  goconst:
+    min-len: 2
+    min-occurrences: 2
+  misspell:
+    locale: US
+  lll:
+    line-length: 150
+  gocritic:
+    enabled-tags:
+      - diagnostic
+      - experimental
+      - opinionated
+      - performance
+      - style
+    disabled-checks:
+      - hugeParam
+      - wrapperFunc
+      - dupImport # https://github.com/go-critic/go-critic/issues/845
+      - ifElseChain
+      - octalLiteral
+  funlen:
+    lines: 300
+    statements: 80
+
+linters: # don't use --enable-all
+  disable-all: true
+  enable:
+    - bodyclose
+    - unused
+    - depguard
+    - dogsled
+    - errcheck
+    - funlen
+    - gochecknoinits
+    - goconst
+    - gocritic
+    - gocyclo
+    - gofmt
+    - revive
+    - gosec
+    - gosimple
+    - govet
+    - ineffassign
+    - lll
+    - misspell
+    - nakedret
+    - nestif
+    - exportloopref
+    - staticcheck
+    - stylecheck
+    - typecheck
+    - unconvert
+    - unparam
+    - unused
+    - whitespace
+    - govet
+
+run:
+  tests: false
+  skip-dirs:
+    - vendor/
+    - fakers/
+    - sql/
+  skip-dirs-use-default: true
+  modules-download-mode: vendor
+  skip-files:
+    - ./*_test.go
+    - pkg/email/builder.go
+    - query.go

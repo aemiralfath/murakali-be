@@ -1,0 +1,5384 @@
+openapi: 3.0.0
+servers:
+  # Added by API Auto Mocking Plugin
+  - description: SwaggerHub API Auto Mocking
+  - url: http://localhost:8080
+  - url: https://be.murakali.store
+  - url: https://virtserver.swaggerhub.com/JULIUSBECKHAM/Murakali/1.0.0
+
+info:
+  version: "1.0.0"
+  title: Murakali
+  description: The API for Murakali
+
+tags:
+  - name: Auth
+    description: Related to Auth perspective.
+  - name: User
+    description: Related to User perspective.
+  - name: Product
+    description: Related to User perspective.
+  - name: Cart
+    description: Related to Cart perspective.
+  - name: Location
+    description: Related to Location perspective.
+  - name: Seller
+    description: Related to Seller perspective.
+paths:
+  "/api/v1/auth/register":
+    post:
+      summary: register user
+      description: >-
+        user register
+      tags:
+        - Auth
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RegisterEmailRequest"
+      responses:
+        "201":
+          description: CREATED
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RegisterEmailResponse"
+    put:
+      summary: register user after verified email
+      description: >-
+        user register
+      tags:
+        - Auth
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RegisterRequest"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DefaultSuccess"
+
+  "/api/v1/auth/verify":
+    post:
+      summary: set user is verify
+      description: >-
+        user register set verification use request body
+      tags:
+        - Auth
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/VerifyEmailRequest"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DefaultSuccess"
+    get:
+      summary: set user is verify
+      description: >-
+        user register set verification use param query
+      tags:
+        - Auth
+      parameters:
+        - in: query
+          name: code
+          schema:
+            type: string
+          required: true
+        - in: query
+          name: email
+          schema:
+            type: string
+          required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DefaultSuccess"
+
+  "/api/v1/auth/refresh":
+    get:
+      summary: refresh token
+      description: >-
+        refresh token
+      tags:
+        - Auth
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RefreshTokenResponse"
+
+  "/api/v1/auth/login":
+    post:
+      summary: Login
+      description: >-
+        User authentication to retrieve access token for further API access.
+      tags:
+        - Auth
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoginRequest"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LoginResponse"
+  "/api/v1/auth/logout":
+    get:
+      summary: Logout
+      description: >-
+        User authentication to logout.
+      tags:
+        - Auth
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DefaultSuccess"
+
+  "/api/v1/auth/reset-password":
+    post:
+      summary: Reset Password user
+      description: >-
+        User need to reset the password
+      tags:
+        - Auth
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RegisterEmailRequest"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DefaultSuccess"
+    patch:
+      summary: Update Password user
+      description: >-
+        User update the Password
+      tags:
+        - Auth
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/NewPasswordRequest"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DefaultSuccess"
+
+  "/api/v1/auth/unique/username/{username}":
+    get:
+      summary: Check Unique Username
+      description: >-
+        Check Unique Username
+      tags:
+        - Auth
+      parameters:
+        - in: path
+          name: username
+          schema:
+            type: string
+          required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CheckUniqueTrueSuccess"
+
+  "/api/v1/auth/unique/phone-no/{phone_no}":
+    get:
+      summary: Check Unique Phone Number
+      description: >-
+        Check Unique Phone Number
+      tags:
+        - Auth
+      parameters:
+        - in: path
+          name: phone_no
+          schema:
+            type: string
+          required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CheckUniqueTrueSuccess"
+
+  "/api/v1/location/cost":
+    post:
+      summary: Get Shipping Cost
+      description: >-
+        Get Shipping Cost
+      tags:
+        - Location
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CostShippingRequest"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CostShippingSuccess"
+
+  "/api/v1/location/province":
+    get:
+      summary: Get Province
+      description: >-
+        Get Province
+      tags:
+        - Location
+
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GetProvinceResponse"
+  "/api/v1/location/province/city":
+    get:
+      summary: Get City
+      description: >-
+        Get City
+      tags:
+        - Location
+      parameters:
+        - in: query
+          name: province_id
+          schema:
+            type: string
+          required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GetCityResponse"
+
+  "/api/v1/location/province/city/subdistrict":
+    get:
+      summary: Get Sub District
+      description: >-
+        Get Sub District
+      tags:
+        - Location
+      parameters:
+        - in: query
+          name: province
+          required: true
+          schema:
+            type: string
+            description: >-
+              query for searching province name
+        - in: query
+          name: city
+          required: true
+          schema:
+            type: string
+            description: >-
+              query for searching city name
+
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GetSubDistrictResponse"
+
+  "/api/v1/location/province/city/subdistrict/urban":
+    get:
+      summary: Get Urban
+      description: >-
+        Get Urban
+      tags:
+        - Location
+      parameters:
+        - in: query
+          name: province
+          required: true
+          schema:
+            type: string
+        - in: query
+          name: city
+          required: true
+          schema:
+            type: string
+        - in: query
+          name: subdistrict
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GetUrbanResponse"
+
+  "/api/v1/user/profile":
+    get:
+      summary: Get User Profile
+      description: >-
+        Get User profile detail
+      tags:
+        - User
+      security:
+        - BEARER: []
+
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GetUserProfileResponse"
+
+    put:
+      summary: Edit User Profile
+      description: >-
+        Edit user profile
+      tags:
+        - User
+      security:
+        - BEARER: []
+
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/EditProfileRequest"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DefaultSuccess"
+
+  "/api/v1/user/email":
+    post:
+      summary: verification email for change email
+      description: >-
+        verification email for change email
+      tags:
+        - User
+      security:
+        - BEARER: []
+
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/EditEmailRequest"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DefaultSuccess"
+    patch:
+      summary: change email user
+      description: >-
+        change email user
+      tags:
+        - User
+      security:
+        - BEARER: []
+
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/EditEmailRequest"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DefaultSuccess"
+  "/api/v1/user/profile/picture":
+    post:
+      summary: Edit User Profile Picture
+      description: >-
+        Edit user profile picture
+      tags:
+        - User
+      security:
+        - BEARER: []
+
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              $ref: "#/components/schemas/EditProfilePictureRequest"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DefaultSuccess"
+
+  "/api/v1/user/address":
+    get:
+      summary: Get User Address
+      description: >-
+        get all user address
+      tags:
+        - User
+      security:
+        - BEARER: []
+      parameters:
+        - in: query
+          name: is_default
+          schema:
+            type: string
+            enum: ["true", "false"]
+        - in: query
+          name: shop_default
+          schema:
+            type: string
+            enum: ["true", "false"]
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GetAddressResponse"
+
+    post:
+      summary: Create Address
+      description: >-
+        User create new address
+      tags:
+        - User
+      security:
+        - BEARER: []
+
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateAddressRequest"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DefaultSuccess"
+  "/api/v1/user/address/{address_id}":
+    get:
+      summary: Get Address
+      description: >-
+        User get address by id
+      tags:
+        - User
+      security:
+        - BEARER: []
+      parameters:
+        - in: path
+          name: address_id
+          schema:
+            type: string
+          required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GetAddressByIDResponse"
+    put:
+      summary: Edit Address
+      description: >-
+        User create new address
+      tags:
+        - User
+      security:
+        - BEARER: []
+      parameters:
+        - in: path
+          name: address_id
+          schema:
+            type: string
+          required: true
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/EditAddressRequest"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DefaultSuccess"
+    delete:
+      summary: Delete Address
+      description: >-
+        User Delete address
+      tags:
+        - User
+      security:
+        - BEARER: []
+      parameters:
+        - in: path
+          name: address_id
+          schema:
+            type: string
+          required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DefaultSuccess"
+
+  "/api/v1/user/register-merchant":
+    post:
+      summary: user register merchant / shop
+      description: >-
+        User can register as merchant or shop
+      tags:
+        - User
+      security:
+        - BEARER: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RegisterMerchantRequest"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DefaultSuccess"
+
+  "/api/v1/user/sealab-pay":
+    get:
+      summary: Get all SeaLab Pay Account
+      description: >-
+        Get all SeaLab Pay Account
+      tags:
+        - User
+      security:
+        - BEARER: []
+
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GetSeaLabPayResponse"
+    post:
+      summary: Create SeaLab Pay
+      description: >-
+        Create new SeaLab Pay account
+      tags:
+        - User
+      security:
+        - BEARER: []
+
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateSeaLabPayRequest"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CreateSeaLabPayResponse"
+
+  "/api/v1/user/sealab-pay/{card_number}":
+    patch:
+      summary: Set default SeaLab Pay
+      description: >-
+        Set default SeaLab Pay account
+      tags:
+        - User
+      security:
+        - BEARER: []
+      parameters:
+        - in: path
+          name: card_number
+          schema:
+            type: string
+          required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SetDefaultSeaLabPayResponse"
+    delete:
+      summary: delete SeaLab Pay
+      description: >-
+        Delete SeaLab Pay account
+      tags:
+        - User
+      security:
+        - BEARER: []
+      parameters:
+        - in: path
+          name: card_number
+          schema:
+            type: string
+          required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DefaultSuccess"
+
+  "/api/v1/user/wallet":
+    patch:
+      summary: Top Up wallet
+      description: >-
+        top up wallet
+      tags:
+        - User
+      security:
+        - BEARER: []
+
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TopUpWalletRequest"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CreateTransactionResponse"
+    post:
+      summary: Setup pin wallet
+      description: >-
+        setup pin wallet (create wallet)
+      tags:
+        - User
+      security:
+        - BEARER: []
+
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SetupPinWalletRequest"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DefaultSuccess"
+    get:
+      summary: Get user wallet
+      description: >-
+        Get user wallet
+      tags:
+        - User
+      security:
+        - BEARER: []
+
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GetWalletResponse"
+    put:
+      summary: input pin wallet
+      description: >-
+        input pin wallet
+      tags:
+        - User
+      security:
+        - BEARER: []
+
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/InputPinWalletRequest"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InputPinWalletResponse"
+
+  "/api/v1/user/wallet/history":
+    get:
+      summary: Get user wallet history
+      description: >-
+        Get user wallet history
+      tags:
+        - User
+      parameters:
+        - in: query
+          name: page
+          schema:
+            type: integer
+          required: false
+        - in: query
+          name: limit
+          schema:
+            type: integer
+          required: false
+        - in: query
+          name: sort
+          schema:
+            type: string
+          required: false
+          example: "ASC"
+
+      security:
+        - BEARER: []
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GetWalletResponse"
+
+  "/api/v1/user/password":
+    post:
+      summary: verification password
+      description: >-
+        user verification password
+      tags:
+        - User
+      security:
+        - BEARER: []
+
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/VerificationPasswordRequest"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DefaultSuccess"
+    patch:
+      summary: Update Password
+      description: >-
+        user update password
+      tags:
+        - User
+      security:
+        - BEARER: []
+
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/NewPasswordRequest"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DefaultSuccess"
+
+  "/api/v1/user/order":
+    get:
+      summary: Get User Orders
+      description: >-
+        Get User Orders
+      tags:
+        - User
+      security:
+        - BEARER: []
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GetSellerOrderResponse"
+
+  "/api/v1/user/transaction":
+    post:
+      summary: user create transaction
+      description: >-
+        user create transaction
+      tags:
+        - User
+      security:
+        - BEARER: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateTransactionRequest"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CreateTransactionResponse"
+
+  "/api/v1/user/transaction/slp-payment":
+    post:
+      summary: user create slp payment
+      description: >-
+        user create slp payment
+      tags:
+        - User
+      security:
+        - BEARER: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateSlpPaymentRequest"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CreateSlpPaymentResponse"
+  "/api/v1/product/picture":
+    post:
+      summary: Upload image to cloudinary only
+      description: >-
+        Upload Image to cloudinary only, this endpoint will not save url in database
+      tags:
+        - Product
+      security:
+        - BEARER: []
+
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              $ref: "#/components/schemas/EditProfilePictureRequest"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UploadProductPictureResponse"
+
+  "/api/v1/product/":
+    post:
+      summary: create  product
+      description: >-
+        user create for product
+      tags:
+        - Product
+      security:
+        - BEARER: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateProductRequest"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DefaultSuccess"
+    get:
+      summary: Get Product {WIP}
+      description: >-
+        get product
+      tags:
+        - Product
+
+      parameters:
+        - in: query
+          name: listed_status
+          schema:
+            type: string
+            enum: [0, 1, 2]
+            description: >-
+              query for see active product(0: all product, 1 :active product, 2 : non active product)
+        - in: query
+          name: search
+          schema:
+            type: string
+            description: >-
+              query for searching product by title
+        - in: query
+          name: category
+          schema:
+            type: string
+            description: >-
+              query for searching product by category
+        - in: query
+          name: limit
+          schema:
+            type: number
+            description: >-
+              query for limit show product
+        - in: query
+          name: page
+          schema:
+            type: number
+            description: >-
+              query for page product
+        - in: query
+          name: sort_by
+          schema:
+            type: string
+            enum: [min_price, unit_sold, created_at, view_count, recommended]
+            description: >-
+              query for sort by product
+        - in: query
+          name: sort
+          schema:
+            type: string
+            enum: [asc, desc]
+            description: >-
+              query for sort order product descrending or ascending
+        - in: query
+          name: min_price
+          schema:
+            type: number
+            description: >-
+              query for minimium price show product
+        - in: query
+          name: max_price
+          schema:
+            type: number
+            description: >-
+              query for max price show product
+        - in: query
+          name: min_rating
+          schema:
+            type: number
+            description: >-
+              query for minimum rating show product
+        - in: query
+          name: max_rating
+          schema:
+            type: number
+            description: >-
+              query for max rating show product
+        - in: query
+          name: shop_id
+          schema:
+            type: string
+            description: >-
+              query for shop id show product
+        - in: query
+          name: province_ids
+          schema:
+            type: string
+            description: >-
+              input province id, (no spaces between id) example: 32,33,34,35
+
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GetProductResponse"
+  "/api/v1/product/{product_id}":
+    put:
+      summary: update product
+      description: >-
+        user update for product
+      tags:
+        - Product
+      parameters:
+        - in: path
+          name: product_id
+          schema:
+            type: string
+          required: true
+      security:
+        - BEARER: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateProductRequest"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DefaultSuccess"
+    get:
+      summary: Get Product
+      description: >-
+        get product
+      tags:
+        - Product
+
+      parameters:
+        - in: path
+          name: product_id
+          schema:
+            type: string
+          required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GetProductDetailResponse"
+
+  "/api/v1/product/{product_id}/picture":
+    get:
+      summary: Get Product Picture
+      description: >-
+        get product picture
+      tags:
+        - Product
+
+      parameters:
+        - in: path
+          name: product_id
+          schema:
+            type: string
+          required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GetAllImageProductResponse"
+
+  "/api/v1/product/status/{product_id}":
+    put:
+      summary: update product listed list status
+      description: >-
+        update for product  listed list status
+      tags:
+        - Product
+      parameters:
+        - in: path
+          name: product_id
+          schema:
+            type: string
+          required: true
+      security:
+        - BEARER: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DefaultSuccess"
+
+  "/api/v1/product/bulk-status":
+    patch:
+      summary: update product listed list bulk status
+      description: >-
+        update for product  listed list status bulk
+      tags:
+        - Seller
+      security:
+        - BEARER: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateProductListedStatusBulkRequest"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DefaultSuccess"
+
+  "/api/v1/product/favorite":
+    get:
+      summary: Get Favorite Product
+      description: >-
+        get product
+      tags:
+        - Product
+      security:
+        - BEARER: []
+      parameters:
+        - in: query
+          name: search
+          schema:
+            type: string
+            description: >-
+              query for searching product by title
+        - in: query
+          name: category
+          schema:
+            type: string
+            description: >-
+              query for searching product by category
+
+        - in: query
+          name: shop_id
+          schema:
+            type: string
+            description: >-
+              query for searching product by shop
+
+        - in: query
+          name: limit
+          schema:
+            type: number
+            description: >-
+              query for limit show product
+        - in: query
+          name: page
+          schema:
+            type: number
+            description: >-
+              query for page product
+        - in: query
+          name: sort_by
+          schema:
+            type: string
+            enum: [min_price, unit_sold, created_at, view_count, recommended]
+            description: >-
+              query for sort by product
+        - in: query
+          name: sort
+          schema:
+            type: string
+            enum: [asc, desc]
+            description: >-
+              query for sort order product descrending or ascending
+        - in: query
+          name: min_price
+          schema:
+            type: number
+            description: >-
+              query for minimium price show product
+        - in: query
+          name: max_price
+          schema:
+            type: number
+            description: >-
+              query for max price show product
+        - in: query
+          name: min_rating
+          schema:
+            type: number
+            description: >-
+              query for minimum rating show product
+        - in: query
+          name: max_rating
+          schema:
+            type: number
+            description: >-
+              query for max rating show product
+        - in: query
+          name: shop_name
+          schema:
+            type: string
+            description: >-
+              query for shop name show product
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GetFavoriteProductResponse"
+    post:
+      summary: Create Favorite Product
+      description: >-
+        create favorite product
+      tags:
+        - Product
+      security:
+        - BEARER: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateProductFavoriteRequest"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CreateProductFavoriteResponse"
+    delete:
+      summary: Delete Favorite Product
+      description: >-
+        delete favorite product
+      tags:
+        - Product
+      security:
+        - BEARER: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DeleteProductFavoriteRequest"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DeleteProductFavoriteResponse"
+
+  "/api/v1/product/favorite/check":
+    post:
+      summary: Check Favorite Product
+      description: >-
+        check favorite product
+      tags:
+        - Product
+      security:
+        - BEARER: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateProductFavoriteRequest"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CheckProductIsFavoriteResponse"
+
+  "/api/v1/product/recommended":
+    get:
+      summary: Get Recommended Product List
+      description: >-
+        Get Recommended Product List
+      tags:
+        - Product
+
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GetRecommendedProductListResponse"
+
+  "/api/v1/product/{product_id}/review":
+    get:
+      summary: Get Product Review
+      description: >-
+        get product
+      tags:
+        - Product
+      parameters:
+        - in: path
+          name: product_id
+          schema:
+            type: string
+          required: true
+        - in: query
+          name: rating
+          schema:
+            type: number
+        - in: query
+          name: show_comment
+          schema:
+            type: boolean
+        - in: query
+          name: show_image
+          schema:
+            type: boolean
+        - in: query
+          name: sort
+          schema:
+            type: string
+        - in: query
+          name: limit
+          schema:
+            type: number
+        - in: query
+          name: page
+          schema:
+            type: number
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GetReviewProductResponse"
+
+  "/api/v1/product/{product_id}/review/rating":
+    get:
+      summary: Get Review Rating Product
+      description: >-
+        get product
+      tags:
+        - Product
+      parameters:
+        - in: path
+          name: product_id
+          schema:
+            type: string
+          required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GetTotalRatingReviewProductResponse"
+
+  "/api/v1/product/review/{product_id}":
+    post:
+      summary: create review product
+      description: >-
+        user create review for product
+      tags:
+        - Product
+
+      security:
+        - BEARER: []
+      parameters:
+        - in: path
+          name: product_id
+          schema:
+            type: string
+          required: true
+
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateProductReviewRequest"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GetProductReviewResponse"
+
+  "/api/v1/product/category":
+    get:
+      summary: Get Product Category
+      description: >-
+        Get Product Category on root
+      tags:
+        - Product
+
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GetCategoryResponse"
+
+  "/api/v1/product/category/{name_lvl_one}":
+    get:
+      summary: Get Product Category
+      description: >-
+        Get Product Category on root
+      tags:
+        - Product
+
+      parameters:
+        - in: path
+          name: name_lvl_one
+          required: true
+          schema:
+            type: string
+            description: >-
+              query category name
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GetCategoryByNameLvlOneResponse"
+
+  "/api/v1/product/category/{name_lvl_one}/{name_lvl_two}":
+    get:
+      summary: Get Product Category
+      description: >-
+        Get Product Category on root
+      tags:
+        - Product
+
+      parameters:
+        - in: path
+          name: name_lvl_one
+          required: true
+          schema:
+            type: string
+            description: >-
+              query category name level one
+        - in: path
+          name: name_lvl_two
+          required: true
+          schema:
+            type: string
+            description: >-
+              query category name level two
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GetCategoryByNameLvlTwoResponse"
+
+  "/api/v1/product/category/{name_lvl_one}/{name_lvl_two}/{name_lvl_three}":
+    get:
+      summary: Get Product Category
+      description: >-
+        Get Product Category on root
+      tags:
+        - Product
+
+      parameters:
+        - in: path
+          name: name_lvl_one
+          required: true
+          schema:
+            type: string
+            description: >-
+              query category name level one
+        - in: path
+          name: name_lvl_two
+          required: true
+          schema:
+            type: string
+            description: >-
+              query category name level two
+        - in: path
+          name: name_lvl_three
+          required: true
+          schema:
+            type: string
+            description: >-
+              query category name level three
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GetCategoryByNameLvlThreeResponse"
+
+  "/api/v1/product/banner":
+    get:
+      summary: Get Banners
+      description: >-
+        get banners
+      tags:
+        - Product
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GetBannerResponse"
+
+  "/api/v1/cart/hover-home":
+    get:
+      summary: Get User Cart In Home
+      description: >-
+        Get User Cart In Home
+      tags:
+        - Cart
+      security:
+        - BEARER: []
+      parameters:
+        - in: query
+          name: limit
+          schema:
+            type: number
+            description: >-
+              query for limit show products
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GetCartInHomeResponse"
+
+  "/api/v1/cart/items":
+    get:
+      summary: Get User Cart product
+      description: >-
+        get user all item cart
+      tags:
+        - Cart
+      security:
+        - BEARER: []
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GetCartResponse"
+    post:
+      summary: Create User Cart product
+      description: >-
+        Create new item cart
+      tags:
+        - Cart
+      security:
+        - BEARER: []
+
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateCartRequest"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CreateCartResponse"
+    put:
+      summary: update User Cart product
+      description: >-
+        Create new item cart
+      tags:
+        - Cart
+      security:
+        - BEARER: []
+
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateCartRequest"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CreateCartResponse"
+
+  "/api/v1/cart/items/{id}":
+    delete:
+      summary: delete Cart Item
+      description: >-
+        Delete Cart
+      tags:
+        - Cart
+      security:
+        - BEARER: []
+      parameters:
+        - in: path
+          name: id
+          schema:
+            type: string
+          required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DefaultSuccess"
+
+  "/api/v1/cart/voucher":
+    get:
+      summary: Get All Voucher Marketplace for Cart
+      description: >-
+        Get All Voucher Marketplace for cart
+      tags:
+        - Cart
+      security:
+        - BEARER: []
+      parameters:
+        - in: query
+          name: limit
+          schema:
+            type: number
+        - in: query
+          name: page
+          schema:
+            type: number
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GetAllSellerVoucherResponse"
+
+  "/api/v1/cart/voucher/{shop_id}":
+    get:
+      summary: Get All Voucher Shop
+      description: >-
+        Get All Voucher Shop
+      tags:
+        - Cart
+      security:
+        - BEARER: []
+      parameters:
+        - in: path
+          name: shop_id
+          schema:
+            type: string
+          required: true
+        - in: query
+          name: limit
+          schema:
+            type: number
+        - in: query
+          name: page
+          schema:
+            type: number
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GetAllSellerVoucherResponse"
+  "/api/v1/seller/courier":
+    get:
+      summary: Get Seller Courier Information
+      description: >-
+        Get Seller Courier Information
+      tags:
+        - Seller
+      security:
+        - BEARER: []
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GetSellerCourierResponse"
+    post:
+      summary: Post Seller Courier
+      description: >-
+        Post Seller Courier
+      tags:
+        - Seller
+      security:
+        - BEARER: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SellerCourierRequest"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DefaultSuccess"
+
+  "/api/v1/seller/courier/{seller_courier_id}":
+    delete:
+      summary: delete Seller Courier
+      description: >-
+        Delete Seller Courier
+      tags:
+        - Seller
+      security:
+        - BEARER: []
+      parameters:
+        - in: path
+          name: seller_courier_id
+          schema:
+            type: string
+          required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DefaultSuccess"
+
+  "/api/v1/seller/{seller_id}":
+    get:
+      summary: Get Seller Detail
+      description: >-
+        Get Seller Detail
+      tags:
+        - Seller
+      security:
+        - BEARER: []
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GetSellerDetailResponse"
+
+  "/api/v1/seller/{seller_id}/category":
+    get:
+      summary: Get Seller Category
+      description: >-
+        Get Seller Category
+      tags:
+        - Seller
+      security:
+        - BEARER: []
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GetSellerCategoryResponse"
+
+  "/api/v1/seller/order":
+    get:
+      summary: Get Seller Order
+      description: >-
+        Get Seller Order
+      tags:
+        - Seller
+      parameters:
+        - in: query
+          name: sort_by
+          schema:
+            type: string
+            enum: [is_withdraw, created_at]
+            description: >-
+              query for sort order
+        - in: query
+          name: sort
+          schema:
+            type: string
+            enum: [asc, desc]
+            description: >-
+              query for sort order descrending or ascending
+      security:
+        - BEARER: []
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GetSellerOrderResponse"
+  "/api/v1/seller/information":
+    get:
+      summary: Get Seller information
+      description: >-
+        Get Seller information
+      tags:
+        - Seller
+      security:
+        - BEARER: []
+
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GetSellerInformationResponse"
+  "/api/v1/seller/order/{order_id}":
+    get:
+      summary: Get Seller Orders
+      description: >-
+        Get Seller Orders
+      tags:
+        - Seller
+      security:
+        - BEARER: []
+      parameters:
+        - in: path
+          name: order_id
+          schema:
+            type: string
+          required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GetOrderDetailResponse"
+  "/api/v1/seller/order-resi/{order_id}":
+    patch:
+      summary: Get Seller Orders
+      description: >-
+        Get Seller Orders
+      tags:
+        - Seller
+      security:
+        - BEARER: []
+      parameters:
+        - in: path
+          name: order_id
+          schema:
+            type: string
+          required: true
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ChangeOrderResiRequest"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DefaultSuccess"
+  "/api/v1/seller/order-status":
+    patch:
+      summary: Get Seller Orders
+      description: >-
+        Get Seller Orders
+      tags:
+        - Seller
+      security:
+        - BEARER: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ChangeOrderStatusRequest"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DefaultSuccess"
+
+  "/api/v1/seller/voucher":
+    get:
+      summary: Get All Seller Voucher
+      description: >-
+        Get All Seller Voucher
+      tags:
+        - Seller
+      security:
+        - BEARER: []
+      parameters:
+        - in: query
+          name: voucher_status
+          description: (1 All, 2 Will Come, 3 On Going, 4 HasEnded)
+          schema:
+            type: string
+            enum: [1, 2, 3, 4]
+        - in: query
+          name: limit
+          schema:
+            type: number
+        - in: query
+          name: page
+          schema:
+            type: number
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GetAllSellerVoucherResponse"
+    post:
+      summary: Create Voucher Seller
+      description: >-
+        Create Voucher Seller
+      tags:
+        - Seller
+      security:
+        - BEARER: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateVoucherSellerRequest"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DefaultSuccess"
+    put:
+      summary: Update Voucher Seller
+      description: >-
+        Update Voucher Seller
+      tags:
+        - Seller
+      security:
+        - BEARER: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateVoucherSellerRequest"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DefaultSuccess"
+
+  "/api/v1/seller/voucher/{id}":
+    get:
+      summary: Get Voucher Detail Seller
+      description: >-
+        Get Voucher Detail Seller
+      tags:
+        - Seller
+      security:
+        - BEARER: []
+      parameters:
+        - in: path
+          name: id
+          schema:
+            type: string
+          required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GetVoucherDetailSellerResponse"
+    delete:
+      summary: Delete Seller Voucher
+      description: >-
+        Delete Seller Voucher
+      tags:
+        - Seller
+      security:
+        - BEARER: []
+      parameters:
+        - in: path
+          name: id
+          schema:
+            type: string
+          required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DefaultSuccess"
+
+  "/api/v1/seller/promotion":
+    get:
+      summary: Get All Seller Promotion
+      description: >-
+        Get All Seller Promotion
+      tags:
+        - Seller
+      security:
+        - BEARER: []
+      parameters:
+        - in: query
+          name: promo_status
+          description: (1 All, 2 Will Come, 3 On Going, 4 HasEnded)
+          schema:
+            type: string
+            enum: [1, 2, 3, 4]
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GetAllPromotionSellerResponse"
+    post:
+      summary: Create Seller Promotion
+      description: >-
+        Create Seller Promotion
+      tags:
+        - Seller
+      security:
+        - BEARER: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreatePromotionSellerRequest"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CreatedRowSuccess"
+    put:
+      summary: Update Seller Promotion
+      description: >-
+        Update Seller Promotion
+      tags:
+        - Seller
+      security:
+        - BEARER: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdatePromotionSellerRequest"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DefaultSuccess"
+  "/api/v1/seller/promotion/{id}":
+    get:
+      summary: Get Promotion Detail Seller
+      description: >-
+        Get Promotion Detail Seller
+      tags:
+        - Seller
+      security:
+        - BEARER: []
+      parameters:
+        - in: path
+          name: id
+          schema:
+            type: string
+          required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GetPromotionDetailSellerResponse"
+
+  "/api/v1/admin/voucher":
+    get:
+      summary: Get All Voucher Marketplace Admin
+      description: >-
+        Get All Voucher Marketplace Admin
+      tags:
+        - Admin
+      security:
+        - BEARER: []
+      parameters:
+        - in: query
+          name: voucher_status
+          description: (1 All, 2 Will Come, 3 On Going, 4 HasEnded)
+          schema:
+            type: string
+            enum: [1, 2, 3, 4]
+        - in: query
+          name: limit
+          schema:
+            type: number
+        - in: query
+          name: page
+          schema:
+            type: number
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GetAllSellerVoucherResponse"
+    post:
+      summary: Create Voucher Marketplace Admin
+      description: >-
+        Create Voucher Marketplace Admin
+      tags:
+        - Admin
+      security:
+        - BEARER: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateVoucherSellerRequest"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DefaultSuccess"
+    put:
+      summary: Update Voucher Marketplace Admin
+      description: >-
+        Update Voucher Marketplace Admin
+      tags:
+        - Admin
+      security:
+        - BEARER: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateVoucherSellerRequest"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DefaultSuccess"
+  "/api/v1/admin/voucher/{id}":
+    get:
+      summary: Get Detail Voucher Marketplace Admin
+      description: >-
+        Get Detail Voucher Marketplace Admin
+      tags:
+        - Admin
+      security:
+        - BEARER: []
+      parameters:
+        - in: path
+          name: id
+          schema:
+            type: string
+          required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GetVoucherDetailSellerResponse"
+    delete:
+      summary: Delete Voucher Marketplace Admin
+      description: >-
+        Delete Voucher Marketplace Admin
+      tags:
+        - Admin
+      security:
+        - BEARER: []
+      parameters:
+        - in: path
+          name: id
+          schema:
+            type: string
+          required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DefaultSuccess"
+components:
+  schemas:
+    LoginRequest:
+      title: LoginRequest
+      type: object
+      description: Login request model.
+      properties:
+        email:
+          type: string
+          description: Unique email.
+          example: account@example.com
+        password:
+          type: string
+          description: Account password.
+          example: -/P4s5w0Rd_!?-WhaT#v#r
+      required:
+        - email
+        - password
+
+    LoginResponse:
+      title: LoginResponse
+      type: object
+      description: Login response data model.
+      properties:
+        message:
+          type: string
+          example: "login success"
+        data:
+          type: object
+          properties:
+            access_token:
+              type: string
+              example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2Mzg3NzE1NDcsImlhdCI6MTYzODE2Njc0NywianRpIjoiNGE2YTE3MDMtOGM5ZC00Yjk1LTkwODctNjIzNDM3MjIyMmRkIiwic3ViIjoiNDA1OTU2YzMtNDZhZS00NzFjLTkzMWUtNmIwZTFkZWMwYjdhIn0.IUvCSn9GR3tQBJ86PhVl3MBDgG4BdSHEGoRO1SYEcYk"
+
+    CreateTransactionResponse:
+      title: TransactionResponse
+      type: object
+      description: Transaction response data model.
+      properties:
+        message:
+          type: string
+          example: "success"
+        data:
+          type: object
+          properties:
+            transaction_id:
+              type: string
+              example: "e6723204-144a-40fd-a866-952de5695d32"
+
+    CreateSlpPaymentResponse:
+      title: CreateSlpPaymentResponse
+      type: object
+      description: Create Slp Payment response data model.
+      properties:
+        message:
+          type: string
+          example: "success"
+        data:
+          type: object
+          properties:
+            redirect_url:
+              type: string
+              example: "https://slp.air-sipp.com/payment?amount=638183&merchant_name=Murakali&txn_id=3555"
+
+    RegisterEmailRequest:
+      title: RegisterEmailRequest
+      type: object
+      description: Register email request model.
+      properties:
+        email:
+          type: string
+          description: Unique email.
+          example: "example@email.com"
+      required:
+        - email
+
+    RegisterEmailResponse:
+      title: RegisterEmailResponse
+      type: object
+      description: Register email response data model.
+      properties:
+        massage:
+          type: string
+          example: "success"
+
+    VerifyEmailRequest:
+      title: RegisterEmailRequest
+      type: object
+      description: Register email request model.
+      properties:
+        email:
+          type: string
+          description: Unique email.
+          example: "example@email.com"
+        otp:
+          type: string
+          description: OTP code verification
+          example: "021209"
+      required:
+        - email
+        - otp
+
+    RefreshTokenResponse:
+      title: RefreshTokenResponse
+      type: object
+      description: Refresh token response data model.
+      properties:
+        massage:
+          type: string
+          example: "success"
+        data:
+          type: object
+          properties:
+            access_token:
+              type: string
+              example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2Mzg3NzE1NDcsImlhdCI6MTYzODE2Njc0NywianRpIjoiNGE2YTE3MDMtOGM5ZC00Yjk1LTkwODctNjIzNDM3MjIyMmRkIiwic3ViIjoiNDA1OTU2YzMtNDZhZS00NzFjLTkzMWUtNmIwZTFkZWMwYjdhIn0.IUvCSn9GR3tQBJ86PhVl3MBDgG4BdSHEGoRO1SYEcYk"
+
+    RegisterRequest:
+      title: RegisterRequest
+      type: object
+      description: Register request model.
+      properties:
+        username:
+          type: string
+          description: Unique Account username.
+          example: "account123"
+        fullname:
+          type: string
+          description: Account full name.
+          example: "julius beckham"
+        password:
+          type: string
+          description: Unique Account password.
+          example: "-/P4s5w0Rd_!?-WhaT#v#r"
+        phone_no:
+          type: string
+          description: Account phone number.
+          example: 081273471937
+      required:
+        - email
+        - otp
+        - username
+        - fullname
+        - password
+        - phone_no
+
+    RegisterMerchantRequest:
+      title: RegisterMerchantRequest
+      type: object
+      description: Register merchant request model.
+      properties:
+        shop_name:
+          type: string
+          description: Shop name
+          example: "Murakali shop"
+
+    GetUserProfileResponse:
+      title: GetUserProfileResponse
+      type: object
+      description: Get user profile response data model.
+      properties:
+        message:
+          type: string
+          example: "success"
+        data:
+          type: object
+          properties:
+            user:
+              type: object
+              properties:
+                id:
+                  type: string
+                username:
+                  type: string
+                email:
+                  type: string
+                phone_no:
+                  type: string
+                fullname:
+                  type: string
+                gender:
+                  type: string
+                birth_date:
+                  type: string
+                photo_url:
+                  type: string
+              example:
+                id: "101401ce-4a0f-11ed-9772-acde48001122"
+                username: "account123"
+                email: "example@email.com"
+                phone_no: "08127361283"
+                fullname: "Julius Beckham"
+                gender: "M"
+                birth_date: "1999-12-23T05:00:52.731695Z"
+                photo_url: "http://google.com/asdwnid.asiqwnea"
+
+    EditProfileRequest:
+      title: EditProfileRequest
+      type: object
+      description: Edit profile request data model.
+      properties:
+        username:
+          type: string
+        phone_no:
+          type: string
+        fullname:
+          type: string
+        gender:
+          type: string
+        birth_date:
+          type: string
+      example:
+        username: "juww122"
+        phone_no: "81770884719"
+        fullname: "Julius Beckham"
+        gender: "L"
+        birth_date: "2000-07-22"
+
+    EditEmailRequest:
+      title: EditEmailRequest
+      type: object
+      description: Edit email request data model.
+      properties:
+        email:
+          type: string
+      example:
+        email: "example@gmail.com"
+
+    EditProfilePictureRequest:
+      title: EditProfilePictureRequest
+      type: object
+      description: Edit profile picture request data model.
+      properties:
+        photo_url:
+          type: string
+          format: binary
+
+    GetAddressByIDResponse:
+      title: GetAddressByIDResponse
+      type: object
+      description: Get address response data model.
+      properties:
+        message:
+          type: string
+          example: "success"
+        data:
+          type: object
+          properties:
+            id:
+              type: string
+            user_id:
+              type: string
+            name:
+              type: string
+            province_id:
+              type: number
+            city_id:
+              type: number
+            province:
+              type: string
+            city:
+              type: string
+            disctrict:
+              type: string
+            sub_disctrict:
+              type: string
+            address_detail:
+              type: string
+              maxLength: 256
+            zip_code:
+              type: string
+            is_default:
+              type: boolean
+            is_shop_default:
+              type: boolean
+      example:
+        message: "success"
+        data:
+          id: "8b9e5380-6906-43d6-bc76-a8c4a1943bc0"
+          user_id: "101401ce-4a0f-11ed-9772-acde48001122"
+          name: "Rumah"
+          province_id: 1
+          city_id: 1
+          province: "DKI Jakarta"
+          city: "Jakarta"
+          district: "Kalideres"
+          sub_district: "Kalideres Permai"
+          address_detail: "jl. kalideres permai, kalideres"
+          zip_code: "11840"
+          is_default: true
+          is_shop_default: true
+
+    GetProvinceResponse:
+      title: GetProvinceResponse
+      type: object
+      description: Get province response data model.
+      properties:
+        message:
+          type: string
+          example: "success"
+        data:
+          type: object
+          properties:
+            rows:
+              type: array
+              items:
+                type: object
+                properties:
+                  province_id:
+                    type: string
+                  province:
+                    type: string
+
+          example:
+            rows:
+              - province_id: "1"
+                province: "Bali"
+
+              - province_id: "2"
+                province: "Bangka Belitung"
+
+              - province_id: "3"
+                province: "Banten"
+
+              - province_id: "4"
+                province: "Bengkulu"
+
+              - province_id: "5"
+                province: "DI Yogyakarta"
+
+    GetCityResponse:
+      title: GetCityResponse
+      type: object
+      description: Get city response data model.
+      properties:
+        message:
+          type: string
+          example: "success"
+        data:
+          type: object
+          properties:
+            rows:
+              type: array
+              items:
+                type: object
+                properties:
+                  city_id:
+                    type: string
+                  city:
+                    type: string
+
+          example:
+            rows:
+              - city_id: "39"
+                city: "Bantul"
+
+              - city_id: "135"
+                city: "Gunung Kidul"
+
+              - city_id: "210"
+                city: "Kulon Progo"
+
+              - city_id: "419"
+                city: "Sleman"
+
+              - city_id: "501"
+                city: "Yogyakarta"
+
+    GetSubDistrictResponse:
+      title: GetSubDistrictResponse
+      type: object
+      description: Get Sub District response data model.
+      properties:
+        message:
+          type: string
+          example: "success"
+        data:
+          type: object
+          properties:
+            rows:
+              type: array
+              items:
+                type: object
+                properties:
+                  sub_district:
+                    type: string
+
+          example:
+            rows:
+              - sub_district: "Pakem"
+              - sub_district: "Seyegan"
+              - sub_district: "Tempel"
+              - sub_district: "Sleman"
+              - sub_district: "Mlati"
+
+    GetUrbanResponse:
+      title: GetUrbanResponse
+      type: object
+      description: Get Urban response data model.
+      properties:
+        message:
+          type: string
+          example: "success"
+        data:
+          type: object
+          properties:
+            rows:
+              type: array
+              items:
+                type: object
+                properties:
+                  urban:
+                    type: string
+                  postalcode:
+                    type: string
+
+          example:
+            rows:
+              - urban: "Pakem Binangun"
+                postalcode: "543234"
+              - urban: "Candi Binangun"
+                postalcode: "543234"
+              - urban: "Purwo Binang"
+                postalcode: "543234"
+              - urban: "Hargo Binangun"
+                postalcode: "543234"
+              - urban: "Harjo Binangun"
+                postalcode: "543234"
+
+    GetAddressResponse:
+      title: GetAddressResponse
+      type: object
+      description: Get address response data model.
+      properties:
+        message:
+          type: string
+          example: "success"
+        data:
+          type: object
+          properties:
+            limit:
+              type: number
+            page:
+              type: number
+            sort:
+              type: string
+            total_rows:
+              type: number
+            total_pages:
+              type: number
+            rows:
+              type: array
+              items:
+                type: object
+                properties:
+                  id:
+                    type: string
+                  user_id:
+                    type: string
+                  name:
+                    type: string
+                  province_id:
+                    type: number
+                  city_id:
+                    type: number
+                  province:
+                    type: string
+                  city:
+                    type: string
+                  disctrict:
+                    type: string
+                  sub_disctrict:
+                    type: string
+                  address_detail:
+                    type: string
+                    maxLength: 256
+                  zip_code:
+                    type: string
+                  is_default:
+                    type: boolean
+                  is_shop_default:
+                    type: boolean
+
+          example:
+            limit: 10
+            page: 1
+            sort: "created_at desc"
+            total_rows: 2
+            total_pages: 1
+            rows:
+              - id: "8b9e5380-6906-43d6-bc76-a8c4a1943bc0"
+                user_id: "101401ce-4a0f-11ed-9772-acde48001122"
+                name: "Rumah"
+                province_id: 1
+                city_id: 1
+                province: "DKI Jakarta"
+                city: "Jakarta"
+                district: "Kalideres"
+                sub_district: "Kalideres Permai"
+                address_detail: "jl. kalideres permai, kalideres"
+                zip_code: "11840"
+                is_default: true
+                is_shop_default: true
+              - id: "8b9e5380-6906-43d6-bc76-a8c4a1943bc1"
+                user_id: "101401ce-4a0f-11ed-9772-acde48001123"
+                name: "Kantor"
+                province_id: 1
+                city_id: 1
+                province: "DKI Jakarta"
+                city: "Jakarta"
+                district: "Kalideres"
+                sub_district: "Kalideres Permai"
+                address_detail: "jl. kalideres permai 2, kalideres"
+                zip_code: "11841"
+                is_default: false
+                is_shop_default: false
+
+    CreateAddressRequest:
+      title: CreateAddressRequest
+      type: object
+      description: Create address request data model.
+      properties:
+        name:
+          type: string
+          description: name address shop
+          example: "Rumah"
+        province_id:
+          type: number
+          description: province id
+          example: 1
+        city_id:
+          type: number
+          description: city id
+          example: 1
+        province:
+          type: string
+          description: province address shop
+          example: "DKI Jakarta"
+        city:
+          type: string
+          description: city shop
+          example: "Jakarta"
+        district:
+          type: string
+          description: district shop
+          example: "Kalideres"
+        sub_district:
+          type: string
+          description: sub district shop
+          example: "Kalideres Permai"
+        zip_code:
+          type: string
+          description: zip code shop
+          example: "11840"
+        address_detail:
+          type: string
+          description: address detail shop
+          example: "jl. kalideres permai, kalideres"
+        is_default:
+          type: boolean
+          description: set default address user
+          example: true
+        is_shop_default:
+          type: boolean
+          description: set default shop address
+          example: true
+
+    EditAddressRequest:
+      title: EditAddressRequest
+      type: object
+      description: Edit address request data model.
+      properties:
+        name:
+          type: string
+          description: name address
+          example: "Rumah"
+        province_id:
+          type: number
+          description: province id
+          example: 1
+        city_id:
+          type: number
+          description: city id
+          example: 1
+        province:
+          type: string
+          description: province address
+          example: "DKI Jakarta"
+        city:
+          type: string
+          description: city
+          example: "Jakarta"
+        district:
+          type: string
+          description: district
+          example: "Kalideres"
+        sub_district:
+          type: string
+          description: sub district
+          example: "Kalideres Permai"
+        zip_code:
+          type: string
+          description: zip code
+          example: "11840"
+        address_detail:
+          type: string
+          description: address detail
+          example: "tempat tinggal"
+        is_default:
+          type: boolean
+          description: set default address user
+          example: true
+        is_shop_default:
+          type: boolean
+          description: set default shop address
+          example: true
+
+    GetSeaLabPayResponse:
+      title: GetSeaLabPayResponse
+      type: object
+      description: Get sealab pay response data model.
+      properties:
+        message:
+          type: string
+          example: "success"
+        data:
+          type: object
+          properties:
+            sealab_pay:
+              type: array
+              items:
+                type: object
+                properties:
+                  card_number:
+                    type: string
+                  user_id:
+                    type: string
+                  name:
+                    type: string
+                  is_default:
+                    type: boolean
+                  active_date:
+                    type: string
+
+              example:
+                - card_number: "123456"
+                  user_id: "101401ce-4a0f-11ed-9772-acde48001122"
+                  name: "julius"
+                  is_default: false
+                  active_date: "2025-12-23T05:00:52.731695Z"
+                  updated_at: { "Time": "0001-01-01T00:00:00Z", "Valid": false }
+                  deleted_at: { "Time": "0001-01-01T00:00:00Z", "Valid": false }
+
+    SetupPinWalletRequest:
+      title: SetupPinWalletRequest
+      type: object
+      description: Setup pin wallet request data model.
+      properties:
+        pin:
+          type: string
+
+      example:
+        pin: "123456"
+
+    SetupPinWalletResponse:
+      title: SetupPinWalletResponse
+      type: object
+      description: Setup pin wallet response data model.
+      properties:
+        massage:
+          type: string
+          example: "success"
+        data:
+          type: object
+          properties:
+            wallet:
+              type: object
+              properties:
+                id:
+                  type: string
+                user_id:
+                  type: string
+                created_at:
+                  type: string
+                updated_at:
+                  type: string
+              example:
+                id: "101401ce-4a0f-11ed-9772-acde48001122"
+                user_id: "101401ce-4a0f-11ed-9772-acde48001122"
+                created_at: "2025-12-23T05:00:52.731695Z"
+                update_at: "2025-12-23T05:00:52.731695Z"
+
+    GetWalletResponse:
+      title: GetWalletResponse
+      type: object
+      description: Get wallet response data model.
+      properties:
+        message:
+          type: string
+          example: "success"
+        data:
+          type: object
+          properties:
+          example:
+            data:
+              id: f67a6297-bfd7-42d2-9f85-6441b848c57f
+              user_id: 7950eca2-58d5-44f0-b873-22b23d8107da
+              balance: 0
+              pin: ""
+              attempt_count: 0
+              attempt_at:
+                Time: "0001-01-01T00:00:00Z"
+                Valid: false
+              unlocked_at:
+                Time: "0001-01-01T00:00:00Z"
+                Valid: false
+              active_date:
+                Time: "2023-01-05T10:02:58.493922Z"
+                Valid: true
+
+    GetWalletHistoryResponse:
+      title: GetWalletHistoryResponse
+      type: object
+      properties:
+        message:
+          type: string
+        data:
+          type: object
+          properties:
+            limit:
+              type: integer
+            page:
+              type: integer
+            sort:
+              type: string
+            total_rows:
+              type: integer
+            total_pages:
+              type: integer
+            rows:
+              type: array
+              items:
+                - type: object
+                  properties:
+                    id:
+                      type: string
+                    from:
+                      type: string
+                    to:
+                      type: string
+                    amount:
+                      type: integer
+                    description:
+                      type: string
+                    created_at:
+                      type: string
+                  required:
+                    - id
+                    - from
+                    - to
+                    - amount
+                    - description
+                    - created_at
+      example:
+        message: success
+        data:
+          limit: 10
+          page: 1
+          sort: created_at DESC
+          total_rows: 1
+          total_pages: 1
+          rows:
+            - id: 9e13d61e-397a-4ab7-b1ea-569f4667012c
+              from: SEA BANK
+              to: USER
+              amount: -20000
+              description: TopUp
+              created_at: "2023-01-16T06:01:19.776573Z"
+
+    InputPinWalletRequest:
+      title: InputPinWalletRequest
+      type: object
+      description: Input pin wallet request data model.
+      properties:
+        user_id:
+          type: string
+        pin:
+          type: string
+
+      example:
+        user_id: "101401ce-4a0f-11ed-9772-acde48001122"
+        pin: "123456"
+
+    InputPinWalletResponse:
+      title: InputPinWalletResponse
+      type: object
+      description: Input pin wallet response data model.
+      properties:
+        massage:
+          type: string
+          example: "success"
+        data:
+          type: object
+          properties:
+            wallet:
+              type: object
+              properties:
+                id:
+                  type: string
+                user_id:
+                  type: string
+                attempt_count:
+                  type: number
+                attempt_at:
+                  type: string
+                unlocked_at:
+                  type: string
+              example:
+                id: "101401ce-4a0f-11ed-9772-acde48001122"
+                user_id: "101401ce-4a0f-11ed-9772-acde48001122"
+                attempt_count: 1
+                attempt_at: "2025-12-23T05:00:52.731695Z"
+                unlocked_at: "2025-12-23T05:00:52.731695Z"
+
+    GetCategoryResponse:
+      title: GetCategoryResponse
+      type: object
+      description: Get all category by parent id
+      properties:
+        message:
+          type: string
+          example: "success"
+        data:
+          type: object
+          properties:
+            category:
+              type: array
+              items:
+                type: object
+                properties:
+                  id:
+                    type: string
+                  parent_id:
+                    type: string
+                  name:
+                    type: string
+                  photo_url:
+                    type: string
+                  child_category:
+                    $ref: "#/components/schemas/GetCategoryChildResponse"
+              example:
+                - id: "101401ce-4a0f-11ed-9772-acde48001122"
+                  parent_id: "00000000-0000-0000-0000-000000000000"
+                  name: "Kaos"
+                  photo_url: "http://google.com/asdwnid.asiqwnea"
+                - id: "101ak2ce-0a0f-91ad-9102-amp9990woqp2"
+                  parent_id: "00000000-0000-0000-0000-000000000000"
+                  name: "Kemeja"
+                  photo_url: "http://google.com/asdwsmwoea.woa"
+
+    GetCategoryByNameLvlOneResponse:
+      title: GetCategoryByNameLvlOneResponse
+      type: object
+      description: Get category by name level one data model
+      properties:
+        message:
+          type: string
+          example: "success"
+        data:
+          type: object
+          properties:
+            category:
+              type: array
+              items:
+                type: object
+                properties:
+                  id:
+                    type: string
+                  parent_id:
+                    type: string
+                  name:
+                    type: string
+                  photo_url:
+                    type: string
+                  child_category:
+                    $ref: "#/components/schemas/GetCategoryChildResponse"
+              example:
+                - id: "086e3235-41dd-45d2-bd41-ebbd9d32e6de"
+                  parent_id: "00000000-0000-0000-0000-000000000000"
+                  name: "pakaian pria"
+                  photo_url: "https://cf.shopee.co.id/file/04dba508f1ad19629518defb94999ef9_tn"
+                  child_category:
+                    - id: "93e975af-3e9c-4dc2-8202-762128985982"
+                      parent_id: "086e3235-41dd-45d2-bd41-ebbd9d32e6de"
+                      name: "outfit Hangat"
+                      photo_url: "https://cf.shopee.co.id/file/d89df04fd3435962af59be0408ec4786"
+                      child_category:
+                        - id: "0b4f0c5c-2d13-45f8-82bb-fc65ee4967c7"
+                          parent_id: "93e975af-3e9c-4dc2-8202-762128985982"
+                          name: "sweeter"
+                          photo_url: "https://cf.shopee.co.id/file/19b8238c917f3dec99b689809ea43a79_tn"
+                          child_category: []
+
+    GetCategoryByNameLvlTwoResponse:
+      title: GetCategoryByNameLvlOneResponse
+      type: object
+      description: Get category by name level one data model
+      properties:
+        message:
+          type: string
+          example: "success"
+        data:
+          type: object
+          properties:
+            category:
+              type: array
+              items:
+                type: object
+                properties:
+                  id:
+                    type: string
+                  parent_id:
+                    type: string
+                  name:
+                    type: string
+                  photo_url:
+                    type: string
+                  child_category:
+                    $ref: "#/components/schemas/GetCategoryChildResponse"
+              example:
+                - id: "93e975af-3e9c-4dc2-8202-762128985982"
+                  parent_id: "086e3235-41dd-45d2-bd41-ebbd9d32e6de"
+                  name: "outfit Hangat"
+                  photo_url: "https://cf.shopee.co.id/file/d89df04fd3435962af59be0408ec4786"
+                  child_category:
+                    - id: "0b4f0c5c-2d13-45f8-82bb-fc65ee4967c7"
+                      parent_id: "93e975af-3e9c-4dc2-8202-762128985982"
+                      name: "sweeter"
+                      photo_url: "https://cf.shopee.co.id/file/19b8238c917f3dec99b689809ea43a79_tn"
+                      child_category: []
+
+    GetCategoryByNameLvlThreeResponse:
+      title: GetCategoryByNameLvlOneResponse
+      type: object
+      description: Get category by name level one data model
+      properties:
+        message:
+          type: string
+          example: "success"
+        data:
+          type: object
+          properties:
+            category:
+              type: array
+              items:
+                type: object
+                properties:
+                  id:
+                    type: string
+                  parent_id:
+                    type: string
+                  name:
+                    type: string
+                  photo_url:
+                    type: string
+                  child_category:
+                    $ref: "#/components/schemas/GetCategoryChildResponse"
+              example:
+                - id: "0b4f0c5c-2d13-45f8-82bb-fc65ee4967c7"
+                  parent_id: "93e975af-3e9c-4dc2-8202-762128985982"
+                  name: "sweeter"
+                  photo_url: "https://cf.shopee.co.id/file/19b8238c917f3dec99b689809ea43a79_tn"
+                  child_category: []
+
+    GetCategoryChildResponse:
+      title: GetCategoryChildResponse
+      type: object
+      description: Get category child data model
+      properties:
+        message:
+          type: string
+          example: "success"
+        data:
+          type: object
+          properties:
+            category:
+              type: array
+              items:
+                type: object
+                properties:
+                  id:
+                    type: string
+                  parent_id:
+                    type: string
+                  name:
+                    type: string
+                  photo_url:
+                    type: string
+                  child_category:
+                    $ref: "#/components/schemas/GetCategoryChildResponse"
+              example:
+                - id: "101401ce-4a0f-11ed-9772-acde48001122"
+                  parent_id: "00000000-0000-0000-0000-000000000000"
+                  name: "Kaos"
+                  photo_url: "http://google.com/asdwnid.asiqwnea"
+                - id: "101ak2ce-0a0f-91ad-9102-amp9990woqp2"
+                  parent_id: "00000000-0000-0000-0000-000000000000"
+                  name: "Kemeja"
+                  photo_url: "http://google.com/asdwsmwoea.woa"
+
+    GetBannerResponse:
+      title: GetBannerResponse
+      type: object
+      description: Get all banner.
+      properties:
+        message:
+          type: string
+          example: "success"
+        data:
+          type: object
+          properties:
+            banner:
+              type: array
+              items:
+                type: object
+                properties:
+                  id:
+                    type: string
+                  title:
+                    type: string
+                  content:
+                    type: string
+                  image_url:
+                    type: string
+                  page_url:
+                    type: string
+                  is_active:
+                    type: boolean
+              example:
+                - id: "9a4de0f5-0556-491b-ba1b-0873933262da"
+                  title: "festival hari ibu"
+                  content: "festival di hari ibu"
+                  image_url: "https://cf.shopee.co.id/file/776fa8ed99c660a7913666544a3c228d"
+                  page_url: "https://shopee.co.id/m/festival-hari-ibu"
+                  is_active: true
+                - id: "37817b2c-c4b0-42ec-8422-055d44e47fbe"
+                  title: "tanggal tua"
+                  content: "diskon di tanggal tua"
+                  image_url: "https://cf.shopee.co.id/file/f73747bf997bd9d0f20f0b33727f018e"
+                  page_url: "https://shopee.co.id/m/mall-super-category-day"
+                  is_active: true
+
+    CreateSeaLabPayRequest:
+      title: CreateSeaLabPayRequest
+      type: object
+      description: Create SeaLab Pay Request data model.
+      properties:
+        card_number:
+          type: string
+        user_id:
+          type: string
+        name:
+          type: string
+        is_default:
+          type: boolean
+        active_date:
+          type: string
+      example:
+        card_number: "123456"
+        user_id: "101401ce-4a0f-11ed-9772-acde48001122"
+        name: "julius"
+        is_default: true
+        active_date: "2025-12-23T05:00:52"
+
+    CostShippingRequest:
+      title: CostShippingRequest
+      type: object
+      description: Cost shipping Request data model.
+      properties:
+        destination:
+          type: int
+        weight:
+          type: int
+        shop_id:
+          type: string
+        product_ids:
+          type: array
+          items:
+            properties:
+              type: string
+      example:
+        destination: 114
+        weight: 1500
+        shop_id: e8854443-c2c7-488e-93d5-b9d93708b8a3
+        product_ids:
+          - d21d410c-0f25-46ea-8c06-8d1573a2a0f7
+
+    NewPasswordRequest:
+      title: NewPasswordRequest
+      type: object
+      description: New Password Request data model.
+      properties:
+        password:
+          type: string
+          example: "newPassword"
+
+    VerificationPasswordRequest:
+      title: VerificationPasswordRequest
+      type: object
+      description: Verification Password Request data model.
+      properties:
+        password:
+          type: string
+          example: "Password"
+
+    CreateSlpPaymentRequest:
+      title: CreateSlpPaymentRequest
+      type: object
+      description: Create Slp Payment.
+      properties:
+        transaction_id:
+          type: string
+          example: "eda8ffa8-ed96-4ab6-94b8-7a532e1f0457"
+
+    CreateTransactionRequest:
+      title: CreateTransactionRequest
+      type: object
+      description: Create Transaction Request data model.
+      properties:
+        wallet_id:
+          type: string
+        card_number:
+          type: string
+        voucher_marketplace_id:
+          type: string
+        cart_items:
+          type: array
+          items:
+            type: object
+            properties:
+              shop_id:
+                type: string
+              voucher_shop_id:
+                type: string
+              courier_id:
+                type: string
+              courier_fee:
+                type: string
+              product_details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      type: string
+                    quantity:
+                      type: number
+                    sub_price:
+                      type: number
+      example:
+        wallet_id: "60a54e99-33a7-40d8-8ed0-979413a8c33d"
+        card_number: ""
+        voucher_marketplace_id: ""
+        cart_items:
+          - shop_id: "07315003-5369-465f-9f05-09482d951645"
+            voucher_shop_id: "59bfcd74-e278-4c70-a889-d9c8515bf72c"
+            courier_id: "98c1921e-b80e-40f3-9cba-fe8806097517"
+            product_details:
+              - id: "s"
+                quantity: 3
+                sub_price: 70000
+
+    CreateSeaLabPayResponse:
+      title: CreateSeaLabPayResponse
+      type: object
+      description: Create SeaLab Pay Response data model.
+      properties:
+        message:
+          type: string
+          example: success
+          description: Success message from server.
+
+    SetDefaultSeaLabPayResponse:
+      title: SetDefaultSeaLabPayResponse
+      type: object
+      description: Set Default SeaLab Pay Response data model.
+      properties:
+        message:
+          type: string
+          example: success
+          description: Success message from server.
+        data:
+          type: object
+          properties:
+            sealab_pay:
+              type: object
+              properties:
+                card_number:
+                  type: string
+                is_default:
+                  type: boolean
+
+              example:
+                card_number: "123456"
+                is_default: true
+
+    CostShippingSuccess:
+      properties:
+      example:
+        message: success
+        data:
+          shipping_option:
+            - courier:
+                id: 0d389020-f229-461e-9202-5788961fbb81
+                name: POS Indonesia
+                code: pos
+                service: Pos Reguler
+                description: Layanan Reguler
+                created_at: "2023-01-05T04:27:04.580086Z"
+                updated_at:
+                  Time: "0001-01-01T00:00:00Z"
+                  Valid: false
+                deleted_at:
+                  Time: "0001-01-01T00:00:00Z"
+                  Valid: false
+              fee: 17000
+              etd: 2 HARI
+            - courier:
+                id: 4bf503dc-689e-4b66-8401-3f133f1d585a
+                name: TIKI
+                code: tiki
+                service: REG
+                description: Layanan Reguler
+                created_at: "2023-01-05T04:27:04.580086Z"
+                updated_at:
+                  Time: "0001-01-01T00:00:00Z"
+                  Valid: false
+                deleted_at:
+                  Time: "0001-01-01T00:00:00Z"
+                  Valid: false
+              fee: 24000
+              etd: "2"
+
+    GetProductResponse:
+      title: GetProductResponse
+      type: object
+      description: Get product response data model.
+      properties:
+        message:
+          type: string
+          example: "success"
+        data:
+          type: object
+          properties:
+            limit:
+              type: number
+            page:
+              type: number
+            sort:
+              type: string
+            total_rows:
+              type: number
+            total_pages:
+              type: number
+            rows:
+              type: array
+              items:
+                type: object
+                properties:
+                  title:
+                    type: string
+                  unit_sold:
+                    type: number
+                  rating_avg:
+                    type: number
+                  thumbnail_url:
+                    type: string
+                  min_price:
+                    type: number
+                  max_price:
+                    type: number
+                  sub_price:
+                    type: number
+                  promo_discount_percentage:
+                    type: number
+                  promo_discount_fix_price:
+                    type: number
+                  promo_min_product_price:
+                    type: number
+                  promo_max_discount_price:
+                    type: number
+                  result_discount:
+                    type: number
+                  voucher_discount_percentage:
+                    type: number
+                  voucher_discount_fix_price:
+                    type: number
+          example:
+            limit: 18
+            page: 1
+            sort: unit_sold DESC
+            total_rows: 100080
+            total_pages: 5560
+            products:
+              - title: Masker KN95 PM2.5 Earloop kn 95 filter 95% setara n95 4 ply isi 50 Pcs
+                unit_sold: 100000
+                rating_avg: 4.8
+                thumbnail_url: " "
+                min_price: 70000
+                max_price: 170000
+                sub_price: 21700.000000000007
+                promo_discount_percentage: 69
+                promo_discount_fix_price: 0
+                promo_min_product_price: 1000
+                promo_max_discount_price: 70000
+                result_discount: 48299.99999999999
+                voucher_discount_percentage: 0
+                voucher_discount_fix_price: 5000
+              - title: Cereal SIMBA Choco Chips Bag 1 kg
+                unit_sold: 10000
+                rating_avg: 5
+                thumbnail_url: " "
+                min_price: 45648
+                max_price: 55648
+                sub_price: 34692.479999999996
+                promo_discount_percentage: 24
+                promo_discount_fix_price: 0
+                promo_min_product_price: 30000
+                promo_max_discount_price: 50000
+                result_discount: 10955.52
+                voucher_discount_percentage: 0
+                voucher_discount_fix_price: 5000
+              - title: "Triple Pack: Tropicana Slim Hokkaido Cheese Cookies (5 Sch)"
+                unit_sold: 10000
+                rating_avg: 5
+                thumbnail_url: " "
+                min_price: 80400
+                max_price: 90400
+                sub_price: 0
+                promo_discount_percentage: 25
+                promo_discount_fix_price: 0
+                promo_min_product_price: 150000
+                promo_max_discount_price: 150000
+                result_discount:
+                voucher_discount_percentage: 0
+                voucher_discount_fix_price: 5000
+              - title: Nice Facial Tissue Tisue Tisu Wajah Muka Paket isi 5 x 180 sheets
+                unit_sold: 10000
+                rating_avg: 5
+                thumbnail_url: " "
+                min_price: 32000
+                max_price: 42000
+                sub_price: 0
+                promo_discount_percentage:
+                promo_discount_fix_price:
+                promo_min_product_price:
+                promo_max_discount_price:
+                result_discount:
+                voucher_discount_percentage: 0
+                voucher_discount_fix_price: 5000
+    UploadProductPictureResponse:
+      title: DefaultSuccess
+      type: object
+      description: Default Success.
+      properties:
+        message:
+          type: string
+          example: success
+          description: Success message from server.
+        data:
+          type: string
+          example: https://res.cloudinary.com/dhpao1zxi/image/upload/v1671705602/ldtzmxqeyb4nwu5p6y76.jpg
+          description: you get url picture.
+
+    CreateProductRequest:
+      title: CreateProductRequest
+      type: object
+      description: Create product request data model.
+      example:
+        products_info:
+          title: uniqlo shirt
+          description: this is description
+          thumbnail: https://res.cloudinary.com/dhpao1zxi/image/upload/v1671705602/ldtzmxqeyb4nwu5p6y76.jpg
+          category_id: d92a0995-78cd-4eba-a855-dfc096ffec5b
+          listed_status: true
+        products_detail:
+          - price: 400000
+            stock: 40
+            weight: 40000
+            size: 40
+            hazardous: true
+            condition: new
+            bulk_price: true
+            photo:
+              - https://res.cloudinary.com/dhpao1zxi/image/upload/v1671705602/ldtzmxqeyb4nwu5p6y76.jpg
+              - https://res.cloudinary.com/dhpao1zxi/image/upload/v1671705602/ldtzmxqeyb4nwu5p6y76.jpg
+            variant_detail:
+              - type: color
+                name: red
+              - type: ukuran
+                name: L
+          - price: 500000
+            stock: 50
+            weight: 50000
+            size: 50
+            hazardous: true
+            condition: new
+            bulk_price: true
+            photo:
+              - https://res.cloudinary.com/dhpao1zxi/image/upload/v1671705602/ldtzmxqeyb4nwu5p6y76.jpg
+            variant_detail:
+              - type: color
+                name: blue
+              - type: ukuran
+                name: M
+          - price: 600000
+            stock: 60
+            weight: 60000
+            size: 60
+            hazardous: true
+            condition: old
+            bulk_price: false
+            photo:
+              - https://res.cloudinary.com/dhpao1zxi/image/upload/v1671705602/ldtzmxqeyb4nwu5p6y76.jpg
+            variant_detail:
+              - type: color
+                name: blue
+              - type: ukuran
+                name: S
+
+    UpdateProductRequest:
+      title: UpdateProductRequest
+      type: object
+      description: Update product request data model.
+      example:
+        products_info_update:
+          title: uniqlo shirts
+          description: this is description
+          thumbnail: https://res.cloudinary.com/dhpao1zxi/image/upload/v1673329263/k6x5iqami51p1ouilukp.jpg
+          listed_status: true
+        products_detail_update:
+          - product_detail_id: a7e8e5c8-95a0-468f-b0e3-efd3d324e51c
+            price: 900000
+            stock: 80
+            weight: 10000
+            size: 1
+            hazardous: false
+            condition: old
+            bulk_price: false
+            photo:
+              - https://res.cloudinary.com/dhpao1zxi/image/upload/v1673329263/k6x5iqami51p1ouilukp.jpg
+            variant_info_update:
+              - variant_id: 04564f63-7a59-422a-9e52-64a4560f3896
+                variant_detail_id: c89f208d-19b2-4e47-a1e3-6ad10e433cd9
+            variant_id_remove:
+              - 17adb731-b4f4-44ef-ad52-887c4a7472b3
+        products_detail_id_remove:
+          - 13510b22-3aa2-432e-ae48-3d1566a2acb7
+
+    UpdateProductListedStatusBulkRequest:
+      title: UpdateProductListedStatusBulkRequest
+      type: object
+      description: Update product listed status bulk request data model.
+      example:
+        products_ids:
+          - 2166a57e-ac15-45dc-8293-b1ae0dee1747
+          - edb9e5b1-c1a7-49c5-a90a-3d89a558d455
+        listed_status: true
+
+    GetFavoriteProductResponse:
+      title: GetFavoriteProductResponse
+      type: object
+      description: Get Favorite product response data model.
+      properties:
+        message:
+          type: string
+          example: "success"
+        data:
+          type: object
+          properties:
+            limit:
+              type: number
+            page:
+              type: number
+            sort:
+              type: string
+            total_rows:
+              type: number
+            total_pages:
+              type: number
+            rows:
+              type: array
+              items:
+                type: object
+                properties:
+                  title:
+                    type: string
+                  unit_sold:
+                    type: number
+                  rating_avg:
+                    type: number
+                  thumbnail_url:
+                    type: string
+                  min_price:
+                    type: number
+                  max_price:
+                    type: number
+                  sub_price:
+                    type: number
+                  promo_discount_percentage:
+                    type: number
+                  promo_discount_fix_price:
+                    type: number
+                  promo_min_product_price:
+                    type: number
+                  promo_max_discount_price:
+                    type: number
+                  result_discount:
+                    type: number
+                  voucher_discount_percentage:
+                    type: number
+                  voucher_discount_fix_price:
+                    type: number
+          example:
+            limit: 18
+            page: 1
+            sort: unit_sold DESC
+            total_rows: 3
+            total_pages: 1
+            products:
+              - title: Cereal SIMBA Choco Chips Bag 1 kg
+                unit_sold: 10000
+                rating_avg: 5
+                thumbnail_url: " "
+                min_price: 45648
+                max_price: 55648
+                sub_price: 34692.479999999996
+                promo_discount_percentage: 24
+                promo_discount_fix_price: 0
+                promo_min_product_price: 30000
+                promo_max_discount_price: 50000
+                result_discount: 10955.52
+                voucher_discount_percentage: 0
+                voucher_discount_fix_price: 5000
+              - title: "Triple Pack: Tropicana Slim Hokkaido Cheese Cookies (5 Sch)"
+                unit_sold: 10000
+                rating_avg: 5
+                thumbnail_url: " "
+                min_price: 80400
+                max_price: 90400
+                sub_price: 0
+                promo_discount_percentage: 25
+                promo_discount_fix_price: 0
+                promo_min_product_price: 150000
+                promo_max_discount_price: 150000
+                result_discount:
+                voucher_discount_percentage: 0
+                voucher_discount_fix_price: 5000
+              - title: Nice Facial Tissue Tisue Tisu Wajah Muka Paket isi 5 x 180 sheets
+                unit_sold: 10000
+                rating_avg: 5
+                thumbnail_url: " "
+                min_price: 32000
+                max_price: 42000
+                sub_price: 0
+                promo_discount_percentage:
+                promo_discount_fix_price:
+                promo_min_product_price:
+                promo_max_discount_price:
+                result_discount:
+                voucher_discount_percentage: 0
+                voucher_discount_fix_price: 5000
+
+    CreateProductFavoriteRequest:
+      title: CreateProductFavoriteRequest
+      type: object
+      description: Create product favorite request data model.
+      example:
+        product_id: "2fe8ee60-06b7-4e74-890e-8b00cbcb5af9"
+
+    CreateProductFavoriteResponse:
+      title: CreateProductFavoriteResponse
+      type: object
+      description: Create product favorite response data model.
+      properties:
+        message:
+          type: string
+          example: "success"
+    CheckProductIsFavoriteResponse:
+      title: CheckProductIsFavoriteResponse
+      type: object
+      description: Check product favorite response data model.
+      properties:
+        message:
+          type: string
+          example: "success"
+        data:
+          type: bool
+          example: true
+
+    DeleteProductFavoriteRequest:
+      title: DeleteProductFavoriteRequest
+      type: object
+      description: Delete product favorite request data model.
+      example:
+        product_id: "2fe8ee60-06b7-4e74-890e-8b00cbcb5af9"
+
+    DeleteProductFavoriteResponse:
+      title: DeleteProductFavoriteResponse
+      type: object
+      description: Delete product favorite response data model.
+      properties:
+        message:
+          type: string
+          example: "success"
+
+    GetRecommendedProductListResponse:
+      title: GetRecommendedProductListResponse
+      type: object
+      description: Get recommended product list response data model.
+      properties:
+        message:
+          type: string
+          example: "success"
+        data:
+          type: object
+          properties:
+            limit:
+              type: number
+            page:
+              type: number
+            sort:
+              type: string
+            total_rows:
+              type: number
+            total_pages:
+              type: number
+            products:
+              type: array
+              items:
+                type: object
+                properties:
+                  id:
+                    type: string
+                  title:
+                    type: string
+                  unit_sold:
+                    type: number
+                  rating_avg:
+                    type: number
+                  thumbnail_url:
+                    type: string
+                  min_price:
+                    type: number
+                  max_price:
+                    type: number
+                  sub_price:
+                    type: number
+                  promo_discount_percentage:
+                    type: number
+                  promo_discount_fix_price:
+                    type: number
+                  promo_min_product_price:
+                    type: number
+                  promo_max_discount_price:
+                    type: number
+                  result_discount:
+                    type: number
+                  voucher_discount_percentage:
+                    type: number
+                  voucher_discount_fix_price:
+                    type: number
+          example:
+            limit: 18
+            page: 1
+            sort: unit_sold DESC
+            total_rows: 100080
+            total_pages: 5560
+            products:
+              - id: e6fb2764-076f-4b3b-bc05-8aa125d537ed
+                title: Masker KN95 PM2.5 Earloop kn 95 filter 95% setara n95 4 ply isi 50 Pcs
+                unit_sold: 100000
+                rating_avg: 4.8
+                thumbnail_url: " "
+                min_price: 70000
+                max_price: 170000
+                sub_price: 21700.000000000007
+                promo_discount_percentage: 69
+                promo_discount_fix_price: 0
+                promo_min_product_price: 1000
+                promo_max_discount_price: 70000
+                result_discount: 48299.99999999999
+                voucher_discount_percentage: 0
+                voucher_discount_fix_price: 5000
+              - id: 910dbb9b-53d5-4a23-b8ca-cf3f0caab169
+                title: Cereal SIMBA Choco Chips Bag 1 kg
+                unit_sold: 10000
+                rating_avg: 5
+                thumbnail_url: " "
+                min_price: 45648
+                max_price: 55648
+                sub_price: 34692.479999999996
+                promo_discount_percentage: 24
+                promo_discount_fix_price: 0
+                promo_min_product_price: 30000
+                promo_max_discount_price: 50000
+                result_discount: 10955.52
+                voucher_discount_percentage: 0
+                voucher_discount_fix_price: 5000
+              - id: 855f81a1-c7aa-4428-9f26-74fd664de377
+                title: "Triple Pack: Tropicana Slim Hokkaido Cheese Cookies (5 Sch)"
+                unit_sold: 10000
+                rating_avg: 5
+                thumbnail_url: " "
+                min_price: 80400
+                max_price: 90400
+                sub_price: 0
+                promo_discount_percentage: 25
+                promo_discount_fix_price: 0
+                promo_min_product_price: 150000
+                promo_max_discount_price: 150000
+                result_discount:
+                voucher_discount_percentage: 0
+                voucher_discount_fix_price: 5000
+              - id: 3bc05e37-f9df-45ee-969f-b56c733259e6
+                title: Nice Facial Tissue Tisue Tisu Wajah Muka Paket isi 5 x 180 sheets
+                unit_sold: 10000
+                rating_avg: 5
+                thumbnail_url: " "
+                min_price: 32000
+                max_price: 42000
+                sub_price: 0
+                promo_discount_percentage:
+                promo_discount_fix_price:
+                promo_min_product_price:
+                promo_max_discount_price:
+                result_discount:
+                voucher_discount_percentage: 0
+                voucher_discount_fix_price: 5000
+
+    TopUpWalletRequest:
+      properties:
+      example:
+        card_number: "2787884621261326"
+        amount: 100000
+
+    GetProductDetailResponse:
+      title: GetProductDetailResponse
+      type: object
+      description: Get product detail response data model.
+      properties:
+        message:
+          type: string
+          example: "success"
+        data:
+          type: object
+          properties:
+            product_info:
+              type: object
+              properties:
+                id:
+                  type: string
+                sku:
+                  type: string
+                title:
+                  type: string
+                description:
+                  type: string
+                view_count:
+                  type: number
+                favorite_count:
+                  type: number
+                unit_sold:
+                  type: number
+                listed_status:
+                  type: boolean
+                thumbnail_url:
+                  type: string
+                rating_avg:
+                  type: number
+                min_price:
+                  type: number
+                max_price:
+                  type: number
+                shop_id:
+                  type: string
+                category_name:
+                  type: string
+                category_url:
+                  type: string
+            promotions_info:
+              type: object
+              properties:
+                promotion_name:
+                  type: string
+                promotion_discount_percentage:
+                  type: number
+                promotion_discount_fix_price:
+                  type: number
+                promotion_min_product_price:
+                  type: number
+                promotion_max_discount_price:
+                  type: number
+                promotion_quota:
+                  type: number
+                promotion_max_quantity:
+                  type: number
+                promotion_active_date:
+                  type: string
+                promotion_expiry_date:
+                  type: string
+            products_detail:
+              type: array
+              items:
+                type: object
+                properties:
+                  id:
+                    type: string
+                  normal_price:
+                    type: number
+                  stock:
+                    type: number
+                  weight:
+                    type: number
+                  size:
+                    type: number
+                  hazardous:
+                    type: boolean
+                  condition:
+                    type: string
+                  bulk_price:
+                    type: boolean
+                  product_url:
+                    type: array
+                    items:
+                      type: string
+                  variant:
+                    type: object
+                  variant_info:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        variant_id:
+                          type: string
+                        variant_detail_id:
+                          type: string
+                        variant_name:
+                          type: string
+
+          example:
+            products_info:
+              id: "6f16e578-fd85-4aa3-a321-9195ee38e86c"
+              sku: "UGG-BB-PUR-06"
+              title: "baju zara"
+              description: "lorem ipsum bla bla bla"
+              view_count: 2
+              favorite_count: 5
+              unit_sold: 190
+              listed_status: true
+              thumbnail_url: "yahoo.com"
+              rating_avg: 4
+              min_price: 15000
+              max_price: 25000
+              shop_id: "e8854443-c2c7-488e-93d5-b9d93708b8a3"
+              category_name: "laptop"
+              category_url: "https://cf.shopee.co.id/file/c139370836a9daa649da70876a326b58"
+            promotions_info:
+              promotion_name: "1212"
+              promotion_discount_percentage: 15
+              promotion_discount_fix_price:
+              promotion_min_product_price: 10000
+              promotion_max_discount_price: 20000
+              promotion_quota: 100
+              promotion_max_quantity: 5
+              promotion_active_date: "2022-12-23T07:15:23.487612Z"
+              promotion_expiry_date:
+            products_detail:
+              - id: "208a47a9-4890-45db-9243-8dd4144a3896"
+                normal_price: 15000
+                stock: 25
+                weight: 100
+                size: 20
+                hazardous: true
+                condition: "new"
+                bulk_price: false
+                product_url:
+                  - "google.com"
+                  - "yahoo.com"
+                variant:
+                  ukuran: "xl"
+                  warna: "hitam"
+                variant_info:
+                  variant_id: "f5b6e875-ab71-4a79-b040-35904692dbe3"
+                  variant_detail_id: "407c7e34-1e3d-4888-b0cb-f541fca56058"
+                  variant_name: "warna"
+              - id: "450ba9c5-eafc-409f-99d3-99f931c9fbf2"
+                normal_price: 29000
+                stock: 19
+                weight: 20
+                size: 19
+                hazardous: true
+                condition: "used"
+                bulk_price: true
+                product_url:
+                  url: "yahoo.com"
+                variant:
+                  warna: "hitam"
+                variant_info: null
+
+    GetAllImageProductResponse:
+      title: GetAllImageProductResponse
+      type: object
+      description: Get all image product response data model.
+      properties:
+        message:
+          type: string
+          example: "success"
+        data:
+          type: array
+          properties:
+            type: object
+            properties:
+              product_detail_id:
+                type: string
+              url:
+                type: string
+          example:
+            - product_detail_id: null
+              url: "https://cf.shopee.co.id/file/76a0969b7d64065bc13493bf55df1849_tn"
+            - product_detail_id: "b0348d20-f9dd-4f63-a558-3a6e1d4c6cd4"
+              url: "https://cf.shopee.co.id/file/76a0969b7d64065bc13493bf55df1849_tn"
+
+    GetReviewProductResponse:
+      title: GetReviewProductResponse
+      type: object
+      description: Get review product response data model.
+      properties:
+        message:
+          type: string
+        data:
+          type: object
+          properties:
+            limit:
+              type: integer
+            page:
+              type: integer
+            sort:
+              type: string
+            total_rows:
+              type: integer
+            total_pages:
+              type: integer
+            rows:
+              type: array
+              items:
+                - type: object
+                  properties:
+                    id:
+                      type: string
+                    user_id:
+                      type: string
+                    product_id:
+                      type: string
+                    comment:
+                      type: string
+                    rating:
+                      type: integer
+                    image_url:
+                      type: string
+                    created_at:
+                      type: string
+                    photo_url:
+                      type: string
+                    username:
+                      type: string
+      example:
+        message: success
+        data:
+          limit: 5
+          page: 1
+          sort: r.created_at asc
+          total_rows: 2
+          total_pages: 1
+          rows:
+            - id: 18c5f333-8a9e-4044-9e70-e266bb2b033d
+              user_id: 4c1d6464-3cc6-44d6-92d1-91aee337e025
+              product_id: 1f394fe9-1c19-4270-a776-8c301662496d
+              comment: test
+              rating: 5
+              image_url: null
+              created_at: "2023-01-05T06:24:51.808605Z"
+              photo_url: >-
+                https://res.cloudinary.com/dhpao1zxi/image/upload/v1671705602/ldtzmxqeyb4nwu5p6y76.jpg
+              username: mLVacZT
+            - id: 4ba23810-69fa-40ba-942a-11874db05048
+              user_id: 4c1d6464-3cc6-44d6-92d1-91aee337e025
+              product_id: 1f394fe9-1c19-4270-a776-8c301662496d
+              comment: null
+              rating: 2
+              image_url: null
+              created_at: "2023-01-06T06:45:13.411051Z"
+              photo_url: >-
+                https://res.cloudinary.com/dhpao1zxi/image/upload/v1671705602/ldtzmxqeyb4nwu5p6y76.jpg
+              username: mLVacZT
+
+    GetTotalRatingReviewProductResponse:
+      title: GetTotalRatingReviewProductResponse
+      type: object
+      description: Get total rating review product response data model.
+      properties:
+        message:
+          type: string
+        data:
+          type: object
+          properties:
+            total_rating:
+              type: integer
+            avg_rating:
+              type: number
+            rating_product:
+              type: array
+              items:
+                - type: object
+                  properties:
+                    rating:
+                      type: integer
+                    count:
+                      type: integer
+                  required:
+                    - rating
+                    - count
+                - type: object
+                  properties:
+                    rating:
+                      type: integer
+                    count:
+                      type: integer
+      example:
+        message: success
+        data:
+          total_rating: 2
+          avg_rating: 3.5
+          rating_product:
+            - rating: 2
+              count: 1
+            - rating: 5
+              count: 1
+
+    CreateProductReviewRequest:
+      title: CreateProductReviewRequest
+      type: object
+      description: Create product review request data model.
+      properties:
+        comment:
+          type: string
+          example: "aman dan baik kondisinya"
+        rating:
+          type: number
+          example: 5
+        image_url:
+          type: string
+          example: "http://google.com/asdwnid.asiqwnea"
+
+    GetProductReviewResponse:
+      title: GetProductReviewResponse
+      type: object
+      description: Get product review response data model.
+      properties:
+        message:
+          type: string
+          example: "success"
+        data:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+              comment:
+                type: string
+              rating:
+                type: number
+              image_url:
+                type: string
+              created_at:
+                type: string
+              user:
+                type: object
+                properties:
+                  username:
+                    type: string
+                  photo_url:
+                    type: string
+
+          example:
+            - id: "asdasd"
+              comment: "aman dan baik kondisinya"
+              rating: 5
+              image_url: "http://google.com/asdwnid.asiqwnea"
+              create_at: "2025-12-23T05:00:52.731695Z"
+              user:
+                username: "asdasd"
+                photo_url: "http://google.com/asdwnid.asiqwnea"
+
+    CreateCartResponse:
+      title: CreateCartResponse
+      type: object
+      description: Create Cart response data model.
+      properties:
+        message:
+          type: string
+          example: success
+          description: Success message from server.
+
+    GetCartResponse:
+      title: GetCartResponse
+      type: object
+      description: Get product response data model.
+      properties:
+        message:
+          type: string
+          example: "success"
+        data:
+          type: object
+          properties:
+            limit:
+              type: number
+            page:
+              type: number
+            sort:
+              type: string
+            total_rows:
+              type: number
+            total_pages:
+              type: number
+            rows:
+              type: array
+              items:
+                type: object
+                properties:
+                  id:
+                    type: string
+                  shop:
+                    type: object
+                    properties:
+                      id:
+                        type: string
+                      name:
+                        type: string
+                  weight:
+                    type: number
+                  product_details:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: string
+                        title:
+                          type: string
+                        thumbnail_url:
+                          type: string
+                        product_price:
+                          type: number
+                        product_stock:
+                          type: number
+                        quantity:
+                          type: number
+                        weight:
+                          type: number
+                        variant:
+                          type: object
+                        promo:
+                          type: object
+                          properties:
+                            discount_percentage:
+                              type: number
+                            discount_fix_price:
+                              type: number
+                            min_product_price:
+                              type: number
+                            max_discount_price:
+                              type: number
+                            result_discount:
+                              type: number
+                            sub_price:
+                              type: number
+          example:
+            limit: 3
+            page: 1
+            sort: "created_at DESC"
+            total_rows: 3
+            total_pages: 1
+            rows:
+              - id: "410a1545-1834-4dca-9624-8c1c7e1439de"
+                shop:
+                  id: "e8854443-c2c7-488e-93d5-b9d93708b8a3"
+                  name: "jualan"
+                weight: 3
+                product_details:
+                  - id: "0c53ef3d-3682-4359-90e1-814eb6ab5231"
+                    title: "Masker KN95 PM2.5 Earloop kn 95 filter 95% setara n95 4 ply isi 50 Pcs"
+                    thumbnail_url: " "
+                    product_price: 70000
+                    product_stock: 111
+                    quantity: 4
+                    weight: 2
+                    variant:
+                      ukuran: "l"
+                    promo:
+                      discount_percentage: 69
+                      discount_fix_price: 0
+                      min_product_price: 1000
+                      max_discount_price: 70000
+                      result_discount: 48299.99999999999
+                      sub_price: 21700.000000000007
+                  - id: "0c53ef3d-3682-4359-90e1-814eb6ab5191"
+                    title: "nama produk"
+                    thumbnail_url: "https://cf.shopee.co.id/file/76a0969b7d64065bc13493bf55df1849_tn"
+                    product_price: 10000
+                    product_stock: 4
+                    quantity: 1
+                    weight: 1
+                    variant:
+                      ukuran: "xl"
+                      warna: "hitam"
+                    promo:
+                      discount_percentage: 25
+                      discount_fix_price: 30000
+                      min_product_price: 50000
+                      max_discount_price: 30000
+                      result_discount: 0
+                      sub_price: 0
+
+    GetCartInHomeResponse:
+      title: GetCartInHomeResponse
+      type: object
+      description: Get cart in home response data model.
+      properties:
+        message:
+          type: string
+          example: "success"
+        data:
+          type: object
+          properties:
+            limit:
+              type: number
+            total_item:
+              type: number
+            cart_items:
+              type: array
+              items:
+                type: object
+                properties:
+                  title:
+                    type: string
+                  thumbnail_url:
+                    type: string
+                  price:
+                    type: number
+                  discount_percentage:
+                    type: number
+                  discount_fix_price:
+                    type: number
+                  min_product_price:
+                    type: number
+                  max_discount_price:
+                    type: number
+                  result_discount:
+                    type: number
+                  sub_price:
+                    type: number
+                  quantity:
+                    type: number
+                  variant_name:
+                    type: string
+                  variant_type:
+                    type: string
+
+          example:
+            limit: 5
+            total_item: 1
+            cart_items:
+              - title: "title dummy"
+                thumbnail_url: "https://cf.shopee.co.id/file/76a0969b7d64065bc13493bf55df1849_tn"
+                price: 10000
+                discount_percentage: 25
+                discount_fix_price: 30000
+                min_product_price: 50000
+                max_discount_price: 30000
+                result_discount: 0
+                sub_price: 0
+                quantity: 1
+                variant_name: "warna"
+                variant_type: "hitam"
+
+    CreateCartRequest:
+      title: CreateCartRequest
+      type: object
+      description: Create Cart Request data model.
+      properties:
+        product_detail_id:
+          type: string
+          example: "8b9e5380-6906-43d6-bc76-a8c4a1943bc0"
+        quantity:
+          type: number
+          example: 5
+
+    UpdateCartRequest:
+      title: UpdateCartRequest
+      type: object
+      description: Update Cart Request data model.
+      properties:
+        product_detail_id:
+          type: string
+          example: "8b9e5380-6906-43d6-bc76-a8c4a1943bc0"
+        quantity:
+          type: number
+          example: 5
+
+    GetSellerCourierResponse:
+      title: GetSellerCourierResponse
+      type: object
+      description: Get Seller Courier response data model.
+      properties:
+        message:
+          type: string
+        data:
+          type: object
+          rows:
+            type: array
+            properties:
+              shop_courier_id:
+                type: string
+              courier_id:
+                type: string
+              name:
+                type: string
+              code:
+                type: string
+              service:
+                type: string
+              description:
+                type: string
+              deleted_at:
+                type: string
+      example:
+        message: success
+        data:
+          rows:
+            - shop_courier_id: 69cf4c26-693c-4aaa-8c2d-1d7db0ce75e4
+              courier_id: 98c1921e-b80e-40f3-9cba-fe8806097517
+              name: TIKI
+              code: tiki
+              service: REG
+              description: Layanan Reguler
+              deleted_at:
+            - shop_courier_id: 578ade71-f9f9-4651-b234-7d04cde29b69
+              courier_id: 0d389020-f229-461e-9202-5788961fbb81
+              name: JNE
+              code: jne
+              service: REG
+              description: Layanan Reguler
+              deleted_at: 2023-01-08 07:23:17.795294 +0000 UTC
+
+    GetSellerDetailResponse:
+      title: GetSellerDetailResponse
+      type: object
+      description: Get Seller Detail response data model.
+      properties:
+        message:
+          type: string
+        data:
+          type: object
+          properties:
+            id:
+              type: string
+            user_id:
+              type: string
+            name:
+              type: string
+            total_product:
+              type: integer
+            total_rating:
+              type: integer
+            rating_avg:
+              type: integer
+            photo_url:
+              type: string
+            created_at:
+              type: string
+      example:
+        message: success
+        data:
+          - id: e8854443-c2c7-488e-93d5-b9d93708b8a3
+            user_id: f8d8d66a-e8eb-4633-bc2d-4ccd941fed47
+            name: Laptop Shop
+            total_product: 12510
+            total_rating: 0
+            rating_avg: 0
+            photo_url: https://res.cloudinary.com/dhpao1zxi/image/upload/v1671705602/ldtzmxqeyb4nwu5p6y76.jpg
+            created_at: "2023-01-04T04:50:12.665781Z"
+
+    GetSellerCategoryResponse:
+      title: GetSellerCategoryResponse
+      type: object
+      description: Get Category By Seller ID response data model.
+      properties:
+        message:
+          type: string
+        data:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+              name:
+                type: string
+      example:
+        message: success
+        data:
+          - id: d92a0995-78cd-4eba-a855-dfc096ffec5b
+            name: laptop
+
+    GetSellerInformationResponse:
+      title: GetSellerInformationResponse
+      type: object
+      description: Get Seller Information response data model.
+      properties:
+        message:
+          type: string
+        data:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+              name:
+                type: string
+              total_product:
+                type: number
+              rating_avg:
+                type: number
+              total_rating:
+                type: number
+              photo_url:
+                type: string
+              created_at:
+                type: string
+      example:
+        message: success
+        data:
+          - id: d92a0995-78cd-4eba-a855-dfc096ffec5b
+            name: laptop
+            total_product: 500
+            rating_avg: 5
+            total_rating: 5
+            photo_url: "https://res.cloudinary.com/dhpao1zxi/image/upload/v1671705602/ldtzmxqeyb4nwu5p6y76.jpg"
+            created_at: "2023-01-18T02:16:59.267852Z"
+
+    GetSellerOrderResponse:
+      title: GetSellerOrderResponse
+      type: object
+      description: Get Seller Order response data model.
+      properties:
+        message:
+          type: string
+          example: "success"
+        data:
+          type: object
+          properties:
+            limit:
+              type: number
+            page:
+              type: number
+            total_rows:
+              type: number
+            total_pages:
+              type: number
+            rows:
+              type: array
+              items:
+                type: object
+                properties:
+                  order_id:
+                    type: string
+                  order_status:
+                    type: number
+                  total_price:
+                    type: number
+                  delivery_fee:
+                    type: number
+                  resi_no:
+                    type: string
+                  shop_id:
+                    type: string
+                  shop_name:
+                    type: string
+                  voucher_code:
+                    type: string
+                  created_at:
+                    type: string
+                  detail:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        product_detail_id:
+                          type: string
+                        product_id:
+                          type: string
+                        product_title:
+                          type: string
+                        product_detail_url:
+                          type: string
+                        order_quantity:
+                          type: number
+                        order_item_price:
+                          type: number
+                        order_total_price:
+                          type: number
+          example:
+            limit: 10
+            page: 1
+            total_rows: 2
+            total_pages: 1
+            rows:
+              - order_id: "466844d8-e93b-4835-81d4-a75192e74958"
+                order_status: 1
+                total_price: 250000
+                delivery_fee: 30000
+                resi_no: "1"
+                shop_id: "2829d48b-b1db-4445-937c-a5c90cc1c633"
+                shop_name: "test_shop"
+                voucher_code: "voucher_shop_1"
+                created_at: "2022-12-27T05:24:10.434065Z"
+                detail:
+                  - product_detail_id: "450ba9c5-eafc-409f99d3-99f931c9fbf2"
+                    product_id: "6f16e578-fd85-4aa3-a321-9195ee38e86c"
+                    product_title: "baju zara"
+                    product_detail_url: "yahoo.com"
+                    order_quantity: 4
+                    order_item_price: 2000
+                    order_total_price: 8000
+
+    GetOrderDetailResponse:
+      title: GetOrderDetailResponse
+      type: object
+      description: Get Order detail response data model.
+      properties:
+        message:
+          type: string
+        data:
+          type: object
+          properties:
+            order_id:
+              type: string
+            order_status:
+              type: integer
+            total_price:
+              type: integer
+            delivery_fee:
+              type: integer
+            resi_no:
+              type: string
+            shop_id:
+              type: string
+            shop_name:
+              type: string
+            seller_name:
+              type: string
+            voucher_code:
+              type: "null"
+            created_at:
+              type: string
+            invoice:
+              type: string
+            courier_name:
+              type: string
+            courier_code:
+              type: string
+            courier_service:
+              type: string
+            courier_description:
+              type: string
+            buyer_name:
+              type: string
+            buyer_phone_number:
+              type: string
+            BuyerAddress:
+              type: object
+              properties:
+                i d:
+                  type: string
+                user_id:
+                  type: string
+                name:
+                  type: string
+                province_id:
+                  type: integer
+                city_id:
+                  type: integer
+                province:
+                  type: string
+                city:
+                  type: string
+                district:
+                  type: string
+                sub_district:
+                  type: string
+                address_detail:
+                  type: string
+                zip_code:
+                  type: string
+                is_default:
+                  type: boolean
+                is_shop_default:
+                  type: boolean
+                created_at:
+                  type: string
+                updated_at:
+                  type: object
+                  properties:
+                    Time:
+                      type: string
+                    Valid:
+                      type: boolean
+                  required:
+                    - Time
+                    - Valid
+                deleted_at:
+                  type: object
+                  properties:
+                    Time:
+                      type: string
+                    Valid:
+                      type: boolean
+                  required:
+                    - Time
+                    - Valid
+              required:
+                - id
+                - user_id
+                - name
+                - province_id
+                - city_id
+                - province
+                - city
+                - district
+                - sub_district
+                - address_detail
+                - zip_code
+                - is_default
+                - is_shop_default
+                - created_at
+                - updated_at
+                - deleted_at
+            SellerAddress:
+              type: object
+              properties:
+                id:
+                  type: string
+                user_id:
+                  type: string
+                name:
+                  type: string
+                province_id:
+                  type: integer
+                city_id:
+                  type: integer
+                province:
+                  type: string
+                city:
+                  type: string
+                district:
+                  type: string
+                sub_district:
+                  type: string
+                address_detail:
+                  type: string
+                zip_code:
+                  type: string
+                is_default:
+                  type: boolean
+                is_shop_default:
+                  type: boolean
+                created_at:
+                  type: string
+                updated_at:
+                  type: object
+                  properties:
+                    Time:
+                      type: string
+                    Valid:
+                      type: boolean
+                  required:
+                    - Time
+                    - Valid
+                deleted_at:
+                  type: object
+                  properties:
+                    Time:
+                      type: string
+                    Valid:
+                      type: boolean
+                  required:
+                    - Time
+                    - Valid
+              required:
+                - id
+                - user_id
+                - name
+                - province_id
+                - city_id
+                - province
+                - city
+                - district
+                - sub_district
+                - address_detail
+                - zip_code
+                - is_default
+                - is_shop_default
+                - created_at
+                - updated_at
+                - deleted_at
+            detail:
+              type: array
+              items:
+                - type: object
+                  properties:
+                    product_detail_id:
+                      type: string
+                    product_id:
+                      type: string
+                    product_title:
+                      type: string
+                    product_detail_url:
+                      type: string
+                    order_quantity:
+                      type: integer
+                    order_item_price:
+                      type: integer
+                    order_total_price:
+                      type: integer
+                  required:
+                    - product_detail_id
+                    - product_id
+                    - product_title
+                    - product_detail_url
+                    - order_quantity
+                    - order_item_price
+                    - order_total_price
+          required:
+            - order_id
+            - order_status
+            - total_price
+            - delivery_fee
+            - resi_no
+            - shop_id
+            - shop_name
+            - seller_name
+            - voucher_code
+            - created_at
+            - invoice
+            - courier_name
+            - courier_code
+            - courier_service
+            - courier_description
+            - buyer_name
+            - buyer_phone_number
+            - BuyerAddress
+            - SellerAddress
+            - detail
+      required:
+        - message
+        - data
+      example:
+        message: success
+        data:
+          order_id: b574ec07-076f-43c3-9d11-a3e0ca18e446
+          order_status: 3
+          total_price: 20000
+          delivery_fee: 30000
+          resi_no: "1"
+          shop_id: 63bdf138-3058-473f-8928-e390c8124788
+          shop_name: test_shop
+          seller_name: dhQpjPY
+          voucher_code: null
+          created_at: "2023-01-04T05:04:58.292032Z"
+          invoice: "123"
+          courier_name: JNE
+          courier_code: jne
+          courier_service: REG
+          courier_description: Layanan Reguler
+          buyer_name: dhQpjPY
+          buyer_phone_number: "22"
+          BuyerAddress:
+            id: 8e092dd0-1fd1-4d62-80f4-ab469d37cdb6
+            user_id: 0c53ef3d-3682-4359-90e1-814eb6ab5191
+            name: Home
+            province_id: 33
+            city_id: 327
+            province: Sumatera Selatan
+            city: Palembang
+            district: Ilir Timur II
+            sub_district: 2 Ilir
+            address_detail: no 91
+            zip_code: "30118"
+            is_default: true
+            is_shop_default: false
+            created_at: "2022-12-30T10:40:31.532535Z"
+            updated_at:
+              Time: "0001-01-01T00:00:00Z"
+              Valid: false
+            deleted_at:
+              Time: "0001-01-01T00:00:00Z"
+              Valid: false
+          SellerAddress:
+            id: e2668c06-29f2-4eb4-85f3-0c4a1a284c74
+            user_id: 0c53ef3d-3682-4359-90e1-814eb6ab5191
+            name: test
+            province_id: 1
+            city_id: 322
+            province: jakarta
+            city: jakarta barat
+            district: cengkareng
+            sub_district: cengakreng barat
+            address_detail: test
+            zip_code: "11730"
+            is_default: false
+            is_shop_default: true
+            created_at: "2023-01-12T11:08:14.065223Z"
+            updated_at:
+              Time: "0001-01-01T00:00:00Z"
+              Valid: false
+            deleted_at:
+              Time: "0001-01-01T00:00:00Z"
+              Valid: false
+          detail:
+            - product_detail_id: 2674b3d7-7719-44b1-aa2c-24c70f2f25f6
+              product_id: 0e9a5c56-0525-455a-a9a6-d421df2c8197
+              product_title: uRKTJFb
+              product_detail_url: google.com
+              order_quantity: 2
+              order_item_price: 2000
+              order_total_price: 4000
+
+    SellerCourierRequest:
+      title: SellerCourierRequest
+      type: object
+      description: SellerCourier Request data model.
+      properties:
+        courier_id:
+          type: string
+          example: "4bf503dc-689e-4b66-8401-3f133f1d585a"
+
+    ChangeOrderStatusRequest:
+      title: ChangeOrderStatusRequest
+      type: object
+      description: Change Order Status Request data model.
+      properties:
+        order_id:
+          type: string
+          example: "466844d8-e93b-4835-81d4-a75192e74958"
+        order_status_id:
+          type: number
+          example: 2
+
+    ChangeOrderResiRequest:
+      title: ChangeOrderResiRequest
+      type: object
+      description: Change Order Resi Number Request data model.
+      properties:
+        resi_no:
+          type: string
+          example: "2131231231231232142"
+
+    GetAllSellerVoucherResponse:
+      title: GetAllSellerVoucherResponse
+      type: object
+      description: Get All Seller Voucher Response data model.
+      properties:
+      example:
+        message: success
+        data:
+          limit: 10
+          page: 1
+          total_rows: 1
+          total_pages: 1
+          rows:
+            - id: 59bfcd74-e278-4c70-a889-d9c8515bf71c
+              shop_id: e8854443-c2c7-488e-93d5-b9d93708b8a3
+              code: ASD123
+              quota: 11
+              actived_date: "2022-12-22T21:43:56.202214Z"
+              expired_date: "2023-02-01T21:43:56.202214Z"
+              discount_percentage: 0
+              discount_fix_price: 5000
+              min_product_price: 5000
+              max_discount_price: 100000
+              created_at: "2022-12-23T02:34:38.854025Z"
+              updated_at:
+                Time: "0001-01-01T00:00:00Z"
+                Valid: false
+              deleted_at:
+                Time: "0001-01-01T00:00:00Z"
+                Valid: false
+
+    CreateVoucherSellerRequest:
+      title: CreateVoucherSellerRequest
+      type: object
+      description: Create voucher seller request data model.
+      properties:
+      example:
+        shop_id: e8854443-c2c7-488e-93d5-b9d93708b8a3
+        code: QWE1233
+        quota: 5
+        actived_date: 22-12-2022 21:43:56
+        expired_date: 22-02-2023 21:43:56
+        discount_percentage: 0
+        discount_fix_price: 1000
+        min_product_price: 5000
+        max_discount_price: 10000
+
+    UpdateVoucherSellerRequest:
+      title: UpdateVoucherSellerRequest
+      type: object
+      description: Update voucher seller request data model.
+      properties:
+      example:
+        voucher_id: e8854443-c2c7-488e-93d5-b9d93708b8a3
+        quota: 5
+        actived_date: 22-12-2022 21:43:56
+        expired_date: 22-02-2023 21:43:56
+        discount_percentage: 0
+        discount_fix_price: 1000
+        min_product_price: 5000
+        max_discount_price: 10000
+
+    GetVoucherDetailSellerResponse:
+      title: UpdateVoucherSellerRequest
+      type: object
+      description: Update voucher seller request data model.
+      properties:
+      example:
+        message: success
+        data:
+          id: 59bfcd74-e278-4c70-a889-d9c8515bf71c
+          shop_id: e8854443-c2c7-488e-93d5-b9d93708b8a3
+          code: ASD123
+          quota: 10
+          actived_date: "2022-12-22T21:43:56Z"
+          expired_date: "2023-02-22T21:43:56Z"
+          discount_percentage: 0
+          discount_fix_price: 10000
+          min_product_price: 5000
+          max_discount_price: 10000
+          created_at: "2022-12-23T02:34:38.854025Z"
+          updated_at:
+            Time: "2023-01-17T12:08:57.917015Z"
+            Valid: true
+          deleted_at:
+            Time: "0001-01-01T00:00:00Z"
+            Valid: false
+
+    GetAllPromotionSellerResponse:
+      title: UpdateVoucherSellerRequest
+      type: object
+      description: Update voucher seller request data model.
+      properties:
+      example:
+        message: success
+        data:
+          limit: 10
+          page: 1
+          total_rows: 1
+          total_pages: 1
+          rows:
+            - id: a8f690aa-8838-4a2d-ba60-cf25f9d943cf
+              promotion_name: promo murah
+              product_id: 53874e1e-3c1e-4f46-84fd-2863efb15bcb
+              product_name: PAxYvNY
+              product_thumbnail_url: https://cf.shopee.co.id/file/76a0969b7d64065bc13493bf55df1849_tn
+              discount_percentage: 25
+              discount_fix_price: 0
+              min_product_price: 50000
+              max_discount_price: 30000
+              quota: 10
+              max_quantity: 1
+              actived_date: "2022-12-21T07:00:00Z"
+              expired_date: "2023-02-01T07:00:00Z"
+              created_at: "2023-01-16T12:36:27.068087Z"
+              updated_at:
+                Time: "0001-01-01T00:00:00Z"
+                Valid: false
+              deleted_at:
+                Time: "0001-01-01T00:00:00Z"
+                Valid: false
+
+    CreatePromotionSellerRequest:
+      title: CreatePromotionSellerRequest
+      type: object
+      description: Create promotion seller request data model.
+      properties:
+      example:
+        name: dih promo
+        shop_id: e8854443-c2c7-488e-93d5-b9d93708b8a3
+        quota: 5
+        max_quantity: 2
+        actived_date: 22-12-2022 21:43:56
+        expired_date: 22-02-2023 21:43:56
+        discount_percentage: 19
+        discount_fix_price: 0
+        min_product_price: 5000
+        max_discount_price: 10000
+        product_ids:
+          - b73be319-6598-40ef-a0b3-f5a238a66940
+          - 8a185d4b-fd59-4c7b-9b1a-1b626bd91af0
+
+    UpdatePromotionSellerRequest:
+      title: CreatePromotionSellerRequest
+      type: object
+      description: Create promotion seller request data model.
+      properties:
+      example:
+        promotion_id: 3567d424-ea1f-40bc-b568-feb2bd6cd6e5
+        product_id: e883ec05-504e-4207-89f4-bbc9bb7db8fa
+        name: dih promo
+        max_quantity: 2
+        actived_date: 21-12-2022 21:43:56
+        expired_date: 22-02-2023 21:43:56
+        discount_percentage: 19
+        discount_fix_price: 0
+        min_product_price: 5000
+        max_discount_price: 10000
+
+    GetPromotionDetailSellerResponse:
+      title: CreatePromotionSellerRequest
+      type: object
+      description: Create promotion seller request data model.
+      properties:
+      example:
+        message: success
+        data:
+          promotion_id: 3567d424-ea1f-40bc-b568-feb2bd6cd6e5
+          promotion_name: dih promo
+          product_id: e883ec05-504e-4207-89f4-bbc9bb7db8fa
+          product_name: RTVjOyk
+          min_price: 625000
+          max_price: 625000
+          product_thumbnail_url: https://cf.shopee.co.id/file/76a0969b7d64065bc13493bf55df1849_tn
+          discount_percentage: 19
+          discount_fix_price: 0
+          min_product_price: 5000
+          max_discount_price: 10000
+          quota: 5
+          max_quantity: 2
+          product_sub_min_price: 615000
+          product_sub_max_price: 615000
+          product_min_discount_price: 10000
+          product_max_discount_price: 10000
+          actived_date: "2022-12-22T21:43:56Z"
+          expired_date: "2023-01-22T21:43:56Z"
+          created_at: "2023-01-18T08:01:53.334458Z"
+          updated_at:
+            Time: "2023-01-18T10:19:03.927297Z"
+            Valid: true
+          deleted_at:
+            Time: "0001-01-01T00:00:00Z"
+            Valid: false
+
+    CreatedRowSuccess:
+      title: CheckUniqueTrueSuccess
+      type: object
+      description: Check Unique True Success.
+      properties:
+        message:
+          type: string
+          example: success
+          description: Success message from server.
+        data:
+          type: number
+          example: 2
+          description: number of created row effected
+
+    CheckUniqueTrueSuccess:
+      title: CheckUniqueTrueSuccess
+      type: object
+      description: Check Unique True Success.
+      properties:
+        message:
+          type: string
+          example: success
+          description: Success message from server.
+        data:
+          type: boolean
+          example: true
+          description: the data is unique
+
+    CheckUniqueFalseSuccess:
+      title: CheckUniqueFalseSuccess
+      type: object
+      description: Check Unique False Success.
+      properties:
+        message:
+          type: string
+          example: success
+          description: Success message from server.
+        data:
+          type: boolean
+          example: false
+          description: the data is not unique
+
+    DefaultSuccess:
+      title: DefaultSuccess
+      type: object
+      description: Default Success.
+      properties:
+        message:
+          type: string
+          example: success
+          description: Success message from server.
+          # data:
+          #   type: object
+          #   properties:
+
+  securitySchemes:
+    BEARER:
+      type: apiKey
+      name: Authorization
+      in: header
+      description: "example: BEARER {token value}"
