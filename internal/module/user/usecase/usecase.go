@@ -2050,8 +2050,15 @@ func (u *userUC) GetRefundOrder(ctx context.Context, userID, orderID string) (*b
 			}
 			userModel.Username = &shopModel.Name
 		}
-		username = *userModel.Username
-		photoURL = *userModel.PhotoURL
+
+		if userModel.Username != nil {
+			username = *userModel.Username
+		}
+
+		if userModel.PhotoURL != nil {
+			photoURL = *userModel.PhotoURL
+		}
+
 		refundDataID = refundData.ID
 	}
 

@@ -3,7 +3,7 @@ servers:
   # Added by API Auto Mocking Plugin
   - description: SwaggerHub API Auto Mocking
   - url: http://localhost:8080
-  - url: https://3d50-143-92-127-33.ap.ngrok.io
+  - url: https://be.murakali.store
   - url: https://virtserver.swaggerhub.com/JULIUSBECKHAM/Murakali/1.0.0
 
 info:
