@@ -22,6 +22,49 @@ import (
 	"github.com/stretchr/testify/mock"
 )
 
+func TestCartUseCase_UpdateProductMetadata(t *testing.T) {
+
+	testCase := []struct {
+		name        string
+		body        interface{}
+		mock        func(t *testing.T, r *mocks.Repository)
+		expectedErr error
+	}{
+		{
+			name: "error update product meta data",
+			body: nil,
+			mock: func(t *testing.T, r *mocks.Repository) {
+				r.On("GetFavoriteProduct", mock.Anything).Return(nil, fmt.Errorf("test"))
+
+			},
+			expectedErr: fmt.Errorf("test"),
+		},
+		{
+			name: "error update product meta data",
+			body: nil,
+			mock: func(t *testing.T, r *mocks.Repository) {
+				r.On("GetFavoriteProduct", mock.Anything).Return([]*model.ProductFavorite{}, nil)
+				r.On("GetRatingProduct", mock.Anything).Return(nil, fmt.Errorf("test"))
+			},
+			expectedErr: fmt.Errorf("test"),
+		},
+	}
+
+	for _, tc := range testCase {
+		t.Run(tc.name, func(t *testing.T) {
+			sql, mock, _ := sqlmock.New()
+			mock.ExpectBegin()
+			r := mocks.NewRepository(t)
+			u := NewProductUseCase(&config.Config{}, &postgre.TxRepo{PSQL: sql}, r)
+
+			tc.mock(t, r)
+			err := u.UpdateProductMetadata(context.Background())
+			if err != nil {
+				assert.Equal(t, err.Error(), tc.expectedErr.Error())
+			}
+		})
+	}
+}
 func TestProductUseCase_GetCategories(t *testing.T) {
 	dateString := "2021-11-23"
 	date, _ := time.Parse("2006-01-02", dateString)
