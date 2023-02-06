@@ -71,7 +71,8 @@ const (
 		"a"."province" as "province",
 		"p".listed_status,
 		"p"."created_at",
-		"p"."updated_at"
+		"p"."updated_at",
+		"p"."sku"
 	FROM "product" as "p"
 	LEFT JOIN (
 		SELECT * FROM "promotion"
@@ -103,7 +104,8 @@ const (
 		"a"."province" as "province",
 		"p".listed_status,
 		"p"."created_at",
-		"p"."updated_at"
+		"p"."updated_at",
+		"p"."sku"
 	FROM "product" as "p"
 	LEFT JOIN (
 		SELECT * FROM "promotion"
