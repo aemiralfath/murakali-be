@@ -520,7 +520,6 @@ func (u *productUC) GetTotalReviewRatingByProductID(ctx context.Context, product
 	valueRating := 0
 	totalRating := 0
 
-	// get avg rating from total rating
 	for i := 0; i < len(ratings); i++ {
 		valueRating += ratings[i].Rating * ratings[i].Count
 		totalRating += ratings[i].Count
