@@ -15,6 +15,7 @@ import (
 	"testing"
 
 	"github.com/DATA-DOG/go-sqlmock"
+	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 )
@@ -832,45 +833,56 @@ func Test_sellerUC_GetAllPromotionSeller(t *testing.T) {
 // 	}
 // }
 
-// func Test_sellerUC_GetDetailPromotionSellerByID(t *testing.T) {
-// 	testCase := []struct {
-// 		name             string
-// 		userID           string
-// 		promoStatusID    string
-// 		pgn              *pagination.Pagination
-// 		voucherIDShopID  *body.VoucherIDShopID
-// 		requestBody      body.UpdatePromotionRequest
-// 		shopProductPromo *body.ShopProductPromo
-// 		mock             func(t *testing.T, r *mocks.Repository)
-// 		expectedErr      error
-// 	}{
-// 		{
-// 			name:        "success DeleteVoucherSeller",
-// 			userID:      "123456",
-// 			requestBody: body.UpdatePromotionRequest{},
-// 			mock: func(t *testing.T, r *mocks.Repository) {
-// 				r.On("GetShopIDByUserID", mock.Anything, mock.Anything).Return("", nil)
-// 				r.On("GetDetailPromotionSellerByID", mock.Anything, mock.Anything).Return(&body.PromotionSellerResponse{}, nil)
-// 			},
-// 			expectedErr: nil,
-// 		},
-// 	}
+func Test_sellerUC_GetDetailPromotionSellerByID(t *testing.T) {
+	float64Value := float64(1)
+	testCase := []struct {
+		name             string
+		userID           string
+		promoStatusID    string
+		pgn              *pagination.Pagination
+		voucherIDShopID  *body.VoucherIDShopID
+		requestBody      body.UpdatePromotionRequest
+		shopProductPromo *body.ShopProductPromo
+		mock             func(t *testing.T, r *mocks.Repository)
+		expectedErr      error
+	}{
+		{
+			name:             "success DeleteVoucherSeller",
+			shopProductPromo: &body.ShopProductPromo{},
+			mock: func(t *testing.T, r *mocks.Repository) {
+				r.On("GetShopIDByUserID", mock.Anything, mock.Anything).Return("008dc24d-1f30-4e13-823f-d62972f416df", nil)
+				r.On("GetDetailPromotionSellerByID", mock.Anything, mock.Anything).Return(&body.PromotionDetailSeller{
+					MinProductPrice:         &float64Value,
+					MaxDiscountPrice:        &float64Value,
+					DiscountPercentage:      &float64Value,
+					MinPrice:                1000,
+					MaxPrice:                10000,
+					DiscountFixPrice:        &float64Value,
+					ProductMinDiscountPrice: 1000,
+					ProductSubMinPrice:      1000,
+					ProductMaxDiscountPrice: 1000,
+					ProductSubMaxPrice:      1000,
+				}, nil)
+			},
+			expectedErr: nil,
+		},
+	}
 
-// 	for _, tc := range testCase {
-// 		t.Run(tc.name, func(t *testing.T) {
-// 			sql, mock, _ := sqlmock.New()
-// 			mock.ExpectBegin()
-// 			r := mocks.NewRepository(t)
-// 			u := NewSellerUseCase(&config.Config{}, &postgre.TxRepo{PSQL: sql}, r)
+	for _, tc := range testCase {
+		t.Run(tc.name, func(t *testing.T) {
+			sql, mock, _ := sqlmock.New()
+			mock.ExpectBegin()
+			r := mocks.NewRepository(t)
+			u := NewSellerUseCase(&config.Config{}, &postgre.TxRepo{PSQL: sql}, r)
 
-// 			tc.mock(t, r)
-// 			_, err := u.GetDetailPromotionSellerByID(context.Background(), tc.shopProductPromo)
-// 			if err != nil {
-// 				assert.Equal(t, err.Error(), tc.expectedErr.Error())
-// 			}
-// 		})
-// 	}
-// }
+			tc.mock(t, r)
+			_, err := u.GetDetailPromotionSellerByID(context.Background(), tc.shopProductPromo)
+			if err != nil {
+				assert.Equal(t, err.Error(), tc.expectedErr.Error())
+			}
+		})
+	}
+}
 
 func Test_sellerUC_GetProductWithoutPromotionSeller(t *testing.T) {
 	value := int64(1)
@@ -916,47 +928,212 @@ func Test_sellerUC_GetProductWithoutPromotionSeller(t *testing.T) {
 	}
 }
 
-// func Test_sellerUC_GetRefundOrderSeller(t *testing.T) {
-// 	uuid, _ := uuid.Parse("008dc24d-1f30-4e13-823f-d62972f416df")
-// 	testCase := []struct {
-// 		name             string
-// 		userID           string
-// 		promoStatusID    string
-// 		pgn              *pagination.Pagination
-// 		voucherIDShopID  *body.VoucherIDShopID
-// 		requestBody      body.UpdatePromotionRequest
-// 		shopProductPromo *body.ShopProductPromo
-// 		productName      string
-// 		orderID          string
-// 		mock             func(t *testing.T, r *mocks.Repository)
-// 		expectedErr      error
-// 	}{
-// 		{
-// 			name:    "success DeleteVoucherSeller",
-// 			userID:  "008dc24d-1f30-4e13-823f-d62972f416df",
-// 			orderID: "008dc24d-1f30-4e13-823f-d62972f416df",
-// 			pgn:     &pagination.Pagination{},
-// 			mock: func(t *testing.T, r *mocks.Repository) {
-// 				r.On("GetShopIDByUserID", mock.Anything, mock.Anything).Return("008dc24d-1f30-4e13-823f-d62972f416df", nil)
-// 				r.On("GetOrderModelByID", mock.Anything, mock.Anything).Return(&model.OrderModel{ShopID: uuid}, nil)
-// 				r.On("GetRefundOrderByOrderID", mock.Anything, mock.Anything).Return(&model.Refund{}, nil)
-// 			},
-// 			expectedErr: nil,
-// 		},
-// 	}
+func Test_sellerUC_GetRefundOrderSeller(t *testing.T) {
+	uuid, _ := uuid.Parse("008dc24d-1f30-4e13-823f-d62972f416df")
+	bollTrue := true
+	bollFalse := false
 
-// 	for _, tc := range testCase {
-// 		t.Run(tc.name, func(t *testing.T) {
-// 			sql, mock, _ := sqlmock.New()
-// 			mock.ExpectBegin()
-// 			r := mocks.NewRepository(t)
-// 			u := NewSellerUseCase(&config.Config{}, &postgre.TxRepo{PSQL: sql}, r)
+	testCase := []struct {
+		name             string
+		userID           string
+		promoStatusID    string
+		pgn              *pagination.Pagination
+		voucherIDShopID  *body.VoucherIDShopID
+		requestBody      body.UpdatePromotionRequest
+		shopProductPromo *body.ShopProductPromo
+		productName      string
+		orderID          string
+		mock             func(t *testing.T, r *mocks.Repository)
+		expectedErr      error
+	}{
+		{
+			name:    "success GetRefundOrderSeller",
+			userID:  "008dc24d-1f30-4e13-823f-d62972f416df",
+			orderID: "008dc24d-1f30-4e13-823f-d62972f416df",
+			pgn:     &pagination.Pagination{},
+			mock: func(t *testing.T, r *mocks.Repository) {
+				r.On("GetShopIDByUserID", mock.Anything, mock.Anything).Return("008dc24d-1f30-4e13-823f-d62972f416df", nil)
+				r.On("GetOrderModelByID", mock.Anything, mock.Anything).Return(&model.OrderModel{ShopID: uuid}, nil)
+				r.On("GetRefundOrderByOrderID", mock.Anything, mock.Anything).Return(&model.Refund{IsBuyerRefund: &bollTrue, IsSellerRefund: &bollFalse}, nil)
+				r.On("GetUserByID", mock.Anything, mock.Anything).Return(&model.User{}, nil)
+				r.On("GetRefundThreadByRefundID", mock.Anything, mock.Anything).Return([]*body.RThread{}, nil)
+			},
+			expectedErr: nil,
+		},
+		{
+			name:    "success GetRefundOrderSeller",
+			userID:  "008dc24d-1f30-4e13-823f-d62972f416df",
+			orderID: "008dc24d-1f30-4e13-823f-d62972f416df",
+			pgn:     &pagination.Pagination{},
+			mock: func(t *testing.T, r *mocks.Repository) {
+				r.On("GetShopIDByUserID", mock.Anything, mock.Anything).Return("008dc24d-1f30-4e13-823f-d62972f416df", nil)
+				r.On("GetOrderModelByID", mock.Anything, mock.Anything).Return(&model.OrderModel{ShopID: uuid}, nil)
+				r.On("GetRefundOrderByOrderID", mock.Anything, mock.Anything).Return(&model.Refund{IsBuyerRefund: &bollFalse, IsSellerRefund: &bollTrue}, nil)
+				r.On("GetShopByID", mock.Anything, mock.Anything).Return(&model.Shop{}, nil)
+				r.On("GetUserByID", mock.Anything, mock.Anything).Return(&model.User{}, nil)
+				r.On("GetRefundThreadByRefundID", mock.Anything, mock.Anything).Return([]*body.RThread{}, nil)
+			},
+			expectedErr: nil,
+		},
+	}
 
-// 			tc.mock(t, r)
-// 			_, err := u.GetRefundOrderSeller(context.Background(), tc.userID, tc.orderID)
-// 			if err != nil {
-// 				assert.Equal(t, err, tc.expectedErr)
-// 			}
-// 		})
-// 	}
-// }
+	for _, tc := range testCase {
+		t.Run(tc.name, func(t *testing.T) {
+			sql, mock, _ := sqlmock.New()
+			mock.ExpectBegin()
+			r := mocks.NewRepository(t)
+			u := NewSellerUseCase(&config.Config{}, &postgre.TxRepo{PSQL: sql}, r)
+
+			tc.mock(t, r)
+			_, err := u.GetRefundOrderSeller(context.Background(), tc.userID, tc.orderID)
+			if err != nil {
+				assert.Equal(t, err, tc.expectedErr)
+			}
+		})
+	}
+}
+
+func Test_sellerUC_CreateRefundThreadSeller(t *testing.T) {
+	uuidString1, _ := uuid.Parse("008dc24d-1f30-4e13-823f-d62972f416df")
+	// uuidString2, _ := uuid.Parse("008dc24d-1f30-4e13-823f-d62972f416de")
+	testCase := []struct {
+		name             string
+		userID           string
+		promoStatusID    string
+		pgn              *pagination.Pagination
+		voucherIDShopID  *body.VoucherIDShopID
+		shopProductPromo *body.ShopProductPromo
+		productName      string
+		orderID          string
+		requestBody      *body.CreateRefundThreadRequest
+		mock             func(t *testing.T, r *mocks.Repository)
+		expectedErr      error
+	}{
+		{
+			name:   "success GetRefundOrderSeller",
+			userID: "008dc24d-1f30-4e13-823f-d62972f416df",
+			requestBody: &body.CreateRefundThreadRequest{
+				RefundID: "008dc24d-1f30-4e13-823f-d62972f416df",
+			},
+			mock: func(t *testing.T, r *mocks.Repository) {
+				r.On("GetShopIDByUserID", mock.Anything, mock.Anything).Return("008dc24d-1f30-4e13-823f-d62972f416df", nil)
+				r.On("GetRefundOrderByID", mock.Anything, mock.Anything).Return(&model.Refund{OrderID: uuidString1}, nil)
+				r.On("GetOrderModelByID", mock.Anything, mock.Anything).Return(&model.OrderModel{ShopID: uuidString1, OrderStatusID: 6}, nil)
+				r.On("CreateRefundThreadSeller", mock.Anything, mock.Anything).Return(nil)
+			},
+			expectedErr: nil,
+		},
+	}
+
+	for _, tc := range testCase {
+		t.Run(tc.name, func(t *testing.T) {
+			sql, mock, _ := sqlmock.New()
+			mock.ExpectBegin()
+			r := mocks.NewRepository(t)
+			u := NewSellerUseCase(&config.Config{}, &postgre.TxRepo{PSQL: sql}, r)
+
+			tc.mock(t, r)
+			err := u.CreateRefundThreadSeller(context.Background(), tc.userID, tc.requestBody)
+			if err != nil {
+				assert.Equal(t, err, tc.expectedErr)
+			}
+		})
+	}
+}
+
+func Test_sellerUC_UpdateRefundAccept(t *testing.T) {
+	uuidString1, _ := uuid.Parse("008dc24d-1f30-4e13-823f-d62972f416df")
+	// uuidString2, _ := uuid.Parse("008dc24d-1f30-4e13-823f-d62972f416de")
+	testCase := []struct {
+		name             string
+		userID           string
+		promoStatusID    string
+		pgn              *pagination.Pagination
+		voucherIDShopID  *body.VoucherIDShopID
+		shopProductPromo *body.ShopProductPromo
+		productName      string
+		orderID          string
+		requestBody      *body.UpdateRefundRequest
+		mock             func(t *testing.T, r *mocks.Repository)
+		expectedErr      error
+	}{
+		{
+			name:   "success GetRefundOrderSeller",
+			userID: "008dc24d-1f30-4e13-823f-d62972f416df",
+			requestBody: &body.UpdateRefundRequest{
+				RefundID: "008dc24d-1f30-4e13-823f-d62972f416df",
+			},
+			mock: func(t *testing.T, r *mocks.Repository) {
+				r.On("GetShopIDByUserID", mock.Anything, mock.Anything).Return("008dc24d-1f30-4e13-823f-d62972f416df", nil)
+				r.On("GetRefundOrderByID", mock.Anything, mock.Anything).Return(&model.Refund{OrderID: uuidString1}, nil)
+				r.On("GetOrderModelByID", mock.Anything, mock.Anything).Return(&model.OrderModel{ShopID: uuidString1, OrderStatusID: 6}, nil)
+				r.On("UpdateRefundAccept", mock.Anything, mock.Anything).Return(nil)
+			},
+			expectedErr: nil,
+		},
+	}
+
+	for _, tc := range testCase {
+		t.Run(tc.name, func(t *testing.T) {
+			sql, mock, _ := sqlmock.New()
+			mock.ExpectBegin()
+			r := mocks.NewRepository(t)
+			u := NewSellerUseCase(&config.Config{}, &postgre.TxRepo{PSQL: sql}, r)
+
+			tc.mock(t, r)
+			err := u.UpdateRefundAccept(context.Background(), tc.userID, tc.requestBody)
+			if err != nil {
+				assert.Equal(t, err, tc.expectedErr)
+			}
+		})
+	}
+}
+
+func Test_sellerUC_UpdateRefundReject(t *testing.T) {
+	uuidString1, _ := uuid.Parse("008dc24d-1f30-4e13-823f-d62972f416df")
+	// uuidString2, _ := uuid.Parse("008dc24d-1f30-4e13-823f-d62972f416de")
+	testCase := []struct {
+		name             string
+		userID           string
+		promoStatusID    string
+		pgn              *pagination.Pagination
+		voucherIDShopID  *body.VoucherIDShopID
+		shopProductPromo *body.ShopProductPromo
+		productName      string
+		orderID          string
+		requestBody      *body.UpdateRefundRequest
+		mock             func(t *testing.T, r *mocks.Repository)
+		expectedErr      error
+	}{
+		{
+			name:   "success GetRefundOrderSeller",
+			userID: "008dc24d-1f30-4e13-823f-d62972f416df",
+			requestBody: &body.UpdateRefundRequest{
+				RefundID: "008dc24d-1f30-4e13-823f-d62972f416df",
+			},
+			mock: func(t *testing.T, r *mocks.Repository) {
+				r.On("GetShopIDByUserID", mock.Anything, mock.Anything).Return("008dc24d-1f30-4e13-823f-d62972f416df", nil)
+				r.On("GetRefundOrderByID", mock.Anything, mock.Anything).Return(&model.Refund{OrderID: uuidString1}, nil)
+				r.On("GetOrderModelByID", mock.Anything, mock.Anything).Return(&model.OrderModel{ShopID: uuidString1, OrderStatusID: 6}, nil)
+				r.On("UpdateRefundReject", mock.Anything, mock.Anything, mock.Anything).Return(nil)
+				r.On("UpdateOrderRefundRejected", mock.Anything, mock.Anything, mock.Anything).Return(nil)
+			},
+			expectedErr: nil,
+		},
+	}
+
+	for _, tc := range testCase {
+		t.Run(tc.name, func(t *testing.T) {
+			sql, mock, _ := sqlmock.New()
+			mock.ExpectBegin()
+			r := mocks.NewRepository(t)
+			u := NewSellerUseCase(&config.Config{}, &postgre.TxRepo{PSQL: sql}, r)
+
+			tc.mock(t, r)
+			err := u.UpdateRefundReject(context.Background(), tc.userID, tc.requestBody)
+			if err != nil {
+				assert.Equal(t, err, tc.expectedErr)
+			}
+		})
+	}
+}
