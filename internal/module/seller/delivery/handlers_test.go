@@ -162,6 +162,13 @@ func Test_sellerHandlers_GetAllSeller(t *testing.T) {
 			},
 			expected: http.StatusInternalServerError,
 		},
+		{
+			name: "Error Get All Seller HTTP Error",
+			mock: func(s *mocks.UseCase) {
+				s.On("GetAllSeller", mock.Anything, mock.Anything, mock.Anything).Return(nil, httperror.New(http.StatusBadRequest, "test"))
+			},
+			expected: http.StatusBadRequest,
+		},
 	}
 
 	for _, tc := range testCase {
@@ -3019,6 +3026,228 @@ func Test_sellerHandlers_GetRefundOrderSeller(t *testing.T) {
 
 			tc.mock(s)
 			h.GetRefundOrderSeller(c)
+
+			assert.Equal(t, rr.Code, tc.expected)
+		})
+	}
+}
+
+func Test_sellerHandlers_UpdateRefundAccept(t *testing.T) {
+	InvalidRequestBody := body.UpdateRefundRequest{
+		RefundID: "",
+	}
+	RequestBody := body.UpdateRefundRequest{
+		RefundID: "4cf3a332-5d81-48a0-b935-cfa83a6b6ac4",
+	}
+
+	testCase := []struct {
+		name       string
+		body       interface{}
+		mock       func(s *mocks.UseCase)
+		expected   int
+		authorized bool
+	}{
+		{
+			name: "Success Create Refund Thread",
+			body: RequestBody,
+			mock: func(s *mocks.UseCase) {
+				s.On("UpdateRefundAccept", mock.Anything, mock.Anything, mock.Anything).Return(nil)
+			},
+			expected:   http.StatusOK,
+			authorized: true,
+		},
+		{
+			name:       "Unauthorized Create Refund Thread",
+			body:       RequestBody,
+			mock:       func(s *mocks.UseCase) {},
+			expected:   http.StatusUnauthorized,
+			authorized: false,
+		},
+		{
+			name:       "Body Empty Create Refund Thread",
+			body:       "",
+			mock:       func(s *mocks.UseCase) {},
+			expected:   http.StatusBadRequest,
+			authorized: true,
+		},
+		{
+			name: "Invalid Body Create Refund Thread",
+			body: InvalidRequestBody,
+			mock: func(s *mocks.UseCase) {
+			},
+			expected:   http.StatusUnprocessableEntity,
+			authorized: true,
+		},
+		{
+			name: "Failed Create Refund Thread",
+			body: RequestBody,
+			mock: func(s *mocks.UseCase) {
+				s.On("UpdateRefundAccept", mock.Anything, mock.Anything, mock.Anything).Return(errors.New("error"))
+			},
+			expected:   http.StatusInternalServerError,
+			authorized: true,
+		},
+		{
+			name: "Failed Create Refund Thread HTTP ERROR",
+			body: RequestBody,
+			mock: func(s *mocks.UseCase) {
+				s.On("UpdateRefundAccept", mock.Anything, mock.Anything, mock.Anything).Return(httperror.New(http.StatusBadRequest, "test"))
+			},
+			expected:   http.StatusBadRequest,
+			authorized: true,
+		},
+	}
+
+	for _, tc := range testCase {
+		t.Run(tc.name, func(t *testing.T) {
+			jsonValue, err := json.Marshal(tc.body)
+			if err != nil {
+				t.Error(err)
+			}
+
+			rr := httptest.NewRecorder()
+			c, _ := gin.CreateTestContext(rr)
+
+			r := httptest.NewRequest(http.MethodPost, "/api/v1/seller/refund-thread", bytes.NewBuffer(jsonValue))
+			r.Header = make(http.Header)
+
+			c.Request = r
+			c.Request.Header.Set("Content-Type", "application/json")
+			MockJsonPost(c, tc.body)
+			if tc.authorized {
+				c.Set("userID", "4cf3a332-5d81-48a0-b935-cfa83a6b6ac4")
+			}
+
+			s := mocks.NewUseCase(t)
+
+			cfg := &config.Config{
+				Logger: config.LoggerConfig{
+					Development:       true,
+					DisableCaller:     false,
+					DisableStacktrace: false,
+					Encoding:          "json",
+					Level:             "info",
+				},
+			}
+
+			appLogger := logger.NewAPILogger(cfg)
+			appLogger.InitLogger()
+
+			h := NewSellerHandlers(cfg, s, appLogger)
+
+			tc.mock(s)
+			h.UpdateRefundAccept(c)
+
+			assert.Equal(t, rr.Code, tc.expected)
+		})
+	}
+}
+
+func Test_sellerHandlers_UpdateRefundReject(t *testing.T) {
+	InvalidRequestBody := body.UpdateRefundRequest{
+		RefundID: "",
+	}
+	RequestBody := body.UpdateRefundRequest{
+		RefundID: "4cf3a332-5d81-48a0-b935-cfa83a6b6ac4",
+	}
+
+	testCase := []struct {
+		name       string
+		body       interface{}
+		mock       func(s *mocks.UseCase)
+		expected   int
+		authorized bool
+	}{
+		{
+			name: "Success Create Refund Thread",
+			body: RequestBody,
+			mock: func(s *mocks.UseCase) {
+				s.On("UpdateRefundReject", mock.Anything, mock.Anything, mock.Anything).Return(nil)
+			},
+			expected:   http.StatusOK,
+			authorized: true,
+		},
+		{
+			name:       "Unauthorized Create Refund Thread",
+			body:       RequestBody,
+			mock:       func(s *mocks.UseCase) {},
+			expected:   http.StatusUnauthorized,
+			authorized: false,
+		},
+		{
+			name:       "Body Empty Create Refund Thread",
+			body:       "",
+			mock:       func(s *mocks.UseCase) {},
+			expected:   http.StatusBadRequest,
+			authorized: true,
+		},
+		{
+			name: "Invalid Body Create Refund Thread",
+			body: InvalidRequestBody,
+			mock: func(s *mocks.UseCase) {
+			},
+			expected:   http.StatusUnprocessableEntity,
+			authorized: true,
+		},
+		{
+			name: "Failed Create Refund Thread",
+			body: RequestBody,
+			mock: func(s *mocks.UseCase) {
+				s.On("UpdateRefundReject", mock.Anything, mock.Anything, mock.Anything).Return(errors.New("error"))
+			},
+			expected:   http.StatusInternalServerError,
+			authorized: true,
+		},
+		{
+			name: "Failed Create Refund Thread HTTP ERROR",
+			body: RequestBody,
+			mock: func(s *mocks.UseCase) {
+				s.On("UpdateRefundReject", mock.Anything, mock.Anything, mock.Anything).Return(httperror.New(http.StatusBadRequest, "test"))
+			},
+			expected:   http.StatusBadRequest,
+			authorized: true,
+		},
+	}
+
+	for _, tc := range testCase {
+		t.Run(tc.name, func(t *testing.T) {
+			jsonValue, err := json.Marshal(tc.body)
+			if err != nil {
+				t.Error(err)
+			}
+
+			rr := httptest.NewRecorder()
+			c, _ := gin.CreateTestContext(rr)
+
+			r := httptest.NewRequest(http.MethodPost, "/api/v1/seller/refund-thread", bytes.NewBuffer(jsonValue))
+			r.Header = make(http.Header)
+
+			c.Request = r
+			c.Request.Header.Set("Content-Type", "application/json")
+			MockJsonPost(c, tc.body)
+			if tc.authorized {
+				c.Set("userID", "4cf3a332-5d81-48a0-b935-cfa83a6b6ac4")
+			}
+
+			s := mocks.NewUseCase(t)
+
+			cfg := &config.Config{
+				Logger: config.LoggerConfig{
+					Development:       true,
+					DisableCaller:     false,
+					DisableStacktrace: false,
+					Encoding:          "json",
+					Level:             "info",
+				},
+			}
+
+			appLogger := logger.NewAPILogger(cfg)
+			appLogger.InitLogger()
+
+			h := NewSellerHandlers(cfg, s, appLogger)
+
+			tc.mock(s)
+			h.UpdateRefundReject(c)
 
 			assert.Equal(t, rr.Code, tc.expected)
 		})
