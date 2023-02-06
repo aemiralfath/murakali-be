@@ -9,6 +9,7 @@ import (
 	"murakali/internal/constant"
 	"murakali/internal/model"
 	body2 "murakali/internal/module/location/delivery/body"
+	"murakali/internal/module/user"
 	"murakali/internal/module/user/delivery/body"
 	"murakali/internal/module/user/mocks"
 	"murakali/pkg/pagination"
@@ -2899,14 +2900,13 @@ func Test_userUC_GetWallet(t *testing.T) {
 			},
 			expectedErr: errors.New("test"),
 		},
-
 		{
-			name:   "error GetWallet",
+			name:   "error GetWallet no sql row",
 			userID: "123456",
 			mock: func(t *testing.T, r *mocks.Repository) {
-				r.On("GetWalletByUserID", mock.Anything, mock.Anything).Return(nil, errors.New("test"))
+				r.On("GetWalletByUserID", mock.Anything, mock.Anything).Return(nil, sql.ErrNoRows)
 			},
-			expectedErr: errors.New("test"),
+			expectedErr: errors.New(response.WalletIsNotActivated),
 		},
 	}
 
@@ -2919,6 +2919,259 @@ func Test_userUC_GetWallet(t *testing.T) {
 			_, err := u.GetWallet(context.Background(), tc.userID)
 			if err != nil {
 				assert.Equal(t, err.Error(), tc.expectedErr.Error())
+			}
+		})
+	}
+}
+
+func Test_userUC_GetWalletHistory(t *testing.T) {
+	testCase := []struct {
+		name        string
+		userID      string
+		pgn         *pagination.Pagination
+		mock        func(t *testing.T, r *mocks.Repository)
+		expectedErr error
+	}{
+		{
+			name:   "success GetWalletHistory",
+			userID: "123456",
+			pgn:    &pagination.Pagination{},
+			mock: func(t *testing.T, r *mocks.Repository) {
+				tempInt64 := int64(1)
+				r.On("GetWalletByUserID", mock.Anything, mock.Anything).Return(&model.Wallet{
+					ID: uuid.Nil,
+				}, nil)
+				r.On("GetTotalWalletHistoryByWalletID", mock.Anything, mock.Anything).Return(tempInt64, nil)
+				r.On("GetWalletHistoryByWalletID", mock.Anything, mock.Anything, mock.Anything).Return([]*body.HistoryWalletResponse{}, nil)
+			},
+			expectedErr: nil,
+		},
+		{
+			name:   "error GetWallet",
+			userID: "123456",
+			pgn:    &pagination.Pagination{},
+			mock: func(t *testing.T, r *mocks.Repository) {
+				r.On("GetWalletByUserID", mock.Anything, mock.Anything).Return(nil, errors.New("test"))
+			},
+			expectedErr: errors.New("test"),
+		},
+		{
+			name:   "error GetWallet no sql row",
+			userID: "123456",
+			pgn:    &pagination.Pagination{},
+			mock: func(t *testing.T, r *mocks.Repository) {
+				r.On("GetWalletByUserID", mock.Anything, mock.Anything).Return(nil, sql.ErrNoRows)
+			},
+			expectedErr: nil,
+		},
+	}
+
+	for _, tc := range testCase {
+		t.Run(tc.name, func(t *testing.T) {
+			r := mocks.NewRepository(t)
+			u := NewUserUseCase(&config.Config{}, &postgre.TxRepo{}, r)
+
+			tc.mock(t, r)
+			_, err := u.GetWalletHistory(context.Background(), tc.userID, tc.pgn)
+			if err != nil {
+				assert.Equal(t, err.Error(), tc.expectedErr.Error())
+			}
+		})
+	}
+}
+
+func Test_userUC_GetDetailWalletHistory(t *testing.T) {
+	testCase := []struct {
+		name            string
+		walletHistoryID string
+		userID          string
+		mock            func(t *testing.T, r *mocks.Repository)
+		expectedErr     error
+	}{
+		{
+			name:            "success GetDetailWalletHistory",
+			userID:          "123456",
+			walletHistoryID: "ab80c496-387b-4989-bf3b-a6f68a05940d",
+			mock: func(t *testing.T, r *mocks.Repository) {
+				tempUUID, _ := uuid.Parse("ab80c496-387b-4989-bf3b-a6f68a05940d")
+				r.On("GetWalletHistoryByID", mock.Anything, mock.Anything).Return(&model.WalletHistory{
+					ID:            tempUUID,
+					WalletID:      tempUUID,
+					TransactionID: uuid.Nil,
+					From:          "ab80c496-387b-4989-bf3b-a6f68a05940d",
+				}, nil)
+				r.On("GetTransactionByID", mock.Anything, mock.Anything).Return(&model.Transaction{}, nil)
+				r.On("GetOrdersByTransactionID", mock.Anything, mock.Anything, mock.Anything).Return([]*model.Order{}, nil)
+			},
+			expectedErr: nil,
+		},
+		{
+			name:            "error GetWallet",
+			userID:          "123456",
+			walletHistoryID: "123456",
+			mock: func(t *testing.T, r *mocks.Repository) {
+				r.On("GetWalletHistoryByID", mock.Anything, mock.Anything).Return(nil, errors.New("test"))
+			},
+			expectedErr: errors.New("test"),
+		},
+		{
+			name:            "error GetWallet no sql row",
+			userID:          "123456",
+			walletHistoryID: "123456",
+			mock: func(t *testing.T, r *mocks.Repository) {
+				r.On("GetWalletHistoryByID", mock.Anything, mock.Anything).Return(nil, sql.ErrNoRows)
+			},
+			expectedErr: errors.New(response.WalletHistoryNotFound),
+		},
+	}
+
+	for _, tc := range testCase {
+		t.Run(tc.name, func(t *testing.T) {
+			r := mocks.NewRepository(t)
+			u := NewUserUseCase(&config.Config{}, &postgre.TxRepo{}, r)
+
+			tc.mock(t, r)
+			_, err := u.GetDetailWalletHistory(context.Background(), tc.walletHistoryID, tc.userID)
+			if err != nil {
+				assert.Equal(t, err.Error(), tc.expectedErr.Error())
+			}
+		})
+	}
+}
+
+func Test_userUC_WalletStepUp(t *testing.T) {
+	testCase := []struct {
+		name        string
+		userID      string
+		requestBody body.WalletStepUpRequest
+		mock        func(t *testing.T, r *mocks.Repository)
+		expectedErr error
+	}{
+		{
+			name:   "error WalletStepUp wrong error",
+			userID: "123456",
+			requestBody: body.WalletStepUpRequest{
+				Amount: 1000,
+				Pin:    "123456",
+			},
+			mock: func(t *testing.T, r *mocks.Repository) {
+				r.On("GetWalletByUserID", mock.Anything, mock.Anything).Return(&model.Wallet{
+					Balance: 100000,
+					PIN:     "123456",
+				}, nil)
+				r.On("UpdateWallet", mock.Anything, mock.Anything).Return(nil)
+			},
+			expectedErr: errors.New(response.WalletPinIsInvalid),
+		},
+	}
+
+	for _, tc := range testCase {
+		t.Run(tc.name, func(t *testing.T) {
+			r := mocks.NewRepository(t)
+			u := NewUserUseCase(&config.Config{}, &postgre.TxRepo{}, r)
+
+			tc.mock(t, r)
+			_, err := u.WalletStepUp(context.Background(), tc.userID, tc.requestBody)
+			if err != nil {
+				assert.Equal(t, err.Error(), tc.expectedErr.Error())
+			}
+		})
+	}
+}
+
+func Test_userUC_ChangeWalletPinStepUp(t *testing.T) {
+	passwordHash := "$2a$10$WKul/6gjYoYjOXuNVX4XGen1ZkWYb1PKFiI5vlZp5TFerZh6nTujG"
+	testCase := []struct {
+		name        string
+		userID      string
+		requestBody body.ChangeWalletPinStepUpRequest
+		mock        func(t *testing.T, r *mocks.Repository)
+		expectedErr error
+	}{
+		{
+			name:   "error ChangeWalletPinStepUp",
+			userID: "123456",
+			requestBody: body.ChangeWalletPinStepUpRequest{
+				Password: "Tested8*",
+			},
+			mock: func(t *testing.T, r *mocks.Repository) {
+				r.On("GetWalletByUserID", mock.Anything, mock.Anything).Return(&model.Wallet{
+					ID:      uuid.Nil,
+					Balance: 100000,
+					PIN:     "123456",
+				}, nil)
+				r.On("GetUserPasswordByID", mock.Anything, mock.Anything).Return(&model.User{
+					Password: &passwordHash,
+				}, nil)
+			},
+			expectedErr: nil,
+		},
+		{
+			name:   "error ChangeWalletPinStepUp",
+			userID: "123456",
+			requestBody: body.ChangeWalletPinStepUpRequest{
+				Password: "Tested8*",
+			},
+			mock: func(t *testing.T, r *mocks.Repository) {
+				r.On("GetWalletByUserID", mock.Anything, mock.Anything).Return(nil, errors.New("test"))
+			},
+			expectedErr: errors.New("test"),
+		},
+		{
+			name:   "error ChangeWalletPinStepUp",
+			userID: "123456",
+			requestBody: body.ChangeWalletPinStepUpRequest{
+				Password: "Tested8*",
+			},
+			mock: func(t *testing.T, r *mocks.Repository) {
+				r.On("GetWalletByUserID", mock.Anything, mock.Anything).Return(nil, sql.ErrNoRows)
+			},
+			expectedErr: errors.New(response.WalletIsNotActivated),
+		},
+	}
+
+	for _, tc := range testCase {
+		t.Run(tc.name, func(t *testing.T) {
+			r := mocks.NewRepository(t)
+			u := NewUserUseCase(&config.Config{}, &postgre.TxRepo{}, r)
+
+			tc.mock(t, r)
+			_, err := u.ChangeWalletPinStepUp(context.Background(), tc.userID, tc.requestBody)
+			if err != nil {
+				assert.Equal(t, err.Error(), tc.expectedErr.Error())
+			}
+		})
+	}
+}
+
+func Test_userUC_ChangeWalletPin(t *testing.T) {
+	type fields struct {
+		cfg      *config.Config
+		txRepo   *postgre.TxRepo
+		userRepo user.Repository
+	}
+	type args struct {
+		ctx    context.Context
+		userID string
+		pin    string
+	}
+	tests := []struct {
+		name    string
+		fields  fields
+		args    args
+		wantErr bool
+	}{
+		// TODO: Add test cases.
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			u := &userUC{
+				cfg:      tt.fields.cfg,
+				txRepo:   tt.fields.txRepo,
+				userRepo: tt.fields.userRepo,
+			}
+			if err := u.ChangeWalletPin(tt.args.ctx, tt.args.userID, tt.args.pin); (err != nil) != tt.wantErr {
+				t.Errorf("userUC.ChangeWalletPin() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
 	}
