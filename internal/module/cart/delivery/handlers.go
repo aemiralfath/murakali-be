@@ -59,7 +59,7 @@ func (h *cartHandlers) GetCartHoverHome(c *gin.Context) {
 		return
 	}
 
-	response.SuccessResponse(c.Writer, carts, http.StatusCreated)
+	response.SuccessResponse(c.Writer, carts, http.StatusOK)
 }
 
 func (h *cartHandlers) GetCartItems(c *gin.Context) {
