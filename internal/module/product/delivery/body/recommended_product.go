@@ -2,8 +2,9 @@ package body
 
 import (
 	"database/sql"
-	"github.com/google/uuid"
 	"time"
+
+	"github.com/google/uuid"
 )
 
 type RecommendedProductRequest struct {
@@ -34,6 +35,7 @@ type Products struct {
 	ShopName                  string       `json:"shop_name" db:"shop_name"`
 	CategoryName              string       `json:"category_name" db:"category_name"`
 	ShopProvince              string       `json:"province" db:"province"`
+	SKU                       *string      `json:"sku" db:"sku"`
 	ListedStatus              bool         `json:"listed_status" db:"listed_status"`
 	CreatedAt                 time.Time    `json:"created_at" db:"created_at"`
 	UpdatedAt                 sql.NullTime `json:"updated_at" db:"updated_at"`

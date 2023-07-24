@@ -16,7 +16,7 @@ type Repository interface {
 	GetTotalAllSeller(ctx context.Context, shopName string) (int64, error)
 	GetAllSeller(ctx context.Context, pgn *pagination.Pagination, shopName string) ([]*body.SellerResponse, error)
 	GetTotalOrder(ctx context.Context, userID, orderStatusID, voucherShopID string) (int64, error)
-	GetOrders(ctx context.Context, userID, orderStatusID, voucherShopID string, pgn *pagination.Pagination) ([]*model.Order, error)
+	GetOrders(ctx context.Context, userID, orderStatusID, voucherShopID, sortQuery string, pgn *pagination.Pagination) ([]*model.Order, error)
 	GetShopIDByUser(ctx context.Context, userID string) (string, error)
 	GetShopIDByOrder(ctx context.Context, OrderID string) (string, error)
 	ChangeOrderStatus(ctx context.Context, requestBody body.ChangeOrderStatusRequest) error
@@ -65,8 +65,9 @@ type Repository interface {
 	GetPromotionSellerDetailByID(ctx context.Context, shopProductPromo *body.ShopProductPromo) (*body.PromotionSellerResponse, error)
 	UpdatePromotionSeller(ctx context.Context, promotion *model.Promotion) error
 	GetDetailPromotionSellerByID(ctx context.Context, shopProductPromo *body.ShopProductPromo) (*body.PromotionDetailSeller, error)
-	GetTotalProductWithoutPromotionSeller(ctx context.Context, shopID string) (int64, error)
-	GetProductWithoutPromotionSeller(ctx context.Context, shopID string, pgn *pagination.Pagination) ([]*body.GetProductWithoutPromotion, error)
+	GetTotalProductWithoutPromotionSeller(ctx context.Context, shopID, productName string) (int64, error)
+	GetProductWithoutPromotionSeller(ctx context.Context, shopID,
+		productName string, pgn *pagination.Pagination) ([]*body.GetProductWithoutPromotion, error)
 	GetWalletByUserID(ctx context.Context, tx postgre.Transaction, userID string) (*model.Wallet, error)
 	UpdateWalletBalance(ctx context.Context, tx postgre.Transaction, wallet *model.Wallet) error
 	InsertWalletHistory(ctx context.Context, tx postgre.Transaction, walletHistory *model.WalletHistory) error
@@ -78,5 +79,6 @@ type Repository interface {
 	GetRefundThreadByRefundID(ctx context.Context, refundID string) ([]*body.RThread, error)
 	CreateRefundThreadSeller(ctx context.Context, refundThreadData *model.RefundThread) error
 	UpdateRefundAccept(ctx context.Context, refundDataID string) error
-	UpdateRefundReject(ctx context.Context, refundDataID string) error
+	UpdateRefundReject(ctx context.Context, tx postgre.Transaction, refundDataID string) error
+	UpdateOrderRefundRejected(ctx context.Context, tx postgre.Transaction, orderData *model.OrderModel) error
 }

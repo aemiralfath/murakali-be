@@ -3,7 +3,9 @@ package jwt
 import (
 	"errors"
 	"fmt"
+	"github.com/go-redis/redis/v8"
 	"murakali/config"
+	"murakali/internal/constant"
 	"murakali/internal/model"
 	"net/http"
 	"strings"
@@ -198,11 +200,10 @@ func ExtractJWT(tokenString, jwtKey string) (map[string]interface{}, error) {
 	return claims, nil
 }
 
-func ExtractJWTFromRequest(r *http.Request, jwtKey string) (map[string]interface{}, error) {
+func ExtractJWTFromRequest(r *http.Request, redisClient *redis.Client, jwtKey string) (map[string]interface{}, error) {
 	tokenString := ExtractBearerToken(r)
 
 	claims := jwt.MapClaims{}
-
 	token, err := jwt.ParseWithClaims(tokenString, claims, func(token *jwt.Token) (interface{}, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
@@ -218,7 +219,21 @@ func ExtractJWTFromRequest(r *http.Request, jwtKey string) (map[string]interface
 	}
 
 	if !token.Valid {
-		return nil, errors.New("invalid token ")
+		return nil, errors.New("invalid token")
+	}
+
+	res := redisClient.Get(r.Context(), fmt.Sprintf("session:%s:%s", claims["id"].(string), tokenString))
+	if res.Err() != nil {
+		return nil, errors.New("invalid session")
+	}
+
+	value, err := res.Result()
+	if err != nil {
+		return nil, errors.New("invalid session")
+	}
+
+	if value != constant.TRUE {
+		return nil, errors.New("invalid session")
 	}
 
 	return claims, nil

@@ -42,7 +42,6 @@ func (u *sellerUC) GetPerformance(ctx context.Context, userID string, update boo
 
 	key := fmt.Sprintf("performance:%s", shopID)
 	if !update {
-		fmt.Println("!!!!! Ndak Update?", update)
 		gotPerformanceRedis, _ := u.sellerRepo.GetPerformaceRedis(ctx, key)
 		if gotPerformanceRedis != nil {
 			return gotPerformanceRedis, nil
@@ -163,7 +162,6 @@ func (u *sellerUC) WithdrawalOrderBalance(ctx context.Context, orderID string) e
 
 func (u *sellerUC) GetAllSeller(ctx context.Context, shopName string,
 	pgn *pagination.Pagination) (*pagination.Pagination, error) {
-
 	totalRows, err := u.sellerRepo.GetTotalAllSeller(ctx, shopName)
 	if err != nil {
 		return nil, err
@@ -182,7 +180,7 @@ func (u *sellerUC) GetAllSeller(ctx context.Context, shopName string,
 	return pgn, nil
 }
 
-func (u *sellerUC) GetOrder(ctx context.Context, userID, orderStatusID, voucherShopID string,
+func (u *sellerUC) GetOrder(ctx context.Context, userID, orderStatusID, voucherShopID, sortQuery string,
 	pgn *pagination.Pagination) (*pagination.Pagination, error) {
 	shopID, err := u.sellerRepo.GetShopIDByUser(ctx, userID)
 	if err != nil {
@@ -198,7 +196,7 @@ func (u *sellerUC) GetOrder(ctx context.Context, userID, orderStatusID, voucherS
 	pgn.TotalRows = totalRows
 	pgn.TotalPages = totalPages
 
-	orders, err := u.sellerRepo.GetOrders(ctx, shopID, orderStatusID, voucherShopID, pgn)
+	orders, err := u.sellerRepo.GetOrders(ctx, shopID, orderStatusID, voucherShopID, sortQuery, pgn)
 	if err != nil {
 		return nil, err
 	}
@@ -475,7 +473,7 @@ func (u *sellerUC) UpdateResiNumberInOrderSeller(ctx context.Context, userID, or
 func (u *sellerUC) UpdateOnDeliveryOrder(ctx context.Context) error {
 	orders, err := u.sellerRepo.GetOrdersOnDelivery(ctx)
 	if err != nil {
-		return nil
+		return err
 	}
 
 	for _, order := range orders {
@@ -493,7 +491,7 @@ func (u *sellerUC) UpdateOnDeliveryOrder(ctx context.Context) error {
 func (u *sellerUC) UpdateExpiredAtOrder(ctx context.Context) error {
 	transactions, err := u.sellerRepo.GetTransactionsExpired(ctx)
 	if err != nil {
-		return nil
+		return err
 	}
 
 	for _, transaction := range transactions {
@@ -945,7 +943,8 @@ func (u *sellerUC) GetDetailPromotionSellerByID(ctx context.Context,
 	return promotionShop, nil
 }
 
-func (u sellerUC) GetProductWithoutPromotionSeller(ctx context.Context, userID string, pgn *pagination.Pagination) (*pagination.Pagination, error) {
+func (u sellerUC) GetProductWithoutPromotionSeller(ctx context.Context, userID, productName string,
+	pgn *pagination.Pagination) (*pagination.Pagination, error) {
 	shopID, err := u.sellerRepo.GetShopIDByUserID(ctx, userID)
 	if err != nil {
 		if err == sql.ErrNoRows {
@@ -954,7 +953,7 @@ func (u sellerUC) GetProductWithoutPromotionSeller(ctx context.Context, userID s
 		return nil, err
 	}
 
-	totalRows, err := u.sellerRepo.GetTotalProductWithoutPromotionSeller(ctx, shopID)
+	totalRows, err := u.sellerRepo.GetTotalProductWithoutPromotionSeller(ctx, shopID, productName)
 	if err != nil {
 		return nil, err
 	}
@@ -963,7 +962,7 @@ func (u sellerUC) GetProductWithoutPromotionSeller(ctx context.Context, userID s
 	pgn.TotalRows = totalRows
 	pgn.TotalPages = totalPages
 
-	ProductWoutPromotion, err := u.sellerRepo.GetProductWithoutPromotionSeller(ctx, shopID, pgn)
+	ProductWoutPromotion, err := u.sellerRepo.GetProductWithoutPromotionSeller(ctx, shopID, productName, pgn)
 	if err != nil {
 		return nil, err
 	}
@@ -973,7 +972,7 @@ func (u sellerUC) GetProductWithoutPromotionSeller(ctx context.Context, userID s
 	return pgn, nil
 }
 
-func (u *sellerUC) GetRefundOrderSeller(ctx context.Context, userID string, orderID string) (*body.GetRefundThreadResponse, error) {
+func (u *sellerUC) GetRefundOrderSeller(ctx context.Context, userID, orderID string) (*body.GetRefundThreadResponse, error) {
 	shopID, err := u.sellerRepo.GetShopIDByUserID(ctx, userID)
 	if err != nil {
 		if err == sql.ErrNoRows {
@@ -993,43 +992,57 @@ func (u *sellerUC) GetRefundOrderSeller(ctx context.Context, userID string, orde
 
 	refundData, err := u.sellerRepo.GetRefundOrderByOrderID(ctx, orderID)
 	if err != nil {
-		return nil, err
-	}
-
-	var userModel *model.User
-	var errUser error
-	fmt.Println("refund Data:", refundData)
-	if *refundData.IsBuyerRefund {
-		fmt.Println("masuk Seller")
-		fmt.Println("masuk Seller")
-		fmt.Println("masuk Seller")
-		userModel, errUser = u.sellerRepo.GetUserByID(ctx, orderData.UserID.String())
-		if errUser != nil {
-			return nil, errUser
+		if err != sql.ErrNoRows {
+			return nil, err
 		}
 	}
-
-	if *refundData.IsSellerRefund {
-		shopModel, errShop := u.sellerRepo.GetShopByID(ctx, orderData.ShopID.String())
-		if errShop != nil {
-			return nil, errShop
+	username := ""
+	photoURL := ""
+	refundDataID := uuid.Nil
+	if refundData != nil {
+		var userModel *model.User
+		var errUser error
+		if *refundData.IsBuyerRefund {
+			userModel, errUser = u.sellerRepo.GetUserByID(ctx, orderData.UserID.String())
+			if errUser != nil {
+				return nil, errUser
+			}
 		}
 
-		userModel, errUser = u.sellerRepo.GetUserByID(ctx, shopModel.UserID.String())
-		if errUser != nil {
-			return nil, errUser
+		if *refundData.IsSellerRefund {
+			shopModel, errShop := u.sellerRepo.GetShopByID(ctx, orderData.ShopID.String())
+			if errShop != nil {
+				return nil, errShop
+			}
+
+			userModel, errUser = u.sellerRepo.GetUserByID(ctx, shopModel.UserID.String())
+			if errUser != nil {
+				return nil, errUser
+			}
+			userModel.Username = &shopModel.Name
 		}
-		userModel.Username = &shopModel.Name
+
+		if userModel.Username != nil {
+			username = *userModel.Username
+		}
+
+		if userModel.PhotoURL != nil {
+			photoURL = *userModel.PhotoURL
+		}
+
+		refundDataID = refundData.ID
 	}
 
-	refundThreadData, err := u.sellerRepo.GetRefundThreadByRefundID(ctx, refundData.ID.String())
-	if err != nil {
-		return nil, err
+	refundThreadData, errThread := u.sellerRepo.GetRefundThreadByRefundID(ctx, refundDataID.String())
+	if errThread != nil {
+		if errThread != sql.ErrNoRows {
+			return nil, errThread
+		}
 	}
 
 	refundThreadResponse := &body.GetRefundThreadResponse{
-		UserName:      *userModel.Username,
-		PhotoURL:      *userModel.PhotoURL,
+		UserName:      username,
+		PhotoURL:      &photoURL,
 		RefundData:    refundData,
 		RefundThreads: refundThreadData,
 	}
@@ -1056,7 +1069,7 @@ func (u *sellerUC) CreateRefundThreadSeller(ctx context.Context, userID string, 
 		return err
 	}
 
-	if orderData.ShopID.String() != shopID {
+	if orderData.ShopID.String() != shopID || orderData.OrderStatusID != 6 {
 		return httperror.New(http.StatusBadRequest, response.InvalidRefund)
 	}
 
@@ -1107,7 +1120,7 @@ func (u *sellerUC) UpdateRefundAccept(ctx context.Context, userID string, reques
 		return err
 	}
 
-	if orderData.ShopID.String() != shopID {
+	if orderData.ShopID.String() != shopID || orderData.OrderStatusID != 6 {
 		return httperror.New(http.StatusBadRequest, response.InvalidRefund)
 	}
 
@@ -1142,7 +1155,7 @@ func (u *sellerUC) UpdateRefundReject(ctx context.Context, userID string, reques
 		return err
 	}
 
-	if orderData.ShopID.String() != shopID {
+	if orderData.ShopID.String() != shopID || orderData.OrderStatusID != 6 {
 		return httperror.New(http.StatusBadRequest, response.InvalidRefund)
 	}
 
@@ -1150,9 +1163,19 @@ func (u *sellerUC) UpdateRefundReject(ctx context.Context, userID string, reques
 		return httperror.New(http.StatusBadRequest, response.OrderRefundHasBeenFinished)
 	}
 
-	err = u.sellerRepo.UpdateRefundReject(ctx, refundData.ID.String())
-	if err != nil {
-		return err
+	errTx := u.txRepo.WithTransaction(func(tx postgre.Transaction) error {
+		errReject := u.sellerRepo.UpdateRefundReject(ctx, tx, refundData.ID.String())
+		if errReject != nil {
+			return errReject
+		}
+		errOrderUpdate := u.sellerRepo.UpdateOrderRefundRejected(ctx, tx, orderData)
+		if errOrderUpdate != nil {
+			return errOrderUpdate
+		}
+		return nil
+	})
+	if errTx != nil {
+		return errTx
 	}
 
 	return nil

@@ -74,6 +74,7 @@ const (
 	OrderCannotToRefund            = "Order Cannot to Refund"
 	OrderHasAcceptedToRefund       = "Order Has Accepted to Refund"
 	OrderRefundHasBeenFinished     = "Order Refund Has Been Finished"
+	InvalidBuyOwnProducts          = "Invalid Buy Own Products."
 )
 
 type JSONResponse struct {

@@ -93,29 +93,29 @@ func (r *sellerRepo) GetPerformance(ctx context.Context, shopID string) (*body.S
 	performance.DailyOrder = dailyOrders
 
 	var monthlyOrder body.MonthlyOrder
-	if err := r.PSQL.QueryRowContext(ctx, GetMonthlyOrderQuery, shopID).Scan(
+	if errRow := r.PSQL.QueryRowContext(ctx, GetMonthlyOrderQuery, shopID).Scan(
 		&monthlyOrder.Month,
 		&monthlyOrder.SuccessOrder,
 		&monthlyOrder.FailedOrder,
 		&monthlyOrder.SuccessOrderPercentChange,
 		&monthlyOrder.FailedOrderPercentChange,
-	); err != nil {
-		if err != sql.ErrNoRows {
-			return nil, err
+	); errRow != nil {
+		if errRow != sql.ErrNoRows {
+			return nil, errRow
 		}
 	}
 	performance.MonthlyOrder = &monthlyOrder
 
 	var totalRating body.TotalRating
-	if err := r.PSQL.QueryRowContext(ctx, GetTotalRatingQuery, shopID).Scan(
+	if errRow := r.PSQL.QueryRowContext(ctx, GetTotalRatingQuery, shopID).Scan(
 		&totalRating.Rating1,
 		&totalRating.Rating2,
 		&totalRating.Rating3,
 		&totalRating.Rating4,
 		&totalRating.Rating5,
-	); err != nil {
-		if err != sql.ErrNoRows {
-			return nil, err
+	); errRow != nil {
+		if errRow != sql.ErrNoRows {
+			return nil, errRow
 		}
 	}
 	performance.TotalRating = &totalRating
@@ -472,18 +472,22 @@ func (r *sellerRepo) GetOrderByOrderID(ctx context.Context, orderID string) (*mo
 	return &order, nil
 }
 
-func (r *sellerRepo) GetOrders(ctx context.Context, shopID, orderStatusID, voucherShopID string, pgn *pagination.Pagination) ([]*model.Order, error) {
+func (r *sellerRepo) GetOrders(ctx context.Context, shopID, orderStatusID, voucherShopID, sortQuery string,
+	pgn *pagination.Pagination) ([]*model.Order, error) {
 	orders := make([]*model.Order, 0)
 
 	var res *sql.Rows
 	var err error
+
+	queryOrderBySomething := fmt.Sprintf(OrderBySomething, sortQuery, pgn.GetLimit(),
+		pgn.GetOffset())
+
 	if voucherShopID == "" {
 		res, err = r.PSQL.QueryContext(
-			ctx, GetOrdersQuery,
+			ctx, GetOrdersQuery+queryOrderBySomething,
 			shopID,
 			fmt.Sprintf("%%%s%%", orderStatusID),
-			pgn.GetLimit(),
-			pgn.GetOffset())
+		)
 
 		if err != nil {
 			return nil, err
@@ -509,6 +513,7 @@ func (r *sellerRepo) GetOrders(ctx context.Context, shopID, orderStatusID, vouch
 		if errScan := res.Scan(
 			&order.OrderID,
 			&order.IsWithdraw,
+			&order.IsRefund,
 			&order.OrderStatus,
 			&order.TotalPrice,
 			&order.DeliveryFee,
@@ -1006,7 +1011,7 @@ func (r *sellerRepo) GetAllPromotionSeller(ctx context.Context, shopID, promoSta
 		q += FilterHasEndedQuery
 	}
 
-	res, err := r.PSQL.QueryContext(ctx, q, shopID)
+	res, err := r.PSQL.QueryContext(ctx, q+OrderByCreatedAt, shopID)
 	if err != nil {
 		return nil, err
 	}
@@ -1331,19 +1336,19 @@ func (r *sellerRepo) UpdateProductDetailStock(ctx context.Context, tx postgre.Tr
 	return nil
 }
 
-func (r *sellerRepo) GetTotalProductWithoutPromotionSeller(ctx context.Context, shopID string) (int64, error) {
+func (r *sellerRepo) GetTotalProductWithoutPromotionSeller(ctx context.Context, shopID, productName string) (int64, error) {
 	var total int64
-	if err := r.PSQL.QueryRowContext(ctx, GetTotalProductWithoutPromotionQuery, shopID).Scan(&total); err != nil {
+	if err := r.PSQL.QueryRowContext(ctx, GetTotalProductWithoutPromotionQuery, shopID, fmt.Sprintf("%%%s%%", productName)).Scan(&total); err != nil {
 		return -1, err
 	}
 
 	return total, nil
 }
-func (r *sellerRepo) GetProductWithoutPromotionSeller(ctx context.Context, shopID string,
+func (r *sellerRepo) GetProductWithoutPromotionSeller(ctx context.Context, shopID, productName string,
 	pgn *pagination.Pagination) ([]*body.GetProductWithoutPromotion, error) {
 	var productWoutPromos []*body.GetProductWithoutPromotion
 
-	res, err := r.PSQL.QueryContext(ctx, GetProductWithoutPromotionQuery, shopID, pgn.Limit, pgn.GetOffset())
+	res, err := r.PSQL.QueryContext(ctx, GetProductWithoutPromotionQuery, shopID, fmt.Sprintf("%%%s%%", productName), pgn.Limit, pgn.GetOffset())
 	if err != nil {
 		return nil, err
 	}
@@ -1468,6 +1473,11 @@ func (r *sellerRepo) GetRefundThreadByRefundID(ctx context.Context, refundID str
 		if !refundThreadData.IsBuyer {
 			refundThreadData.UserName = ""
 		}
+		if refundThreadData.PhotoURL == nil {
+			photo := ""
+			refundThreadData.PhotoURL = &photo
+		}
+
 		refundThreadList = append(refundThreadList, &refundThreadData)
 	}
 	return refundThreadList, nil
@@ -1492,9 +1502,18 @@ func (r *sellerRepo) UpdateRefundAccept(ctx context.Context, refundDataID string
 	return nil
 }
 
-func (r *sellerRepo) UpdateRefundReject(ctx context.Context, refundDataID string) error {
-	if _, err := r.PSQL.ExecContext(ctx, UpdateRefundRejectQuery, refundDataID); err != nil {
+func (r *sellerRepo) UpdateRefundReject(ctx context.Context, tx postgre.Transaction, refundDataID string) error {
+	if _, err := tx.ExecContext(ctx, UpdateRefundRejectQuery, refundDataID); err != nil {
 		return err
 	}
+	return nil
+}
+
+func (r *sellerRepo) UpdateOrderRefundRejected(ctx context.Context, tx postgre.Transaction, orderData *model.OrderModel) error {
+	_, err := tx.ExecContext(ctx, UpdateOrderRefundRejectedQuery, orderData.ID)
+	if err != nil {
+		return err
+	}
+
 	return nil
 }

@@ -3,6 +3,7 @@ module murakali
 go 1.19
 
 require (
+	github.com/DATA-DOG/go-sqlmock v1.5.0
 	github.com/gin-contrib/cors v1.4.0
 	github.com/gin-gonic/gin v1.8.1
 	github.com/go-faker/faker/v4 v4.0.0-beta.4
@@ -25,6 +26,7 @@ require (
 	github.com/creasty/defaults v1.5.1 // indirect
 	github.com/gorilla/schema v1.2.0 // indirect
 	github.com/gosimple/unidecode v1.0.1 // indirect
+	github.com/stretchr/objx v0.5.0 // indirect
 )
 
 require (

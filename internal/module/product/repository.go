@@ -55,4 +55,10 @@ type Repository interface {
 	GetMaxMinPriceByID(ctx context.Context, productID string) (*body.RangePrice, error)
 	UpdateVariant(ctx context.Context, tx postgre.Transaction, variantID, variantDetailID string) error
 	DeleteProductDetail(ctx context.Context, tx postgre.Transaction, productDetailID string) error
+	GetFavoriteProduct(ctx context.Context) ([]*model.ProductFavorite, error)
+	GetRatingProduct(ctx context.Context) ([]*model.ProductRating, error)
+	UpdateProductFavorite(ctx context.Context, productID string, favCount int) error
+	UpdateProductRating(ctx context.Context, productID string, ratingAvg float64) error
+	UpdateShopProductRating(ctx context.Context, shop *model.ShopProductRating) error
+	GetShopProductRating(ctx context.Context, shopID string) (*model.ShopProductRating, error)
 }

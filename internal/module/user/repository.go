@@ -13,7 +13,7 @@ import (
 type Repository interface {
 	GetTransactionByID(ctx context.Context, transactionID string) (*model.Transaction, error)
 	GetTransactionByUserID(ctx context.Context, userID string, status int, pgn *pagination.Pagination) ([]*model.Transaction, error)
-	GetTotalTransactionByUserID(ctx context.Context, userID string) (int64, error)
+	GetTotalTransactionByUserID(ctx context.Context, userID string, status int) (int64, error)
 	GetUserByID(ctx context.Context, id string) (*model.User, error)
 	GetUserPasswordByID(ctx context.Context, id string) (*model.User, error)
 	GetTotalAddress(ctx context.Context, userID, name string) (int64, error)
@@ -90,7 +90,7 @@ type Repository interface {
 	UpdateWalletBalance(ctx context.Context, tx postgre.Transaction, wallet *model.Wallet) error
 	UpdateWallet(ctx context.Context, wallet *model.Wallet) error
 	CheckUserSealabsPay(ctx context.Context, userid string) (int, error)
-	CheckDeletedSealabsPay(ctx context.Context, cardNumber string) (int, error)
+	CheckDeletedSealabsPay(ctx context.Context, cardNumber string, userid string) (int, error)
 	AddSealabsPay(ctx context.Context, request body.AddSealabsPayRequest, userid string) error
 	UpdateUserSealabsPay(ctx context.Context, request body.AddSealabsPayRequest, userid string) error
 	UpdateUserSealabsPayTrans(ctx context.Context, tx postgre.Transaction, request body.AddSealabsPayRequest, userid string) error
@@ -105,4 +105,10 @@ type Repository interface {
 	GetRefundOrderByID(ctx context.Context, refundID string) (*model.Refund, error)
 	GetRefundThreadByRefundID(ctx context.Context, refundID string) ([]*body.RThread, error)
 	CreateRefundThreadUser(ctx context.Context, refundThreadData *model.RefundThread) error
+	InsertSessionRedis(ctx context.Context, duration int, key, status string) error
+	GetSessionKeyRedis(ctx context.Context, key string) ([]string, error)
+	GetRejectedRefund(ctx context.Context) ([]*model.RefundOrder, error)
+	InsertNewOTPKeyChangeWalletPin(ctx context.Context, email, otp string) error
+	GetOTPValueChangeWalletPin(ctx context.Context, email string) (string, error)
+	DeleteOTPValueChangeWalletPin(ctx context.Context, email string) (int64, error)
 }

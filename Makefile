@@ -27,11 +27,6 @@ golangci-lint:
 compile:
 	GOOS=linux GOARCH=amd64 go build $(GO_BUILD_FLAGS) -o $(CMD_SERVER_OUT) $(CMD_SERVER)
 
-.PHONY: test-coverage
-test-coverage:
-	go test -race -failfast -tags=integration -coverprofile=$(COVERAGE_OUTPUT) -covermode=atomic ./internal/...
-	go tool cover -html=$(COVERAGE_OUTPUT) -o $(COVERAGE_OUTPUT_HTML)
-
 .PHONY: docker-up
 docker-up:
 	docker-compose up -d
@@ -55,3 +50,25 @@ migrate-down:
 .PHONY: migrate-force
 migrate-force:
 	migrate -path sql/migrations -database "postgres://$(user):$(pwd)@localhost:5431/$(db)?sslmode=disable" -verbose force $(version)
+
+.PHONY: create-mock
+create-mock:
+	mockery --dir=./internal/module/admin --name=UseCase --output=./internal/module/admin/mocks
+	mockery --dir=./internal/module/auth --name=UseCase --output=./internal/module/auth/mocks
+	mockery --dir=./internal/module/cart --name=UseCase --output=./internal/module/cart/mocks
+	mockery --dir=./internal/module/location --name=UseCase --output=./internal/module/location/mocks
+	mockery --dir=./internal/module/product --name=UseCase --output=./internal/module/product/mocks
+	mockery --dir=./internal/module/seller --name=UseCase --output=./internal/module/seller/mocks
+	mockery --dir=./internal/module/user --name=UseCase --output=./internal/module/user/mocks
+	mockery --dir=./internal/module/admin --name=Repository --output=./internal/module/admin/mocks
+	mockery --dir=./internal/module/auth --name=Repository --output=./internal/module/auth/mocks
+	mockery --dir=./internal/module/cart --name=Repository --output=./internal/module/cart/mocks
+	mockery --dir=./internal/module/location --name=Repository --output=./internal/module/location/mocks
+	mockery --dir=./internal/module/product --name=Repository --output=./internal/module/product/mocks
+	mockery --dir=./internal/module/seller --name=Repository --output=./internal/module/seller/mocks
+	mockery --dir=./internal/module/user --name=Repository --output=./internal/module/user/mocks
+
+.PHONY: test-coverage
+test-coverage:
+	go test -failfast -tags=integration -coverprofile=$(COVERAGE_OUTPUT) -covermode=atomic ./internal/module/...
+	go tool cover -html=$(COVERAGE_OUTPUT) -o $(COVERAGE_OUTPUT_HTML)

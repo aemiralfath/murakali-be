@@ -116,6 +116,7 @@ func (r *cartRepo) GetCartHoverHome(ctx context.Context, userID string, limit in
 			&cartItem.DiscountFixPrice,
 			&cartItem.MinProductPrice,
 			&cartItem.MaxDiscountPrice,
+			&cartItem.Quota,
 			&cartItem.Quantity,
 			(*pq.StringArray)(&VariantName),
 			(*pq.StringArray)(&VariantType),
@@ -179,6 +180,7 @@ func (r *cartRepo) GetCartItems(ctx context.Context, userID string, pgn *paginat
 			&promo.DiscountFixPrice,
 			&promo.MinProductPrice,
 			&promo.MaxDiscountPrice,
+			&promo.Quota,
 			(*pq.StringArray)(&VariantName),
 			(*pq.StringArray)(&VariantType),
 		); errScan != nil {

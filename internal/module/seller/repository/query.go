@@ -159,16 +159,15 @@ const (
 	AND "o"."voucher_shop_id" = $3
 	`
 
-	GetOrdersQuery = `SELECT o.id, o.is_withdraw, o.order_status_id,o.total_price,o.delivery_fee,o.resi_no,s.id,s.name,v.code,o.created_at
+	GetOrdersQuery = `SELECT o.id, o.is_withdraw, o.is_refund, o.order_status_id,o.total_price,o.delivery_fee,o.resi_no,s.id,s.name,v.code,o.created_at
 	from "order" o
 	join "shop" s on s.id = o.shop_id
 	left join "voucher" v on v.id = o.voucher_shop_id 
 	WHERE o.shop_id = $1 
 	and "order_status_id"::text LIKE $2 
-	ORDER BY o.created_at asc LIMIT $3 OFFSET $4
 	`
 
-	GetOrdersWithVoucherIDQuery = `SELECT o.id, o.is_withdraw,o.order_status_id,o.total_price,o.delivery_fee,o.resi_no,s.id,s.name,v.code,o.created_at
+	GetOrdersWithVoucherIDQuery = `SELECT o.id, o.is_withdraw, o.is_refund, o.order_status_id,o.total_price,o.delivery_fee,o.resi_no,s.id,s.name,v.code,o.created_at
 	from "order" o
 	join "shop" s on s.id = o.shop_id
 	left join "voucher" v on v.id = o.voucher_shop_id 
@@ -203,13 +202,10 @@ const (
 	GetSellerIDByOrderIDQuery = `SELECT s.user_id from "order" o join shop s on o.shop_id = s.id where o.id = $1`
 
 	GetOrderDetailQuery = `SELECT pd.id,pd.product_id,p.title, pd.weight,
-		(select ph.url from "photo" ph 
-			join product_detail pd on pd.id = ph.product_detail_id 
-			join "order_item" oi on pd.id = oi.product_detail_id limit 1
-		),oi.quantity,oi.item_price,oi.total_price
-	from  "product_detail" pd 
-	join "order_item" oi on pd.id = oi.product_detail_id 
-	join "product" p on p.id = pd.product_id WHERE oi.order_id = $1 `
+        p.thumbnail_url,oi.quantity,oi.item_price,oi.total_price
+    from  "product_detail" pd 
+    join "order_item" oi on pd.id = oi.product_detail_id 
+    join "product" p on p.id = pd.product_id WHERE oi.order_id = $1 `
 
 	GetOrderDetailProductVariant = `
 		SELECT "vd"."name" as "name", "vd"."type" as "type" 
@@ -254,7 +250,7 @@ const (
 	JOIN "user" u ON u.id = s.user_id
 	WHERE s.user_id = $1 AND s.deleted_at is null`
 
-	UpdateShopInformationByUserIDQuery = `UPDATE "shop" SET "name" = $1 WHERE "user_id" = $2`
+	UpdateShopInformationByUserIDQuery = `UPDATE "shop" SET "name" = $1, "updated_at" = now() WHERE "user_id" = $2`
 
 	GetCourierByIDQuery                            = `SELECT id FROM "courier" WHERE id = $1 AND deleted_at IS NULL`
 	GetShopIDByUserIDQuery                         = `SELECT id from "shop" WHERE user_id = $1 AND deleted_at IS NULL `
@@ -337,8 +333,9 @@ const (
 	FROM "promotion" as "promo"
 	INNER JOIN "product" as "p" ON "p"."id" = "promo"."product_id"
 	INNER JOIN "shop" as "s" ON "s"."id" = "p"."shop_id"
-	WHERE "s"."id" = $1 ORDER BY "promo"."created_at" DESC
+	WHERE "s"."id" = $1 
 	`
+	OrderByCreatedAt = ` ORDER BY "promo"."created_at" DESC`
 
 	GetTotalPromotionSellerQuery = `
 	SELECT count("promo"."id") FROM "promotion" as "promo" 
@@ -409,7 +406,8 @@ const (
 		INNER JOIN "category" as "c" ON "c"."id" = "p"."category_id"
 		LEFT JOIN "promotion" as "promo" ON "promo"."product_id" = "p"."id"
 		WHERE "p"."shop_id" = $1 AND ("promo"."id" is NULL OR
-	("promo"."actived_date" < now() AND "promo"."expired_date" < now()));
+	("promo"."actived_date" < now() AND "promo"."expired_date" < now()))
+	AND "p"."title" ILIKE $2;
 	`
 	GetProductWithoutPromotionQuery = `
 	SELECT "p"."id", "p"."title", "p"."min_price", "c"."name", "p"."thumbnail_url", "p"."unit_sold", "p"."rating_avg" FROM "product" as "p"
@@ -417,7 +415,8 @@ const (
 		LEFT JOIN "promotion" as "promo" ON "promo"."product_id" = "p"."id"
 		WHERE "p"."shop_id" = $1 AND ("promo"."id" is NULL OR
 		("promo"."actived_date" < now() AND "promo"."expired_date" < now()))
-		LIMIT $2 OFFSET $3;
+		AND "p"."title" ILIKE $2
+		LIMIT $3 OFFSET $4;
 	`
 
 	GetWalletByUserIDQuery = `SELECT "id", "user_id", "balance", "pin", "attempt_count", "attempt_at", "unlocked_at", "active_date" FROM "wallet" WHERE "user_id" = $1 AND "deleted_at" IS NULL`
@@ -427,10 +426,10 @@ const (
 	FROM "order" WHERE "id" = $1`
 
 	GetRefundOrderByOrderIDQuery = `SELECT "id", "order_id", "is_seller_refund", "is_buyer_refund", "reason", "image", "accepted_at", "rejected_at", "refunded_at"
-	FROM "refund" WHERE "order_id" = $1`
+	FROM "refund" WHERE "order_id" = $1 ORDER BY "rejected_at" DESC LIMIT 1`
 
 	GetRefundOrderByIDQuery = `SELECT "id", "order_id", "is_seller_refund", "is_buyer_refund", "reason", "image", "accepted_at", "rejected_at", "refunded_at"
-	FROM "refund" WHERE "id" = $1`
+	FROM "refund" WHERE "id" = $1 ORDER BY "rejected_at" DESC LIMIT 1`
 
 	GetRefundThreadByRefundIDQuery = `SELECT "rt"."id", "rt"."refund_id", "rt"."user_id", "u"."username", "s"."name", "u"."photo_url", "rt"."is_seller", "rt"."is_buyer", "rt"."text", "rt"."created_at"
 	FROM "refund_thread" as "rt"
@@ -444,4 +443,6 @@ const (
 
 	UpdateRefundAcceptQuery = `UPDATE "refund" SET "accepted_at" = now() WHERE "id" = $1;`
 	UpdateRefundRejectQuery = `UPDATE "refund" SET "rejected_at" = now() WHERE "id" = $1;`
+
+	UpdateOrderRefundRejectedQuery = `UPDATE "order" SET "is_refund" = FALSE WHERE "id" = $1`
 )

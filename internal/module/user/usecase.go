@@ -47,8 +47,11 @@ type UseCase interface {
 	WalletStepUp(ctx context.Context, userID string, requestBody body.WalletStepUpRequest) (string, error)
 	CreateWalletPayment(ctx context.Context, transactionID string) error
 	ChangeWalletPinStepUp(ctx context.Context, userID string, requestBody body.ChangeWalletPinStepUpRequest) (string, error)
+	ChangeWalletPinStepUpEmail(ctx context.Context, userID string) error
+	ChangeWalletPinStepUpVerify(ctx context.Context, requestBody body.VerifyOTPRequest, userID string) (string, error)
 	ChangeWalletPin(ctx context.Context, userID, pin string) error
 	CreateRefundUser(ctx context.Context, userID string, requestBody body.CreateRefundUserRequest) error
 	GetRefundOrder(ctx context.Context, userID string, refundID string) (*body.GetRefundThreadResponse, error)
 	CreateRefundThreadUser(ctx context.Context, userID string, requestBody *body.CreateRefundThreadRequest) error
+	CompletedRejectedRefund(ctx context.Context) error
 }

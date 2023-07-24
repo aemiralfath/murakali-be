@@ -40,9 +40,10 @@ func (u *cartUC) GetCartHoverHome(ctx context.Context, userID string, limit int)
 		var discountPercentage float64
 		var discountFixPrice float64
 		var resultDiscount float64
-		if cart.MaxDiscountPrice == nil {
+		if cart.MaxDiscountPrice == nil || cart.Quantity > *cart.Quota {
 			continue
 		}
+
 		if cart.MinProductPrice != nil {
 			minProductPrice = *cart.MinProductPrice
 		}
@@ -244,6 +245,11 @@ func (u *cartUC) CalculateDiscountProduct(p *body.ProductDetailResponse) *body.P
 	if p.Promo.MaxDiscountPrice == nil {
 		return p
 	}
+
+	if p.Quantity > float64(*p.Promo.Quota) {
+		return p
+	}
+
 	var maxDiscountPrice float64
 	var minProductPrice float64
 	var discountPercentage float64

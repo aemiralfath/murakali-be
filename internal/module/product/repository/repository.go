@@ -29,6 +29,54 @@ func NewProductRepository(psql *sql.DB, client *redis.Client) product.Repository
 	}
 }
 
+func (r *productRepo) GetFavoriteProduct(ctx context.Context) ([]*model.ProductFavorite, error) {
+	productFav := make([]*model.ProductFavorite, 0)
+	res, err := r.PSQL.QueryContext(ctx, GetFavoriteProductQuery)
+	if err != nil {
+		return nil, err
+	}
+	defer res.Close()
+
+	for res.Next() {
+		favorite := model.ProductFavorite{}
+		favorite.Product = &model.Product{}
+		if errScan := res.Scan(&favorite.Product.ID, &favorite.Product.Title, &favorite.Count); errScan != nil {
+			return nil, errScan
+		}
+		productFav = append(productFav, &favorite)
+	}
+
+	if res.Err() != nil {
+		return nil, err
+	}
+
+	return productFav, nil
+}
+
+func (r *productRepo) GetRatingProduct(ctx context.Context) ([]*model.ProductRating, error) {
+	productRating := make([]*model.ProductRating, 0)
+	res, err := r.PSQL.QueryContext(ctx, GetRatingProductQuery)
+	if err != nil {
+		return nil, err
+	}
+	defer res.Close()
+
+	for res.Next() {
+		rating := model.ProductRating{}
+		rating.Product = &model.Product{}
+		if errScan := res.Scan(&rating.Product.ID, &rating.Product.Title, &rating.Product.ShopID, &rating.Count, &rating.Avg); errScan != nil {
+			return nil, errScan
+		}
+		productRating = append(productRating, &rating)
+	}
+
+	if res.Err() != nil {
+		return nil, err
+	}
+
+	return productRating, nil
+}
+
 func (r *productRepo) GetCategories(ctx context.Context) ([]*model.Category, error) {
 	categories := make([]*model.Category, 0)
 	res, err := r.PSQL.QueryContext(
@@ -46,7 +94,7 @@ func (r *productRepo) GetCategories(ctx context.Context) ([]*model.Category, err
 			&category.Name,
 			&category.PhotoURL,
 		); errScan != nil {
-			return nil, err
+			return nil, errScan
 		}
 		categories = append(categories, &category)
 	}
@@ -293,7 +341,7 @@ func (r *productRepo) GetProductDetail(ctx context.Context, productID string, pr
 		}
 		detail.ProductURL = productURLs
 
-		if promo != nil {
+		if promo != nil && (*promo.PromotionQuota) > 0 {
 			discountedPrice := 0.0
 			if promo.PromotionDiscountPercentage != nil {
 				discountedPrice = *detail.NormalPrice - (*detail.NormalPrice * (*promo.PromotionDiscountPercentage / float64(100)))
@@ -304,7 +352,8 @@ func (r *productRepo) GetProductDetail(ctx context.Context, productID string, pr
 			if *detail.NormalPrice >= *promo.PromotionMinProductPrice {
 				if promo.PromotionDiscountFixPrice != nil && *promo.PromotionDiscountFixPrice > *promo.PromotionMaxDiscountPrice {
 					discountedPrice = *detail.NormalPrice - *promo.PromotionDiscountFixPrice
-				} else if discountedPrice > *promo.PromotionMaxDiscountPrice {
+				}
+				if discountedPrice > *promo.PromotionMaxDiscountPrice {
 					discountedPrice = *detail.NormalPrice - *promo.PromotionMaxDiscountPrice
 				}
 				detail.DiscountPrice = &discountedPrice
@@ -470,14 +519,13 @@ func (r *productRepo) GetProducts(ctx context.Context, pgn *pagination.Paginatio
 			&promo.DiscountFixPrice,
 			&promo.MinProductPrice,
 			&promo.MaxDiscountPrice,
-			&voucher.DiscountPercentage,
-			&voucher.DiscountFixPrice,
 			&productData.ShopName,
 			&productData.CategoryName,
 			&productData.ShopProvince,
 			&productData.ListedStatus,
 			&productData.CreatedAt,
 			&productData.UpdatedAt,
+			&productData.SKU,
 		); errScan != nil {
 			return nil, nil, nil, err
 		}
@@ -948,6 +996,22 @@ func (r *productRepo) UpdateProduct(ctx context.Context, tx postgre.Transaction,
 	return nil
 }
 
+func (r *productRepo) UpdateProductFavorite(ctx context.Context, productID string, favCount int) error {
+	_, err := r.PSQL.ExecContext(ctx, UpdateProductFavoriteQuery, favCount, productID)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (r *productRepo) UpdateProductRating(ctx context.Context, productID string, ratingAvg float64) error {
+	_, err := r.PSQL.ExecContext(ctx, UpdateProductRatingQuery, ratingAvg, productID)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 func (r *productRepo) UpdateProductDetail(ctx context.Context,
 	tx postgre.Transaction, requestBody body.UpdateProductDetailRequest, productID string) error {
 	_, err := tx.ExecContext(ctx,
@@ -999,11 +1063,28 @@ func (r *productRepo) GetMaxMinPriceByID(ctx context.Context, productID string) 
 	return &rangePrice, nil
 }
 
+func (r *productRepo) GetShopProductRating(ctx context.Context, shopID string) (*model.ShopProductRating, error) {
+	var shopProductRating model.ShopProductRating
+	if err := r.PSQL.QueryRowContext(ctx, GetShopProductRating, shopID).Scan(&shopProductRating.ShopID,
+		&shopProductRating.Count, &shopProductRating.Avg); err != nil {
+		return nil, err
+	}
+	return &shopProductRating, nil
+}
+
 func (r *productRepo) UpdateVariant(ctx context.Context, tx postgre.Transaction, variantID, variantDetailID string) error {
 	_, err := tx.ExecContext(ctx,
 		UpdateVariantQuery,
 		variantDetailID,
 		variantID)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (r *productRepo) UpdateShopProductRating(ctx context.Context, shop *model.ShopProductRating) error {
+	_, err := r.PSQL.ExecContext(ctx, UpdateShopProductRating, shop.Count, shop.Avg, shop.ShopID)
 	if err != nil {
 		return err
 	}

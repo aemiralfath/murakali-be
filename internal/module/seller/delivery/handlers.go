@@ -99,9 +99,31 @@ func (h *sellerHandlers) GetOrder(c *gin.Context) {
 	pgn := &pagination.Pagination{}
 	orderStatusID := c.DefaultQuery("order_status", "")
 	voucherShopID := c.DefaultQuery("voucher_shop", "")
+
+	sort := strings.TrimSpace(c.DefaultQuery("sort", ""))
+	sortBy := strings.TrimSpace(c.DefaultQuery("sort_by", ""))
+	sort = strings.ToLower(sort)
+	var sortFilter string
+	switch sort {
+	case constant.ASC:
+		sortFilter = sort
+	default:
+		sortFilter = constant.DESC
+	}
+	var sortQuery string
+	switch sortBy {
+	case "created_at":
+		sortQuery = "o.created_at " + sortFilter
+	case "is_withdraw":
+
+		sortQuery = "o.is_withdraw " + sortFilter
+	default:
+		sortQuery = "o.created_at " + sortFilter
+	}
+
 	h.ValidateQueryOrder(c, pgn)
 
-	orders, err := h.sellerUC.GetOrder(c, userID.(string), orderStatusID, voucherShopID, pgn)
+	orders, err := h.sellerUC.GetOrder(c, userID.(string), orderStatusID, voucherShopID, sortQuery, pgn)
 	if err != nil {
 		var e *httperror.Error
 		if !errors.As(err, &e) {
@@ -913,10 +935,15 @@ func (h *sellerHandlers) GetProductWithoutPromotionSeller(c *gin.Context) {
 		return
 	}
 
+	productName := strings.TrimSpace(c.DefaultQuery("search", ""))
+	if productName == "" {
+		productName = ""
+	}
+
 	pgn := &pagination.Pagination{}
 	h.ValidateQueryPagination(c, pgn)
 
-	productWithoutPromotion, err := h.sellerUC.GetProductWithoutPromotionSeller(c, userID.(string), pgn)
+	productWithoutPromotion, err := h.sellerUC.GetProductWithoutPromotionSeller(c, userID.(string), productName, pgn)
 	if err != nil {
 		var e *httperror.Error
 		if !errors.As(err, &e) {
@@ -1062,5 +1089,4 @@ func (h *sellerHandlers) UpdateRefundReject(c *gin.Context) {
 	}
 
 	response.SuccessResponse(c.Writer, nil, http.StatusOK)
-
 }

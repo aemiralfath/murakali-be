@@ -315,7 +315,6 @@ func (u *userUC) ChangeOrderStatus(ctx context.Context, userID string, requestBo
 		return httperror.New(http.StatusUnauthorized, response.UnauthorizedMessage)
 	}
 
-	// Buyer can only set order to -> "Received" & "Completed"
 	if requestBody.OrderStatusID != constant.OrderStatusReceived && requestBody.OrderStatusID != constant.OrderStatusCompleted {
 		return httperror.New(http.StatusBadRequest, response.BadRequestMessage)
 	}
@@ -326,14 +325,14 @@ func (u *userUC) ChangeOrderStatus(ctx context.Context, userID string, requestBo
 	}
 
 	if requestBody.OrderStatusID == constant.OrderStatusCompleted {
-		if err = u.txRepo.WithTransaction(func(tx postgre.Transaction) error {
-			productUnitSolds, err := u.userRepo.GetProductUnitSoldByOrderID(ctx, tx, requestBody.OrderID)
-			if err != nil {
-				return err
+		if err := u.txRepo.WithTransaction(func(tx postgre.Transaction) error {
+			productUnitSolds, errGet := u.userRepo.GetProductUnitSoldByOrderID(ctx, tx, requestBody.OrderID)
+			if errGet != nil {
+				return errGet
 			}
 			for _, productUnitSold := range productUnitSolds {
-				newQty := (productUnitSold.Quantity + productUnitSold.UnitSold)
-				if err = u.userRepo.UpdateProductUnitSold(ctx, tx, productUnitSold.ProductID.String(), newQty); err != nil {
+				newQty := productUnitSold.Quantity + productUnitSold.UnitSold
+				if err := u.userRepo.UpdateProductUnitSold(ctx, tx, productUnitSold.ProductID.String(), newQty); err != nil {
 					return err
 				}
 			}
@@ -459,6 +458,22 @@ func (u *userUC) DeleteAddressByID(ctx context.Context, userID, addressID string
 	return nil
 }
 
+func (u *userUC) CompletedRejectedRefund(ctx context.Context) error {
+	orderRefund, err := u.userRepo.GetRejectedRefund(ctx)
+	if err != nil {
+		return err
+	}
+
+	for _, refund := range orderRefund {
+		if errUpdate := u.ChangeOrderStatus(ctx, refund.Order.UserID.String(),
+			body.ChangeOrderStatusRequest{OrderID: refund.Order.ID.String(), OrderStatusID: constant.OrderStatusCompleted}); errUpdate != nil {
+			return errUpdate
+		}
+	}
+
+	return nil
+}
+
 func (u *userUC) EditUser(ctx context.Context, userID string, requestBody body.EditUserRequest) (*model.User, error) {
 	userModel, err := u.userRepo.GetUserByID(ctx, userID)
 	if err != nil {
@@ -572,14 +587,14 @@ func (u *userUC) EditEmailUser(ctx context.Context, userID string, requestBody b
 	userModel.UpdatedAt.Time = time.Now()
 	userModel.UpdatedAt.Valid = true
 	err = u.txRepo.WithTransaction(func(tx postgre.Transaction) error {
-		if u.userRepo.UpdateUserEmail(ctx, tx, userModel) != nil {
-			return err
+		if errUpdateEmail := u.userRepo.UpdateUserEmail(ctx, tx, userModel); errUpdateEmail != nil {
+			return errUpdateEmail
 		}
 
-		if u.userRepo.CreateEmailHistory(ctx, tx, userModel.Email) != nil {
-			return err
+		if errEmailHistory := u.userRepo.CreateEmailHistory(ctx, tx, userModel.Email); errEmailHistory != nil {
+			return errEmailHistory
 		}
-		return err
+		return nil
 	})
 	if err != nil {
 		return nil, err
@@ -630,11 +645,22 @@ func (u *userUC) AddSealabsPay(ctx context.Context, request body.AddSealabsPayRe
 	if err != nil {
 		return err
 	}
+	deletedSLPCount, err := u.userRepo.CheckDeletedSealabsPay(ctx, request.CardNumber, userid)
+	if err != nil {
+		return err
+	}
 
 	if slpCount == 0 {
-		err = u.userRepo.AddSealabsPay(ctx, request, userid)
-		if err != nil {
-			return httperror.New(http.StatusBadRequest, response.SealabsCardAlreadyExist)
+		if deletedSLPCount != 0 {
+			err = u.userRepo.UpdateUserSealabsPay(ctx, request, userid)
+			if err != nil {
+				return httperror.New(http.StatusBadRequest, response.SealabsCardAlreadyExist)
+			}
+		} else {
+			err = u.userRepo.AddSealabsPay(ctx, request, userid)
+			if err != nil {
+				return httperror.New(http.StatusBadRequest, response.SealabsCardAlreadyExist)
+			}
 		}
 	} else {
 		cardNumber, err := u.userRepo.CheckDefaultSealabsPay(ctx, userid)
@@ -645,12 +671,20 @@ func (u *userUC) AddSealabsPay(ctx context.Context, request body.AddSealabsPayRe
 			return httperror.New(http.StatusBadRequest, response.SealabsCardAlreadyExist)
 		}
 		err = u.txRepo.WithTransaction(func(tx postgre.Transaction) error {
-			if u.userRepo.SetDefaultSealabsPayTrans(ctx, tx, cardNumber) != nil {
-				return err
+			errTx := u.userRepo.SetDefaultSealabsPayTrans(ctx, tx, cardNumber)
+			if errTx != nil {
+				return errTx
 			}
-			err = u.userRepo.AddSealabsPayTrans(ctx, tx, request, userid)
-			if err != nil {
-				return err
+			if deletedSLPCount != 0 {
+				errTx = u.userRepo.UpdateUserSealabsPayTrans(ctx, tx, request, userid)
+				if errTx != nil {
+					return errTx
+				}
+			} else {
+				errTx = u.userRepo.AddSealabsPayTrans(ctx, tx, request, userid)
+				if errTx != nil {
+					return errTx
+				}
 			}
 			return nil
 		})
@@ -667,7 +701,7 @@ func (u *userUC) PatchSealabsPay(ctx context.Context, cardNumber, userid string)
 		return err
 	}
 
-	if u.userRepo.SetDefaultSealabsPay(ctx, cardNumber, userid) != nil {
+	if err = u.userRepo.SetDefaultSealabsPay(ctx, cardNumber, userid); err != nil {
 		return err
 	}
 	return nil
@@ -888,6 +922,17 @@ func (u *userUC) ChangePassword(ctx context.Context, userID, newPassword string)
 		return err
 	}
 
+	keys, errKey := u.userRepo.GetSessionKeyRedis(ctx, fmt.Sprintf("session:%s:*", userID))
+	if errKey != nil {
+		return errKey
+	}
+
+	for _, key := range keys {
+		if err := u.userRepo.InsertSessionRedis(ctx, u.cfg.JWT.AccessExpMin, key, constant.FALSE); err != nil {
+			return err
+		}
+	}
+
 	return nil
 }
 
@@ -1098,7 +1143,7 @@ func (u *userUC) GetRedirectURL(transaction *model.Transaction, sign string) (st
 }
 
 func (u *userUC) GetTransactionByUserID(ctx context.Context, userID string, status int, pgn *pagination.Pagination) (*pagination.Pagination, error) {
-	totalRows, err := u.userRepo.GetTotalTransactionByUserID(ctx, userID)
+	totalRows, err := u.userRepo.GetTotalTransactionByUserID(ctx, userID, status)
 	if err != nil {
 		return nil, err
 	}
@@ -1636,6 +1681,10 @@ func (u *userUC) CreateTransaction(ctx context.Context, userID string, requestBo
 				return nil, err
 			}
 
+			if cartShop.UserID == userModel.ID {
+				return nil, httperror.New(http.StatusBadRequest, response.InvalidBuyOwnProducts)
+			}
+
 			voucherShop := &model.Voucher{}
 			var voucherShopID *uuid.UUID
 			if cart.VoucherShopID != "" {
@@ -1757,11 +1806,11 @@ func (u *userUC) CreateTransaction(ctx context.Context, userID string, requestBo
 			}
 			orderData.TotalPrice = subOrderPrice
 
-			buyerAddressString, errBAS := u.getAdressString(ctx, userModel.ID.String(), false)
+			buyerAddressString, errBAS := u.getAddressString(ctx, userModel.ID.String(), false)
 			if errBAS != nil {
 				return nil, errBAS
 			}
-			shopAddressString, errSAS := u.getAdressString(ctx, cartShop.UserID.String(), true)
+			shopAddressString, errSAS := u.getAddressString(ctx, cartShop.UserID.String(), true)
 			if errSAS != nil {
 				return nil, errSAS
 			}
@@ -1821,8 +1870,8 @@ func (u *userUC) CreateTransaction(ctx context.Context, userID string, requestBo
 
 		for _, vs := range voucherShopList {
 			vs.Quota--
-			if errVoucherMarketplace := u.userRepo.UpdateVoucherQuota(ctx, tx, vs); errVoucherMarketplace != nil {
-				return nil, errVoucherMarketplace
+			if errVoucherShop := u.userRepo.UpdateVoucherQuota(ctx, tx, vs); errVoucherShop != nil {
+				return nil, errVoucherShop
 			}
 		}
 
@@ -1866,8 +1915,7 @@ func (u *userUC) CreateTransaction(ctx context.Context, userID string, requestBo
 	return data.(string), nil
 }
 
-func (u *userUC) getAdressString(ctx context.Context, userID string, isShop bool) (string, error) {
-
+func (u *userUC) getAddressString(ctx context.Context, userID string, isShop bool) (string, error) {
 	AddressModel := &model.Address{}
 	var err error
 	if isShop {
@@ -1896,8 +1944,20 @@ func (u *userUC) CreateRefundUser(ctx context.Context, userID string, requestBod
 		return err
 	}
 
-	if orderData.UserID.String() != userID {
+	if orderData.UserID.String() != userID || orderData.OrderStatusID != 6 {
 		return httperror.New(http.StatusBadRequest, response.InvalidRefund)
+	}
+
+	userWallet, errWallet := u.userRepo.GetWalletByUserID(ctx, userID)
+	if errWallet != nil {
+		if errWallet != sql.ErrNoRows {
+			return errWallet
+		}
+		return httperror.New(http.StatusBadRequest, response.WalletIsNotActivated)
+	}
+
+	if !userWallet.ActiveDate.Valid {
+		return httperror.New(http.StatusBadRequest, response.WalletIsNotActivated)
 	}
 
 	if orderData.IsRefund {
@@ -1954,7 +2014,7 @@ func (u *userUC) CreateRefundUser(ctx context.Context, userID string, requestBod
 	return nil
 }
 
-func (u *userUC) GetRefundOrder(ctx context.Context, userID string, orderID string) (*body.GetRefundThreadResponse, error) {
+func (u *userUC) GetRefundOrder(ctx context.Context, userID, orderID string) (*body.GetRefundThreadResponse, error) {
 	orderData, err := u.userRepo.GetOrderModelByID(ctx, orderID)
 	if err != nil {
 		return nil, err
@@ -1966,44 +2026,57 @@ func (u *userUC) GetRefundOrder(ctx context.Context, userID string, orderID stri
 
 	refundData, err := u.userRepo.GetRefundOrderByOrderID(ctx, orderID)
 	if err != nil {
-		return nil, err
+		if err != sql.ErrNoRows {
+			return nil, err
+		}
 	}
 
-	var userModel *model.User
-	var errUser error
-	fmt.Println("refund Data:", refundData)
-	if *refundData.IsBuyerRefund {
-		fmt.Println("masuk buyer")
-		fmt.Println("masuk buyer")
-		fmt.Println("masuk buyer")
-		userModel, errUser = u.userRepo.GetUserByID(ctx, orderData.UserID.String())
-		if errUser != nil {
-			return nil, errUser
+	username := ""
+	photoURL := ""
+	refundDataID := uuid.Nil
+	if refundData != nil {
+		var userModel *model.User
+		var errUser error
+		if *refundData.IsBuyerRefund {
+			userModel, errUser = u.userRepo.GetUserByID(ctx, orderData.UserID.String())
+			if errUser != nil {
+				return nil, errUser
+			}
+		}
+		if *refundData.IsSellerRefund {
+			shopModel, errShop := u.userRepo.GetShopByID(ctx, orderData.ShopID.String())
+			if errShop != nil {
+				return nil, errShop
+			}
+
+			userModel, errUser = u.userRepo.GetUserByID(ctx, shopModel.UserID.String())
+			if errUser != nil {
+				return nil, errUser
+			}
+			userModel.Username = &shopModel.Name
 		}
 
+		if userModel.Username != nil {
+			username = *userModel.Username
+		}
+
+		if userModel.PhotoURL != nil {
+			photoURL = *userModel.PhotoURL
+		}
+
+		refundDataID = refundData.ID
 	}
 
-	if *refundData.IsSellerRefund {
-		shopModel, errShop := u.userRepo.GetShopByID(ctx, orderData.ShopID.String())
-		if errShop != nil {
-			return nil, errShop
+	refundThreadData, errThread := u.userRepo.GetRefundThreadByRefundID(ctx, refundDataID.String())
+	if errThread != nil {
+		if errThread != sql.ErrNoRows {
+			return nil, errThread
 		}
-
-		userModel, errUser = u.userRepo.GetUserByID(ctx, shopModel.UserID.String())
-		if errUser != nil {
-			return nil, errUser
-		}
-		userModel.Username = &shopModel.Name
-	}
-
-	refundThreadData, err := u.userRepo.GetRefundThreadByRefundID(ctx, refundData.ID.String())
-	if err != nil {
-		return nil, err
 	}
 
 	refundThreadResponse := &body.GetRefundThreadResponse{
-		UserName:      *userModel.Username,
-		PhotoURL:      *userModel.PhotoURL,
+		UserName:      username,
+		PhotoURL:      &photoURL,
 		RefundData:    refundData,
 		RefundThreads: refundThreadData,
 	}
@@ -2022,7 +2095,7 @@ func (u *userUC) CreateRefundThreadUser(ctx context.Context, userID string, requ
 		return err
 	}
 
-	if orderData.UserID.String() != userID {
+	if orderData.UserID.String() != userID || orderData.OrderStatusID != 6 {
 		return httperror.New(http.StatusBadRequest, response.InvalidRefund)
 	}
 
@@ -2050,6 +2123,75 @@ func (u *userUC) CreateRefundThreadUser(ctx context.Context, userID string, requ
 	if err != nil {
 		return err
 	}
+
+	return nil
+}
+
+func (u *userUC) ChangeWalletPinStepUpEmail(ctx context.Context, userID string) error {
+	userInfo, err := u.userRepo.GetUserByID(ctx, userID)
+	if err != nil {
+		return err
+	}
+
+	walletUser, err := u.userRepo.GetWalletByUserID(ctx, userID)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return httperror.New(http.StatusBadRequest, response.WalletIsNotActivated)
+		}
+		return err
+	}
+
+	if !walletUser.ActiveDate.Valid {
+		return httperror.New(http.StatusBadRequest, response.WalletIsNotActivated)
+	}
+
+	err = u.SendOTPChangeWalletPinEmail(ctx, userInfo.Email)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (u *userUC) ChangeWalletPinStepUpVerify(ctx context.Context, requestBody body.VerifyOTPRequest, userID string) (string, error) {
+	userInfo, err := u.userRepo.GetUserByID(ctx, userID)
+	if err != nil {
+		return "", err
+	}
+	value, err := u.userRepo.GetOTPValueChangeWalletPin(ctx, userInfo.Email)
+	if err != nil {
+		return "", httperror.New(http.StatusBadRequest, response.OTPAlreadyExpiredMessage)
+	}
+
+	if value != requestBody.OTP {
+		return "", httperror.New(http.StatusBadRequest, response.OTPIsNotValidMessage)
+	}
+
+	changeWalletPinToken, err := jwt.GenerateJWTWalletToken(userID, "level2", u.cfg)
+	if err != nil {
+		return "", err
+	}
+
+	_, err = u.userRepo.DeleteOTPValueChangeWalletPin(ctx, userInfo.Email)
+	if err != nil {
+		return "", err
+	}
+
+	return changeWalletPinToken, nil
+}
+
+func (u *userUC) SendOTPChangeWalletPinEmail(ctx context.Context, email string) error {
+	otp, err := util.GenerateRandomAlpaNumeric(6)
+	if err != nil {
+		return err
+	}
+
+	if err := u.userRepo.InsertNewOTPKeyChangeWalletPin(ctx, email, otp); err != nil {
+		return err
+	}
+
+	subject := "Change Wallet Pin Verification!"
+	msg := smtp.VerificationEmailBody(otp)
+	go smtp.SendEmail(u.cfg, email, subject, msg)
 
 	return nil
 }

@@ -24,6 +24,7 @@ type CartHome struct {
 	DiscountFixPrice   *float64          `json:"discount_fix_price" db:"discount_fix_price"`
 	MinProductPrice    *float64          `json:"min_product_price" db:"min_product_price"`
 	MaxDiscountPrice   *float64          `json:"max_discount_price" db:"max_discount_price"`
+	Quota              *int              `json:"quota" db:"quota"`
 	ResultDiscount     float64           `json:"result_discount" db:"result_discount"`
 	SubPrice           float64           `json:"sub_price" db:"sub_price"`
 	Quantity           int               `json:"quantity" db:"quantity"`
